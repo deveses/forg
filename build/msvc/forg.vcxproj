@@ -30,29 +30,29 @@
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'" Label="PropertySheets">
+    <Import Project="externals.props" />
+    <Import Project="output.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'" Label="PropertySheets">
+    <Import Project="externals.props" />
+    <Import Project="output.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">$(SolutionDir)/bin\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">$(SolutionDir)/obj/msvc/$(ProjectName)/$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">true</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">true</GenerateManifest>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'">$(SolutionDir)/bin\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'">$(SolutionDir)/obj/msvc/$(ProjectName)/$(Configuration)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'">true</GenerateManifest>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)/src;$(ProjectDir)/sdk/freetype/include;$(ProjectDir)/sdk/zlib/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../src/forg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>D3D_DEBUG_INFO;WIN32;_DEBUG;_WINDOWS;_USRDLL;FORG_EXPORTS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -65,7 +65,7 @@
     <Link>
       <AdditionalDependencies>freetype235.lib;zlib.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName)_vc_d.dll</OutputFile>
-      <AdditionalLibraryDirectories>$(ProjectDir)/sdk/freetype/lib/vc_lib/Release;$(ProjectDir)/sdk/zlib/lib/vc;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>MSVCRT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <TypeLibraryResourceID>3000</TypeLibraryResourceID>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -87,7 +87,7 @@
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <AdditionalIncludeDirectories>$(ProjectDir)/src;$(ProjectDir)/sdk/freetype/include;$(ProjectDir)/sdk/zlib/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../src/forg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;FORG_EXPORTS;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -101,7 +101,7 @@
     <Link>
       <AdditionalDependencies>freetype235.lib;zlib.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName)_vc_r.dll</OutputFile>
-      <AdditionalLibraryDirectories>$(ProjectDir)/sdk/freetype/lib/vc_lib/Release;$(ProjectDir)/sdk/zlib/lib/vc;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TypeLibraryResourceID>3000</TypeLibraryResourceID>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
@@ -116,142 +116,142 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\api.h" />
-    <ClInclude Include="src\audio\Audio.h" />
-    <ClInclude Include="src\audio\AudioDefs.h" />
-    <ClInclude Include="src\audio\AudioDSP.h" />
-    <ClInclude Include="src\audio\AudioMixer.h" />
-    <ClInclude Include="src\audio\AudioOutputWaveOut.h" />
-    <ClInclude Include="src\audio\WaveFile.h" />
-    <ClInclude Include="src\base.h" />
-    <ClInclude Include="src\core\RefCounter.h" />
-    <ClInclude Include="src\core\string.hpp" />
-    <ClInclude Include="src\cpu\atomic.h" />
-    <ClInclude Include="src\cpu\cpuid.h" />
-    <ClInclude Include="src\cpu\vector.h" />
-    <ClInclude Include="src\cpu\vector_sse.h" />
-    <ClInclude Include="src\enums.h" />
-    <ClInclude Include="src\forg.h" />
-    <ClInclude Include="src\forg_pch.h" />
-    <ClInclude Include="src\math\Vector4.h" />
-    <ClInclude Include="src\noise.h" />
-    <ClInclude Include="src\os\File.h" />
-    <ClInclude Include="src\os\os.h" />
-    <ClInclude Include="src\PerformanceCounter.h" />
-    <ClInclude Include="src\core\auto_ptr.hpp" />
-    <ClInclude Include="src\core\BitArray.h" />
-    <ClInclude Include="src\core\core.h" />
-    <ClInclude Include="src\core\shared_array.hpp" />
-    <ClInclude Include="src\core\StringTokenizer.hpp" />
-    <ClInclude Include="src\core\vector.hpp" />
-    <ClInclude Include="src\math\Math.h" />
-    <ClInclude Include="src\math\Matrix4.h" />
-    <ClInclude Include="src\math\Quaternion.h" />
-    <ClInclude Include="src\math\Vector2.h" />
-    <ClInclude Include="src\math\Vector3.h" />
-    <ClInclude Include="src\os\ILibrary.h" />
-    <ClInclude Include="src\os\WindowsLibrary.h" />
-    <ClInclude Include="src\debug\dbg.h" />
-    <ClInclude Include="src\debug\dbg_new.h" />
-    <ClInclude Include="src\debug\pop_new.h" />
-    <ClInclude Include="src\debug\push_new.h" />
-    <ClInclude Include="src\image\Image.h" />
-    <ClInclude Include="src\image\bmp\bmp.h" />
-    <ClInclude Include="src\image\dds\dds.h" />
-    <ClInclude Include="src\mesh\XLoader.h" />
-    <ClInclude Include="src\mesh\xfile\xbinreader.h" />
-    <ClInclude Include="src\mesh\xfile\xbzipreader.h" />
-    <ClInclude Include="src\mesh\xfile\xdata.h" />
-    <ClInclude Include="src\mesh\xfile\xdatamgr.h" />
-    <ClInclude Include="src\mesh\xfile\xdefs.h" />
-    <ClInclude Include="src\mesh\xfile\xfile.h" />
-    <ClInclude Include="src\mesh\xfile\xlexer.h" />
-    <ClInclude Include="src\mesh\xfile\xreader.h" />
-    <ClInclude Include="src\mesh\xfile\xstdtemplates.h" />
-    <ClInclude Include="src\mesh\xfile\xtemplate.h" />
-    <ClInclude Include="src\mesh\xfile\xtemplatesmgr.h" />
-    <ClInclude Include="src\mesh\xfile\xtexreader.h" />
-    <ClInclude Include="src\mesh\xfile\xtmembers.h" />
-    <ClInclude Include="src\mesh\ply\plyfile.h" />
-    <ClInclude Include="src\rendering\Camera.h" />
-    <ClInclude Include="src\rendering\Color.h" />
-    <ClInclude Include="src\rendering\ExtendedMaterial.h" />
-    <ClInclude Include="src\rendering\Font.h" />
-    <ClInclude Include="src\rendering\IIndexBuffer.h" />
-    <ClInclude Include="src\rendering\irenderdevice.h" />
-    <ClInclude Include="src\rendering\IRenderer.h" />
-    <ClInclude Include="src\rendering\ISurface.h" />
-    <ClInclude Include="src\rendering\ITexture.h" />
-    <ClInclude Include="src\rendering\IVertexBuffer.h" />
-    <ClInclude Include="src\rendering\Light.h" />
-    <ClInclude Include="src\rendering\Material.h" />
-    <ClInclude Include="src\rendering\Mesh.h" />
-    <ClInclude Include="src\rendering\Ray.h" />
-    <ClInclude Include="src\rendering\Sprite.h" />
-    <ClInclude Include="src\rendering\Vertex.h" />
-    <ClInclude Include="src\rendering\VertexDeclaration.h" />
-    <ClInclude Include="src\rendering\VertexElement.h" />
-    <ClInclude Include="src\script\script.h" />
-    <ClInclude Include="src\script\xml\XMLParser.h" />
-    <ClInclude Include="src\ui\gui.h" />
+    <ClInclude Include="..\..\src\forg\api.h" />
+    <ClInclude Include="..\..\src\forg\audio\Audio.h" />
+    <ClInclude Include="..\..\src\forg\audio\AudioDefs.h" />
+    <ClInclude Include="..\..\src\forg\audio\AudioDSP.h" />
+    <ClInclude Include="..\..\src\forg\audio\AudioMixer.h" />
+    <ClInclude Include="..\..\src\forg\audio\AudioOutputWaveOut.h" />
+    <ClInclude Include="..\..\src\forg\audio\WaveFile.h" />
+    <ClInclude Include="..\..\src\forg\base.h" />
+    <ClInclude Include="..\..\src\forg\core\RefCounter.h" />
+    <ClInclude Include="..\..\src\forg\core\string.hpp" />
+    <ClInclude Include="..\..\src\forg\cpu\atomic.h" />
+    <ClInclude Include="..\..\src\forg\cpu\cpuid.h" />
+    <ClInclude Include="..\..\src\forg\cpu\vector.h" />
+    <ClInclude Include="..\..\src\forg\cpu\vector_sse.h" />
+    <ClInclude Include="..\..\src\forg\enums.h" />
+    <ClInclude Include="..\..\src\forg\forg.h" />
+    <ClInclude Include="..\..\src\forg\forg_pch.h" />
+    <ClInclude Include="..\..\src\forg\math\Vector4.h" />
+    <ClInclude Include="..\..\src\forg\noise.h" />
+    <ClInclude Include="..\..\src\forg\os\File.h" />
+    <ClInclude Include="..\..\src\forg\os\os.h" />
+    <ClInclude Include="..\..\src\forg\PerformanceCounter.h" />
+    <ClInclude Include="..\..\src\forg\core\auto_ptr.hpp" />
+    <ClInclude Include="..\..\src\forg\core\BitArray.h" />
+    <ClInclude Include="..\..\src\forg\core\core.h" />
+    <ClInclude Include="..\..\src\forg\core\shared_array.hpp" />
+    <ClInclude Include="..\..\src\forg\core\StringTokenizer.hpp" />
+    <ClInclude Include="..\..\src\forg\core\vector.hpp" />
+    <ClInclude Include="..\..\src\forg\math\Math.h" />
+    <ClInclude Include="..\..\src\forg\math\Matrix4.h" />
+    <ClInclude Include="..\..\src\forg\math\Quaternion.h" />
+    <ClInclude Include="..\..\src\forg\math\Vector2.h" />
+    <ClInclude Include="..\..\src\forg\math\Vector3.h" />
+    <ClInclude Include="..\..\src\forg\os\ILibrary.h" />
+    <ClInclude Include="..\..\src\forg\os\WindowsLibrary.h" />
+    <ClInclude Include="..\..\src\forg\debug\dbg.h" />
+    <ClInclude Include="..\..\src\forg\debug\dbg_new.h" />
+    <ClInclude Include="..\..\src\forg\debug\pop_new.h" />
+    <ClInclude Include="..\..\src\forg\debug\push_new.h" />
+    <ClInclude Include="..\..\src\forg\image\Image.h" />
+    <ClInclude Include="..\..\src\forg\image\bmp\bmp.h" />
+    <ClInclude Include="..\..\src\forg\image\dds\dds.h" />
+    <ClInclude Include="..\..\src\forg\mesh\XLoader.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xbinreader.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xbzipreader.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xdata.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xdatamgr.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xdefs.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xfile.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xlexer.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xreader.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xstdtemplates.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xtemplate.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xtemplatesmgr.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xtexreader.h" />
+    <ClInclude Include="..\..\src\forg\mesh\xfile\xtmembers.h" />
+    <ClInclude Include="..\..\src\forg\mesh\ply\plyfile.h" />
+    <ClInclude Include="..\..\src\forg\rendering\Camera.h" />
+    <ClInclude Include="..\..\src\forg\rendering\Color.h" />
+    <ClInclude Include="..\..\src\forg\rendering\ExtendedMaterial.h" />
+    <ClInclude Include="..\..\src\forg\rendering\Font.h" />
+    <ClInclude Include="..\..\src\forg\rendering\IIndexBuffer.h" />
+    <ClInclude Include="..\..\src\forg\rendering\irenderdevice.h" />
+    <ClInclude Include="..\..\src\forg\rendering\IRenderer.h" />
+    <ClInclude Include="..\..\src\forg\rendering\ISurface.h" />
+    <ClInclude Include="..\..\src\forg\rendering\ITexture.h" />
+    <ClInclude Include="..\..\src\forg\rendering\IVertexBuffer.h" />
+    <ClInclude Include="..\..\src\forg\rendering\Light.h" />
+    <ClInclude Include="..\..\src\forg\rendering\Material.h" />
+    <ClInclude Include="..\..\src\forg\rendering\Mesh.h" />
+    <ClInclude Include="..\..\src\forg\rendering\Ray.h" />
+    <ClInclude Include="..\..\src\forg\rendering\Sprite.h" />
+    <ClInclude Include="..\..\src\forg\rendering\Vertex.h" />
+    <ClInclude Include="..\..\src\forg\rendering\VertexDeclaration.h" />
+    <ClInclude Include="..\..\src\forg\rendering\VertexElement.h" />
+    <ClInclude Include="..\..\src\forg\script\script.h" />
+    <ClInclude Include="..\..\src\forg\script\xml\XMLParser.h" />
+    <ClInclude Include="..\..\src\forg\ui\gui.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\audio\AudioDSP.cpp" />
-    <ClCompile Include="src\audio\AudioMixer.cpp" />
-    <ClCompile Include="src\audio\AudioOutputWaveOut.cpp" />
-    <ClCompile Include="src\audio\WaveFile.cpp" />
-    <ClCompile Include="src\core\RefCounter.cpp" />
-    <ClCompile Include="src\cpu\cpuid.cpp" />
-    <ClCompile Include="src\forg.cpp" />
-    <ClCompile Include="src\forg_pch.cpp">
+    <ClCompile Include="..\..\src\forg\audio\AudioDSP.cpp" />
+    <ClCompile Include="..\..\src\forg\audio\AudioMixer.cpp" />
+    <ClCompile Include="..\..\src\forg\audio\AudioOutputWaveOut.cpp" />
+    <ClCompile Include="..\..\src\forg\audio\WaveFile.cpp" />
+    <ClCompile Include="..\..\src\forg\core\RefCounter.cpp" />
+    <ClCompile Include="..\..\src\forg\cpu\cpuid.cpp" />
+    <ClCompile Include="..\..\src\forg\forg.cpp" />
+    <ClCompile Include="..\..\src\forg\forg_pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\math\Vector4.cpp" />
-    <ClCompile Include="src\noise.cpp" />
-    <ClCompile Include="src\os\File.cpp" />
-    <ClCompile Include="src\PerformanceCounter.cpp" />
-    <ClCompile Include="src\core\BitArray.cpp" />
-    <ClCompile Include="src\math\Math.cpp" />
-    <ClCompile Include="src\math\Matrix4.cpp" />
-    <ClCompile Include="src\math\Quaternion.cpp" />
-    <ClCompile Include="src\math\Vector2.cpp" />
-    <ClCompile Include="src\math\Vector3.cpp" />
-    <ClCompile Include="src\os\WindowsLibrary.cpp" />
-    <ClCompile Include="src\debug\debug.cpp" />
-    <ClCompile Include="src\image\Image.cpp" />
-    <ClCompile Include="src\image\bmp\bmp.cpp" />
-    <ClCompile Include="src\image\dds\dds.cpp" />
-    <ClCompile Include="src\mesh\XLoader.cpp" />
-    <ClCompile Include="src\mesh\xfile\xbinreader.cpp" />
-    <ClCompile Include="src\mesh\xfile\xbzipreader.cpp" />
-    <ClCompile Include="src\mesh\xfile\xdata.cpp" />
-    <ClCompile Include="src\mesh\xfile\xdatamgr.cpp" />
-    <ClCompile Include="src\mesh\xfile\xdefs.cpp" />
-    <ClCompile Include="src\mesh\xfile\xfile.cpp" />
-    <ClCompile Include="src\mesh\xfile\xlexer.cpp" />
-    <ClCompile Include="src\mesh\xfile\xreader.cpp" />
-    <ClCompile Include="src\mesh\xfile\xstdtemplates.cpp" />
-    <ClCompile Include="src\mesh\xfile\xtemplate.cpp" />
-    <ClCompile Include="src\mesh\xfile\xtemplatesmgr.cpp" />
-    <ClCompile Include="src\mesh\xfile\xtexreader.cpp" />
-    <ClCompile Include="src\mesh\xfile\xtmembers.cpp" />
-    <ClCompile Include="src\mesh\ply\plyfile.cpp" />
-    <ClCompile Include="src\rendering\Camera.cpp" />
-    <ClCompile Include="src\rendering\Color.cpp" />
-    <ClCompile Include="src\rendering\Font.cpp" />
-    <ClCompile Include="src\rendering\IRenderDevice.cpp" />
-    <ClCompile Include="src\rendering\IRenderer.cpp" />
-    <ClCompile Include="src\rendering\ISurface.cpp" />
-    <ClCompile Include="src\rendering\ITexture.cpp" />
-    <ClCompile Include="src\rendering\Mesh.cpp" />
-    <ClCompile Include="src\rendering\Ray.cpp" />
-    <ClCompile Include="src\rendering\Sprite.cpp" />
-    <ClCompile Include="src\rendering\Vertex.cpp" />
-    <ClCompile Include="src\rendering\VertexDeclaration.cpp" />
-    <ClCompile Include="src\rendering\VertexElement.cpp" />
-    <ClCompile Include="src\script\xml\XMLParser.cpp" />
-    <ClCompile Include="src\ui\gui.cpp" />
+    <ClCompile Include="..\..\src\forg\math\Vector4.cpp" />
+    <ClCompile Include="..\..\src\forg\noise.cpp" />
+    <ClCompile Include="..\..\src\forg\os\File.cpp" />
+    <ClCompile Include="..\..\src\forg\PerformanceCounter.cpp" />
+    <ClCompile Include="..\..\src\forg\core\BitArray.cpp" />
+    <ClCompile Include="..\..\src\forg\math\Math.cpp" />
+    <ClCompile Include="..\..\src\forg\math\Matrix4.cpp" />
+    <ClCompile Include="..\..\src\forg\math\Quaternion.cpp" />
+    <ClCompile Include="..\..\src\forg\math\Vector2.cpp" />
+    <ClCompile Include="..\..\src\forg\math\Vector3.cpp" />
+    <ClCompile Include="..\..\src\forg\os\WindowsLibrary.cpp" />
+    <ClCompile Include="..\..\src\forg\debug\debug.cpp" />
+    <ClCompile Include="..\..\src\forg\image\Image.cpp" />
+    <ClCompile Include="..\..\src\forg\image\bmp\bmp.cpp" />
+    <ClCompile Include="..\..\src\forg\image\dds\dds.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\XLoader.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xbinreader.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xbzipreader.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xdata.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xdatamgr.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xdefs.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xfile.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xlexer.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xreader.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xstdtemplates.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xtemplate.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xtemplatesmgr.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xtexreader.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\xfile\xtmembers.cpp" />
+    <ClCompile Include="..\..\src\forg\mesh\ply\plyfile.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\Camera.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\Color.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\Font.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\IRenderDevice.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\IRenderer.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\ISurface.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\ITexture.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\Mesh.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\Ray.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\Sprite.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\Vertex.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\VertexDeclaration.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\VertexElement.cpp" />
+    <ClCompile Include="..\..\src\forg\script\xml\XMLParser.cpp" />
+    <ClCompile Include="..\..\src\forg\ui\gui.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

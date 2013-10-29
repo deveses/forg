@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual C++ Express 2010
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "forg", "forg.vcxproj", "{BF54E3FF-7D04-46C2-821A-1ABF35F7E0CB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glrenderer", "glrenderer\glrenderer.vcxproj", "{F17FE4EF-6D03-4CAE-9284-065207FD0C3B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glrenderer", "glrenderer.vcxproj", "{F17FE4EF-6D03-4CAE-9284-065207FD0C3B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wxtestsuite", "wxtestsuite\wxtestsuite.vcxproj", "{BAD2424D-2EBD-4D81-80A1-081FC3DA0DC4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wxtestsuite", "wxtestsuite.vcxproj", "{BAD2424D-2EBD-4D81-80A1-081FC3DA0DC4}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "emfcs", "emfc\msvc\emfc_2010.vcxproj", "{D72746D0-020F-4B8F-AE49-4DB01609D06C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "emfcs", "emfc.vcxproj", "{D72746D0-020F-4B8F-AE49-4DB01609D06C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winapp", "winapp\winapp.vcxproj", "{5D2354FB-4369-4E91-BE05-D2136D996144}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winapp", "winapp.vcxproj", "{5D2354FB-4369-4E91-BE05-D2136D996144}"
 	ProjectSection(ProjectDependencies) = postProject
 		{64F3A173-6529-4D07-9882-C64DDD8DEA2B} = {64F3A173-6529-4D07-9882-C64DDD8DEA2B}
 		{D72746D0-020F-4B8F-AE49-4DB01609D06C} = {D72746D0-020F-4B8F-AE49-4DB01609D06C}
@@ -17,7 +17,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winapp", "winapp\winapp.vcx
 		{BF54E3FF-7D04-46C2-821A-1ABF35F7E0CB} = {BF54E3FF-7D04-46C2-821A-1ABF35F7E0CB}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swrenderer", "swrenderer\swrenderer.vcxproj", "{64F3A173-6529-4D07-9882-C64DDD8DEA2B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swrenderer", "swrenderer.vcxproj", "{64F3A173-6529-4D07-9882-C64DDD8DEA2B}"
 	ProjectSection(ProjectDependencies) = postProject
 		{BF54E3FF-7D04-46C2-821A-1ABF35F7E0CB} = {BF54E3FF-7D04-46C2-821A-1ABF35F7E0CB}
 	EndProjectSection
