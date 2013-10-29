@@ -1,0 +1,458 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\core">
+      <UniqueIdentifier>{d84734ab-7324-410b-8620-ce7bbea17a99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\math">
+      <UniqueIdentifier>{0f0c7860-b3a8-4774-b75b-7254e22e4d88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\os">
+      <UniqueIdentifier>{53f28c09-6cb9-48fe-a39b-404e3e57577e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\debug">
+      <UniqueIdentifier>{f28a428b-3d9d-4ef3-9863-f32cacd2f07a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\image">
+      <UniqueIdentifier>{de4a705d-5e55-4fb6-9393-95c017d4c2da}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\image\bmp">
+      <UniqueIdentifier>{7cb1b79d-e5dc-44e1-82b6-bdce02a77375}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\image\dds">
+      <UniqueIdentifier>{415cc4c7-47c9-4983-b588-2db31865a462}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mesh">
+      <UniqueIdentifier>{f5679b65-c506-4308-a23c-29dd60f1dfd8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mesh\x">
+      <UniqueIdentifier>{366cf23d-4882-407f-9be7-7f527ee70a45}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\mesh\ply">
+      <UniqueIdentifier>{690ac369-3135-4159-bbcb-116b964f04ed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\rendering">
+      <UniqueIdentifier>{6fb22cfd-edf3-4ab8-91ac-02b0e09822f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\audio">
+      <UniqueIdentifier>{f3c3e125-2da3-4663-b967-790a512c86d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\cpu">
+      <UniqueIdentifier>{28ce31ca-27b7-472a-8c7b-aec96cb94ed0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ui">
+      <UniqueIdentifier>{7da88b07-91f8-45ff-ac26-0fd9278fdc61}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\script">
+      <UniqueIdentifier>{210a415d-081c-42b8-9b24-03f14e90521f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\script\xml">
+      <UniqueIdentifier>{50c68fdd-39de-428c-b7fc-ee9f6839cac8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\api.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\base.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\enums.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\forg.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\forg_pch.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\noise.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PerformanceCounter.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\auto_ptr.hpp">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\BitArray.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\core.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\shared_array.hpp">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\StringTokenizer.hpp">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\vector.hpp">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\Math.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\Matrix4.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\Quaternion.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\Vector2.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\Vector3.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\os\ILibrary.h">
+      <Filter>Source Files\os</Filter>
+    </ClInclude>
+    <ClInclude Include="src\os\WindowsLibrary.h">
+      <Filter>Source Files\os</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debug\dbg.h">
+      <Filter>Source Files\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debug\dbg_new.h">
+      <Filter>Source Files\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debug\pop_new.h">
+      <Filter>Source Files\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="src\debug\push_new.h">
+      <Filter>Source Files\debug</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\Image.h">
+      <Filter>Source Files\image</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\bmp\bmp.h">
+      <Filter>Source Files\image\bmp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\image\dds\dds.h">
+      <Filter>Source Files\image\dds</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\XLoader.h">
+      <Filter>Source Files\mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xbinreader.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xbzipreader.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xdata.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xdatamgr.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xdefs.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xfile.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xlexer.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xreader.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xstdtemplates.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xtemplate.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xtemplatesmgr.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xtexreader.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\xfile\xtmembers.h">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClInclude>
+    <ClInclude Include="src\mesh\ply\plyfile.h">
+      <Filter>Source Files\mesh\ply</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Camera.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Color.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\ExtendedMaterial.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Font.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\IIndexBuffer.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\irenderdevice.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\IRenderer.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\ISurface.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\ITexture.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\IVertexBuffer.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Light.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Material.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Mesh.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Ray.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Sprite.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\Vertex.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\VertexDeclaration.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rendering\VertexElement.h">
+      <Filter>Source Files\rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio\WaveFile.h">
+      <Filter>Source Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio\Audio.h">
+      <Filter>Source Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio\AudioMixer.h">
+      <Filter>Source Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio\AudioOutputWaveOut.h">
+      <Filter>Source Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio\AudioDefs.h">
+      <Filter>Source Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\audio\AudioDSP.h">
+      <Filter>Source Files\audio</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu\vector.h">
+      <Filter>Source Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu\vector_sse.h">
+      <Filter>Source Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu\cpuid.h">
+      <Filter>Source Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpu\atomic.h">
+      <Filter>Source Files\cpu</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\gui.h">
+      <Filter>Source Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\RefCounter.h">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\math\Vector4.h">
+      <Filter>Source Files\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\string.hpp">
+      <Filter>Source Files\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\xml\XMLParser.h">
+      <Filter>Source Files\script\xml</Filter>
+    </ClInclude>
+    <ClInclude Include="src\script\script.h">
+      <Filter>Source Files\script</Filter>
+    </ClInclude>
+    <ClInclude Include="src\os\File.h">
+      <Filter>Source Files\os</Filter>
+    </ClInclude>
+    <ClInclude Include="src\os\os.h">
+      <Filter>Source Files\os</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\forg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\forg_pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\noise.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PerformanceCounter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\BitArray.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math\Math.cpp">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math\Matrix4.cpp">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math\Quaternion.cpp">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math\Vector2.cpp">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math\Vector3.cpp">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\WindowsLibrary.cpp">
+      <Filter>Source Files\os</Filter>
+    </ClCompile>
+    <ClCompile Include="src\debug\debug.cpp">
+      <Filter>Source Files\debug</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\Image.cpp">
+      <Filter>Source Files\image</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\bmp\bmp.cpp">
+      <Filter>Source Files\image\bmp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\image\dds\dds.cpp">
+      <Filter>Source Files\image\dds</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\XLoader.cpp">
+      <Filter>Source Files\mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xbinreader.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xbzipreader.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xdata.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xdatamgr.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xdefs.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xfile.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xlexer.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xreader.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xstdtemplates.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xtemplate.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xtemplatesmgr.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xtexreader.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\xfile\xtmembers.cpp">
+      <Filter>Source Files\mesh\x</Filter>
+    </ClCompile>
+    <ClCompile Include="src\mesh\ply\plyfile.cpp">
+      <Filter>Source Files\mesh\ply</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\Camera.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\Color.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\Font.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\IRenderDevice.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\IRenderer.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\ISurface.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\ITexture.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\Mesh.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\Ray.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\Sprite.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\Vertex.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\VertexDeclaration.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rendering\VertexElement.cpp">
+      <Filter>Source Files\rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="src\audio\WaveFile.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\audio\AudioMixer.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\audio\AudioOutputWaveOut.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\audio\AudioDSP.cpp">
+      <Filter>Source Files\audio</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpu\cpuid.cpp">
+      <Filter>Source Files\cpu</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\gui.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\RefCounter.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="src\math\Vector4.cpp">
+      <Filter>Source Files\math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\script\xml\XMLParser.cpp">
+      <Filter>Source Files\script\xml</Filter>
+    </ClCompile>
+    <ClCompile Include="src\os\File.cpp">
+      <Filter>Source Files\os</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
