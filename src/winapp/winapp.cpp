@@ -5,7 +5,7 @@
 #include "winapp.h"
 #include "Viewport.h"
 //#include "glrenderer/glrenderer.h"
-#include "forg.h"
+#include "forg/forg.h"
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // 
