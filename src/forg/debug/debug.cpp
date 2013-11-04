@@ -69,5 +69,13 @@ namespace forg { namespace debug {
         return iResult;
     }
 
+	void DbgTrap(LPCTSTR strFile, uint dwLine, LPCTSTR strMsg)
+	{
+		TCHAR dmsg[1024];
+
+		sprintf(dmsg, "%s(%d): TRAP: %s\n", strFile, dwLine, strMsg);
+		DbgOutputString(dmsg);
+		DebugBreak();
+	}
 
 }}

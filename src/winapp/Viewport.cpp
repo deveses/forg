@@ -129,7 +129,7 @@ DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth, int 
 {
     DWORD ret;
 
-    DWORD style = WS_SIZEBOX|WS_MAXIMIZEBOX|WS_MAXIMIZE|WS_TILEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS;
+    DWORD style = WS_SIZEBOX|WS_MAXIMIZEBOX|/*WS_MAXIMIZE|*/WS_TILEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS;
     DWORD exstyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
     ret=EWnd::Create(TEXT("Viewport"),TEXT("View"),x,y,nWidth,nHeight, style, exstyle, hParent);
 
@@ -171,7 +171,8 @@ DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth, int 
     m_font = forg::Font::CreateIndirect(m_device, &fd);
 
     //m_Dialog.Init(m_device, "../bin/data/ui/dxutcontrols.dds");
-    m_Dialog.Init(m_device, "../bin/data/ui/debug_texture2.dds");
+    m_Dialog.Init(m_device, "data/ui/debug_texture2.dds");
+	m_Dialog.Load("data/ui/dialog.xml");
     m_Dialog.AddButton(0, 100, 15, 50, 30);
     m_Dialog.AddSlider(1, 180, 15, 80, 30);
     m_Dialog.AddKnob(2, 0, 15, 30, 30);

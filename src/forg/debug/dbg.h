@@ -52,7 +52,7 @@ namespace forg { namespace debug {
 FORG_API void DbgOutputString(LPCTSTR lpOutputString, ...);
 FORG_API int DbgTrace( LPCTSTR strFile, uint dwLine, int iResult, LPCTSTR strMsg);
 FORG_API int DbgTraceOnlyNonZero( LPCTSTR strFile, uint dwLine, int iResult, LPCTSTR strMsg);
-FORG_API int DbgTraceOnlyIfZero( LPCTSTR strFile, uint dwLine, int iResult, LPCTSTR strMsg);
+FORG_API void DbgTrap( LPCTSTR strFile, uint dwLine, LPCTSTR strMsg);
 
 #define RMSG forg::debug::DbgOutputString
 #define RTRACE_MSG(strLiteral) forg::debug::DbgTrace(__FILE__, __LINE__, 0, strLiteral)
@@ -74,6 +74,7 @@ FORG_API int DbgTraceOnlyIfZero( LPCTSTR strFile, uint dwLine, int iResult, LPCT
 #define REMIND(strLiteral) DBG_TRACE_MSG(strLiteral)
 #define ASSERT(bCondition) if (bCondition == 0) { DBG_TRACE_MSG("Assertion failed!"); abort(); }
 #define EXECUTE_ASSERT(bCondition) forg::debug::DbgTraceOnlyNonZero(__FILE__, __LINE__, (bCondition), "Assertion failed! assertion: "#bCondition)
+#define TRAP_NOT_IMPLEMENTED() forg::debug::DbgTrap(__FILE__, __LINE__, "Not implemented!")
 
 #else
 
@@ -83,6 +84,7 @@ FORG_API int DbgTraceOnlyIfZero( LPCTSTR strFile, uint dwLine, int iResult, LPCT
 #define REMIND(strLiteral) ((void)0)
 #define ASSERT(bCondition) ((void)0)
 #define EXECUTE_ASSERT(bCondition) (bCondition)
+#define TRAP_NOT_IMPLEMENTED() ((void)0)
 
 #endif //_DEBUG
 

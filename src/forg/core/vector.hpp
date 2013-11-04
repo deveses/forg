@@ -320,6 +320,14 @@ namespace forg
                 m_size++;
             }
 
+            void pop_back()
+            {
+                if (m_size > 0)
+                {
+                    m_size--;
+                }
+            }
+
             void copy_to(vector& _right, iterator _begin,iterator _end, iterator _where)
             {
                 size_type offset = _begin - begin();

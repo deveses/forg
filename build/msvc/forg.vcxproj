@@ -36,6 +36,7 @@
     <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'" Label="PropertySheets">
+    <Import Project="forgdebug.props" />
     <Import Project="externals.props" />
     <Import Project="output.props" />
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -48,6 +49,12 @@
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">true</GenerateManifest>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'">false</LinkIncremental>
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'">true</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">
+    <TargetName>$(ProjectName)$(ConfigurationSuffix)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'">
+    <TargetName>$(ProjectName)$(ConfigurationSuffix)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">
     <ClCompile>
@@ -64,7 +71,6 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>freetype235.lib;zlib.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)$(ProjectName)_vc_d.dll</OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>MSVCRT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <TypeLibraryResourceID>3000</TypeLibraryResourceID>
@@ -76,7 +82,6 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <ImportLibrary>$(OutDir)$(ProjectName)_vc_d.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <StackReserveSize>
       </StackReserveSize>
@@ -100,7 +105,6 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>freetype235.lib;zlib.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)$(ProjectName)_vc_r.dll</OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <TypeLibraryResourceID>3000</TypeLibraryResourceID>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -111,7 +115,6 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
-      <ImportLibrary>$(OutDir)$(ProjectName)_vc_r.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
@@ -133,6 +136,7 @@
     <ClInclude Include="..\..\src\forg\enums.h" />
     <ClInclude Include="..\..\src\forg\forg.h" />
     <ClInclude Include="..\..\src\forg\forg_pch.h" />
+    <ClInclude Include="..\..\src\forg\io\ISerializer.h" />
     <ClInclude Include="..\..\src\forg\math\Vector4.h" />
     <ClInclude Include="..\..\src\forg\noise.h" />
     <ClInclude Include="..\..\src\forg\os\File.h" />
@@ -191,8 +195,10 @@
     <ClInclude Include="..\..\src\forg\rendering\Vertex.h" />
     <ClInclude Include="..\..\src\forg\rendering\VertexDeclaration.h" />
     <ClInclude Include="..\..\src\forg\rendering\VertexElement.h" />
+    <ClInclude Include="..\..\src\forg\script\lexer.h" />
     <ClInclude Include="..\..\src\forg\script\script.h" />
     <ClInclude Include="..\..\src\forg\script\xml\XMLParser.h" />
+    <ClInclude Include="..\..\src\forg\script\xml\XMLSerializer.h" />
     <ClInclude Include="..\..\src\forg\ui\gui.h" />
   </ItemGroup>
   <ItemGroup>
@@ -207,6 +213,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseDll|Win32'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="..\..\src\forg\io\ISerializer.cpp" />
     <ClCompile Include="..\..\src\forg\math\Vector4.cpp" />
     <ClCompile Include="..\..\src\forg\noise.cpp" />
     <ClCompile Include="..\..\src\forg\os\File.cpp" />
@@ -250,7 +257,9 @@
     <ClCompile Include="..\..\src\forg\rendering\Vertex.cpp" />
     <ClCompile Include="..\..\src\forg\rendering\VertexDeclaration.cpp" />
     <ClCompile Include="..\..\src\forg\rendering\VertexElement.cpp" />
+    <ClCompile Include="..\..\src\forg\script\lexer.cpp" />
     <ClCompile Include="..\..\src\forg\script\xml\XMLParser.cpp" />
+    <ClCompile Include="..\..\src\forg\script\xml\XMLSerializer.cpp" />
     <ClCompile Include="..\..\src\forg\ui\gui.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files">
@@ -56,6 +56,9 @@
     </Filter>
     <Filter Include="Source Files\script\xml">
       <UniqueIdentifier>{50c68fdd-39de-428c-b7fc-ee9f6839cac8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\io">
+      <UniqueIdentifier>{57df7398-23d4-4f0f-939b-c276bd30d5f9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -293,6 +296,15 @@
     <ClInclude Include="..\..\src\forg\os\os.h">
       <Filter>Source Files\os</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\forg\script\xml\XMLSerializer.h">
+      <Filter>Source Files\script\xml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\forg\script\lexer.h">
+      <Filter>Source Files\script</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\forg\io\ISerializer.h">
+      <Filter>Source Files\io</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\forg\forg.cpp">
@@ -453,6 +465,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\forg\os\File.cpp">
       <Filter>Source Files\os</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\forg\script\xml\XMLSerializer.cpp">
+      <Filter>Source Files\script\xml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\forg\script\lexer.cpp">
+      <Filter>Source Files\script</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\forg\io\ISerializer.cpp">
+      <Filter>Source Files\io</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

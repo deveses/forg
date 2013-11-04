@@ -86,10 +86,10 @@ struct RefCountOwner
 template<typename T>
 struct auto_ptr_ref
 {
-    T* ptr;
+    T* m_ptr;
 
     explicit
-    auto_ptr_ref(T* p): ptr(p) 
+    auto_ptr_ref(T* p): m_ptr(p) 
     { 
     }
 };
@@ -109,7 +109,7 @@ template<typename T, typename OwnPolicy = PointerOwner<T>>
 class auto_ptr
 {
 	private:
-		T* ptr;
+		T* m_ptr;
 
         OwnPolicy own_policy;
 
@@ -122,33 +122,33 @@ class auto_ptr
 		//////////////////////////////////////////////////////////////////////////
 		// Construction / Destruction
 		//////////////////////////////////////////////////////////////////////////
-		auto_ptr(): ptr(0) // never throws
+		auto_ptr(): m_ptr(0) // never throws
 		{
 		}
 
 		//destructive copy
 		auto_ptr(auto_ptr& aptr)
-			: ptr( aptr.release() )
+			: m_ptr( aptr.release() )
 		{
 		}
 
         template<typename U>
 		auto_ptr(auto_ptr<U>& aptr)
-			: ptr( aptr.release() )
+			: m_ptr( aptr.release() )
 		{
             own_policy.acquire(ptr);
 		}
 
 
-		explicit auto_ptr(element_type* p): ptr(p) // never throws
+		explicit auto_ptr(element_type* p): m_ptr(p) // never throws
 		{
 		}
 
 		~auto_ptr() // never throws
 		{
 			//boost::checked_delete(ptr);
-            own_policy.destroy(ptr);
-			ptr = 0;
+            own_policy.destroy(m_ptr);
+			m_ptr = 0;
 		}
 
 		//////////////////////////////////////////////////////////////////////////
@@ -180,12 +180,12 @@ class auto_ptr
 
 		element_type& operator*() const // never throws
 		{
-			return *ptr;
+			return *m_ptr;
 		}
 
 		element_type* operator->() const // never throws
 		{
-			return ptr;
+			return m_ptr;
 		}
 
 		// implicit conversion to "bool"
@@ -197,29 +197,29 @@ class auto_ptr
 
 		bool operator !() const // never throws
 		{
-			return ptr == 0;
+			return m_ptr == 0;
 		}
 
 		//almost never applies because its templated version
 		//except "if (sp == 0)" for example
 		inline friend bool operator ==(const auto_ptr& lhs, const T* rhs)
 		{
-			return lhs.ptr == rhs;
+			return lhs.m_ptr == rhs;
 		}
 
 		inline friend bool operator ==(const T* lhs, const auto_ptr& rhs)
 		{
-			return lhs == rhs->ptr;
+			return lhs == rhs->m_ptr;
 		}
 
 		inline friend bool operator !=(const auto_ptr& lhs, const T* rhs)
 		{
-			return lhs.ptr != rhs;
+			return lhs.m_ptr != rhs;
 		}
 
 		inline friend bool operator !=(const T* lhs, const auto_ptr& rhs)
 		{
-			return lhs != rhs->ptr;
+			return lhs != rhs->m_ptr;
 		}
 
 		//templated versions
@@ -227,19 +227,19 @@ class auto_ptr
 		template <class U>
 		inline friend bool operator ==(const auto_ptr& lhs, const U* rhs)
 		{
-			return lhs.ptr == rhs;
+			return lhs.m_ptr == rhs;
 		}
 
 		template <class U>
 		inline friend bool operator ==(const U* lhs, const auto_ptr& rhs)
 		{
-			return lhs == rhs->ptr;
+			return lhs == rhs->m_ptr;
 		}
 
 		template <class U>
 		inline friend bool operator !=(const auto_ptr& lhs, const U* rhs)
 		{
-			return lhs.ptr != rhs;
+			return lhs.m_ptr != rhs;
 		}
 
 		template <class U>
@@ -253,13 +253,13 @@ class auto_ptr
 		template <class U>
 		bool operator ==(const auto_ptr<U>& rhs)
 		{
-			return ptr == rhs.ptr;
+			return m_ptr == rhs.m_ptr;
 		}
 
 		template <class U>
 		bool operator !=(const auto_ptr<U>& rhs)
 		{
-			return ptr != rhs.ptr;
+			return m_ptr != rhs.m_ptr;
 		}
 
 		//////////////////////////////////////////////////////////////////////////
@@ -268,14 +268,14 @@ class auto_ptr
 
         bool is_null() const
         {
-            return (ptr == 0);
+            return (m_ptr == 0);
         }
 
 		element_type* release()
 		{
-			T* tmp = ptr;
+			T* tmp = m_ptr;
 
-			ptr = 0;
+			m_ptr = 0;
 
             own_policy.release(tmp);
 
@@ -289,28 +289,28 @@ class auto_ptr
 
 		element_type* get() const // never throws
 		{
-			return ptr;
+			return m_ptr;
 		}
 
 		void swap(auto_ptr& b) // never throws
 		{
-			T* tmp = b.ptr;
-			b.ptr = ptr;
-			ptr = tmp;
+			T* tmp = b.m_ptr;
+			b.m_ptr = m_ptr;
+			m_ptr = tmp;
 		}
 
 		// automatic conversion
 
 	    auto_ptr(auto_ptr_ref<element_type> ref)
-        : ptr(ref.ptr) { }
+        : m_ptr(ref.m_ptr) { }
 
         auto_ptr& operator = (auto_ptr_ref<element_type> ref)
         {
-            if (ref.ptr != this->get())
+            if (ref.m_ptr != this->get())
             {
-                own_policy.destroy(ptr);
+                own_policy.destroy(m_ptr);
 
-                ptr = ref.ptr;
+                m_ptr = ref.m_ptr;
             }
 
             return *this;

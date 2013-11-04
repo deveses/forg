@@ -1,6 +1,7 @@
 #include "forg_pch.h"
 #include "gui.h"
 #include "math/Math.h"
+#include "script/xml/XMLSerializer.h"
 
 namespace forg{ namespace ui{
 
@@ -271,6 +272,25 @@ bool CUIDialog::Init(IRenderDevice* _device, const char* _filename)
     m_Sprite = forg::Sprite::CreateSprite(_device);
 
     return true;
+}
+
+bool CUIDialog::Load(const char* _filename)
+{
+    forg::io::XMLSerializer xmlfile;
+
+    if (xmlfile.Open(_filename))
+    {
+        Serialize(&xmlfile);
+
+        return true;
+    }
+
+    return false;
+}
+
+void CUIDialog::Serialize(forg::io::ISerializer* _serializer)
+{
+
 }
 
 void CUIDialog::Render()

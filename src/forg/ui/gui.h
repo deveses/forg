@@ -26,6 +26,10 @@
 #include "core/vector.hpp"
 #include "rendering/Sprite.h"
 
+namespace forg { namespace io {
+    class ISerializer;
+}}
+
 namespace forg { namespace ui {
 
     struct SUIElement
@@ -163,6 +167,8 @@ namespace forg { namespace ui {
         ~CUIDialog();
 
         bool Init(IRenderDevice* _device, const char* _filename);
+        bool Load(const char* _filename);
+        void Serialize(forg::io::ISerializer* _serializer);
         void Close();
         void Render();
 

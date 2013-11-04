@@ -84,6 +84,9 @@ int Sprite::Draw(ITexture* srcTexture,
                   const Vector3* position,
                   Color4b color)
 {
+	if (!srcTexture)
+		return FORG_INVALID_CALL;
+
     uint tex_width = 0;
     uint tex_height = 0;
 
