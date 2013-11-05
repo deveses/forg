@@ -4,27 +4,17 @@
 
 namespace forg { namespace cpu {
 
-uint32 invoke_cpuid(uint32 param, uint32& _eax, uint32& _ebx, uint32& _ecx, uint32& _edx)
+uint32 invoke_cpuid(int param, uint32& _eax, uint32& _ebx, uint32& _ecx, uint32& _edx)
 {
-    uint32 x,y,z,r;
+	int cpui[4];
+	__cpuid(cpui, param);
 
-    __asm {
-        mov eax, param;
-        cpuid;
+    _eax = cpui[0];
+	_ebx = cpui[1];
+	_ecx = cpui[2];
+	_edx = cpui[3];
 
-        mov x, ebx;
-        mov y, ecx;
-        mov z, edx;
-
-        mov r, eax;
-    }
-
-    _eax = r;
-    _ebx = x;
-    _ecx = y;
-    _edx = z;
-
-    return r;
+	return cpui[0];
 }
 
 cpuid::cpuid()

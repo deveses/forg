@@ -8,7 +8,7 @@
 
 namespace emfc {
 
-BOOL CALLBACK EPropertyPage::EPropDialogProc(
+INT_PTR CALLBACK EPropertyPage::EPropDialogProc(
   HWND hwndDlg,  // handle to dialog box
   UINT uMsg,     // message
   WPARAM wParam, // first message parameter
@@ -17,14 +17,14 @@ BOOL CALLBACK EPropertyPage::EPropDialogProc(
 {
     EPropertyPage *ed=NULL;
     
-    ed=(EPropertyPage *)::GetWindowLong(hwndDlg,GWL_USERDATA);
+    ed=(EPropertyPage *)::GetWindowLongPtr(hwndDlg,GWLP_USERDATA);
     if (ed==NULL && lParam==0L) return 0; 
     
     if (uMsg==WM_INITDIALOG) {
         if (lParam>0) {
             ed=(EPropertyPage *)(((PROPSHEETPAGE *)lParam)->lParam);
             ed->m_hWnd=hwndDlg;
-            ed->SetWindowLong(GWL_USERDATA, (LONG)ed);
+            ed->SetWindowLongPointer(GWLP_USERDATA, (LONG_PTR)ed);
         }
         return ed->OnInitDialog();
     } else if (ed->m_hWnd!=NULL)

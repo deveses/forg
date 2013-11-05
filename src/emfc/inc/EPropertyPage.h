@@ -15,7 +15,7 @@ namespace emfc {
 
 class EMFC_API EPropertyPage : public EDialog  
 {
-    static BOOL CALLBACK EPropDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam); 
+    static INT_PTR CALLBACK EPropDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam); 
 
 public:
 	PROPSHEETPAGE m_psp;

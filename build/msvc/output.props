@@ -5,14 +5,14 @@
     <Choose>
       <When Condition = "'$(ConfigurationType)'=='StaticLibrary'">
         <PropertyGroup>
-          <OutDir>$(SolutionDir)/lib\</OutDir>
-          <IntDir>$(SolutionDir)/obj/$(ProjectName)/$(Configuration)\</IntDir>
+          <OutDir>$(SolutionDir)/lib/$(Platform)</OutDir>
+          <IntDir>$(SolutionDir)/obj/$(Platform)/$(ProjectName)/$(Configuration)\</IntDir>
         </PropertyGroup>
       </When>
       <Otherwise>
         <PropertyGroup>
-          <OutDir>$(SolutionDir)/bin\</OutDir>
-          <IntDir>$(SolutionDir)/obj/$(ProjectName)/$(Configuration)\</IntDir>
+          <OutDir>$(SolutionDir)/bin/$(Platform)</OutDir>
+          <IntDir>$(SolutionDir)/obj/$(Platform)/$(ProjectName)/$(Configuration)\</IntDir>
         </PropertyGroup>
       </Otherwise>
     </Choose>

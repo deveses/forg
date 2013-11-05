@@ -22,7 +22,7 @@ LRESULT CALLBACK EWindowProc(
   ) {
     EWnd *ew=NULL;
 
-    ew=(EWnd *)GetWindowLong(hWnd,GWL_USERDATA);
+    ew=(EWnd *)GetWindowLongPtr(hWnd,GWLP_USERDATA);
     if (ew!=NULL) return ew->WindowProc(uMsg,wParam,lParam);
     else {
 	    switch (uMsg) {
@@ -87,7 +87,7 @@ DWORD EWnd::Create(LPCTSTR lpszClassName,
                       nWidth,nHeight,hWndParent,NULL,m_hInstance,NULL);
     if (m_hWnd==NULL) return GetLastError();
 
-    SetWindowLong(GWL_USERDATA, (LONG)this);
+    SetWindowLongPointer(GWLP_USERDATA, (LONG_PTR)this);
     return 0;
 }
 
@@ -376,7 +376,7 @@ BOOL EWnd::SetMenu(HMENU hMenu)
 
 void EWnd::SetBkBrush(HBRUSH hBrush)
 {
-    SetClassLong(m_hWnd,GCL_HBRBACKGROUND,(LONG) hBrush);
+    SetClassLongPtr(m_hWnd,GCLP_HBRBACKGROUND,(LONG_PTR) hBrush);
 }
 
 HICON EWnd::SetIcon(HICON hIcon, BOOL bBigIcon)
@@ -392,6 +392,11 @@ BOOL EWnd::SetWindowPos(HWND pWndInsertAfter, int x, int y, int cx, int cy, UINT
 LONG EWnd::SetWindowLong(int nIndex, LONG dwNewLong)
 {
     return ::SetWindowLong(m_hWnd,nIndex,dwNewLong);
+}
+
+LONG_PTR EWnd::SetWindowLongPointer(int nIndex, LONG_PTR dwNewLong)
+{
+	return ::SetWindowLongPtr(m_hWnd, nIndex, dwNewLong);
 }
 
 void EWnd::SetWindowText(LPCTSTR lpszString)
@@ -431,6 +436,11 @@ LONG EWnd::GetWindowLong(int nIndex)
     return ::GetWindowLong(m_hWnd,nIndex);
 }
 
+LONG_PTR EWnd::GetWindowLongPointer(int nIndex)
+{
+	return ::GetWindowLongPtr(m_hWnd, nIndex);
+}
+
 void EWnd::GetWindowRect(LPRECT lpRect)
 {
     ::GetWindowRect(m_hWnd,lpRect);
@@ -456,7 +466,7 @@ EWnd * EWnd::FromHandlePermanent(HWND hWnd)
 {
     EWnd *pWnd=NULL;
 
-    pWnd=(EWnd *)::GetWindowLong(hWnd,GWL_USERDATA);
+    pWnd=(EWnd *)::GetWindowLongPtr(hWnd,GWLP_USERDATA);
 
     return pWnd;
 }

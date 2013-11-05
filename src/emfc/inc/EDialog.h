@@ -28,7 +28,7 @@ public:
 
 class EMFC_API EDialog : public EWnd  
 {
-    static BOOL CALLBACK EDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static INT_PTR CALLBACK EDialogProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 public:
 	BOOL OnCommand(WPARAM wParam, LPARAM lParam);

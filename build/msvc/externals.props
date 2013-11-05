@@ -8,7 +8,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)../../extern/freetype/include;$(ProjectDir)../../extern/zlib/include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)../../extern/freetype/lib/vc_lib/Release;$(ProjectDir)../../extern/zlib/lib/vc;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)../../extern/freetype/lib/vc_lib/$(Platform);$(ProjectDir)../../extern/zlib/lib/vc/$(Platform);</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

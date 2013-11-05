@@ -38,7 +38,7 @@ int EOpenFileDialog::ShowDialog()
     return IDCANCEL;
 }
 
-BOOL CALLBACK EDialog::EDialogProc(
+INT_PTR CALLBACK EDialog::EDialogProc(
   HWND hwndDlg,  // handle to dialog box
   UINT uMsg,     // message
   WPARAM wParam, // first message parameter
@@ -47,7 +47,7 @@ BOOL CALLBACK EDialog::EDialogProc(
 {
     EDialog *ed=NULL;
     
-    ed=(EDialog *)::GetWindowLong(hwndDlg,GWL_USERDATA);
+    ed=(EDialog *)::GetWindowLongPtr(hwndDlg,GWLP_USERDATA);
     if (uMsg==WM_INITDIALOG) {
         ed=(EDialog *)lParam;
         //SetWindowLong(hwndDlg,GWL_USERDATA,(LONG)ed);
@@ -87,7 +87,7 @@ EDialog::~EDialog()
 {
     if (m_hWnd!=NULL) EndDialog(0);
     m_hWnd=NULL;
-    SetWindowLong(GWL_USERDATA, NULL);
+    SetWindowLongPointer(GWLP_USERDATA, NULL);
 }
 
 BOOL EDialog::Create(UINT nIDTemplate, HWND pParentWnd)
@@ -136,7 +136,7 @@ BOOL EDialog::CreateIndirect(LPCDLGTEMPLATE lpDialogTemplate, HWND pParentWnd, H
     m_nModalResult=-1;
     m_nFlags |= WF_CONTINUEMODAL;
     if (m_hWnd==NULL) return FALSE;
-    SetWindowLong(GWL_USERDATA, (LONG)this);
+    SetWindowLongPointer(GWLP_USERDATA, (LONG)this);
     return TRUE;
 }
 

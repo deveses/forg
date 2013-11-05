@@ -305,6 +305,7 @@
     <ClInclude Include="..\..\src\forg\io\ISerializer.h">
       <Filter>Source Files\io</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\forg\platform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\forg\forg.cpp">

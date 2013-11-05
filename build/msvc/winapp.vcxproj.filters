@@ -51,7 +51,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="winapp.rc">
+    <ResourceCompile Include="../../src/winapp/winapp.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

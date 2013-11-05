@@ -178,7 +178,9 @@ public:
 	BOOL ModifyStyle( DWORD dwRemove, DWORD dwAdd, UINT nFlags = 0 );
 	LONG GetWindowLong( int nIndex ) ;
 	LONG SetWindowLong( int nIndex, LONG dwNewLong );
-	BOOL ModifyStyleEx( DWORD dwRemove, DWORD dwAdd, UINT nFlags = 0 );
+	LONG_PTR GetWindowLongPointer(int nIndex);
+	LONG_PTR SetWindowLongPointer(int nIndex, LONG_PTR dwNewLong);
+	BOOL ModifyStyleEx(DWORD dwRemove, DWORD dwAdd, UINT nFlags = 0);
 	void SetFont(HFONT pFont, BOOL bRedraw = TRUE );
 	void Invalidate( BOOL bErase=TRUE);
 	HWND ChildWindowFromPoint( POINT point, UINT nFlags=CWP_ALL );

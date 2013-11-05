@@ -23,6 +23,7 @@
 #pragma once
 #endif
 
+#include "platform.h"
 #include "api.h"
 
 #ifdef _MSC_VER

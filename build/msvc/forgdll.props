@@ -16,7 +16,7 @@
       </GenerateDebugInformation>
       <ImportLibrary>$(OutDir)$(ProjectName)$(ConfigurationSuffix).lib</ImportLibrary>
       <AdditionalDependencies>forg$(ConfigurationSuffix).lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)\lib;$(SolutionDir)\bin</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)\lib\$(Platform);$(SolutionDir)\bin\$(Platform)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />
