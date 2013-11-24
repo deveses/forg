@@ -146,7 +146,7 @@ namespace forg { namespace core {
             {
                 reserve(m_length + _num + 1);
 
-                copy(m_buffer + m_length, _str.m_buffer + _pos, _num*sizeof(T));
+                copy(m_buffer + m_length, _str.m_buffer + _pos, _num*sizeof(char_type));
 
                 m_length += _num;
 
@@ -158,7 +158,25 @@ namespace forg { namespace core {
 
         basic_string& erase( size_type pos = 0, size_type n = npos )
         {
-			TRAP_NOT_IMPLEMENTED();
+            if (pos < m_length)
+            {
+                if (n != npos)
+                {
+                    basic_string tail;
+                    tail.append(*this, pos + n, npos);
+
+                    m_buffer[pos] = 0;
+                    m_length = pos;
+
+                    append(tail);
+                }
+                else
+                {
+                    // cut the tail
+                    m_buffer[pos] = 0;
+                    m_length = pos;
+                }
+            }
 
 			return *this;
         }
@@ -175,14 +193,21 @@ namespace forg { namespace core {
             return "";
         }
 
-        size_type find_last_of( char c, size_type pos = npos ) const
+        size_type find_last_of( char_type _c, size_type _pos = npos ) const
         {
-			TRAP_NOT_IMPLEMENTED();
+            for (size_type i = 0; i < m_length; i++)
+            {
+                size_type p = m_length - 1 - i;
+                if (m_buffer[p] == _c)
+                {
+                    return p;
+                }
+            }
 			
 			return npos;
         }
 
-        size_type find_first_of( char c, size_type pos = npos ) const
+        size_type find_first_of( char_type c, size_type pos = npos ) const
         {
 			TRAP_NOT_IMPLEMENTED();
 			
@@ -191,8 +216,8 @@ namespace forg { namespace core {
 
         void resize(size_type _size)
         {
-			TRAP_NOT_IMPLEMENTED();
-
+            reserve(_size);
+            m_length = _size;
         }
 
         void reserve(size_type _size)

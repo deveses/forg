@@ -97,6 +97,7 @@ Viewport::Viewport()
     m_bMouseCaptured=FALSE;
     m_bLMBDown=FALSE;
     m_fullscreen = false;
+	m_show_gui = true;
 
     m_fps = 0;
     m_frame_counter = 0;
@@ -326,7 +327,7 @@ void Viewport::Render()
 
     m_model.Render(m_device);
 
-    RenderUI();
+	RenderUI();
 
   	m_device->EndScene();
 	m_device->Present();
@@ -352,7 +353,10 @@ void Viewport::RenderUI()
         m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
     }
 
-    m_Dialog.Render();
+	if (m_show_gui)
+	{
+		m_Dialog.Render();
+	}
 }
 
 void Viewport::OnPaint()
@@ -377,6 +381,9 @@ void Viewport::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
 {
     switch (nChar)
     {
+	case VK_ESCAPE:
+		m_show_gui = !m_show_gui;
+		break;
     case VK_F1:
         ToggleFullscreen();
         break;

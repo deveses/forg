@@ -36,6 +36,7 @@ class Viewport : public emfc::EWnd
     forg::ui::CUIDialog m_Dialog;
 
     bool m_fullscreen;
+	bool m_show_gui;
 	BOOL m_bLMBDown;
 	BOOL m_bMouseCaptured;
 
