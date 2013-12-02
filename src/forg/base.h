@@ -49,6 +49,11 @@ T max(T l, T r)
     return (l>r ? l : r);
 }
 
+template<typename T>
+T min(T a, T b) {
+    return (((a) < (b)) ? (a) : (b));
+}
+
 template <typename T> 
 T clamp(T v, T min, T max) 
 {
@@ -98,11 +103,6 @@ typedef signed long long int64;
 
 #define _clear(target, size, type) 	memset(target, 0, (size) * sizeof(type))
 #define null 0
-
-template<typename T> 
-T min(T a, T b) {
-    return (((a) < (b)) ? (a) : (b));
-}
 
 #define _fget(state, arg)			((arg) == (state & (arg)))
 #define _fadd(state, arg) 			((int&)state = (state | (arg)))

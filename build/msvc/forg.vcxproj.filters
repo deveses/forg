@@ -60,6 +60,9 @@
     <Filter Include="Source Files\io">
       <UniqueIdentifier>{57df7398-23d4-4f0f-939b-c276bd30d5f9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\rendering\reference">
+      <UniqueIdentifier>{3af3921d-db67-48dd-a153-62b36a0e6450}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\forg\api.h">
@@ -306,6 +309,18 @@
       <Filter>Source Files\io</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\forg\platform.h" />
+    <ClInclude Include="..\..\src\forg\rendering.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\forg\config.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\forg\rendering\reference\SWBuffers.h">
+      <Filter>Source Files\rendering\reference</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\forg\rendering\reference\SWRenderDevice.h">
+      <Filter>Source Files\rendering\reference</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\forg\forg.cpp">
@@ -475,6 +490,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\forg\io\ISerializer.cpp">
       <Filter>Source Files\io</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\forg\rendering\reference\SWBuffers.cpp">
+      <Filter>Source Files\rendering\reference</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\forg\rendering\reference\SWRenderDevice.cpp">
+      <Filter>Source Files\rendering\reference</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

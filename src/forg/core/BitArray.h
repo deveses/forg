@@ -24,8 +24,8 @@
 #endif
 
 #include "base.h"
-#include <vector>
-#include <string>
+#include "core/vector.hpp"
+#include "core/string.hpp"
 
 namespace forg { namespace core {
 
@@ -43,8 +43,8 @@ class FORG_API BitArray
 {
 	// Nested
 	public:
-    typedef std::vector<int> IntArray;
-    typedef std::string string;
+    typedef forg::core::vector<int> IntArray;
+    typedef forg::core::string string;
 
 	// Constructors
 	public:

@@ -1,6 +1,8 @@
+#include "forg_pch.h"
+
 #include "SWBuffers.h"
 
-namespace forg {
+namespace forg { namespace rendering { namespace reference {
 
     /////////////////////////////////////////////////////////////////////////////////////
     // SWTexture
@@ -159,4 +161,5 @@ namespace forg {
     {
         return FORG_OK;
     }
-}
+
+}}}

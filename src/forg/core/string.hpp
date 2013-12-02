@@ -49,6 +49,26 @@ namespace forg { namespace core {
             m_length = l;
         }
 
+        basic_string(size_type _size, char_type _char_fill)
+        {
+            m_buffer = 0;
+            m_length = 0;
+            m_capacity = 0;
+
+            size_type l = _size;
+
+            reserve(l + 1);
+
+            for (size_type i = 0; i < l; i++)
+            {
+                m_buffer[i] = _char_fill;
+            }
+
+            m_buffer[l] = 0;
+
+            m_length = l;
+        }
+
         basic_string(const basic_string& _str)
         {
             m_buffer = allocate(_str.m_capacity);

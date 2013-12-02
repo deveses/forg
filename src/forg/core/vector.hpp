@@ -147,6 +147,12 @@ namespace forg
                     return (m_ptr - _Right.m_ptr);
                 }
 
+                const_iterator operator+(difference_type _Off) const
+                {	// return this + integer
+                    const_iterator _Tmp = *this;
+                    return (_Tmp += _Off);
+                }
+
                 const_iterator& operator++()
                 {	// preincrement
                     m_ptr++;
@@ -205,6 +211,10 @@ namespace forg
                 return (*(begin() + _Off));
             }
 
+            const_reference operator[](size_type _Off) const
+            {	// subscript mutable sequence
+                return (*(begin() + _Off));
+            }
         public:
             size_type size() const
             {

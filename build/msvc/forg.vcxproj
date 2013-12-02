@@ -226,6 +226,7 @@
     <ClInclude Include="..\..\src\forg\audio\AudioOutputWaveOut.h" />
     <ClInclude Include="..\..\src\forg\audio\WaveFile.h" />
     <ClInclude Include="..\..\src\forg\base.h" />
+    <ClInclude Include="..\..\src\forg\config.h" />
     <ClInclude Include="..\..\src\forg\core\RefCounter.h" />
     <ClInclude Include="..\..\src\forg\core\string.hpp" />
     <ClInclude Include="..\..\src\forg\cpu\atomic.h" />
@@ -277,6 +278,7 @@
     <ClInclude Include="..\..\src\forg\mesh\xfile\xtmembers.h" />
     <ClInclude Include="..\..\src\forg\mesh\ply\plyfile.h" />
     <ClInclude Include="..\..\src\forg\platform.h" />
+    <ClInclude Include="..\..\src\forg\rendering.h" />
     <ClInclude Include="..\..\src\forg\rendering\Camera.h" />
     <ClInclude Include="..\..\src\forg\rendering\Color.h" />
     <ClInclude Include="..\..\src\forg\rendering\ExtendedMaterial.h" />
@@ -291,6 +293,8 @@
     <ClInclude Include="..\..\src\forg\rendering\Material.h" />
     <ClInclude Include="..\..\src\forg\rendering\Mesh.h" />
     <ClInclude Include="..\..\src\forg\rendering\Ray.h" />
+    <ClInclude Include="..\..\src\forg\rendering\reference\SWBuffers.h" />
+    <ClInclude Include="..\..\src\forg\rendering\reference\SWRenderDevice.h" />
     <ClInclude Include="..\..\src\forg\rendering\Sprite.h" />
     <ClInclude Include="..\..\src\forg\rendering\Vertex.h" />
     <ClInclude Include="..\..\src\forg\rendering\VertexDeclaration.h" />
@@ -355,6 +359,8 @@
     <ClCompile Include="..\..\src\forg\rendering\ITexture.cpp" />
     <ClCompile Include="..\..\src\forg\rendering\Mesh.cpp" />
     <ClCompile Include="..\..\src\forg\rendering\Ray.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\reference\SWBuffers.cpp" />
+    <ClCompile Include="..\..\src\forg\rendering\reference\SWRenderDevice.cpp" />
     <ClCompile Include="..\..\src\forg\rendering\Sprite.cpp" />
     <ClCompile Include="..\..\src\forg\rendering\Vertex.cpp" />
     <ClCompile Include="..\..\src\forg\rendering\VertexDeclaration.cpp" />

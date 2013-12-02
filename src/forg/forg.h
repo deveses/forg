@@ -20,6 +20,8 @@
 #pragma once
 #endif
 
+#include "config.h"
+
 #include "base.h"
 #include "enums.h"
 
@@ -41,23 +43,7 @@
 #include "noise.h"
 #include "PerformanceCounter.h"
 
-#include "rendering/Camera.h"
-#include "rendering/Color.h"
-#include "rendering/Light.h"
-#include "rendering/Material.h"
-#include "rendering/IIndexBuffer.h"
-#include "rendering/IRenderer.h"
-#include "rendering/IRenderDevice.h"
-#include "rendering/ISurface.h"
-#include "rendering/ITexture.h"
-#include "rendering/IVertexBuffer.h"
-#include "rendering/Sprite.h"
-#include "rendering/VertexDeclaration.h"
-#include "rendering/VertexElement.h"
-#include "rendering/Vertex.h"
-
-#include "rendering/Mesh.h"
-#include "rendering/Font.h"
+#include "rendering.h"
 
 #include "script/script.h"
 

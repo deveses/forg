@@ -131,12 +131,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="../../src/swrenderer/main.cpp" />
-    <ClCompile Include="../../src/swrenderer/SWBuffers.cpp" />
     <ClCompile Include="../../src/swrenderer/SWRenderDevice.cpp" />
     <ClCompile Include="../../src/swrenderer/SWRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="../../src/swrenderer/SWBuffers.h" />
     <ClInclude Include="../../src/swrenderer/SWRenderDevice.h" />
     <ClInclude Include="../../src/swrenderer/SWRenderer.h" />
   </ItemGroup>

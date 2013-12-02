@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _SW_BUFFERS_H_
-#define _SW_BUFFERS_H_
+#ifndef _FORG_REFERENCE_SWBUFFERS_H_
+#define _FORG_REFERENCE_SWBUFFERS_H_
 
 #if _MSC_VER > 1000
 #pragma once
@@ -28,13 +28,13 @@
 #include "rendering/IVertexBuffer.h"
 #include "rendering/IIndexBuffer.h"
 
-namespace forg {
+namespace forg { namespace rendering { namespace reference {
 
     /////////////////////////////////////////////////////////////////////////////////////
     // SWTexture
     /////////////////////////////////////////////////////////////////////////////////////
 
-    class SWTexture : public ITexture
+    class FORG_API SWTexture : public ITexture
     {
         int m_refCount;
         char* m_data;
@@ -67,7 +67,7 @@ namespace forg {
     /////////////////////////////////////////////////////////////////////////////////////
     // SWVertexBuffer
     /////////////////////////////////////////////////////////////////////////////////////
-    class SWVertexBuffer : public IVertexBuffer
+    class FORG_API SWVertexBuffer : public IVertexBuffer
     {
         char* m_data;
 
@@ -94,7 +94,7 @@ namespace forg {
     /////////////////////////////////////////////////////////////////////////////////////
     // SWIndexBuffer
     /////////////////////////////////////////////////////////////////////////////////////
-    class SWIndexBuffer : public IIndexBuffer
+    class FORG_API SWIndexBuffer : public IIndexBuffer
     {
         char* m_data;
 
@@ -122,6 +122,6 @@ namespace forg {
 
 		virtual int Unlock();
     };
-}
+}}} // forg::rendering::reference
 
-#endif
+#endif  //_FORG_REFERENCE_SWBUFFERS_H_
