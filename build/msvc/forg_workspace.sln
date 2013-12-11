@@ -24,6 +24,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "swrenderer", "swrenderer.vc
 		{BF54E3FF-7D04-46C2-821A-1ABF35F7E0CB} = {BF54E3FF-7D04-46C2-821A-1ABF35F7E0CB}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "clrenderer", "clrenderer.vcxproj", "{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -153,6 +155,26 @@ Global
 		{64F3A173-6529-4D07-9882-C64DDD8DEA2B}.ReleaseStatic|Win32.Build.0 = Release|Win32
 		{64F3A173-6529-4D07-9882-C64DDD8DEA2B}.ReleaseStatic|x64.ActiveCfg = Release|x64
 		{64F3A173-6529-4D07-9882-C64DDD8DEA2B}.ReleaseStatic|x64.Build.0 = Release|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.Debug|Win32.Build.0 = Debug|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.Debug|x64.ActiveCfg = Debug|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.Debug|x64.Build.0 = Debug|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.DebugDll|Win32.ActiveCfg = Debug|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.DebugDll|Win32.Build.0 = Debug|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.DebugDll|x64.ActiveCfg = Debug|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.DebugDll|x64.Build.0 = Debug|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.DebugStatic|Win32.ActiveCfg = Debug|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.DebugStatic|Win32.Build.0 = Debug|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.DebugStatic|x64.ActiveCfg = Debug|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.DebugStatic|x64.Build.0 = Debug|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.Release|Win32.ActiveCfg = Release|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.Release|Win32.Build.0 = Release|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.Release|x64.ActiveCfg = Release|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.Release|x64.Build.0 = Release|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.ReleaseStatic|Win32.ActiveCfg = Release|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.ReleaseStatic|Win32.Build.0 = Release|Win32
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.ReleaseStatic|x64.ActiveCfg = Release|x64
+		{FB24A9DC-5B20-44C6-A259-1AD4A4F25591}.ReleaseStatic|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

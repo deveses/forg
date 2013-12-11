@@ -56,6 +56,19 @@ uint File::Read(void* _buffer, uint _size)
     return num_read;
 }
 
+bool File::GetSize(uint& _out_size)
+{
+    if (m_handle)
+    {
+        DWORD fs_high = 0;
+        DWORD res = GetFileSize(m_handle, &fs_high);
+        _out_size = res;
+        return (res != INVALID_FILE_SIZE);
+    }
+
+    return false;
+}
+
 #endif
 
 }}

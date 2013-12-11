@@ -1,6 +1,6 @@
 /*******************************************************************************
     This source file is part of FORG library (http://forg.googlecode.com)
-    Copyright (C) 2007  Slawomir Strumecki
+    Copyright (C) 2005  Slawomir Strumecki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,40 +16,44 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_OS_FILE_H_
-#define _FORG_OS_FILE_H_
+#ifndef _GL_RENDERER_H_
+#define _GL_RENDERER_H_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
 
 #include "base.h"
+#include "rendering/IRenderer.h"
 
-namespace forg { namespace os {
-
-    class FORG_API File
-    {
-    public:
-        File();
-        ~File();
-
-        bool Open(const char* _filename);
-        void Close();
-
-        bool GetSize(uint& _out_size);
-
-        uint Read(void* _buffer, uint _size);
-
-        template <class T>
-        bool ReadT(T& _v)
-        {
-            return (Read(&_v, sizeof(T))==sizeof(T));
-        }
-
-    private:
-        void* m_handle;
-    };
-
-}}
-
+#ifdef _WIN32
+//#   warning(dllexport in MSVC style)
+#   define DLLEXPORT __declspec( dllexport )
+#   define DLLIMPORT __declspec( dllimport )
+#else
+#   define DLLEXPORT
+#   define DLLIMPORT
 #endif
+
+
+#ifdef RENDERER_EXPORTS
+//#   warning(exporting symbols)
+#   define SWRENDERER_API DLLEXPORT
+#else
+#   ifdef SWRENDERER_STATIC
+//#       warning(static library)
+#       define SWRENDERER_API
+#   else
+//#       warning(importing symbols)
+#       define SWRENDERER_API DLLIMPORT
+#   endif
+#endif
+
+extern "C" {
+
+SWRENDERER_API forg::IRenderer* forgCreateRenderer();
+
+}
+
+
+#endif  //_GL_RENDERER_H_

@@ -289,6 +289,8 @@ namespace forg
                 return const_iterator(((_Type*)m_data) + m_size);
             }
 
+            _Type* data() const { return (_Type*)m_data; }
+
             _Type* get() { return (_Type*)m_data; }
 
             const _Type* get() const { return (_Type*)m_data; }
