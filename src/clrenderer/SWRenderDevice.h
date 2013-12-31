@@ -23,13 +23,14 @@
 #pragma once
 #endif
 
-#include "base.h"
+#include "forg.h"
 #include "rendering/IRenderDevice.h"
 #include "rendering/VertexDeclaration.h"
 #include "math/Vector4.h"
 #include "math/Vector2.h"
+#include "core/core.h"
 
-#include "OpenCL.h"
+#include <opencl/OpenCL.h>
 
 namespace forg {
 
@@ -127,8 +128,16 @@ class SWRenderDevice
 
     int m_refCount;
     HWIN m_window;
-    OpenCL::CLLibrary m_opencl;
 
+    OpenCL::CLLibrary m_opencl;
+    OpenCL::CLContext m_context;
+    OpenCL::CLProgram m_program;
+    OpenCL::CLCommandQueue m_queue;
+    OpenCL::CLMemObject m_fbuffer;
+    forg::core::vector<OpenCL::CLMemObject> m_mem_buffers;
+    OpenCL::CLKernel m_kDrawBlock;
+
+    // Frame buffer: ARGB, each component is an uint8 (32bits per pixel)
     uint* m_frame_buffer;
     float* m_depth_buffer;
     uint m_fb_stride;
@@ -163,6 +172,7 @@ public:
     
     // Helpers
 private:
+    bool InitializeCL();
     void CreateBuffers();
 
     int ProcessVertex(VSInput& _input, VSOutput& _output, int _usage);
@@ -173,6 +183,10 @@ private:
     void SetPixel(uint _x, uint _y, float _z, uint _c);
     void DrawTriangle(const Vector3* pos);
     void DrawTriangle(const VSOutput* vertices, int usage);
+    void DrawTriangleArray(const VSOutput* vertices, uint num_triangles, int usage);
+    void DrawTriangleArrayCL(VSOutput* vertices, uint num_triangles, int usage);
+    void DrawTriangleArrayCLTest(VSOutput* vertices, uint num_triangles, int usage);
+    void DrawTriangleCL(const VSOutput* vertices, int usage);
 
     // IRenderDevice implementation
 public:

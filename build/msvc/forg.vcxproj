@@ -239,6 +239,7 @@
     <ClInclude Include="..\..\src\forg\io\ISerializer.h" />
     <ClInclude Include="..\..\src\forg\math\Vector4.h" />
     <ClInclude Include="..\..\src\forg\noise.h" />
+    <ClInclude Include="..\..\src\forg\opencl\OpenCL.h" />
     <ClInclude Include="..\..\src\forg\os\File.h" />
     <ClInclude Include="..\..\src\forg\os\os.h" />
     <ClInclude Include="..\..\src\forg\PerformanceCounter.h" />
@@ -322,6 +323,7 @@
     <ClCompile Include="..\..\src\forg\io\ISerializer.cpp" />
     <ClCompile Include="..\..\src\forg\math\Vector4.cpp" />
     <ClCompile Include="..\..\src\forg\noise.cpp" />
+    <ClCompile Include="..\..\src\forg\opencl\OpenCL.cpp" />
     <ClCompile Include="..\..\src\forg\os\File.cpp" />
     <ClCompile Include="..\..\src\forg\PerformanceCounter.cpp" />
     <ClCompile Include="..\..\src\forg\core\BitArray.cpp" />

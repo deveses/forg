@@ -97,7 +97,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir)../../extern/opencl;$(SolutionDir)../../src;$(SolutionDir)../../src/forg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)../../src;$(SolutionDir)../../src/forg;$(SolutionDir)../../extern/opencl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -123,7 +123,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir)../../extern/opencl;$(SolutionDir)../../src;$(SolutionDir)../../src/forg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)../../src;$(SolutionDir)../../src/forg;$(SolutionDir)../../extern/opencl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -135,11 +135,9 @@
     <ClCompile Include="../../src/clrenderer/main.cpp" />
     <ClCompile Include="../../src/clrenderer/SWRenderDevice.cpp" />
     <ClCompile Include="../../src/clrenderer/SWRenderer.cpp" />
-    <ClCompile Include="..\..\src\clrenderer\OpenCL.cpp" />
     <ClCompile Include="..\..\src\clrenderer\SWBuffers.cpp" />
     <ClInclude Include="../../src/clrenderer/SWRenderDevice.h" />
     <ClInclude Include="../../src/clrenderer/SWRenderer.h" />
-    <ClInclude Include="..\..\src\clrenderer\OpenCL.h" />
     <ClInclude Include="..\..\src\clrenderer\SWBuffers.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

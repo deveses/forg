@@ -63,6 +63,9 @@
     <Filter Include="Source Files\rendering\reference">
       <UniqueIdentifier>{3af3921d-db67-48dd-a153-62b36a0e6450}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\opencl">
+      <UniqueIdentifier>{25642c9f-e2a2-4a78-b217-4bd3cc5c4761}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\forg\api.h">
@@ -321,6 +324,9 @@
     <ClInclude Include="..\..\src\forg\rendering\reference\SWRenderDevice.h">
       <Filter>Source Files\rendering\reference</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\forg\opencl\OpenCL.h">
+      <Filter>Source Files\opencl</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\forg\forg.cpp">
@@ -496,6 +502,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\forg\rendering\reference\SWRenderDevice.cpp">
       <Filter>Source Files\rendering\reference</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\forg\opencl\OpenCL.cpp">
+      <Filter>Source Files\opencl</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

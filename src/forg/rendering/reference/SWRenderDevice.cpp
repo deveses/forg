@@ -782,6 +782,9 @@ namespace forg { namespace rendering { namespace reference {
 
             uint& p = m_frame_buffer[index];
 
+            //Color colz(_z, _z, _z);
+            //_c = colz;
+
             p = blend_color(_c, p);
         }
     }

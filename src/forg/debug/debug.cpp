@@ -30,10 +30,7 @@ namespace forg { namespace debug {
 
         int c = _vscprintf(lpOutputString, args);
 
-        if (c < 1024)
-            vstprintf(msg, lpOutputString, args);
-        else
-            msg[0] = 0;
+        _vsnprintf(msg, sizeof(msg), lpOutputString, args);
 
         OutputDebugString(msg);
     }

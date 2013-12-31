@@ -71,8 +71,14 @@ FORG_API void DbgTrap( LPCTSTR strFile, uint dwLine, LPCTSTR strMsg);
 #define DBG_TRACE_ERR(strLiteral, iResult) ((void)0)
 #endif
 
+#if defined(_MSC_VER)
+#define DBG_BREAK() __debugbreak()
+#else
+#define DBG_BREAK() abort()
+#endif
+
 #define REMIND(strLiteral) DBG_TRACE_MSG(strLiteral)
-#define ASSERT(bCondition) if (bCondition == 0) { DBG_TRACE_MSG("Assertion failed!"); abort(); }
+#define ASSERT(bCondition) if (bCondition == 0) { DBG_TRACE_MSG("Assertion failed!"); DBG_BREAK(); }
 #define EXECUTE_ASSERT(bCondition) forg::debug::DbgTraceOnlyNonZero(__FILE__, __LINE__, (bCondition), "Assertion failed! assertion: "#bCondition)
 #define TRAP_NOT_IMPLEMENTED() forg::debug::DbgTrap(__FILE__, __LINE__, "Not implemented!")
 

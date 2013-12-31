@@ -97,7 +97,7 @@ Viewport::Viewport()
     m_bMouseCaptured=FALSE;
     m_bLMBDown=FALSE;
     m_fullscreen = false;
-	m_show_gui = true;
+	m_show_gui = 1;
 
     m_fps = 0;
     m_frame_counter = 0;
@@ -335,28 +335,31 @@ void Viewport::Render()
 
 void Viewport::RenderUI()
 {
-    m_device->SetRenderState(forg::RenderStates_Lighting, false);
-
-    forg::Viewport vp;
-    m_device->GetViewport(&vp);
-    forg::Rectangle r = {0, 0, vp.Width, vp.Height};
-
-    if (m_font)
+    if (m_show_gui > 0)
     {
-        char str[512];
+        m_device->SetRenderState(forg::RenderStates_Lighting, false);
 
-        sprintf(str, "%d fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
+        forg::Viewport vp;
+        m_device->GetViewport(&vp);
+        forg::Rectangle r = { 0, 0, vp.Width, vp.Height };
+
+        if (m_font)
+        {
+            char str[512];
+
+            sprintf(str, "%d fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
                 m_fps,
                 m_camera.get_Position().X, m_camera.get_Position().Y, m_camera.get_Position().Z,
                 m_camera.get_Target().X, m_camera.get_Target().Y, m_camera.get_Target().Z);
 
-        m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
-    }
+            m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
+        }
 
-	if (m_show_gui)
-	{
-		m_Dialog.Render();
-	}
+        if (m_show_gui == 1)
+        {
+            m_Dialog.Render();
+        }
+    }
 }
 
 void Viewport::OnPaint()
@@ -373,7 +376,7 @@ void Viewport::OnPaint()
         m_fps = m_frame_counter;
         m_frame_counter = 0;
         m_perf_count.Start();
-        //DBG_MSG("fps %d\n", m_fps);
+        DBG_MSG("fps %d\n", m_fps);
     }
 }
 
@@ -382,7 +385,7 @@ void Viewport::OnKeyUp( UINT nChar, UINT nRepCnt, UINT nFlags )
     switch (nChar)
     {
 	case VK_ESCAPE:
-		m_show_gui = !m_show_gui;
+		m_show_gui = (m_show_gui+1)%3;
 		break;
     case VK_F1:
         ToggleFullscreen();

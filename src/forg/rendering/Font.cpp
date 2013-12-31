@@ -173,7 +173,7 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format, C
     for (int i=0; i<count; i++)
     {
         int c = pString[i];
-        uint th = m_metrics[c].rows + (m_metrics[c].rows - m_metrics[c].top);
+        uint th = m_metrics[c].rows /*+ (m_metrics[c].rows - m_metrics[c].top)*/;
 
         if (max_height < th)
             max_height = th;

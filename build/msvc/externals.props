@@ -5,7 +5,7 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../extern/freetype/include;$(ProjectDir)../../extern/zlib/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../extern/freetype/include;$(ProjectDir)../../extern/zlib/include;$(ProjectDir)../../extern/opencl</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)../../extern/freetype/lib/vc_lib/$(Platform);$(ProjectDir)../../extern/zlib/lib/vc/$(Platform);</AdditionalLibraryDirectories>
