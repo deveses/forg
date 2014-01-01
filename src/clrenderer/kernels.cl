@@ -22,8 +22,13 @@ typedef struct _VSOutput
 {
     float4 position;
     float4 color;
-    float3 texcoord0;
+    float4 texcoord0;
 } VSOutput;
+
+typedef struct _Triangle
+{
+  VSOutput vertices[3];
+} Triangle;
 
 typedef struct _TriangleInterpolator
 {
@@ -122,44 +127,90 @@ float4 TriangleInterpolator_Interpolate(TriangleInterpolator* ti, float4 attribs
     return attribs0*ti->bary_a + attribs1*ti->bary_b + attribs2*ti->bary_c;
 }
 
-void SetPixel(__write_only image2d_t buffer, int2 coords, uint4 col)
+float interpolate_float(TriangleInterpolator* ti, float attribs0, float attribs1, float attribs2)
 {
-  write_imageui(buffer, coords, col);
+    return attribs0*ti->bary_a + attribs1*ti->bary_b + attribs2*ti->bary_c;
 }
 
-__kernel void DrawBlock(__write_only image2d_t buffer, __constant float* vertices, uint vertex_size, uint num_triangles)
+void SetPixel(__write_only image2d_t cbuffer, int2 coords, uint4 col)
 {
-    int width = get_image_width(buffer);
-    int height = get_image_height(buffer);
+    write_imageui(cbuffer, coords, col);
+}
+
+void ProcessPixel(__write_only image2d_t cbuffer, __global float* zbuffer, int2 coords, int2 dim, TriangleInterpolator* interpolator, const Triangle* triangle)
+{
+    const uint4 colMask = (uint4)(2, 1, 0, 3);     // RGBA -> BGRA
+
+    TriangleInterpolator_SetPoint(interpolator, coords);
+    
+    float d = interpolate_float(interpolator, triangle->vertices[0].position.z, triangle->vertices[1].position.z, triangle->vertices[2].position.z);
+
+    size_t index = coords.y*dim.x + coords.x;
+    float cur_z = zbuffer[index];
+
+    if (d < cur_z)
+    {
+        float4 col0 = triangle->vertices[0].color;
+        float4 col1 = triangle->vertices[1].color;
+        float4 col2 = triangle->vertices[2].color;
+            
+        //col0 = d;    
+        //col1 = d;    
+        //col2 = d;    
+            
+        float4 pix_col = TriangleInterpolator_Interpolate(interpolator, col0, col1, col2);
+        
+        uint4 int_col = convert_uint4_sat_rte(pix_col*255.0f);
+        int_col = shuffle(int_col, colMask);
+        
+        coords.y = dim.y - 1 - coords.y;
+        SetPixel(cbuffer, coords, int_col);
+        
+        zbuffer[index] = d;
+    }    
+}
+
+__kernel void ClearScreenBuffer(__global  float* buffer, float value)
+{
+    int sx = get_global_id(0);
+    int sy = get_global_id(1);
+
+    size_t width = get_global_size(0);
+    size_t height = get_global_size(1);
+    
+    size_t index = sy*width + sx;
+    
+    buffer[index] = value;
+}
+
+__kernel void DrawBlock(__write_only image2d_t cbuffer, __global float* zbuffer, __constant Triangle* triangles, uint vertex_size, uint num_triangles)
+{
+    int width = get_image_width(cbuffer);
+    int height = get_image_height(cbuffer);
     int stride = vertex_size/4;
   
     int sx = get_global_id(0);
     int sy = get_global_id(1);
+    
+    int2 dim = (int2)(width, height);                
     int2 spos = (int2)(sx, sy);
     
     int lx = get_local_id(0);
     int ly = get_local_id(1);
-    
+        
     TriangleInterpolator interpolator;
-      
     // GRAB?
     // RGBA -> GRAB
     //uint4 colMask = (uint4)(1, 0, 3, 2);
-    uint4 colMask = (uint4)(2, 1, 0, 3);     // RGBA -> BGRA
+    const uint4 colMask = (uint4)(2, 1, 0, 3);     // RGBA -> BGRA
     
     for (uint t=0; t<num_triangles; t++)
     {
-        int tri0 = t*3*stride;
-        int tri1 = t*3*stride + stride;
-        int tri2 = t*3*stride + 2*stride;
+        const Triangle triangle = triangles[t];
 
-        const float2 pos0 = vload2(0, vertices+tri0);  // (float2)(vertices[tri0], vertices[tri0+1]);
-        const float2 pos1 = vload2(0, vertices+tri1);  //(float2)(vertices[tri1], vertices[tri1+1]);
-        const float2 pos2 = vload2(0, vertices+tri2);  //(float2)(vertices[tri2], vertices[tri2+1]);
-
-        const float4 col0 = vload4(0, vertices+tri0+4); //(float4)(vertices[tri0+4], vertices[tri0+5], vertices[tri0+6], vertices[tri0+7]);
-        const float4 col1 = vload4(0, vertices+tri1+4); //(float4)(vertices[tri1+4], vertices[tri1+5], vertices[tri1+6], vertices[tri1+7]);
-        const float4 col2 = vload4(0, vertices+tri2+4); //(float4)(vertices[tri2+4], vertices[tri2+5], vertices[tri2+6], vertices[tri2+7]);
+        const float2 pos0 = triangle.vertices[0].position.xy;
+        const float2 pos1 = triangle.vertices[1].position.xy; 
+        const float2 pos2 = triangle.vertices[2].position.xy;
 
         const int2 ipos1 = convert_int2(16.0f * pos0);
         const int2 ipos2 = convert_int2(16.0f * pos1);
@@ -252,14 +303,7 @@ __kernel void DrawBlock(__write_only image2d_t buffer, __constant float* vertice
                 {
                     if (sx < width && sy < height) 
                     {
-                        TriangleInterpolator_SetPoint(&interpolator, (int2)(sx, sy));
-                      
-                        float4 icol = TriangleInterpolator_Interpolate(&interpolator, col0, col1, col2);
-                      
-                        uint4 colIn = convert_uint4_sat_rte(icol*255.0f);
-                        colIn = shuffle(colIn, colMask);
-                      
-                        SetPixel(buffer, (int2)(sx, height - 1 - sy), colIn);
+                        ProcessPixel(cbuffer, zbuffer, spos, dim, &interpolator, &triangle);  
                     }
                 }
                 else // Partially covered block
@@ -275,13 +319,7 @@ __kernel void DrawBlock(__write_only image2d_t buffer, __constant float* vertice
                     {                               
                         if (sx < width && sy < height) 
                         {
-                            TriangleInterpolator_SetPoint(&interpolator, (int2)(sx, sy));
-    
-                            float4 icol = TriangleInterpolator_Interpolate(&interpolator, col0, col1, col2);
-                            uint4 colEdge = convert_uint4_sat_rte(icol*255.0f);
-                            colEdge = shuffle(colEdge, colMask);
-    
-                            SetPixel(buffer, (int2)(sx, height - 1 - sy), colEdge);  
+                            ProcessPixel(cbuffer, zbuffer, spos, dim, &interpolator, &triangle);
                         }
                     }
                     

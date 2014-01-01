@@ -406,6 +406,7 @@ namespace forg
         m_queue.Create(m_context.GetContext(), device->GetDeviceId(), 0);
 
         m_kDrawBlock.Create(m_program.GetProgram(), "DrawBlock");
+        m_kClearScreenBuffer.Create(m_program.GetProgram(), "ClearScreenBuffer");
 
         OpenCL::CLKernelWorkGroupInfo kwginfo;
         m_kDrawBlock.GetKernelWorkGroupInfo(device->GetDeviceId(), kwginfo);
@@ -434,18 +435,29 @@ namespace forg
         }
 
         m_fb_stride = m_width * 4;
+        m_zb_stride = m_width * 4;
         m_frame_buffer = new uint[m_width*m_height];
         m_depth_buffer = new float[m_width*m_height];
 
-        cl_image_format fbformat;
-        fbformat.image_channel_data_type = CL_UNSIGNED_INT8;
-        fbformat.image_channel_order = CL_RGBA; //CL_ARGB;
+        cl_image_format img_format;
+        img_format.image_channel_data_type = CL_UNSIGNED_INT8;
+        img_format.image_channel_order = CL_RGBA; //CL_ARGB;
         
         m_fbuffer.Release();
-        if (!m_fbuffer.CreateImage2D(m_context.GetContext(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, &fbformat, m_width, m_height, m_fb_stride, m_frame_buffer))
+        if (!m_fbuffer.CreateImage2D(m_context.GetContext(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, &img_format, m_width, m_height, m_fb_stride, m_frame_buffer))
         {
             DBG_MSG("Failed to create OpenCL image buffer!");
         }
+
+        img_format.image_channel_data_type = CL_FLOAT;
+        img_format.image_channel_order = CL_A; //CL_ARGB;
+
+        m_zbuffer.Release();
+        if (!m_zbuffer.CreateBuffer(m_context.GetContext(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,  m_zb_stride*m_height, m_depth_buffer))
+        {
+            DBG_MSG("Failed to create OpenCL image buffer!");
+        }
+
     }
 
     int SWRenderDevice::Reset()
@@ -869,6 +881,14 @@ namespace forg
             {
                 m_depth_buffer[p] = zdepth;
             }
+
+            const size_t globalWorkSize[] = { m_width, m_height, 0 };
+
+            m_kClearScreenBuffer.SetKernelArg(0, m_zbuffer);
+            m_kClearScreenBuffer.SetKernelArg(1, sizeof(float), &zdepth);
+
+            m_queue.EnqueueNDRangeKernel(m_kClearScreenBuffer.GetKernel(), 2,
+                nullptr, globalWorkSize, nullptr);
         }
         
         //memset(fb, 0, m_width*m_height*4);
@@ -1232,10 +1252,11 @@ namespace forg
         // Set kernel attributes
 
         m_kDrawBlock.SetKernelArg(0, m_fbuffer);
-        m_kDrawBlock.SetKernelArg(1, tri_buffer);
+        m_kDrawBlock.SetKernelArg(1, m_zbuffer);
+        m_kDrawBlock.SetKernelArg(2, tri_buffer);
         uint vertex_size = sizeof(VSOutput);
-        m_kDrawBlock.SetKernelArg(2, sizeof(vertex_size), &vertex_size);
-        m_kDrawBlock.SetKernelArg(3, sizeof(num_triangles), &num_triangles);
+        m_kDrawBlock.SetKernelArg(3, sizeof(vertex_size), &vertex_size);
+        m_kDrawBlock.SetKernelArg(4, sizeof(num_triangles), &num_triangles);
 
         // Set up work groups
 
