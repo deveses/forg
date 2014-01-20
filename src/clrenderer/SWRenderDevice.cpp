@@ -405,6 +405,7 @@ namespace forg
 
         m_queue.Create(m_context.GetContext(), device->GetDeviceId(), 0);
 
+        m_kPrepareBlock.Create(m_program.GetProgram(), "PrepareBlock");
         m_kDrawBlock.Create(m_program.GetProgram(), "DrawBlock");
         m_kClearScreenBuffer.Create(m_program.GetProgram(), "ClearScreenBuffer");
 
@@ -496,7 +497,7 @@ namespace forg
     {
         SWTexture* tex = new SWTexture();
 
-        tex->Create(Width, Height, Levels, Usage, Format, Pool);
+        tex->Create(m_context, m_queue, Width, Height, Levels, Usage, Format, Pool);
 
         return tex;
     }
@@ -657,7 +658,7 @@ namespace forg
 
     enum
     {
-        MAX_VERTEX_BATCH_SIZE = 1024
+        MAX_VERTEX_BATCH_SIZE = 3 * 512
     };
 
     int SWRenderDevice::DrawIndexedUserPrimitives(
@@ -831,18 +832,18 @@ namespace forg
                 vs_output += 3;
                 tri_count++;
             }
+
+            if (vs_output - vs_batch == MAX_VERTEX_BATCH_SIZE)
+            {
+                DrawTriangleArrayCL(vs_batch, tri_count, vertex_usage);
+
+                vs_output = vs_batch;
+                tri_count = 0;
+            }
         }
 
-        if (USE_SOFTWARE_MODE)
-        {
-            DrawTriangleArray(vs_batch, tri_count, vertex_usage);
-            //DrawTriangleArrayCLTest(vs_batch, tri_count, vertex_usage);
-        }
-        else
-        {
-            DrawTriangleArrayCL(vs_batch, tri_count, vertex_usage);
-        }
-                
+        if (tri_count > 0)
+            DrawTriangleArrayCL(vs_batch, tri_count, vertex_usage);                
 
         //SetStreamSource(0, 0, 0, 0);
         //SetIndices(0);
@@ -1236,7 +1237,7 @@ namespace forg
 
     void SWRenderDevice::DrawTriangleArrayCL(VSOutput* vertices, uint num_triangles, int usage)
     {
-        if (num_triangles == 0 || !bit_test(usage, DeclarationType_Color))
+        if (num_triangles == 0)
             return;
 
         OpenCL::CLPlatform* platform = m_opencl.GetPlatform(0);
@@ -1254,9 +1255,16 @@ namespace forg
         m_kDrawBlock.SetKernelArg(0, m_fbuffer);
         m_kDrawBlock.SetKernelArg(1, m_zbuffer);
         m_kDrawBlock.SetKernelArg(2, tri_buffer);
-        uint vertex_size = sizeof(VSOutput);
-        m_kDrawBlock.SetKernelArg(3, sizeof(vertex_size), &vertex_size);
-        m_kDrawBlock.SetKernelArg(4, sizeof(num_triangles), &num_triangles);
+        m_kDrawBlock.SetKernelArg(3, sizeof(num_triangles), &num_triangles);
+        m_kDrawBlock.SetKernelArg(4, sizeof(usage), &usage);
+        if (bit_test(usage, DeclarationUsage_TextureCoordinate) && m_samplers[0].texture)
+        {
+            m_kDrawBlock.SetKernelArg(5, static_cast<SWTexture*>(m_samplers[0].texture)->GetBuffer());
+        }
+        else
+        {
+            m_kDrawBlock.SetKernelArg(5, m_fbuffer);
+        }
 
         // Set up work groups
 
@@ -1321,6 +1329,8 @@ namespace forg
         ymax = m_height;
         */
 
+        xmin &= ~7;
+        ymin &= ~7;
         uint xsize = next_mul<3>(xmax-xmin);
         uint ysize = next_mul<3>(ymax-ymin);
         const size_t globalWorkOffset[] = { xmin, ymin, 0 };

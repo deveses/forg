@@ -42,10 +42,15 @@ namespace forg {
 
     int SWTexture::UnlockRect(uint Level)
     {
+        uint stride = m_Width * 4;
+        size_t origin[3] = { 0, 0, 0 };
+        size_t region[3] = { m_Width, m_Height, 1 };
+        m_queue.EnqueueWriteImage(m_buffer.GetMemObject(), CL_TRUE, origin, region, stride, 0, m_data);
+
         return FORG_OK;
     }
 
-    int SWTexture::Create(uint Width, uint Height, uint Levels, uint Usage, uint Format, uint Pool)
+    int SWTexture::Create(OpenCL::CLContext& context, OpenCL::CLCommandQueue& queue, uint Width, uint Height, uint Levels, uint Usage, uint Format, uint Pool)
     {
         m_Levels = 1;
         m_Width = Width;
@@ -54,18 +59,29 @@ namespace forg {
         m_Format = Format;
         m_Pool = Pool;
 
+        m_queue.Create(queue);
+
         uint stride = Width*4;
         uint size = stride * Height;
 
         m_data = new char[size];
+
+        cl_image_format img_format;
+        img_format.image_channel_data_type = CL_UNSIGNED_INT8;
+        img_format.image_channel_order = CL_RGBA; // always supported;
+
+        if (!m_buffer.CreateImage2D(context.GetContext(), CL_MEM_READ_WRITE, &img_format, m_Width, m_Height, 0, nullptr))
+        {
+            return FORG_INVALID_CALL;
+        }
 
         return FORG_OK;
     }
 
     uint SWTexture::Sample(float u, float v)
     {
-        uint x = u*m_Width;
-        uint y = v*m_Height;
+        uint x = uint(u*m_Width);
+        uint y = uint(v*m_Height);
 
         if (x < m_Width && y < m_Height)
         {

@@ -43,6 +43,7 @@ struct VSInput
     Vector4 tangent;
 };
 
+// TODO: change to cl_ types for proper alignment
 struct VSOutput
 {
     Vector4 position;
@@ -138,6 +139,7 @@ class SWRenderDevice
     OpenCL::CLMemObject m_zbuffer;
     forg::core::vector<OpenCL::CLMemObject> m_mem_buffers;
     OpenCL::CLKernel m_kDrawBlock;
+    OpenCL::CLKernel m_kPrepareBlock;
     OpenCL::CLKernel m_kClearScreenBuffer;
 
     // Frame buffer: ARGB, each component is an uint8 (32bits per pixel)

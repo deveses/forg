@@ -148,6 +148,8 @@ namespace OpenCL {
 
     typedef cl_int(*PFNCLRELEASECONTEXT)(cl_context /* context */);
 
+    typedef cl_int(*PFNCLRETAINCONTEXT)(cl_context /* context */);
+
     /* Command Queue APIs */
     typedef cl_command_queue(*PFNCLCREATECOMMANDQUEUE)(cl_context                     /* context */,
         cl_device_id                   /* device */,
@@ -155,6 +157,8 @@ namespace OpenCL {
         cl_int *                       /* errcode_ret */);
 
     typedef cl_int(*PFNCLRELEASECOMMANDQUEUE)(cl_command_queue /* command_queue */);
+
+    typedef cl_int (*PFNCLRETAINCOMMANDQUEUE)(cl_command_queue /* command_queue */);
 
     /* Memory Object APIs */
     typedef cl_mem(*PFNCLCREATEBUFFER)(cl_context   /* context */,
@@ -290,6 +294,7 @@ namespace OpenCL {
 
     PFNCLCREATECONTEXT clCreateContext;
     PFNCLRELEASECONTEXT clReleaseContext;
+    PFNCLRETAINCONTEXT clRetainContext;
 
     PFNCLCREATEPROGRAMWITHSOURCE clCreateProgramWithSource;
     PFNCLBUILDPROGRAM clBuildProgram;
@@ -309,6 +314,7 @@ namespace OpenCL {
 
     PFNCLCREATECOMMANDQUEUE clCreateCommandQueue;
     PFNCLRELEASECOMMANDQUEUE clReleaseCommandQueue;
+    PFNCLRETAINCOMMANDQUEUE clRetainCommandQueue;
 
     PFNCLFLUSH clFlush;
     PFNCLFINISH clFinish;
@@ -331,6 +337,7 @@ namespace OpenCL {
 
         OPENCL_GETPROCADDRESS(PFNCLCREATECONTEXT, clCreateContext);
         OPENCL_GETPROCADDRESS(PFNCLRELEASECONTEXT, clReleaseContext);
+        OPENCL_GETPROCADDRESS(PFNCLRETAINCONTEXT, clRetainContext);
 
         OPENCL_GETPROCADDRESS(PFNCLCREATEPROGRAMWITHSOURCE, clCreateProgramWithSource);
         OPENCL_GETPROCADDRESS(PFNCLBUILDPROGRAM, clBuildProgram);
@@ -350,6 +357,7 @@ namespace OpenCL {
         
         OPENCL_GETPROCADDRESS(PFNCLCREATECOMMANDQUEUE, clCreateCommandQueue);
         OPENCL_GETPROCADDRESS(PFNCLRELEASECOMMANDQUEUE, clReleaseCommandQueue);
+        OPENCL_GETPROCADDRESS(PFNCLRETAINCOMMANDQUEUE, clRetainCommandQueue);
 
         OPENCL_GETPROCADDRESS(PFNCLFLUSH, clFlush);
         OPENCL_GETPROCADDRESS(PFNCLFINISH, clFinish);
@@ -608,11 +616,36 @@ namespace OpenCL {
 
     CLContext::~CLContext()
     {
+        Release();
+    }
+
+    void CLContext::Retain()
+    {
+        if (m_context != nullptr)
+        {
+            m_error = OpenCL::clRetainContext(m_context);
+
+            CLV(m_error);
+        }
+    }
+
+    void CLContext::Release()
+    {
         if (m_context != nullptr)
         {
             OpenCL::clReleaseContext(m_context);
             m_context = nullptr;
         }
+    }
+
+    bool CLContext::Create(const CLContext& context)
+    {
+        m_context = context.m_context;
+        m_error = CL_SUCCESS;
+
+        Retain();
+
+        return (m_error == CL_SUCCESS);
     }
 
     bool CLContext::Create(cl_platform_id platform_id, cl_device_id device_id)
@@ -825,11 +858,36 @@ namespace OpenCL {
 
     CLCommandQueue::~CLCommandQueue()
     {
+        Release();
+    }
+
+    void CLCommandQueue::Retain()
+    {
+        if (m_queue != nullptr)
+        {
+            m_error = OpenCL::clRetainCommandQueue(m_queue);
+
+            CLV(m_error);
+        }
+    }
+
+    void CLCommandQueue::Release()
+    {
         if (m_queue != nullptr)
         {
             OpenCL::clReleaseCommandQueue(m_queue);
             m_queue = nullptr;
         }
+    }
+
+    bool CLCommandQueue::Create(const CLCommandQueue& queue)
+    {
+        m_queue = queue.m_queue;
+        m_error = CL_SUCCESS;
+
+        Retain();
+
+        return (m_error == CL_SUCCESS);
     }
 
     bool CLCommandQueue::Create(cl_context context, cl_device_id device, cl_command_queue_properties properties)

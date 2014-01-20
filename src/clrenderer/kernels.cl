@@ -30,6 +30,26 @@ typedef struct _Triangle
   VSOutput vertices[3];
 } Triangle;
 
+
+enum DeclarationUsage
+{
+	DeclarationUsage_Position = 0,
+	DeclarationUsage_BlendWeight = 1,
+	DeclarationUsage_BlendIndices = 2,
+	DeclarationUsage_Normal = 3,
+	DeclarationUsage_PointSize = 4,
+	DeclarationUsage_TextureCoordinate = 5,
+	DeclarationUsage_Tangent = 6,
+	DeclarationUsage_BiNormal = 7,
+	DeclarationUsage_TessellateFactor = 8,
+	DeclarationUsage_PositionTransformed = 9,
+	DeclarationUsage_Color = 10,
+	DeclarationUsage_Fog = 11,
+	DeclarationUsage_Depth = 12,
+	DeclarationUsage_Sample = 13
+};
+
+
 typedef struct _TriangleInterpolator
 {
         float2 lineA01;
@@ -122,7 +142,7 @@ void TriangleInterpolator_SetPoint(TriangleInterpolator* ti, int2 pos)
     }
 }
 
-float4 TriangleInterpolator_Interpolate(TriangleInterpolator* ti, float4 attribs0, float4 attribs1, float4 attribs2)
+float4 interpolate_float4(TriangleInterpolator* ti, float4 attribs0, float4 attribs1, float4 attribs2)
 {
     return attribs0*ti->bary_a + attribs1*ti->bary_b + attribs2*ti->bary_c;
 }
@@ -137,7 +157,14 @@ void SetPixel(__write_only image2d_t cbuffer, int2 coords, uint4 col)
     write_imageui(cbuffer, coords, col);
 }
 
-void ProcessPixel(__write_only image2d_t cbuffer, __global float* zbuffer, int2 coords, int2 dim, TriangleInterpolator* interpolator, const Triangle* triangle)
+void ProcessPixel(__write_only image2d_t cbuffer, 
+                  __global float* zbuffer, 
+                  int2 coords, 
+                  int2 dim, 
+                  TriangleInterpolator* interpolator, 
+                  const Triangle* triangle, 
+                  int usage,
+                  __read_only image2d_t tex0)
 {
     const uint4 colMask = (uint4)(2, 1, 0, 3);     // RGBA -> BGRA
 
@@ -149,19 +176,36 @@ void ProcessPixel(__write_only image2d_t cbuffer, __global float* zbuffer, int2 
     float cur_z = zbuffer[index];
 
     if (d < cur_z)
-    {
-        float4 col0 = triangle->vertices[0].color;
-        float4 col1 = triangle->vertices[1].color;
-        float4 col2 = triangle->vertices[2].color;
-            
-        //col0 = d;    
-        //col1 = d;    
-        //col2 = d;    
-            
-        float4 pix_col = TriangleInterpolator_Interpolate(interpolator, col0, col1, col2);
+    {   uint4 int_col = 0;
+    
+        if (usage & DeclarationUsage_TextureCoordinate)
+        {
+          const sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_ADDRESS_CLAMP_TO_EDGE | CLK_FILTER_NEAREST;
         
-        uint4 int_col = convert_uint4_sat_rte(pix_col*255.0f);
-        int_col = shuffle(int_col, colMask);
+          float4 coords = interpolate_float4(interpolator, triangle->vertices[0].texcoord0, triangle->vertices[1].texcoord0, triangle->vertices[2].texcoord0);                                
+          uint4 tex_col = read_imageui(tex0, sampler, coords.xy);
+
+          if (tex_col.w > 0)
+          {
+            int_col = tex_col;            
+          }
+        }
+    
+        if (usage & DeclarationUsage_Color)
+        {
+          float4 col0 = triangle->vertices[0].color;
+          float4 col1 = triangle->vertices[1].color;
+          float4 col2 = triangle->vertices[2].color;
+              
+          //col0 = d;    
+          //col1 = d;    
+          //col2 = d;    
+              
+          float4 pix_col = interpolate_float4(interpolator, col0, col1, col2);
+          
+          int_col = convert_uint4_sat_rte(pix_col*255.0f);
+          int_col = shuffle(int_col, colMask);
+        }
         
         coords.y = dim.y - 1 - coords.y;
         SetPixel(cbuffer, coords, int_col);
@@ -183,11 +227,19 @@ __kernel void ClearScreenBuffer(__global  float* buffer, float value)
     buffer[index] = value;
 }
 
-__kernel void DrawBlock(__write_only image2d_t cbuffer, __global float* zbuffer, __constant Triangle* triangles, uint vertex_size, uint num_triangles)
+__kernel void PrepareBlock(__constant Triangle* triangles, uint num_triangles)
+{
+}
+
+__kernel void DrawBlock(__write_only image2d_t cbuffer, 
+                        __global float* zbuffer, 
+                        __constant Triangle* triangles, 
+                        uint num_triangles,
+                        int usage,
+                        __read_only image2d_t tex0)
 {
     int width = get_image_width(cbuffer);
     int height = get_image_height(cbuffer);
-    int stride = vertex_size/4;
   
     int sx = get_global_id(0);
     int sy = get_global_id(1);
@@ -229,9 +281,7 @@ __kernel void DrawBlock(__write_only image2d_t cbuffer, __global float* zbuffer,
     
         bounds_min = max(bounds_min, (int2)(0, 0));
         bounds_max = min(bounds_max, (int2)(width, height));
-                 
-        TriangleInterpolator_Initialize(&interpolator, pos0, pos1, pos2);
-        
+                         
         // Deltas
 
         const int2 DXY12 = ipos1 - ipos2;
@@ -303,7 +353,8 @@ __kernel void DrawBlock(__write_only image2d_t cbuffer, __global float* zbuffer,
                 {
                     if (sx < width && sy < height) 
                     {
-                        ProcessPixel(cbuffer, zbuffer, spos, dim, &interpolator, &triangle);  
+                        TriangleInterpolator_Initialize(&interpolator, pos0, pos1, pos2);
+                        ProcessPixel(cbuffer, zbuffer, spos, dim, &interpolator, &triangle, usage, tex0);  
                     }
                 }
                 else // Partially covered block
@@ -319,7 +370,8 @@ __kernel void DrawBlock(__write_only image2d_t cbuffer, __global float* zbuffer,
                     {                               
                         if (sx < width && sy < height) 
                         {
-                            ProcessPixel(cbuffer, zbuffer, spos, dim, &interpolator, &triangle);
+                            TriangleInterpolator_Initialize(&interpolator, pos0, pos1, pos2);
+                            ProcessPixel(cbuffer, zbuffer, spos, dim, &interpolator, &triangle, usage, tex0);
                         }
                     }
                     

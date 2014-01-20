@@ -28,6 +28,8 @@
 #include "rendering/IVertexBuffer.h"
 #include "rendering/IIndexBuffer.h"
 
+#include <opencl/OpenCL.h>
+
 namespace forg {
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -44,13 +46,19 @@ namespace forg {
         uint m_Usage;
         uint m_Format;
         uint m_Pool;
+
+        OpenCL::CLMemObject m_buffer;
+        OpenCL::CLCommandQueue m_queue;
+
     public:
         SWTexture();
         virtual ~SWTexture();
 
-        int Create(uint Width, uint Height, uint Levels, uint Usage, uint Format, uint Pool);
+        int Create(OpenCL::CLContext& context, OpenCL::CLCommandQueue& queue, uint Width, uint Height, uint Levels, uint Usage, uint Format, uint Pool);
 
         uint Sample(float u, float v);
+
+        OpenCL::CLMemObject& GetBuffer() { return m_buffer; }
 
     // ITexture implementation
     public:

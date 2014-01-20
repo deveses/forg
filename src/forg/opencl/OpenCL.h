@@ -101,9 +101,13 @@ namespace OpenCL
 
         cl_context GetContext() const { return m_context; }
 
+        /// copy with reference counting
+        bool Create(const CLContext& context);
         bool Create(cl_platform_id platform_id, cl_device_id device_id);
         bool Create(cl_platform_id platform_id, cl_device_id* device_ids, cl_uint count);
 
+        void Retain();
+        void Release();
     };
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +174,13 @@ namespace OpenCL
         CLCommandQueue();
         ~CLCommandQueue();
 
+        void Retain();
+        void Release();
+
         cl_command_queue GetQueue() const { return m_queue; }
+
+        // copy with reference counting
+        bool Create(const CLCommandQueue& context);
 
         bool Create(cl_context context, cl_device_id device, cl_command_queue_properties properties);
 
