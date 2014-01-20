@@ -253,6 +253,16 @@ namespace OpenCL {
         const cl_event *    /* event_wait_list */,
         cl_event *          /* event */);
 
+    typedef cl_int (*PFNCLENQUEUEWRITEBUFFER)(cl_command_queue   /* command_queue */,
+        cl_mem             /* buffer */,
+        cl_bool            /* blocking_write */,
+        size_t             /* offset */,
+        size_t             /* cb */,
+        const void *       /* ptr */,
+        cl_uint            /* num_events_in_wait_list */,
+        const cl_event *   /* event_wait_list */,
+        cl_event *         /* event */);
+
     typedef cl_int(*PFNCLENQUEUEREADIMAGE)(cl_command_queue     /* command_queue */,
         cl_mem               /* image */,
         cl_bool              /* blocking_read */,
@@ -321,6 +331,7 @@ namespace OpenCL {
 
     PFNCLENQUEUENDRANGEKERNEL clEnqueueNDRangeKernel;
     PFNCLENQUEUEREADBUFFER clEnqueueReadBuffer;
+    PFNCLENQUEUEWRITEBUFFER clEnqueueWriteBuffer;
     PFNCLENQUEUEREADIMAGE clEnqueueReadImage;
     PFNCLENQUEUEWRITEIMAGE clEnqueueWriteImage;
 
@@ -364,6 +375,7 @@ namespace OpenCL {
 
         OPENCL_GETPROCADDRESS(PFNCLENQUEUENDRANGEKERNEL, clEnqueueNDRangeKernel);
         OPENCL_GETPROCADDRESS(PFNCLENQUEUEREADBUFFER, clEnqueueReadBuffer);
+        OPENCL_GETPROCADDRESS(PFNCLENQUEUEWRITEBUFFER, clEnqueueWriteBuffer);
         OPENCL_GETPROCADDRESS(PFNCLENQUEUEREADIMAGE, clEnqueueReadImage);
         OPENCL_GETPROCADDRESS(PFNCLENQUEUEWRITEIMAGE, clEnqueueWriteImage);
 
@@ -931,6 +943,16 @@ namespace OpenCL {
         size_t offset, size_t size, void *ptr)
     {
         m_error = OpenCL::clEnqueueReadBuffer(m_queue, buffer, blocking_read, offset, size, ptr, 0, nullptr, nullptr);
+
+        CLV(m_error);
+
+        return (m_error == CL_SUCCESS);
+    }
+
+    bool CLCommandQueue::EnqueueWriteBuffer(cl_mem buffer, cl_bool blocking_write,
+        size_t offset, size_t size, void *ptr)
+    {
+        m_error = OpenCL::clEnqueueWriteBuffer(m_queue, buffer, blocking_write, offset, size, ptr, 0, nullptr, nullptr);
 
         CLV(m_error);
 

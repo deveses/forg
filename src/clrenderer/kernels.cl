@@ -152,15 +152,64 @@ float interpolate_float(TriangleInterpolator* ti, float attribs0, float attribs1
     return attribs0*ti->bary_a + attribs1*ti->bary_b + attribs2*ti->bary_c;
 }
 
-void SetPixel(__write_only image2d_t cbuffer, int2 coords, uint4 col)
+uint convert_color_uint(uint4 col)
 {
-    write_imageui(cbuffer, coords, col);
+  return ((col.x) | (col.y<<8) | (col.z<<16) | (col.w<<24));
 }
 
-void ProcessPixel(__write_only image2d_t cbuffer, 
+// BGRA
+uint4 convert_color_uint4(uint col)
+{
+  uint4 o;
+  o.x = (col) & 0xff;
+  o.y = (col >> 8) & 0xff;
+  o.z = (col >> 16) & 0xff;
+  o.w = (col >> 24);
+  return o;
+}
+
+uint4 blend_color(uint4 src, uint4 dst, uint src_factor, uint dst_factor)
+{
+    uint4 out = src;
+
+    if (src_factor == 0)
+    {
+      out = dst;
+    }
+    else if (src_factor < 255)
+    {
+      uint4 blend = src * src_factor + dst * dst_factor;
+    
+      blend = (blend + 1 + (blend>>8) )>> 8;
+    
+      blend = clamp(blend, (uint4)0, (uint4)255);
+      
+      blend.w = 0xff;
+      
+      out = blend;
+    }
+
+    return out;
+}
+
+void SetPixel(__global uint* cbuffer, uint2 dim, int2 coords, uint4 col)
+{
+    uint lindex = dim.x*coords.y + coords.x;        
+    uint4 dst = convert_color_uint4(cbuffer[lindex]);   
+       
+    // alpha blending
+    uint source_factor = col.w;       // SRC_ALPHA
+    uint dest_factor = 255 - col.w;   // ONE_MINUS_DST_ALPHA
+
+    uint4 blend = blend_color(col, dst, source_factor, dest_factor);
+              
+    cbuffer[lindex] = convert_color_uint(blend);
+}
+
+void ProcessPixel(__global uint* cbuffer, 
                   __global float* zbuffer, 
                   int2 coords, 
-                  int2 dim, 
+                  uint2 dim, 
                   TriangleInterpolator* interpolator, 
                   const Triangle* triangle, 
                   int usage,
@@ -208,9 +257,13 @@ void ProcessPixel(__write_only image2d_t cbuffer,
         }
         
         coords.y = dim.y - 1 - coords.y;
-        SetPixel(cbuffer, coords, int_col);
+        SetPixel(cbuffer, dim, coords, int_col);
         
-        zbuffer[index] = d;
+        // z-buffer read-only for translucent polys
+        if (int_col.w == 255)
+        {
+          zbuffer[index] = d;
+        }
     }    
 }
 
@@ -231,20 +284,21 @@ __kernel void PrepareBlock(__constant Triangle* triangles, uint num_triangles)
 {
 }
 
-__kernel void DrawBlock(__write_only image2d_t cbuffer, 
+__kernel void DrawBlock(__global uint* cbuffer, 
                         __global float* zbuffer, 
+                        uint2 dim,
                         __constant Triangle* triangles, 
                         uint num_triangles,
                         int usage,
                         __read_only image2d_t tex0)
 {
-    int width = get_image_width(cbuffer);
-    int height = get_image_height(cbuffer);
+    uint width = dim.x;
+    uint height = dim.y;
   
     int sx = get_global_id(0);
     int sy = get_global_id(1);
     
-    int2 dim = (int2)(width, height);                
+    //int2 dim = (int2)(width, height);                
     int2 spos = (int2)(sx, sy);
     
     int lx = get_local_id(0);

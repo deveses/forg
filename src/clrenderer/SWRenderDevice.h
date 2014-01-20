@@ -137,6 +137,7 @@ class SWRenderDevice
     OpenCL::CLCommandQueue m_queue;
     OpenCL::CLMemObject m_fbuffer;
     OpenCL::CLMemObject m_zbuffer;
+    OpenCL::CLMemObject m_default_texture;
     forg::core::vector<OpenCL::CLMemObject> m_mem_buffers;
     OpenCL::CLKernel m_kDrawBlock;
     OpenCL::CLKernel m_kPrepareBlock;
@@ -145,8 +146,9 @@ class SWRenderDevice
     // Frame buffer: ARGB, each component is an uint8 (32bits per pixel)
     uint* m_frame_buffer;
     float* m_depth_buffer;
-    uint m_fb_stride;
-    uint m_zb_stride;
+    uint m_fb_size;
+    uint m_fb_pitch;
+    uint m_zb_pitch;
     uint m_width;
     uint m_height;
 

@@ -317,8 +317,9 @@ namespace forg
         m_refCount = 1;
         m_window = handle;
         m_frame_buffer = 0;
-        m_width = m_height = 0;
-        m_fb_stride = 0;
+        m_width = m_height = m_fb_size = 0;
+        m_fb_pitch = 0;
+        m_zb_pitch = 0;
         m_vp_x = m_vp_y = 0;
         m_vp_width = m_vp_height = 0;
 
@@ -435,8 +436,9 @@ namespace forg
             m_depth_buffer = 0;
         }
 
-        m_fb_stride = m_width * 4;
-        m_zb_stride = m_width * 4;
+        m_fb_pitch = m_width * 4;
+        m_zb_pitch = m_width * 4;
+        m_fb_size = m_fb_pitch * m_height;
         m_frame_buffer = new uint[m_width*m_height];
         m_depth_buffer = new float[m_width*m_height];
 
@@ -444,19 +446,34 @@ namespace forg
         img_format.image_channel_data_type = CL_UNSIGNED_INT8;
         img_format.image_channel_order = CL_RGBA; //CL_ARGB;
         
-        m_fbuffer.Release();
-        if (!m_fbuffer.CreateImage2D(m_context.GetContext(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, &img_format, m_width, m_height, m_fb_stride, m_frame_buffer))
+        
+        if (!m_default_texture.CreateImage2D(m_context.GetContext(), CL_MEM_READ_ONLY, &img_format, 1, 1, 0, 0))
         {
             DBG_MSG("Failed to create OpenCL image buffer!");
         }
 
-        img_format.image_channel_data_type = CL_FLOAT;
-        img_format.image_channel_order = CL_A; //CL_ARGB;
-
-        m_zbuffer.Release();
-        if (!m_zbuffer.CreateBuffer(m_context.GetContext(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR,  m_zb_stride*m_height, m_depth_buffer))
+        m_fbuffer.Release();
+        // can't use image buffer as we want to read and write from it in kernel
+        if (!m_fbuffer.CreateBuffer(m_context.GetContext(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, m_fb_size, m_frame_buffer))
+        {
+            DBG_MSG("Failed to create a OpenCL buffer for the frame buffer!");
+        }
+        /*
+        if (!m_fbuffer.CreateImage2D(m_context.GetContext(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, &img_format, m_width, m_height, m_fb_stride, m_frame_buffer))
         {
             DBG_MSG("Failed to create OpenCL image buffer!");
+        }
+        */
+
+        /*
+        img_format.image_channel_data_type = CL_FLOAT;
+        img_format.image_channel_order = CL_A; //CL_ARGB;
+        */
+
+        m_zbuffer.Release();
+        if (!m_zbuffer.CreateBuffer(m_context.GetContext(), CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, m_fb_size, m_depth_buffer))
+        {
+            DBG_MSG("Failed to create a OpenCL buffer for the depth buffer!");
         }
 
     }
@@ -871,18 +888,11 @@ namespace forg
                 m_frame_buffer[p] = c;
             }
 
-            size_t origin[3] = { 0, 0, 0 };
-            size_t region[3] = { m_width, m_height, 1 };
-            m_queue.EnqueueWriteImage(m_fbuffer.GetMemObject(), CL_FALSE, origin, region, m_fb_stride, 0, m_frame_buffer);
+            m_queue.EnqueueWriteBuffer(m_fbuffer.GetMemObject(), CL_FALSE, 0, m_fb_size, m_frame_buffer);
         }
 
         if (flags & forg::ClearFlags_ZBuffer)
         {
-            for (uint p=0; p<m_width*m_height; p++)
-            {
-                m_depth_buffer[p] = zdepth;
-            }
-
             const size_t globalWorkSize[] = { m_width, m_height, 0 };
 
             m_kClearScreenBuffer.SetKernelArg(0, m_zbuffer);
@@ -965,8 +975,7 @@ namespace forg
             // Get the results back to the host
             size_t origin[3] = { 0, 0, 0 };
             size_t region[3] = { m_width, m_height, 1 };
-            m_queue.EnqueueReadImage(m_fbuffer.GetMemObject(), CL_TRUE,
-                origin, region, m_fb_stride, 0, pvBits);
+            m_queue.EnqueueReadBuffer(m_fbuffer.GetMemObject(), CL_TRUE, 0, m_fb_size, pvBits);
 
             m_mem_buffers.clear();
 
@@ -1124,7 +1133,7 @@ namespace forg
         minx &= ~(q - 1);
         miny &= ~(q - 1);
 
-        (char*&)colorBuffer += miny * m_fb_stride;
+        (char*&)colorBuffer += miny * m_fb_pitch;
 
         // Half-edge constants
         int C1 = DY12 * X1 - DX12 * Y1;
@@ -1186,7 +1195,7 @@ namespace forg
                             SetPixel(ix, y+iy, 0.0f, 0xFF007F00);
                         }
 
-                        (char*&)buffer += m_fb_stride;
+                        (char*&)buffer += m_fb_pitch;
                     }
                 }
                 else // Partially covered block
@@ -1218,12 +1227,12 @@ namespace forg
                         CY2 += FDX23;
                         CY3 += FDX31;
 
-                        (char*&)buffer += m_fb_stride;
+                        (char*&)buffer += m_fb_pitch;
                     }
                 }
             }
 
-            (char*&)colorBuffer += q * m_fb_stride;
+            (char*&)colorBuffer += q * m_fb_pitch;
         }
     }
 
@@ -1251,19 +1260,23 @@ namespace forg
             sizeof(VSOutput)*num_triangles*3, vertices);
 
         // Set kernel attributes
+        cl_uint2 screen_dim;
+        screen_dim.s[0] = m_width;
+        screen_dim.s[1] = m_height;
 
         m_kDrawBlock.SetKernelArg(0, m_fbuffer);
         m_kDrawBlock.SetKernelArg(1, m_zbuffer);
-        m_kDrawBlock.SetKernelArg(2, tri_buffer);
-        m_kDrawBlock.SetKernelArg(3, sizeof(num_triangles), &num_triangles);
-        m_kDrawBlock.SetKernelArg(4, sizeof(usage), &usage);
+        m_kDrawBlock.SetKernelArg(2, sizeof(screen_dim), &screen_dim);
+        m_kDrawBlock.SetKernelArg(3, tri_buffer);
+        m_kDrawBlock.SetKernelArg(4, sizeof(num_triangles), &num_triangles);
+        m_kDrawBlock.SetKernelArg(5, sizeof(usage), &usage);
         if (bit_test(usage, DeclarationUsage_TextureCoordinate) && m_samplers[0].texture)
         {
-            m_kDrawBlock.SetKernelArg(5, static_cast<SWTexture*>(m_samplers[0].texture)->GetBuffer());
+            m_kDrawBlock.SetKernelArg(6, static_cast<SWTexture*>(m_samplers[0].texture)->GetBuffer());
         }
         else
         {
-            m_kDrawBlock.SetKernelArg(5, m_fbuffer);
+            m_kDrawBlock.SetKernelArg(6, m_default_texture);
         }
 
         // Set up work groups
