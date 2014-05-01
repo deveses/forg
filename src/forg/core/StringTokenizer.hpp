@@ -21,7 +21,7 @@
 
 #include "base.h"
 #include <string>
-//#include "string.hpp"
+//#include "core/string.hpp"
 
 namespace forg { namespace core {
 
@@ -127,6 +127,7 @@ public:
 	*/
 	int	CountTokens()
 	{
+        TRAP_NOT_IMPLEMENTED();
 //#warning "fuction not implemented"
 		return 0;
 	}

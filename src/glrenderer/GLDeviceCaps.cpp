@@ -48,7 +48,7 @@ using namespace forg::debug;
 #else
 #define GLCAPS_CHECK_AND_SETUP(str, ext, cap)\
 	{\
-	if (! m_capabilities[cap] && str == (string)_T(#ext))\
+if (!m_capabilities[cap] && str == (StringTokenizer<char>::string_type)_T(#ext))\
 	{\
 		m_capabilities.Set(cap, GetExtension(cap)!=0 );\
 	}\

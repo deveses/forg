@@ -36,7 +36,7 @@
 #endif
 
 
-#ifdef RENDERER_EXPORTS
+#ifdef SWRENDERER_EXPORTS
 //#   warning(exporting symbols)
 #   define SWRENDERER_API DLLEXPORT
 #else

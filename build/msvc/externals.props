@@ -5,10 +5,10 @@
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)../../extern/freetype/include;$(ProjectDir)../../extern/zlib/include;$(ProjectDir)../../extern/opencl</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)../../extern/freetype/include;$(ProjectDir)../../extern/zlib/include;$(ProjectDir)../../extern/opencl;$(ProjectDir)../../extern/opengl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(ProjectDir)../../extern/freetype/lib/vc_lib/$(Platform);$(ProjectDir)../../extern/zlib/lib/vc/$(Platform);</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)../../extern/freetype/lib/vc_lib/$(Platform);$(ProjectDir)../../extern/zlib/lib/vc/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup />

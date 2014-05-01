@@ -5,7 +5,7 @@
 
 /******************************************************************************/
 
-#ifdef WIN32
+#ifdef PLATFORM_WINDOWS
 #include <Windows.h>
 #else
 typedef union _LARGE_INTEGER {

@@ -2,13 +2,16 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <ConfigurationSuffix>_vc_d</ConfigurationSuffix>
+    <ConfigurationSuffix>_d</ConfigurationSuffix>
   </PropertyGroup>
   <PropertyGroup />
   <ItemDefinitionGroup>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <BuildMacro Include="ConfigurationSuffix">
