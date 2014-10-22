@@ -16,21 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _CORELIB_DEBUG_H_
-#define _CORELIB_DEBUG_H_
-
-#ifdef TRACE_MEMORY_LEAKS
-
-#if defined(new) || defined(_MFC_VER)  // if new is already defined use current definition
-#   define OVERRIDE_NEW     new
-#else
-#   define OVERRIDE_NEW     new(__FILE__,__LINE__)
-#   define new              OVERRIDE_NEW
-#endif //new
-
-#include "dbg_new.h"
-
-#endif
+#pragma once
 
 #include "base.h"
 
@@ -48,11 +34,19 @@ namespace forg { namespace debug {
 //#define verify(value) ((void)value)
 //#endif
 
-
-FORG_API void DbgOutputString(LPCTSTR lpOutputString, ...);
+FORG_API void DbgOutputStringW(const wchar_t* lpOutputString, va_list args);
+FORG_API void DbgOutputStringA(LPCTSTR lpOutputString, va_list args);
 FORG_API int DbgTrace( LPCTSTR strFile, uint dwLine, int iResult, LPCTSTR strMsg);
 FORG_API int DbgTraceOnlyNonZero( LPCTSTR strFile, uint dwLine, int iResult, LPCTSTR strMsg);
 FORG_API void DbgTrap( LPCTSTR strFile, uint dwLine, LPCTSTR strMsg);
+
+template <typename T>
+void DbgOutputString(const T* lpOutputString, ...);
+
+template <>
+FORG_API void DbgOutputString<wchar_t>(const wchar_t* lpOutputString, ...);
+template <>
+FORG_API void DbgOutputString<char>(const char* lpOutputString, ...);
 
 #define RMSG forg::debug::DbgOutputString
 #define RTRACE_MSG(strLiteral) forg::debug::DbgTrace(__FILE__, __LINE__, 0, strLiteral)
@@ -61,7 +55,7 @@ FORG_API void DbgTrap( LPCTSTR strFile, uint dwLine, LPCTSTR strMsg);
 
 #ifndef NO_DEBUG_MSG
 
-#define DBG_MSG forg::debug::DbgOutputString
+#define DBG_MSG(fmt, ...) forg::debug::DbgOutputString(fmt, ##__VA_ARGS__)
 
 #ifdef _WIN32
 #define DBG_TRACE_MSG(strLiteral) forg::debug::DbgTrace(__FILE__, __LINE__, 0, strLiteral)
@@ -96,5 +90,3 @@ FORG_API void DbgTrap( LPCTSTR strFile, uint dwLine, LPCTSTR strMsg);
 
 
 }}
-
-#endif // _CORELIB_DEBUG_H_
