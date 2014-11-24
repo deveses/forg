@@ -68,11 +68,11 @@ typedef struct _TriangleInterpolator
         float bary_b;
         float bary_c;
 
-        bool ext01;
-        bool ext12;
-        bool ext20;
+        char ext01;
+        char ext12;
+        char ext20;
 
-        bool draw;
+        char draw;
 } TriangleInterpolator;
 
 float linear_eq(float2 A, float C, float2 x)
@@ -112,7 +112,28 @@ void TriangleInterpolator_Initialize(TriangleInterpolator* ti, float2 pos0, floa
     ti->ext01 = linear_eq(ti->lineA01, ti->lineC01, xp)*ti->bary01 > 0.0f;
     ti->ext12 = linear_eq(ti->lineA12, ti->lineC12, xp)*ti->bary12 > 0.0f;
     ti->ext20 = linear_eq(ti->lineA20, ti->lineC20, xp)*ti->bary20 > 0.0f;
+}
 
+void TriangleInterpolator_InitializeGlobal(__global TriangleInterpolator* ti, float2 pos0, float2 pos1, float2 pos2)
+{
+    ti->lineA01 = (float2)(pos0.y - pos1.y, pos1.x - pos0.x);
+    ti->lineA12 = (float2)(pos1.y - pos2.y, pos2.x - pos1.x);
+    ti->lineA20 = (float2)(pos2.y - pos0.y, pos0.x - pos2.x);
+        
+    // cross product AxB = A.x * B.y - B.x * A.y 
+    
+    ti->lineC01 = det(pos0, pos1);
+    ti->lineC12 = det(pos1, pos2);
+    ti->lineC20 = det(pos2, pos0);
+    
+    ti->bary01 = linear_eq(ti->lineA01, ti->lineC01, pos2);
+    ti->bary12 = linear_eq(ti->lineA12, ti->lineC12, pos0);
+    ti->bary20 = linear_eq(ti->lineA20, ti->lineC20, pos1);
+    
+    float2 xp = (float2)(-1, -1);
+    ti->ext01 = linear_eq(ti->lineA01, ti->lineC01, xp)*ti->bary01 > 0.0f;
+    ti->ext12 = linear_eq(ti->lineA12, ti->lineC12, xp)*ti->bary12 > 0.0f;
+    ti->ext20 = linear_eq(ti->lineA20, ti->lineC20, xp)*ti->bary20 > 0.0f;
 }
 
 void TriangleInterpolator_SetPoint(TriangleInterpolator* ti, int2 pos)
@@ -273,7 +294,7 @@ __kernel void ClearScreenBuffer(__global  float* buffer, float value)
     int sy = get_global_id(1);
 
     size_t width = get_global_size(0);
-    size_t height = get_global_size(1);
+    //size_t height = get_global_size(1);
     
     size_t index = sy*width + sx;
     
@@ -282,6 +303,20 @@ __kernel void ClearScreenBuffer(__global  float* buffer, float value)
 
 __kernel void PrepareBlock(__constant Triangle* triangles, uint num_triangles)
 {
+}
+
+__kernel void InitializeInterpolator(__constant Triangle* triangles, uint num_triangles, __global TriangleInterpolator* interpolators)
+{
+    for (uint t=0; t<num_triangles; t++)
+    {
+        const Triangle triangle = triangles[t];
+
+        const float2 pos0 = triangle.vertices[0].position.xy;
+        const float2 pos1 = triangle.vertices[1].position.xy; 
+        const float2 pos2 = triangle.vertices[2].position.xy;
+
+        TriangleInterpolator_InitializeGlobal(&interpolators[t], pos0, pos1, pos2);
+    }
 }
 
 __kernel void DrawBlock(__global uint* cbuffer, 
@@ -308,7 +343,7 @@ __kernel void DrawBlock(__global uint* cbuffer,
     // GRAB?
     // RGBA -> GRAB
     //uint4 colMask = (uint4)(1, 0, 3, 2);
-    const uint4 colMask = (uint4)(2, 1, 0, 3);     // RGBA -> BGRA
+    //const uint4 colMask = (uint4)(2, 1, 0, 3);     // RGBA -> BGRA
     
     for (uint t=0; t<num_triangles; t++)
     {
@@ -441,3 +476,153 @@ __kernel void DrawBlock(__global uint* cbuffer,
   }
 }
 
+__kernel void DrawBlockInt(__global uint* cbuffer, 
+                        __global float* zbuffer, 
+                        uint2 dim,
+                        __constant Triangle* triangles, 
+                        __constant TriangleInterpolator* interpolators,
+                        uint num_triangles,
+                        int usage,
+                        __read_only image2d_t tex0)
+{
+    uint width = dim.x;
+    uint height = dim.y;
+  
+    int sx = get_global_id(0);
+    int sy = get_global_id(1);
+    
+    //int2 dim = (int2)(width, height);                
+    int2 spos = (int2)(sx, sy);
+    
+    int lx = get_local_id(0);
+    int ly = get_local_id(1);
+    
+    for (uint t=0; t<num_triangles; t++)
+    {
+        const Triangle triangle = triangles[t];
+        const TriangleInterpolator interpolator = interpolators[t];
+
+        const float2 pos0 = triangle.vertices[0].position.xy;
+        const float2 pos1 = triangle.vertices[1].position.xy; 
+        const float2 pos2 = triangle.vertices[2].position.xy;
+
+        const int2 ipos1 = convert_int2(16.0f * pos0);
+        const int2 ipos2 = convert_int2(16.0f * pos1);
+        const int2 ipos3 = convert_int2(16.0f * pos2);
+
+        // Bounding rectangle
+
+        int2 bounds_min = (min3_int2(ipos1, ipos2, ipos3) + 0xF) >> 4;
+        int2 bounds_max = (max3_int2(ipos1, ipos2, ipos3) + 0xF) >> 4;
+                    
+        if (spos.x < bounds_min.x || spos.x > bounds_max.x)
+          continue;
+          
+        if (spos.y < bounds_min.y || spos.y > bounds_max.y)
+          continue;
+    
+        bounds_min = max(bounds_min, (int2)(0, 0));
+        bounds_max = min(bounds_max, (int2)(width, height));
+                         
+        // Deltas
+
+        const int2 DXY12 = ipos1 - ipos2;
+        const int2 DXY23 = ipos2 - ipos3;
+        const int2 DXY31 = ipos3 - ipos1;
+        
+        // Fixed-point deltas
+
+        const int2 FDXY12 = DXY12 << 4;
+        const int2 FDXY23 = DXY23 << 4;
+        const int2 FDXY31 = DXY31 << 4;
+
+        // Half-edge constants
+        int C1 = det_int2(ipos1, DXY12);  
+        int C2 = det_int2(ipos2, DXY23);  
+        int C3 = det_int2(ipos3, DXY31); 
+
+        // Correct for fill convention
+        if(DXY12.y < 0 || (DXY12.y == 0 && DXY12.x > 0)) C1++;
+        if(DXY23.y < 0 || (DXY23.y == 0 && DXY23.x > 0)) C2++;
+        if(DXY31.y < 0 || (DXY31.y == 0 && DXY31.x > 0)) C3++;     
+
+        // Block size, standard 8x8 (must be power of two)
+        const int q = 8;
+
+        // Start in corner of 8x8 block
+        bounds_min &= ~(q - 1);
+                
+        // Loop through blocks
+        int2 cur_pos = spos & ~(q - 1);
+        
+        //for(int y = miny; y < maxy; y += q)
+        if (cur_pos.y >= bounds_min.y && cur_pos.y < bounds_max.y)
+        {        
+            //for(int x = minx; x < maxx; x += q)
+            if (cur_pos.x >= bounds_min.x && cur_pos.x < bounds_max.x)
+            {
+                // Corners of block
+                int2 bc0 = cur_pos << 4;
+                int2 bc1 = (cur_pos + q - 1) << 4;
+                
+                // Evaluate half-space functions
+                
+                bool a00 = C1 + det_int2(DXY12, bc0) > 0;
+                bool a10 = C1 + det_int2(DXY12, (int2)(bc1.x, bc0.y)) > 0;
+                bool a01 = C1 + det_int2(DXY12, (int2)(bc0.x, bc1.y)) > 0;
+                bool a11 = C1 + det_int2(DXY12, bc1) > 0; 
+
+                bool b00 = C2 + det_int2(DXY23, bc0) > 0;
+                bool b10 = C2 + det_int2(DXY23, (int2)(bc1.x, bc0.y)) > 0;
+                bool b01 = C2 + det_int2(DXY23, (int2)(bc0.x, bc1.y)) > 0;
+                bool b11 = C2 + det_int2(DXY23, bc1) > 0; 
+
+                bool c00 = C3 + det_int2(DXY31, bc0) > 0;
+                bool c10 = C3 + det_int2(DXY31, (int2)(bc1.x, bc0.y)) > 0;
+                bool c01 = C3 + det_int2(DXY31, (int2)(bc0.x, bc1.y)) > 0;
+                bool c11 = C3 + det_int2(DXY31, bc1) > 0; 
+
+                int a = (a00 << 0) | (a10 << 1) | (a01 << 2) | (a11 << 3);
+                int b = (b00 << 0) | (b10 << 1) | (b01 << 2) | (b11 << 3);
+                int c = (c00 << 0) | (c10 << 1) | (c01 << 2) | (c11 << 3);
+
+                // Skip block when outside an edge
+                if(a == 0x0 || b == 0x0 || c == 0x0) //continue;
+                {
+                }
+                // Accept whole block when totally covered
+                else if(a == 0xF && b == 0xF && c == 0xF)
+                {
+                    if (sx < width && sy < height) 
+                    {
+                        ProcessPixel(cbuffer, zbuffer, spos, dim, &interpolator, &triangle, usage, tex0);  
+                    }
+                }
+                else // Partially covered block
+                {                    
+                    // current block pixel
+                    int2 bp = spos - cur_pos;
+                
+                    int CX1 = C1 + det_int2(DXY12, bc0) + det_int2(FDXY12, bp);
+                    int CX2 = C2 + det_int2(DXY23, bc0) + det_int2(FDXY23, bp);
+                    int CX3 = C3 + det_int2(DXY31, bc0) + det_int2(FDXY31, bp);
+                         
+                    if(CX1 > 0 && CX2 > 0 && CX3 > 0)
+                    {                               
+                        if (sx < width && sy < height) 
+                        {
+                            ProcessPixel(cbuffer, zbuffer, spos, dim, &interpolator, &triangle, usage, tex0);
+                        }
+                    }
+                    
+                }                
+            }
+        }
+        // end of blocks checking loop    
+  }
+  
+  if (sx < width && sy < height)
+  {
+    //write_imageui(buffer, (int2)(sx, height - 1 - sy), (uint4)(255, 255, 255, 255));
+  }
+}

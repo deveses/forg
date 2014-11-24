@@ -17,6 +17,8 @@ class Model
 public:
     int Load(const char* _name, IRenderDevice* _device);
 
+    bool IsLoaded() const { return !m_mesh.is_null(); }
+
     void Render(IRenderDevice* _device);
 };
 

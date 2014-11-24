@@ -12,7 +12,7 @@
     </When>
     <Otherwise>
       <PropertyGroup>
-        <TargetName>$(ProjectName)_vc_dll$(ConfigurationSuffix)</TargetName>
+        <TargetName>$(ProjectName)_vc_$(Platform)$(ConfigurationSuffix)</TargetName>
         <OutDir>$(SolutionDir)/bin/$(Platform)/</OutDir>
         <IntDir>$(SolutionDir)/obj/$(Platform)/$(ProjectName)/$(Configuration)/</IntDir>
       </PropertyGroup>

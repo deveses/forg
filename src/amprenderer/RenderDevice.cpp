@@ -1379,6 +1379,7 @@ namespace forg
             , m_zbuffer(dim.x, dim.y, zbuffer)
             , m_vertices(num_triangles * 3, (AMPVSOutput*)vertices)
         {
+            //m_cbuffer.discard_data();
             m_zbuffer.discard_data();
         }
 

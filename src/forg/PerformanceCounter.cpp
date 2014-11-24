@@ -137,6 +137,34 @@ namespace forg {
         return RESULT_NO_ERRORS;
     }
 
+    int PerformanceCounter::GetDurationInUs(uint64& duration)
+    {
+        uint64 t = m_iDuration;
+
+        if (m_bStarted)
+        {
+            t += GetTime() - m_iStart;
+        }
+
+        duration = (t / (m_iFrequency/1000000));
+
+        return RESULT_NO_ERRORS;
+    }
+
+    int PerformanceCounter::GetDurationInUs(double& duration)
+    {
+        uint64 t = m_iDuration;
+
+        if (m_bStarted)
+        {
+            t += GetTime() - m_iStart;
+        }
+
+        duration = ((double)t / (m_iFrequency / 1000000.0));
+
+        return RESULT_NO_ERRORS;
+    }
+
     //==========================================================================
     // Platform specific
     //==========================================================================

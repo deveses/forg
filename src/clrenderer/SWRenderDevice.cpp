@@ -159,11 +159,11 @@ namespace forg
         float bary_b;
         float bary_c;
 
-        bool ext01;
-        bool ext12;
-        bool ext20;
+        char ext01;
+        char ext12;
+        char ext20;
 
-        bool draw;
+        char draw;
 
         void Initialize(const float2& pos0, const float2& pos1, const float2& pos2)
         {
@@ -234,7 +234,7 @@ namespace forg
             return A*x + B*y + C;
         }
 
-        bool CanDraw() const { return draw; }
+        bool CanDraw() const { return draw!=0; }
 
         void Interpolate(Vector3* out, const Vector3* attribs) const
         {
@@ -375,15 +375,16 @@ namespace forg
     {
         if (!m_opencl.Initialize())
         {
-            return FORG_INVALID_CALL;
+            return false;
         }
 
         // Device -> Compute units -> Processing elements
 
-        OpenCL::CLPlatform* platform = m_opencl.GetPlatform(0);
+        OpenCL::CLPlatform* platform = m_opencl.GetPlatform(1);
         OpenCL::CLDevice* device = platform->GetDevice(0);
 
-        forg::PerformanceCounter job_timer;
+        DBG_MSG("Selected platform: \n");
+        platform->PrintInfo();
 
         DBG_MSG("Create context...\n");
         m_context.Create(platform->GetPlatformId(), device->GetDeviceId());
@@ -408,7 +409,9 @@ namespace forg
 
         m_kPrepareBlock.Create(m_program.GetProgram(), "PrepareBlock");
         m_kDrawBlock.Create(m_program.GetProgram(), "DrawBlock");
+        m_kDrawBlockInt.Create(m_program.GetProgram(), "DrawBlockInt");
         m_kClearScreenBuffer.Create(m_program.GetProgram(), "ClearScreenBuffer");
+        m_kInitializeInterpolators.Create(m_program.GetProgram(), "InitializeInterpolator");
 
         OpenCL::CLKernelWorkGroupInfo kwginfo;
         m_kDrawBlock.GetKernelWorkGroupInfo(device->GetDeviceId(), kwginfo);
@@ -476,6 +479,17 @@ namespace forg
             DBG_MSG("Failed to create a OpenCL buffer for the depth buffer!");
         }
 
+        m_vbuffer.Release();
+        if (!m_vbuffer.CreateBuffer(m_context.GetContext(), CL_MEM_READ_WRITE, sizeof(VSOutput)*MAX_VERTEX_BATCH_SIZE, 0))
+        {
+            DBG_MSG("Failed to create a OpenCL buffer for the vertex buffer!");
+        }
+
+        m_interpolators.Release();
+        if (!m_interpolators.CreateBuffer(m_context.GetContext(), CL_MEM_READ_ONLY, sizeof(TriangleInterpolator)*NUM_TRIANGLES_PER_BATCH, 0))
+        {
+            DBG_MSG("Failed to create a OpenCL buffer for the vertex buffer!");
+        }
     }
 
     int SWRenderDevice::Reset()
@@ -671,11 +685,6 @@ namespace forg
         V_POS_FLOAT3 = 1,
         V_NRM_FLOAT3 = 2,
         V_UV0_FLOAT2 = 4,
-    };
-
-    enum
-    {
-        MAX_VERTEX_BATCH_SIZE = 3 * 512
     };
 
     int SWRenderDevice::DrawIndexedUserPrimitives(
@@ -1244,20 +1253,29 @@ namespace forg
         }
     }
 
-    void SWRenderDevice::DrawTriangleArrayCL(VSOutput* vertices, uint num_triangles, int usage)
+    void SWRenderDevice::DrawTriangleArrayCL(const VSOutput* vertices, uint num_triangles, int usage)
     {
         if (num_triangles == 0)
             return;
+
+        if (num_triangles > 10)
+        {
+            DrawTriangleArrayCLPreInt(vertices, num_triangles, usage);
+            return;
+        }
 
         OpenCL::CLPlatform* platform = m_opencl.GetPlatform(0);
         OpenCL::CLDevice* device = platform->GetDevice(0);
 
         // Prepare buffers
 
-        m_mem_buffers.push_back(OpenCL::CLMemObject());
-        OpenCL::CLMemObject& tri_buffer = m_mem_buffers.back();
-        tri_buffer.CreateBuffer(m_context.GetContext(), CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
-            sizeof(VSOutput)*num_triangles*3, vertices);
+        //m_mem_buffers.push_back(OpenCL::CLMemObject());
+        //OpenCL::CLMemObject& tri_buffer = m_mem_buffers.back();
+        //tri_buffer.CreateBuffer(m_context.GetContext(), CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        //    sizeof(VSOutput)*num_triangles*3, vertices);
+
+        // write vertex data
+        m_queue.EnqueueWriteBuffer(m_vbuffer.GetMemObject(), CL_TRUE, 0, sizeof(VSOutput)*num_triangles * 3, vertices);
 
         // Set kernel attributes
         cl_uint2 screen_dim;
@@ -1267,7 +1285,7 @@ namespace forg
         m_kDrawBlock.SetKernelArg(0, m_fbuffer);
         m_kDrawBlock.SetKernelArg(1, m_zbuffer);
         m_kDrawBlock.SetKernelArg(2, sizeof(screen_dim), &screen_dim);
-        m_kDrawBlock.SetKernelArg(3, tri_buffer);
+        m_kDrawBlock.SetKernelArg(3, m_vbuffer);
         m_kDrawBlock.SetKernelArg(4, sizeof(num_triangles), &num_triangles);
         m_kDrawBlock.SetKernelArg(5, sizeof(usage), &usage);
         if (bit_test(usage, DeclarationUsage_TextureCoordinate) && m_samplers[0].texture)
@@ -1277,6 +1295,140 @@ namespace forg
         else
         {
             m_kDrawBlock.SetKernelArg(6, m_default_texture);
+        }
+
+        // Set up work groups
+
+        uint xmax = 0;
+        uint xmin = m_width;
+        uint ymax = 0;
+        uint ymin = m_height;
+        uint xtreme_found = 0;
+
+        for (size_t i = 0; i < num_triangles * 3 && xtreme_found < 4; i++)
+        {
+            int screenx = iround(vertices[i].position.X);
+            int screeny = iround(vertices[i].position.Y);
+
+            if (screenx < xmin && xmin > 0)
+            {
+                xmin = screenx;
+
+                if (xmin <= 0)
+                {
+                    xmin = 0;
+                    xtreme_found++;
+                }
+            }
+            else if (screenx > xmax && xmax < m_width)
+            {
+                xmax = screenx;
+
+                if (xmax >= m_width)
+                {
+                    xmax = m_width;
+                    xtreme_found++;
+                }
+            }
+
+            if (screeny < ymin && ymin > 0)
+            {
+                ymin = screeny;
+
+                if (ymin <= 0)
+                {
+                    ymin = 0;
+                    xtreme_found++;
+                }
+            }
+            else if (screeny > ymax && ymax < m_height)
+            {
+                ymax = screeny;
+
+                if (ymax >= m_height)
+                {
+                    ymax = m_height;
+                    xtreme_found++;
+                }
+            }
+        }
+
+        /*
+        xmin = 0;
+        xmax = m_width;
+        ymin = 0;
+        ymax = m_height;
+        */
+
+        xmin &= ~7;
+        ymin &= ~7;
+        uint xsize = next_mul<5>(xmax - xmin);
+        uint ysize = next_mul<5>(ymax - ymin);
+
+        // Enqueue job 
+
+        // we need one loop to iterate through triangles
+        static int exec = 1;
+        if(exec){
+            const size_t globalWorkOffset[] = { xmin, ymin, 0 };
+            const size_t globalWorkSize[] = { xsize, ysize, 0 };
+            const size_t localWorkSize[] = { 8, 8, 0 };
+
+            m_queue.EnqueueNDRangeKernel(m_kDrawBlock.GetKernel(), 2,
+                globalWorkOffset, globalWorkSize, nullptr);
+        }
+    }
+
+    void SWRenderDevice::DrawTriangleArrayCLPreInt(const VSOutput* vertices, uint num_triangles, int usage)
+    {
+        if (num_triangles == 0)
+            return;
+
+        OpenCL::CLPlatform* platform = m_opencl.GetPlatform(0);
+        OpenCL::CLDevice* device = platform->GetDevice(0);
+
+        // Prepare buffers
+
+        //m_mem_buffers.push_back(OpenCL::CLMemObject());
+        //OpenCL::CLMemObject& tri_buffer = m_mem_buffers.back();
+        //tri_buffer.CreateBuffer(m_context.GetContext(), CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR,
+        //    sizeof(VSOutput)*num_triangles*3, vertices);
+
+        // write vertex data
+        m_queue.EnqueueWriteBuffer(m_vbuffer.GetMemObject(), CL_TRUE, 0, sizeof(VSOutput)*num_triangles * 3, vertices);
+
+        // initialize interpolators
+        {
+            const size_t globalWorkSize[] = { num_triangles, 0, 0 };
+
+            m_kInitializeInterpolators.SetKernelArg(0, m_vbuffer);
+            m_kInitializeInterpolators.SetKernelArg(1, sizeof(num_triangles), &num_triangles);
+            m_kInitializeInterpolators.SetKernelArg(2, m_interpolators);
+
+            m_queue.EnqueueNDRangeKernel(m_kInitializeInterpolators.GetKernel(), 1,
+                nullptr, globalWorkSize, nullptr);
+        }
+
+        // Set kernel attributes
+        cl_uint2 screen_dim;
+        screen_dim.s[0] = m_width;
+        screen_dim.s[1] = m_height;
+
+        m_kDrawBlockInt.SetKernelArg(0, m_fbuffer);
+        m_kDrawBlockInt.SetKernelArg(1, m_zbuffer);
+        m_kDrawBlockInt.SetKernelArg(2, sizeof(screen_dim), &screen_dim);
+        m_kDrawBlockInt.SetKernelArg(3, m_vbuffer);
+        m_kDrawBlockInt.SetKernelArg(4, m_interpolators);
+        m_kDrawBlockInt.SetKernelArg(5, sizeof(num_triangles), &num_triangles);
+        m_kDrawBlockInt.SetKernelArg(6, sizeof(usage), &usage);
+
+        if (bit_test(usage, DeclarationUsage_TextureCoordinate) && m_samplers[0].texture)
+        {
+            m_kDrawBlockInt.SetKernelArg(7, static_cast<SWTexture*>(m_samplers[0].texture)->GetBuffer());
+        }
+        else
+        {
+            m_kDrawBlockInt.SetKernelArg(7, m_default_texture);
         }
 
         // Set up work groups
@@ -1346,15 +1498,18 @@ namespace forg
         ymin &= ~7;
         uint xsize = next_mul<3>(xmax-xmin);
         uint ysize = next_mul<3>(ymax-ymin);
-        const size_t globalWorkOffset[] = { xmin, ymin, 0 };
-        const size_t globalWorkSize[] = { xsize, ysize, 0 };
-        const size_t localWorkSize[] = { 8, 8, 0 };
 
         // Enqueue job 
 
         // we need one loop to iterate through triangles
-        m_queue.EnqueueNDRangeKernel(m_kDrawBlock.GetKernel(), 2,
-            globalWorkOffset, globalWorkSize, localWorkSize);
+        {
+            const size_t globalWorkOffset[] = { xmin, ymin, 0 };
+            const size_t globalWorkSize[] = { xsize, ysize, 0 };
+            const size_t localWorkSize[] = { 8, 8, 0 };
+
+            m_queue.EnqueueNDRangeKernel(m_kDrawBlockInt.GetKernel(), 2,
+                globalWorkOffset, globalWorkSize, localWorkSize);
+        }
     }
 
     /*

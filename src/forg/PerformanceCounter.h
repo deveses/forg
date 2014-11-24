@@ -70,6 +70,8 @@ namespace forg {
         int GetDuration(double& duration);
         int GetDurationInMs(uint64& duration);
         int GetDurationInMs(double& duration);
+        int GetDurationInUs(uint64& duration);
+        int GetDurationInUs(double& duration);
 
     //Helpers
     private:

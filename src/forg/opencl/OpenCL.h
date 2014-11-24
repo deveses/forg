@@ -51,6 +51,8 @@ namespace OpenCL
         CLDevice* GetDevice(cl_uint index) const;
 
         bool Initialize(cl_platform_id platform_id);
+
+        void PrintInfo();
     };
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -195,7 +197,7 @@ namespace OpenCL
             size_t offset, size_t size, void *ptr);
 
         bool EnqueueWriteBuffer(cl_mem buffer, cl_bool blocking_write,
-            size_t offset, size_t size, void *ptr);
+            size_t offset, size_t size, const void *ptr);
 
         bool EnqueueReadImage(cl_mem image, cl_bool blocking,
             const size_t origin[3], const size_t region[3],

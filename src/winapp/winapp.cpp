@@ -45,6 +45,11 @@ BOOL CWinApp::InitApplication()
       and WS_MINIMIZE styles.*/
 
     HMODULE module = 0;
+    int winWidth = 100;
+    int winHeight = 100;
+	int winX = 10;
+	int winY = 10;
+
     forg::script::xml::XMLParser config;
 
     config.Open("config.xml");
@@ -52,17 +57,37 @@ BOOL CWinApp::InitApplication()
 
     if (xml_doc)
     {
-        forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("renderer");
-
-        if (xml_node)
+        if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("renderer"))
         {
-            forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("driver");
-
-            if (xml_att)
+            if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("driver"))
             {                   
                 module = LoadLibrary(xml_att->GetContent().c_str());
             }
         }
+
+        if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("window"))
+        {
+            if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("width"))
+            {
+                winWidth = atoi(xml_att->GetContent().c_str());
+            }
+		
+			if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("height"))
+			{
+				winHeight = atoi(xml_att->GetContent().c_str());
+			}
+
+			if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("posx"))
+			{
+				winX = atoi(xml_att->GetContent().c_str());
+			}
+
+			if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("posy"))
+			{
+				winY = atoi(xml_att->GetContent().c_str());
+			}
+
+		}
     }
     
     //HMODULE module = LoadLibrary("glrenderer_vc_d.dll");
@@ -78,7 +103,7 @@ BOOL CWinApp::InitApplication()
 
     m_winMain = new Viewport();
     //if (m_winMain.Create("EWindow","3Ditor",CW_USEDEFAULT ,SW_MAXIMIZE,480,460,WS_SIZEBOX|WS_MAXIMIZEBOX|WS_MAXIMIZE|WS_TILEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS ))
-    if (m_winMain->Create(m_renderer, 10, 10, 1280,720, NULL))
+    if (m_winMain->Create(m_renderer, winX, winY, winWidth,winHeight, NULL))
         return FALSE;
 
     m_winMain->ShowWindow(SW_SHOW);

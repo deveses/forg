@@ -474,40 +474,7 @@ namespace OpenCL {
         m_platform_id = platform_id;
 
         // Get platform info
-        {
-            size_t string_size = 0;
-            forg::core::vector<char> platform_info;
-
-            // platform name
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_NAME, 0, nullptr, &string_size);
-            platform_info.resize(string_size);
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_NAME, string_size, platform_info.data(), &string_size);
-            DBG_MSG("[OpenCL] Platform: %s\n", platform_info.data());
-
-            // version
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_VERSION, 0, nullptr, &string_size);
-            platform_info.resize(string_size);
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_VERSION, string_size, platform_info.data(), &string_size);
-            DBG_MSG("[OpenCL] Version: %s\n", platform_info.data());
-
-            // vendor
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_VENDOR, 0, nullptr, &string_size);
-            platform_info.resize(string_size);
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_VENDOR, string_size, platform_info.data(), &string_size);
-            DBG_MSG("[OpenCL] Vendor: %s\n", platform_info.data());
-
-            // profile
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_PROFILE, 0, nullptr, &string_size);
-            platform_info.resize(string_size);
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_PROFILE, string_size, platform_info.data(), &string_size);
-            DBG_MSG("[OpenCL] Profile: %s\n", platform_info.data());
-
-            // extensions
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_EXTENSIONS, 0, nullptr, &string_size);
-            platform_info.resize(string_size);
-            OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_EXTENSIONS, string_size, platform_info.data(), &string_size);
-            DBG_MSG("[OpenCL] Extensions: %s\n", platform_info.data());
-        }
+        PrintInfo();
 
         CLV(OpenCL::clGetDeviceIDs(m_platform_id, CL_DEVICE_TYPE_ALL, 0, nullptr, &deviceIdCount));
 
@@ -530,6 +497,42 @@ namespace OpenCL {
         }
 
         return true;
+    }
+
+    void CLPlatform::PrintInfo()
+    {
+        size_t string_size = 0;
+        forg::core::vector<char> platform_info;
+
+        // platform name
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_NAME, 0, nullptr, &string_size);
+        platform_info.resize(string_size);
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_NAME, string_size, platform_info.data(), &string_size);
+        DBG_MSG("[OpenCL] Platform: %s\n", platform_info.data());
+
+        // version
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_VERSION, 0, nullptr, &string_size);
+        platform_info.resize(string_size);
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_VERSION, string_size, platform_info.data(), &string_size);
+        DBG_MSG("[OpenCL] Version: %s\n", platform_info.data());
+
+        // vendor
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_VENDOR, 0, nullptr, &string_size);
+        platform_info.resize(string_size);
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_VENDOR, string_size, platform_info.data(), &string_size);
+        DBG_MSG("[OpenCL] Vendor: %s\n", platform_info.data());
+
+        // profile
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_PROFILE, 0, nullptr, &string_size);
+        platform_info.resize(string_size);
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_PROFILE, string_size, platform_info.data(), &string_size);
+        DBG_MSG("[OpenCL] Profile: %s\n", platform_info.data());
+
+        // extensions
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_EXTENSIONS, 0, nullptr, &string_size);
+        platform_info.resize(string_size);
+        OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_EXTENSIONS, string_size, platform_info.data(), &string_size);
+        DBG_MSG("[OpenCL] Extensions: %s\n", platform_info.data());
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -950,7 +953,7 @@ namespace OpenCL {
     }
 
     bool CLCommandQueue::EnqueueWriteBuffer(cl_mem buffer, cl_bool blocking_write,
-        size_t offset, size_t size, void *ptr)
+        size_t offset, size_t size, const void *ptr)
     {
         m_error = OpenCL::clEnqueueWriteBuffer(m_queue, buffer, blocking_write, offset, size, ptr, 0, nullptr, nullptr);
 

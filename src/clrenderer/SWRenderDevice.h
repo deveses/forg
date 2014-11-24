@@ -107,6 +107,12 @@ class SWRenderDevice
     enum { NUM_STREAMS = 8};
     enum { NUM_LIGHTS = 8};
 
+    enum
+    {
+        NUM_TRIANGLES_PER_BATCH     = 256,
+        MAX_VERTEX_BATCH_SIZE       = 3 * NUM_TRIANGLES_PER_BATCH
+    };
+
     struct SStreamSource
     {
         IVertexBuffer* streamData;
@@ -135,13 +141,17 @@ class SWRenderDevice
     OpenCL::CLContext m_context;
     OpenCL::CLProgram m_program;
     OpenCL::CLCommandQueue m_queue;
-    OpenCL::CLMemObject m_fbuffer;
-    OpenCL::CLMemObject m_zbuffer;
+    OpenCL::CLMemObject m_fbuffer;  ///! frame/color buffer
+    OpenCL::CLMemObject m_zbuffer;  ///! depth buffer
+    OpenCL::CLMemObject m_vbuffer;  ///! vertex buffer
     OpenCL::CLMemObject m_default_texture;
+    OpenCL::CLMemObject m_interpolators;
     forg::core::vector<OpenCL::CLMemObject> m_mem_buffers;
     OpenCL::CLKernel m_kDrawBlock;
+    OpenCL::CLKernel m_kDrawBlockInt;
     OpenCL::CLKernel m_kPrepareBlock;
     OpenCL::CLKernel m_kClearScreenBuffer;
+    OpenCL::CLKernel m_kInitializeInterpolators;
 
     // Frame buffer: ARGB, each component is an uint8 (32bits per pixel)
     uint* m_frame_buffer;
@@ -192,7 +202,8 @@ private:
     void DrawTriangle(const Vector3* pos);
     void DrawTriangle(const VSOutput* vertices, int usage);
     void DrawTriangleArray(const VSOutput* vertices, uint num_triangles, int usage);
-    void DrawTriangleArrayCL(VSOutput* vertices, uint num_triangles, int usage);
+    void DrawTriangleArrayCL(const VSOutput* vertices, uint num_triangles, int usage);
+    void DrawTriangleArrayCLPreInt(const VSOutput* vertices, uint num_triangles, int usage);
     void DrawTriangleArrayCLTest(VSOutput* vertices, uint num_triangles, int usage);
     void DrawTriangleCL(const VSOutput* vertices, int usage);
 

@@ -59,6 +59,8 @@ namespace forg { namespace scene {
                 DBG_MSG(__T("Failed to load texture <%s>!\n"), tfn.c_str());
         }
 
+        DBG_MSG("Mesh %s loaded. Vertices: %d, Faces: %d\n", _name, m_mesh->GetNumVertices(), m_mesh->GetNumFaces());
+
         return FORG_OK;
     }
 
@@ -152,7 +154,8 @@ DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth, int 
     m_device->SetRenderState(forg::RenderStates_SourceBlend, forg::Blend_SourceAlpha);
     m_device->SetRenderState(forg::RenderStates_DestinationBlend, forg::Blend_InvSourceAlpha);
 
-    m_mesh = forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 5, 20);
+    m_mesh = forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40);
+    DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n", m_mesh->GetNumVertices(), m_mesh->GetNumFaces());
     
     forg::FontDescription fd =
     {
@@ -314,7 +317,12 @@ void Viewport::Render()
 
     m_device->SetLight(0, &s_Light);
     m_device->SetRenderState(forg::RenderStates_Lighting, true);
-    if (m_mesh != 0)
+
+    if (m_model.IsLoaded())
+    {
+        m_model.Render(m_device);
+    }
+    else if (m_mesh != 0)
     {
         //Matrix4 mat;
         //mat.Scale(0.01f, 0.01f, 0.01f);
@@ -324,8 +332,6 @@ void Viewport::Render()
         m_device->SetTransform(forg::TransformType_World, m_mesh_tm);
         m_mesh->DrawSubset(0);
     }
-
-    m_model.Render(m_device);
 
 	RenderUI();
 
@@ -364,7 +370,10 @@ void Viewport::RenderUI()
 
 void Viewport::OnPaint()
 {
+    forg::PerformanceCounter frame_profiler;
+    frame_profiler.Start();
     Render();
+    frame_profiler.Stop();
     ValidateRect( m_hWnd, NULL );
 
     m_frame_counter++;
@@ -373,10 +382,12 @@ void Viewport::OnPaint()
     m_perf_count.GetDurationInMs(duration);
 	if (duration >= 1000)
 	{
+        frame_profiler.GetDurationInUs(duration);
+
         m_fps = m_frame_counter;
         m_frame_counter = 0;
         m_perf_count.Start();
-        DBG_MSG("fps %d\n", m_fps);
+        DBG_MSG("fps %d time: %lld us\n", m_fps, duration);
     }
 }
 
