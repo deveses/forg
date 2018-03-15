@@ -9,13 +9,17 @@ static class ForgConstants
 
 abstract class BaseForgProject : Project
 {
-    protected string _ForgRootPath;
-    protected string _ForgScrPath;
+    public string ForgRootPath {get; private set;}
+    public string ForgScrPath {get; private set;}
+    public string ForgTmpPath {get; private set;}
+    public string ForgExternPath {get; private set;}
 
     public BaseForgProject()
     {
-        _ForgRootPath = ForgConstants.ProjectRootPath; 
-        _ForgScrPath = Path.Combine(_ForgRootPath, "src");        
+        ForgRootPath = ForgConstants.ProjectRootPath; 
+        ForgScrPath = Path.Combine(ForgRootPath, "src");        
+        ForgTmpPath = Path.Combine(ForgRootPath, "tmp");        
+        ForgExternPath = Path.Combine(ForgRootPath, "extern");        
     }
 }
 
@@ -30,7 +34,7 @@ abstract class BaseLibraryProject : BaseForgProject
         // that help us specify the kind of library output that we want.
         AddTargets(new Target(
             Platform.win64,
-            DevEnv.vs2015,
+            DevEnv.vs2017,
             Optimization.Debug | Optimization.Release,
             OutputType.Dll | OutputType.Lib));
     }
@@ -42,11 +46,16 @@ abstract class BaseLibraryProject : BaseForgProject
         // [target.Optimization] (so Debug or Release), but both the debug and
         // release configurations have both a shared and a static version so
         // that would not create unique configuration names.
-        conf.Name = @"[target.Optimization] [target.OutputType]";
+        conf.Name = @"[target.Optimization][target.OutputType]";
 
         // Gives a unique path for the project because Visual Studio does not
         // like shared intermediate directories.
-        conf.ProjectPath =  Path.Combine(_ForgRootPath, "output");
+        conf.ProjectPath =  Path.Combine(ForgRootPath, "output");
+
+        conf.TargetPath = Path.Combine("[conf.ProjectPath]", "[target.OutputType]", "[project.Name]", "[target.Optimization]");
+        //conf.Options.Add(Sharpmake.Options.Vc.General.WindowsTargetPlatformVersion.v8_1);
+
+		conf.IntermediatePath = Path.Combine("[conf.ProjectPath]", "int", "[project.Name]","[target.Optimization]");
     }
 }
 
@@ -54,18 +63,18 @@ abstract class BaseLibraryProject : BaseForgProject
 // project with the sample code.
 abstract class BaseSolution : Solution
 {
-    protected string _ForgRootPath;
+    public string ForgRootPath {get; private set;}
 
     public BaseSolution()
     {
-        _ForgRootPath = ForgConstants.SolutionRootPath; 
+        ForgRootPath = ForgConstants.SolutionRootPath; 
 
         // As with the project, define which target this solution builds for.
         // It's usually the same thing.
         AddTargets(new Target(
             //Platform.win32 | Platform.win64,
             Platform.win64,
-            DevEnv.vs2015,
+            DevEnv.vs2017,
             Optimization.Debug | Optimization.Release));
     }
 
@@ -76,6 +85,6 @@ abstract class BaseSolution : Solution
     public virtual void ConfigureAll(Solution.Configuration conf, Target target)
     {
         // Puts the generated solution in the /generated folder too.
-        conf.SolutionPath = Path.Combine(_ForgRootPath, "output");
+        conf.SolutionPath = Path.Combine(ForgRootPath, "output");
      }
 };

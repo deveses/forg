@@ -10,7 +10,7 @@ class WinAppLibraryProject : BaseLibraryProject
     public WinAppLibraryProject()
     {
         Name = "winapp";
-        SourceRootPath = Path.Combine(_ForgScrPath, "winapp");
+        SourceRootPath = Path.Combine(ForgScrPath, "winapp");
     }
 
     public override void ConfigureAll(Project.Configuration conf, Target target)
@@ -33,7 +33,7 @@ class ForgSolution : BaseSolution
     public ForgSolution()
     {
         // The name of the solution.
-        Name = "Forg";
+        Name = "ForgDemo";
     }
 
     // Configure for all 4 generated targets. Note that the type of the
@@ -52,7 +52,7 @@ class ForgSolution : BaseSolution
         conf.AddProject<EmfcLibraryProject>(target);
         conf.AddProject<ForgLibraryProject>(target);      
         conf.AddProject<GLRendererLibraryProject>(target);      
-
+        conf.AddProject<WinAppLibraryProject>(target);      
      }
 
     [Main]

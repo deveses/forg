@@ -2,6 +2,8 @@
 #include "cpuid.h"
 #include "debug/dbg.h"
 
+#include <intrin.h>
+
 namespace forg { namespace cpu {
 
 uint32 invoke_cpuid(int param, uint32& _eax, uint32& _ebx, uint32& _ecx, uint32& _edx)

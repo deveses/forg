@@ -2,11 +2,13 @@
 #include "rendering/Font.h"
 #include "rendering/Vertex.h"
 
+#ifdef FORG_USE_FREETYPE
 #include <ft2build.h>
 #include <freetype/freetype.h>
 #include <freetype/ftglyph.h>
 #include <freetype/ftoutln.h>
 #include <freetype/fttrigon.h>
+#endif
 
 #include "debug/dbg.h"
 
@@ -84,6 +86,7 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
     if (device == NULL || fontDesc == NULL)
         return NULL;
 
+#ifdef FORG_USE_FREETYPE
     FT_Library library;
     if (FT_Init_FreeType( &library ))
         return NULL;
@@ -148,6 +151,9 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
     FT_Done_FreeType(library);
 
     return font;
+#else
+    return nullptr;
+#endif
 }
 
 int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format, Color4b color)

@@ -10,7 +10,7 @@ class EmfcLibraryProject : BaseLibraryProject
     public EmfcLibraryProject()
     {
         Name = "emfc";
-        SourceRootPath = Path.Combine(_ForgScrPath, "emfc");
+        SourceRootPath = Path.Combine(ForgScrPath, "emfc");
     }
 
     public override void ConfigureAll(Project.Configuration conf, Target target)
@@ -30,7 +30,7 @@ class EmfcLibraryProject : BaseLibraryProject
         // The library wants LIBRARY_COMPILE defined when it compiles the
         // library, so that it knows whether it must use dllexport or
         // dllimport.
-        conf.Defines.Add("LIBRARY_COMPILE");
+        conf.Defines.Add("EMFC_STATIC");
 
         if (target.OutputType == OutputType.Dll)
         {
@@ -42,7 +42,7 @@ class EmfcLibraryProject : BaseLibraryProject
             // it is better to put it as an exported define. That way, any
             // projects with a dependency on this one will have LIBRARY_DLL
             // automatically defined by Sharpmake.
-            conf.ExportDefines.Add("LIBRARY_DLL");
+            conf.ExportDefines.Add("EMFC_EXPORTS");
 
             // Exported defines are not necessarily defines as well, so we need
             // to add LIBRARY_DLL as an ordinary define too.
@@ -62,7 +62,7 @@ class ForgLibraryProject : BaseLibraryProject
     public ForgLibraryProject()
     {
         Name = "forg";
-        SourceRootPath = Path.Combine(_ForgScrPath, "forg");
+        SourceRootPath = Path.Combine(ForgScrPath, "forg");
     }
 
     public override void ConfigureAll(Project.Configuration conf, Target target)
@@ -77,12 +77,12 @@ class ForgLibraryProject : BaseLibraryProject
 
         // Sets the include path of the library. Those will be shared with any
         // project that adds this one as a dependency. (The executable here.)
-        //conf.IncludePaths.Add(Path.Combine(SourceRootPath, "inc"));
+        conf.IncludePaths.Add(SourceRootPath);
 
         // The library wants LIBRARY_COMPILE defined when it compiles the
         // library, so that it knows whether it must use dllexport or
         // dllimport.
-        conf.Defines.Add("LIBRARY_COMPILE");
+        conf.Defines.Add("FORG_STATIC");
 
         if (target.OutputType == OutputType.Dll)
         {
@@ -114,7 +114,7 @@ class GLRendererLibraryProject : BaseLibraryProject
     public GLRendererLibraryProject()
     {
         Name = "glrenderer";
-        SourceRootPath = Path.Combine(_ForgScrPath, "glrenderer");
+        SourceRootPath = Path.Combine(ForgScrPath, "glrenderer");
     }
 
     public override void ConfigureAll(Project.Configuration conf, Target target)

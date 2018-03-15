@@ -2,13 +2,16 @@
 #include "mesh/xfile/xbzipreader.h"
 #include "debug/dbg.h"
 
+#ifdef FORG_USE_ZLIB
 #include <zlib.h>
+#endif
 
 #define MSZIP_MAGIC 0x4B43
 
 namespace forg { namespace xfile { namespace reader {
 
-voidpf MSZipAlloc(voidpf opaque, uInt items, uInt size)
+#ifdef FORG_USE_ZLIB
+ voidpf MSZipAlloc(voidpf opaque, uInt items, uInt size)
 {
     return new char[items * size];
 }
@@ -184,5 +187,7 @@ bool xbzipreader::read_data(char* buffer, unsigned int count)
 */
 }
 
+#else
+#endif
 
 }}}
