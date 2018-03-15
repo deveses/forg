@@ -2,7 +2,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "emfc\inc\EWnd.h"
+#include "EWnd.h"
 
 namespace forg { namespace scene {
 

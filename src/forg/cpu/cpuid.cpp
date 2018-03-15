@@ -1,6 +1,6 @@
-#include "forg_pch.h"
-#include "cpuid.h"
-#include "debug/dbg.h"
+#include <forg_pch.h>
+#include <cpu/cpuid.h>
+#include <debug/dbg.h>
 
 #include <intrin.h>
 

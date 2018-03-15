@@ -7,7 +7,7 @@
 
 #include "targetver.h"
 
-#include "forg\forg.h"
+#include "forg.h"
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
@@ -20,6 +20,6 @@
 #include <memory.h>
 #include <tchar.h>
 
-#include "emfc/inc/emfc.h"
+#include "emfc.h"
 
 // TODO: reference additional headers your program requires here

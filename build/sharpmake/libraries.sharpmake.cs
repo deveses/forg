@@ -121,9 +121,13 @@ class GLRendererLibraryProject : BaseLibraryProject
     {
         base.ConfigureAll(conf, target);
         
+        conf.AddPrivateDependency<ForgLibraryProject>(target);
+
         // Sets the include path of the library. Those will be shared with any
         // project that adds this one as a dependency. (The executable here.)
         //conf.IncludePaths.Add(Path.Combine(SourceRootPath, "inc"));
+        
+        conf.IncludePrivatePaths.Add(Path.Combine(ForgExternPath, "OpenGL"));
 
         // The library wants LIBRARY_COMPILE defined when it compiles the
         // library, so that it knows whether it must use dllexport or
