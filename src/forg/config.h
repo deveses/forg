@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 #endif
 
-//#define FORG_ENABLE_OPENCL
+#define FORG_ENABLE_OPENCL
 //#define FORG_USE_FREETYPE
 //#define FORG_USE_ZLIB
 

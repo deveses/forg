@@ -17,6 +17,9 @@ class WinAppLibraryProject : BaseLibraryProject
     {
         base.ConfigureAll(conf, target);
 
+        conf.Defines.Add("FORG_STATIC");
+        conf.Defines.Add("EMFC_STATIC");
+
         // This line tells Sharpmake that this project has a dependency on the
         // library project. This will cause all exported include paths and
         // exported defines to be automatically added to this project.

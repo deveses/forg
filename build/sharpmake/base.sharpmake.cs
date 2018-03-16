@@ -53,7 +53,8 @@ abstract class BaseLibraryProject : BaseForgProject
         conf.ProjectPath =  Path.Combine(ForgRootPath, "output");
 
         conf.TargetPath = Path.Combine("[conf.ProjectPath]", "[target.OutputType]", "[project.Name]", "[target.Optimization]");
-        //conf.Options.Add(Sharpmake.Options.Vc.General.WindowsTargetPlatformVersion.v8_1);
+        
+        conf.Options.Add(Sharpmake.Options.Vc.General.WindowsTargetPlatformVersion.v10_0_16299_0);
 
 		conf.IntermediatePath = Path.Combine("[conf.ProjectPath]", "int", "[project.Name]","[target.Optimization]");
     }

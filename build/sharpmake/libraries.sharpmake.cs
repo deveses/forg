@@ -79,6 +79,7 @@ class ForgLibraryProject : BaseLibraryProject
         // project that adds this one as a dependency. (The executable here.)
         conf.IncludePaths.Add(SourceRootPath);
 
+		conf.IncludePaths.Add(@"[project.ForgExternPath]\OpenCL");
         // The library wants LIBRARY_COMPILE defined when it compiles the
         // library, so that it knows whether it must use dllexport or
         // dllimport.
