@@ -75,12 +75,14 @@ bool XFile::Open(const char* filename)
             rval = ReadData( reader );
             break;
         }
+#ifdef FORG_USE_ZLIB
         case XOFFILE_FORMAT_COMPRESSED_BINARY:
         {
             reader::xbzipreader reader(m_input, m_bDoubleFloat);
             rval = ReadData( reader );
             break;
         }
+#endif
         case XOFFILE_FORMAT_COMPRESSED_TEXT:
         {
             DBG_MSG("[XFILE] Compressed formats are not supported!\n");

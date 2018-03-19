@@ -23,6 +23,8 @@
 #ifndef XFILE_XBZIPREADER_INCLUDED
 #define XFILE_XBZIPREADER_INCLUDED
 
+#ifdef FORG_USE_ZLIB
+
 #include "mesh/xfile/xbinreader.h"
 
 #define CAB_BLOCKMAX (32768)
@@ -62,4 +64,7 @@ namespace forg { namespace xfile { namespace reader {
 
 }}}
 
+#endif
+
 #endif // XFILE_XBZIPREADER_INCLUDED
+
