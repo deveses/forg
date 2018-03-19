@@ -22,6 +22,8 @@ class WinAppLibraryProject : BaseLibraryProject
 
         conf.LibraryFiles.Add(@"Comctl32.lib");
 
+        conf.Options.Add(Sharpmake.Options.Vc.Linker.SubSystem.Application);
+
         // This line tells Sharpmake that this project has a dependency on the
         // library project. This will cause all exported include paths and
         // exported defines to be automatically added to this project.
