@@ -13,6 +13,7 @@ abstract class BaseForgProject : Project
     public string ForgScrPath {get; private set;}
     public string ForgTmpPath {get; private set;}
     public string ForgExternPath {get; private set;}
+    public string ForgBinPath {get; private set;}
 
     public BaseForgProject()
     {
@@ -20,6 +21,7 @@ abstract class BaseForgProject : Project
         ForgScrPath = Path.Combine(ForgRootPath, "src");        
         ForgTmpPath = Path.Combine(ForgRootPath, "tmp");        
         ForgExternPath = Path.Combine(ForgRootPath, "extern");        
+        ForgBinPath = Path.Combine(ForgRootPath, "bin");        
     }
 }
 
@@ -36,7 +38,7 @@ abstract class BaseLibraryProject : BaseForgProject
             Platform.win64,
             DevEnv.vs2017,
             Optimization.Debug | Optimization.Release,
-            OutputType.Dll | OutputType.Lib));
+            OutputType.Lib | OutputType.Dll));
     }
 
     [Configure]
@@ -57,6 +59,8 @@ abstract class BaseLibraryProject : BaseForgProject
         conf.Options.Add(Sharpmake.Options.Vc.General.WindowsTargetPlatformVersion.v10_0_16299_0);
 
 		conf.IntermediatePath = Path.Combine("[conf.ProjectPath]", "int", "[project.Name]","[target.Optimization]");
+
+		conf.ProjectFileName = "[project.Name]_[target.DevEnv]_[target.Platform]";
     }
 }
 

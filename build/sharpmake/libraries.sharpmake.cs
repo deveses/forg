@@ -120,9 +120,13 @@ class GLRendererLibraryProject : BaseLibraryProject
 
     public override void ConfigureAll(Project.Configuration conf, Target target)
     {
+        conf.Output = Configuration.OutputType.Dll;
+
         base.ConfigureAll(conf, target);
         
         conf.AddPrivateDependency<ForgLibraryProject>(target);
+
+		conf.LibraryFiles.Add(@"Opengl32.lib");        
 
         // Sets the include path of the library. Those will be shared with any
         // project that adds this one as a dependency. (The executable here.)
@@ -133,12 +137,12 @@ class GLRendererLibraryProject : BaseLibraryProject
         // The library wants LIBRARY_COMPILE defined when it compiles the
         // library, so that it knows whether it must use dllexport or
         // dllimport.
-        conf.Defines.Add("LIBRARY_COMPILE");
-
-        if (target.OutputType == OutputType.Dll)
+        conf.Defines.Add("GLRENDERER_EXPORTS");
+        conf.Defines.Add("FORG_STATIC");
+        
+        //if (target.OutputType == OutputType.Dll)
         {
             // We want this to output a shared library. (DLL)
-            conf.Output = Configuration.OutputType.Dll;
 
             // This library project expects LIBRARY_DLL symbol to be defined
             // when used as a DLL. While we could define it in the executable,
@@ -151,10 +155,10 @@ class GLRendererLibraryProject : BaseLibraryProject
             // to add LIBRARY_DLL as an ordinary define too.
             conf.Defines.Add("LIBRARY_DLL");
         }
-        else if (target.OutputType == OutputType.Lib)
+        /*else if (target.OutputType == OutputType.Lib)
         {
             // We want this to output a static library. (LIB)
             conf.Output = Configuration.OutputType.Lib;
-        }
+        }*/
     }
 }
