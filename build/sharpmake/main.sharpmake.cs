@@ -29,6 +29,8 @@ class WinAppLibraryProject : BaseLibraryProject
         // exported defines to be automatically added to this project.
         conf.AddPrivateDependency<EmfcLibraryProject>(target);
         conf.AddPrivateDependency<ForgLibraryProject>(target);        
+
+        conf.TargetPath = ForgBinPath; 
     }
 }
 

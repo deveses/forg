@@ -139,7 +139,9 @@ class GLRendererLibraryProject : BaseLibraryProject
         // dllimport.
         conf.Defines.Add("GLRENDERER_EXPORTS");
         conf.Defines.Add("FORG_STATIC");
-        
+
+        conf.TargetPath = ForgBinPath; 
+                
         //if (target.OutputType == OutputType.Dll)
         {
             // We want this to output a shared library. (DLL)
