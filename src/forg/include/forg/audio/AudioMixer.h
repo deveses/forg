@@ -16,51 +16,42 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_CORE_REFCOUNTER_H_
-#define _FORG_CORE_REFCOUNTER_H_
+#ifndef _FORG_AUDIO_AUDIOMIXER_H_
+#define _FORG_AUDIO_AUDIOMIXER_H_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
 
-#include "base.h"
+#include "forg/base.h"
+#include "forg/audio/AudioDefs.h"
 
-namespace forg { namespace core {
+namespace forg { namespace audio {
 
-/// BitArray class
-/**
-* BitArray
-* @author eses
-* @version 1.0
-* @date 07-2005
-* @todo
-* @bug
-* @warning
-*/
-class FORG_API RefCounter
+class FORG_API AudioMixer
 {
-    int m_refCount;
+    IAudioOutput* m_output;
+    SAudioStream m_streams[10];
+    unsigned int m_num_streams;
+    SAudioFormat m_format;
 
 public:
-    RefCounter() { m_refCount = 1; }
-    virtual ~RefCounter() {}
+    AudioMixer();
+    ~AudioMixer();
 
 public:
-	/// Brief description
-	/**
-	* Detailed description
-	* @return Number of references.
-	*/
-	virtual int AddRef(void);
+    bool Init();
+    void Shutdown();
+    void Update();
 
-	/// Brief description
-	/**
-	* Detailed description
-	* @return Number of references.
-	*/
-	virtual int Release(void);
+    void SetStreamBuffer(unsigned int _stream, char* _buffer, unsigned int size);
+    void SetStreamFormat(unsigned int _stream, SAudioFormat& format);
+
+private:
+    unsigned int MixStreams(char* _out_buffer, unsigned int _out_size);
+    unsigned int MixStreamsFloat(float* _out_samples, unsigned int _count);
 };
 
 }}
 
-#endif  //  _FORG_CORE_REFCOUNTER_H_
+#endif

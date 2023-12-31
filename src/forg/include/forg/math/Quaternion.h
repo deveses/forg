@@ -23,8 +23,8 @@
 #pragma once
 #endif
 
-#include "base.h"
-#include "math/Vector3.h"
+#include "forg/base.h"
+#include "forg/math/Vector3.h"
 
 namespace forg { namespace math {
 

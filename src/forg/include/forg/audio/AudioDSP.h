@@ -16,36 +16,38 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_MATH_VECTOR2_H_
-#define _FORG_MATH_VECTOR2_H_
+#ifndef _FORG_AUDIO_AUDIODSP_H_
+#define _FORG_AUDIO_AUDIODSP_H_
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
 
-#include "base.h"
+#include "forg/base.h"
 
-namespace forg { namespace math {
+namespace forg { namespace audio { namespace dsp {
 
-struct FORG_API Vector2
-{
-    static const Vector2 Empty;
+    struct float4
+    {
+        float x;
+        float y;
+        float z;
+        float w;
 
-    //////////////////////////////////////////////////////////////////////////
-    // Constructors
-    //////////////////////////////////////////////////////////////////////////
-    Vector2(float x = 0.0f, float y = 0.0f)
-        : X(x), Y(y)
-    {}
+        const float& operator [] (uint32 _index) const { return ((float*)this)[_index]; }
+        float& operator [] (uint32 _index) { return ((float*)this)[_index]; }
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Attributes
-    ////////////////////////////////////////////////////////////////////////////////
+        void set(float _x, float _y, float _z, float _w) { x = _x; y = _y; z = _z; w = _w; }
+    };
 
-	float X;
-	float Y;
-};
+    float dot(const float4& lhs, const float4& rhs) { return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z + lhs.w*rhs.w; }
 
-}}
+    __inline float RadiansToCutoffFrequency(float Radians, float SampleRate)
+    {
+        return SampleRate * asinf(Radians / 2.0f) / (float)3.1415926535897932384626433832795;
+    }
 
-#endif // _FORG_MATH_VECTOR2_H_
+    void CalcLowpassCoeffs( float Fc, float Q, float4& coeffsA, float4& coeffsB );
+}}}
+
+#endif

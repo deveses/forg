@@ -1,6 +1,6 @@
 #include "forg_pch.h"
 
-#include "core/BitArray.h"
+#include "forg/core/BitArray.h"
 
 namespace forg { namespace core {
 

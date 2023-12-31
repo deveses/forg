@@ -23,8 +23,8 @@
 #pragma once
 #endif
 
-#include "base.h"
-#include "core/vector.hpp"
+#include "forg/base.h"
+#include "forg/core/vector.hpp"
 
 namespace forg { namespace audio {
 

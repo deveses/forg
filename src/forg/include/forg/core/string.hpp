@@ -5,8 +5,8 @@
 #pragma once
 #endif
 
-#include "base.h"
-#include "debug/dbg.h"
+#include "forg/base.h"
+#include "forg/debug/dbg.h"
 
 namespace forg { namespace core {
 

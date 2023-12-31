@@ -1,7 +1,7 @@
 #include "forg_pch.h"
-#include "audio/AudioMixer.h"
+#include "forg/audio/AudioMixer.h"
 #include "audio/AudioOutputWaveOut.h"
-#include "cpu/vector.h"
+//#include "forg/cpu/vector.h"
 
 namespace forg { namespace audio {
 

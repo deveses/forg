@@ -23,8 +23,8 @@
 #pragma once
 #endif
 
-#include "platform.h"
-#include "api.h"
+//#include "platform.h"
+#include "forg/api.h"
 
 #ifdef _MSC_VER
 #   define FORG_MSVC 1

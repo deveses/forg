@@ -1,5 +1,5 @@
 #include "forg_pch.h"
-#include "audio/WaveFile.h"
+#include "forg/audio/WaveFile.h"
 
 namespace forg { namespace audio {
 

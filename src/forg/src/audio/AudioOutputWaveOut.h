@@ -23,8 +23,8 @@
 #pragma once
 #endif
 
-#include "base.h"
-#include "AudioDefs.h"
+#include "forg/base.h"
+#include "forg/audio/AudioDefs.h"
 
 namespace forg { namespace audio {
 

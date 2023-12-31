@@ -19,13 +19,17 @@
 #ifndef _FORG_MATH_H_
 #define _FORG_MATH_H_
 
-#include "base.h"
+#include "forg/base.h"
 
-#include "math/Vector2.h"
-#include "math/Vector3.h"
-#include "math/Vector4.h"
-#include "math/Matrix4.h"
-#include "math/Quaternion.h"
+#include "forg/math/Vector2.h"
+#include "forg/math/Vector3.h"
+#include "forg/math/Vector4.h"
+#include "forg/math/Matrix4.h"
+#include "forg/math/Quaternion.h"
+
+#if !defined(FLT_EPSILON)
+#define FLT_EPSILON std::numeric_limits<float>::epsilon() // 1.192092896e-07F
+#endif
 
 namespace forg { namespace math {
 

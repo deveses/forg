@@ -23,9 +23,9 @@
 #pragma once
 #endif
 
-#include "base.h"
-#include "core/vector.hpp"
-#include "core/string.hpp"
+//#include "base.h"
+#include "forg/core/vector.hpp"
+#include "forg/core/string.hpp"
 
 namespace forg { namespace core {
 

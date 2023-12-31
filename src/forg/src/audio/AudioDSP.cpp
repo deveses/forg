@@ -1,7 +1,7 @@
 #include "forg_pch.h"
-#include "AudioDSP.h"
-#include "base.h"
-#include "math/Math.h"
+#include "forg/audio/AudioDSP.h"
+//#include "forgbase.h"
+#include "forg/math/Math.h"
 
 namespace forg { namespace audio { namespace dsp {
     /*
@@ -112,7 +112,7 @@ namespace forg { namespace audio { namespace dsp {
     //      2*sqrt(A)*alpha  =  sin(w0) * sqrt( (A^2 + 1)*(1/S - 1) + 2*A )
     //      is a handy intermediate variable for shelving EQ filters.
 
-    void __forceinline FilterCore( 
+    void FilterCore( 
     const float4&  input,
     float4& output,
     const float4& prevInput, 
