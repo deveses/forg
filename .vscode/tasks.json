@@ -21,6 +21,18 @@
 			"command": "configure",
 			"problemMatcher": [],
 			"detail": "CMake template configure task"
+		},
+		{
+			"type": "cmake",
+			"label": "CMake: clean",
+			"command": "clean",
+			"detail": "CMake template clean task"
+		},
+		{
+			"type": "cmake",
+			"label": "CMake: clean rebuild",
+			"command": "cleanRebuild",
+			"detail": "CMake template clean rebuild task"
 		}
 	]
 }

@@ -23,14 +23,14 @@
 #pragma once
 #endif
 
-#include "core/string.hpp"
+#include "forg/core/string.hpp"
 
 namespace forg { namespace io {
 
     class ISerializer
     {
     public:
-        virtual ~ISerializer(){}
+        virtual ~ISerializer() = default;
 
         virtual bool Begin(const char* _name) = 0;
         virtual void End() = 0;

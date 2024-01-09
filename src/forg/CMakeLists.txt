@@ -6,8 +6,8 @@ include(Sources.cmake)
 ###############################################################################
 
 target_sources(forg 
-    PUBLIC ${audio_includes} ${core_includes}
-    PRIVATE ${audio_sources} ${core_sources}
+    PUBLIC ${all_includes}
+    PRIVATE ${all_sources}
 )
 
 target_precompile_headers(forg PRIVATE src/forg_pch.h)

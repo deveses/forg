@@ -1,5 +1,5 @@
 #include "forg_pch.h"
-#include "XMLSerializer.h"
+#include "forg/script/xml/XMLSerializer.h"
 
 namespace forg { namespace io {
 

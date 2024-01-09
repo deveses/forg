@@ -23,33 +23,34 @@
 #pragma once
 #endif
 
-#include "base.h"
+#include "forg/base.h"
 
-namespace forg { namespace os {
+namespace forg::os
+{
 
-    class FORG_API File
+class FORG_API File
+{
+  public:
+    File();
+    ~File();
+
+    bool Open(const char* _filename);
+    void Close();
+
+    bool GetSize(uint& _out_size);
+
+    uint Read(void* _buffer, uint _size);
+
+    template <class T> bool ReadT(T& _v)
     {
-    public:
-        File();
-        ~File();
+        return (Read(&_v, sizeof(T)) == sizeof(T));
+    }
 
-        bool Open(const char* _filename);
-        void Close();
+  private:
+    void* m_handle = nullptr;
+    uint m_size = 0;
+};
 
-        bool GetSize(uint& _out_size);
-
-        uint Read(void* _buffer, uint _size);
-
-        template <class T>
-        bool ReadT(T& _v)
-        {
-            return (Read(&_v, sizeof(T))==sizeof(T));
-        }
-
-    private:
-        void* m_handle;
-    };
-
-}}
+} // namespace forg::os
 
 #endif

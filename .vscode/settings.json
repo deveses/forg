@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "cstdarg": "cpp"
+    }
+    "editor.formatOnSave": true,
+    "cmake.loggingLevel": "debug"
+}

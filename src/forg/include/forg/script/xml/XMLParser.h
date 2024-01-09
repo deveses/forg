@@ -23,11 +23,11 @@
 #pragma once
 #endif
 
-#include "base.h"
-#include "core/vector.hpp"
-#include "core/string.hpp"
-#include "os/File.h"
-#include "script/lexer.h"
+#include "forg/base.h"
+#include "forg/core/vector.hpp"
+#include "forg/core/string.hpp"
+#include "forg/os/File.h"
+#include "forg/script/lexer.h"
 
 namespace forg { namespace script { namespace xml {
 

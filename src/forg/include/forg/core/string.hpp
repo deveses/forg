@@ -8,6 +8,8 @@
 #include "forg/base.h"
 #include "forg/debug/dbg.h"
 
+#include <cstring>
+
 namespace forg { namespace core {
 
     template <class T>
@@ -215,7 +217,7 @@ namespace forg { namespace core {
 
         size_type find_last_of( char_type _c, size_type _pos = npos ) const
         {
-            for (size_type i = 0; i < m_length; i++)
+            for (size_type i = 0; i < m_length && i!=_pos; i++)
             {
                 size_type p = m_length - 1 - i;
                 if (m_buffer[p] == _c)
@@ -227,7 +229,7 @@ namespace forg { namespace core {
 			return npos;
         }
 
-        size_type find_first_of( char_type c, size_type pos = npos ) const
+        size_type find_first_of( char_type /*c*/, size_type /*pos = npos*/ ) const
         {
 			TRAP_NOT_IMPLEMENTED();
 			
@@ -285,7 +287,7 @@ namespace forg { namespace core {
 
         void copy(T* _dst, const T* _src, size_type _bytes)
         {
-            memcpy(_dst, _src, _bytes);
+            std::memcpy(_dst, _src, _bytes);
         }
 
         size_type slen(const T* _str)

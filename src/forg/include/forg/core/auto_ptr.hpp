@@ -24,7 +24,7 @@
 #endif
 
 
-#include "base.h"
+#include "forg/base.h"
 
 /*
 	smart pointers.
@@ -136,7 +136,7 @@ class auto_ptr
 		auto_ptr(auto_ptr<U>& aptr)
 			: m_ptr( aptr.release() )
 		{
-            own_policy.acquire(ptr);
+            own_policy.acquire(m_ptr);
 		}
 
 

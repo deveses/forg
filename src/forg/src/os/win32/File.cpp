@@ -1,25 +1,21 @@
 #include "forg_pch.h"
 
-#include "File.h"
+#include "forg/os/File.h"
 
-#ifdef PLATFORM_WINDOWS
+#ifdef FORG_PLATFORM_WINDOWS
 #include <windows.h>
 
-namespace forg { namespace os {
-
-File::File()
+namespace forg::os
 {
-    m_handle = 0;
-}
 
-File::~File()
-{
-    Close();
-}
+File::File() { m_handle = 0; }
+
+File::~File() { Close(); }
 
 bool File::Open(const char* _filename)
 {
-    HANDLE h = CreateFile(_filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+    HANDLE h = CreateFile(_filename, GENERIC_READ, FILE_SHARE_READ, 0,
+                          OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
 
     if (h != INVALID_HANDLE_VALUE)
     {
@@ -47,7 +43,7 @@ uint File::Read(void* _buffer, uint _size)
     if (m_handle)
     {
         DWORD nr = 0;
-        if ( ReadFile(m_handle, _buffer, _size, &nr, 0) )
+        if (ReadFile(m_handle, _buffer, _size, &nr, 0))
         {
             num_read = nr;
         }
@@ -69,6 +65,5 @@ bool File::GetSize(uint& _out_size)
     return false;
 }
 
+} // namespace forg::os
 #endif
-
-}}

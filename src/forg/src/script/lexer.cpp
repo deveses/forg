@@ -1,6 +1,6 @@
 #include "forg_pch.h"
 
-#include "lexer.h"
+#include "forg/script/lexer.h"
 
 namespace forg { namespace script {
 

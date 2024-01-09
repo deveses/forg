@@ -1,17 +1,12 @@
-#include "forg_pch.h"
 #include "forg/audio/WaveFile.h"
+#include "forg_pch.h"
 
-namespace forg { namespace audio {
-
-WaveFile::WaveFile()
-    : m_file(0)
+namespace forg::audio
 {
-}
 
-WaveFile::~WaveFile()
-{
-    Close();
-}
+WaveFile::WaveFile() : m_file(0) {}
+
+WaveFile::~WaveFile() { Close(); }
 
 void WaveFile::Close()
 {
@@ -58,7 +53,8 @@ unsigned int WaveFile::Read(unsigned int offset, char* buf, unsigned int size)
     return (unsigned int)fread(buf, 1, size, m_file);
 }
 
-unsigned int WaveFile::ReadChunkData(const SWaveChunk& chunk, char* buf, unsigned int size)
+unsigned int WaveFile::ReadChunkData(const SWaveChunk& chunk, char* buf,
+                                     unsigned int size)
 {
     fseek(m_file, chunk.offset + 8, SEEK_SET);
 
@@ -82,24 +78,28 @@ bool WaveFile::Open(const char* _filename)
 
         size_t file_size = 0;
 
-        if (fseek(m_file, 0, SEEK_END) != 0) return false;
+        if (fseek(m_file, 0, SEEK_END) != 0)
+            return false;
         file_size = ftell(m_file);
-        if (fseek(m_file, 0, SEEK_SET) != 0) return false;
+        if (fseek(m_file, 0, SEEK_SET) != 0)
+            return false;
 
         bool riff_found = false;
         size_t cbread = 0;
 
-        while (0 < (cbread = fread(&chunk.header, sizeof(chunk.header), 1, m_file)))
+        while (0 <
+               (cbread = fread(&chunk.header, sizeof(chunk.header), 1, m_file)))
         {
             if (riff_found)
             {
-                if (chunk.offset + chunk.header.nSize + sizeof(chunk.header) > file_size)
+                if (chunk.offset + chunk.header.nSize + sizeof(chunk.header) >
+                    file_size)
                 {
                     // broken chunk, skip it
                     break;
                 }
 
-                if (fseek(m_file, chunk.header.nSize, SEEK_CUR)!=0)
+                if (fseek(m_file, chunk.header.nSize, SEEK_CUR) != 0)
                 {
                     // if we can't skip chunk, break reading
                     break;
@@ -118,13 +118,12 @@ bool WaveFile::Open(const char* _filename)
                     fread(&m_riff_type, sizeof(m_riff_type), 1, m_file);
 
                     chunk.offset = ftell(m_file);
-                } else
+                }
+                else
                 {
                     fseek(m_file, chunk.header.nSize, SEEK_CUR);
                 }
             }
-
-
         }
 
         return riff_found;
@@ -133,4 +132,4 @@ bool WaveFile::Open(const char* _filename)
     return false;
 }
 
-}}
+} // namespace forg::audio

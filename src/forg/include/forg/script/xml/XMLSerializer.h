@@ -23,8 +23,8 @@
 #pragma once
 #endif
 
-#include "io/ISerializer.h"
-#include "script/xml/XMLParser.h"
+#include "forg/io/ISerializer.h"
+#include "forg/script/xml/XMLParser.h"
 
 namespace forg { namespace io {
 

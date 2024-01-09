@@ -23,9 +23,9 @@
 #pragma once
 #endif
 
-#include "base.h"
-#include "core/string.hpp"
-#include "core/vector.hpp"
+#include "forg/base.h"
+#include "forg/core/string.hpp"
+#include "forg/core/vector.hpp"
 
 namespace forg { namespace script { 
 

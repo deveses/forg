@@ -32,7 +32,7 @@
 #   define FORG_GNUC 1
 #endif
 
-#include <stdlib.h>
+//#include <stdlib.h>
 //#include <tchar.h>
 
 //#include <string>

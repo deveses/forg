@@ -20,6 +20,8 @@
 
 #include "forg/base.h"
 
+#include <cstdarg>
+
 namespace forg { namespace debug {
 
 //#ifdef assert
