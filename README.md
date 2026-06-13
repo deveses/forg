@@ -4,7 +4,7 @@ FORG is a C++17 rendering-API abstraction library. It defines a common set of re
 
 ## Supported platforms
 
-- **macOS** (arm64) — primary CMake target
+- **macOS** — primary CMake target
 - **Windows** — legacy MSVC/Sharpmake build (renderer plugin DLLs and Win32 sample app)
 - iOS platform macros exist (`FORG_PLATFORM_IOS`) but there is no app target yet
 
@@ -38,7 +38,7 @@ A post-build step copies `libswrenderer.dylib` and `src/macapp/config.xml` next 
 
 Notes:
 
-- `CMAKE_OSX_ARCHITECTURES` is hardcoded to `arm64` at the top of the root `CMakeLists.txt`; change it there to build for `x86_64`.
+- CMake uses the host default macOS architecture. Pass `-DCMAKE_OSX_ARCHITECTURES=x86_64` or `-DCMAKE_OSX_ARCHITECTURES=arm64` at configure time when you need a specific architecture.
 - The options `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB` default to `OFF`, and the vendored dependencies in `extern/` are not currently wired into the build.
 - Source files for the `forg` library are listed explicitly in `src/forg/Sources.cmake` — new files must be added there.
 
@@ -51,7 +51,7 @@ Run the test suite with:
 ```sh
 cmake --preset debug
 cmake --build --preset debug
-ctest --test-dir build/debug --output-on-failure
+ctest --preset debug
 ```
 
 Release tests use the matching preset and build directory:
@@ -59,7 +59,7 @@ Release tests use the matching preset and build directory:
 ```sh
 cmake --preset release
 cmake --build --preset release
-ctest --test-dir build/release --output-on-failure
+ctest --preset release
 ```
 
 Testing is controlled by CMake's standard `BUILD_TESTING` option. To configure without tests:
@@ -107,7 +107,7 @@ Beyond rendering, the library includes math types, audio output, an XML parser/l
 
 ## CI
 
-GitHub Actions runs the standard CMake configure, build, and CTest workflows (`.github/workflows/`).
+GitHub Actions runs the canonical CMake workflow (`.github/workflows/cmake.yml`) on macOS for both `debug` and `release` presets. Windows and Linux are intentionally not in CMake CI yet: Windows remains covered by the legacy Sharpmake/MSVC build files, and unsupported platforms still fail configuration.
 
 ## License
 
