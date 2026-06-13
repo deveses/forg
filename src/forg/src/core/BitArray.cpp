@@ -5,10 +5,13 @@
 namespace forg { namespace core {
 
 BitArray::BitArray(const BitArray& bits)
-:	m_array(bits.m_array),
-	m_length(bits.m_array.size())
+:	m_array(bits.m_array.size()),
+	m_length(bits.m_length)
 {
-
+	for (uint i = 0; i < bits.m_array.size(); i++)
+	{
+		m_array[i] = bits.m_array[i];
+	}
 }
 
 //BitArray::BitArray(const array<int>& values)
@@ -71,7 +74,14 @@ BitArray::~BitArray(void)
 
 BitArray& BitArray::operator = (const BitArray& bits)
 {
-    m_array = bits.m_array;
+	if (this == &bits)
+		return *this;
+
+	m_array.resize(bits.m_array.size());
+	for (uint i = 0; i < bits.m_array.size(); i++)
+	{
+		m_array[i] = bits.m_array[i];
+	}
 
 	m_length = bits.m_length;
 
@@ -212,7 +222,7 @@ BitArray BitArray::Not() const
 }
 
 
-inline bool BitArray::Get(uint index) const
+bool BitArray::Get(uint index) const
 {
 	return (m_array[index>>5] & 1<<(index%0x20))!=0;
 }
@@ -248,12 +258,12 @@ void BitArray::SetAll(bool value)
 	}
 }
 
-inline uint BitArray::get_Count() const
+uint BitArray::get_Count() const
 {
 	return m_length;
 }
 
-inline uint BitArray::get_Length() const
+uint BitArray::get_Length() const
 {
 	return m_length;
 }
@@ -314,4 +324,3 @@ bool operator != (const BitArray& b1, const BitArray& b2)
 }
 
 }}
-

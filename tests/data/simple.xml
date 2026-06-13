@@ -1,0 +1,4 @@
+<config>
+    <renderer driver="libswrenderer.dylib"/>
+    <window width="800" height="600"/>
+</config>
