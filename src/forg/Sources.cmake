@@ -103,6 +103,9 @@ set(control_includes
 list(TRANSFORM control_includes PREPEND "include/forg/control/")
 set(control_sources
     SceneControl.cpp
+    commands/camera.cpp
+    commands/mesh.cpp
+    commands/scene.cpp
 )
 list(TRANSFORM control_sources PREPEND "src/control/")
 
