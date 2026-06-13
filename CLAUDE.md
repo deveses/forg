@@ -22,7 +22,7 @@ ctest --preset debug
 ctest --preset release
 ```
 
-Run the sample with `./build/<preset>/src/macapp/macapp` (a post-build step puts `libswrenderer.dylib` and `config.xml` next to it). The software renderer is ~4× faster in release (`-O0` debug runs ~20 fps at 800×600, release hits the 60 fps timer cap).
+Run the sample with `./build/<preset>/src/macapp/macapp` (a post-build step puts `libswrenderer.dylib`, `libmetalrenderer.dylib`, and `config.xml` next to it; `config.xml` picks the driver and defaults to the Metal backend). The software renderer is ~4× faster in release (`-O0` debug runs ~20 fps at 800×600, release hits the 60 fps timer cap).
 
 - `build/` is generated (not tracked). If a build tree's cache references a stale checkout path, delete that tree and reconfigure.
 - CMake uses the host default macOS architecture. Pass `-DCMAKE_OSX_ARCHITECTURES=x86_64` or `-DCMAKE_OSX_ARCHITECTURES=arm64` at configure time when you need a specific architecture.
@@ -36,7 +36,8 @@ Run the sample with `./build/<preset>/src/macapp/macapp` (a post-build step puts
 
 - **`forg`** — the static library (`src/forg/`), with PCH (`src/forg_pch.h`).
 - **`swrenderer`** (macOS only) — the software-renderer plugin as `libswrenderer.dylib` (`SWRenderer.cpp` + the Cocoa presentation layer `SWRenderDevice_osx.mm`).
-- **`macapp`** (macOS only) — the Cocoa sample app (`src/macapp/main.mm`): reads `config.xml` for window geometry and the renderer driver, `dlopen`s the plugin, renders the demo scene. A post-build step copies `libswrenderer.dylib` and `src/macapp/config.xml` next to the binary.
+- **`metalrenderer`** (macOS only) — the native Apple Metal backend as `libmetalrenderer.dylib` (`src/metalrenderer/`: `MetalRenderer.cpp` factory + `MetalRenderDevice.mm`/`MetalBuffers.mm`). Implements `IRenderDevice` on a `CAMetalLayer` with MSL shaders compiled at init; it is the default `config.xml` driver.
+- **`macapp`** (macOS only) — the Cocoa sample app (`src/macapp/main.mm`): reads `config.xml` for window geometry and the renderer driver, `dlopen`s the plugin, renders the demo scene. A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`, and `src/macapp/config.xml` next to the binary.
 - **`forg_tests`** — Catch2/CTest coverage for deterministic library behavior such as math types, `BitArray`, XML parsing, color conversion, and vertex declaration helpers.
 
 Everything else under `src/` (`glrenderer`, `clrenderer`, `amprenderer`, `winapp`, `emfc`, plus the Windows GDI side of `swrenderer`) is **not** part of the CMake build. Those are renderer plugin DLLs and a Win32 sample app from the legacy Windows build, driven by `tools/msvc/*.vcxproj` (Sharpmake-generated; see `tools/sharpmake/`, `tools/generateprojects.bat`).
@@ -49,5 +50,5 @@ Everything else under `src/` (`glrenderer`, `clrenderer`, `amprenderer`, `winapp
 
 - **Public headers**: `src/forg/include/forg/` — modules: `math`, `rendering`, `audio`, `core`, `fs`, `os`, `script` (XML parser/lexer), `image`, `mesh`, `ui`, `cpu`, `opencl`, `debug`. Umbrella headers `forg.h`, `rendering.h`.
 - **Private implementation**: `src/forg/src/`, mirroring the module layout; OS-specific code under `src/forg/src/os/{win32,osx}/`.
-- **Rendering abstraction**: interfaces `IRenderDevice`, `IRenderer`, `ITexture`, `IVertexBuffer`, etc. in `include/forg/rendering/`. A reference software renderer is compiled into the library itself (`include/forg/rendering/reference/`). The OpenGL/software/OpenCL/C++AMP backends in `src/{gl,sw,cl,amp}renderer/` implement these interfaces as separate plugin DLLs (Windows `DllMain` entry points).
+- **Rendering abstraction**: interfaces `IRenderDevice`, `IRenderer`, `ITexture`, `IVertexBuffer`, etc. in `include/forg/rendering/`. A reference software renderer is compiled into the library itself (`include/forg/rendering/reference/`). The OpenGL/software/OpenCL/C++AMP backends in `src/{gl,sw,cl,amp}renderer/` implement these interfaces as separate plugin DLLs (Windows `DllMain` entry points); `src/metalrenderer/` is a native Apple Metal backend built by CMake on macOS (`forgCreateRenderer` entry point, `dlopen`'d by `macapp`).
 - Some `.cpp` files live in the `include/` tree (e.g. `rendering/*.cpp`, `rendering/reference/*.cpp`) — header and source side by side; don't assume `include/` is header-only.

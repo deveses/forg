@@ -1,6 +1,6 @@
 # FORG
 
-FORG is a C++17 rendering-API abstraction library. It defines a common set of rendering interfaces (`IRenderDevice`, `IRenderer`, `ITexture`, `IVertexBuffer`, …) and provides multiple backends behind them — a reference software renderer built into the library, plus OpenGL, software, OpenCL, and C++ AMP renderer plugins. It originated from the old `forg.googlecode.com` project.
+FORG is a C++17 rendering-API abstraction library. It defines a common set of rendering interfaces (`IRenderDevice`, `IRenderer`, `ITexture`, `IVertexBuffer`, …) and provides multiple backends behind them — a reference software renderer built into the library, a native Apple Metal backend (macOS), plus OpenGL, software, OpenCL, and C++ AMP renderer plugins. It originated from the old `forg.googlecode.com` project.
 
 ## Supported platforms
 
@@ -25,6 +25,7 @@ The CMake build produces these main targets:
 
 - **`forg`** — the static library (`src/forg/`)
 - **`swrenderer`** (macOS) — the software-renderer plugin, built as `libswrenderer.dylib`
+- **`metalrenderer`** (macOS) — the native Apple Metal backend, built as `libmetalrenderer.dylib`; the default `config.xml` driver
 - **`macapp`** (macOS) — the Cocoa sample app (`src/macapp/`): reads `config.xml` for window geometry and the renderer driver, loads the plugin with `dlopen`, and renders the demo scene
 - **`forg_tests`** — Catch2-based unit tests, built when CMake testing is enabled
 
@@ -34,7 +35,7 @@ Run the sample with:
 ./build/release/src/macapp/macapp
 ```
 
-A post-build step copies `libswrenderer.dylib` and `src/macapp/config.xml` next to the binary.
+A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`, and `src/macapp/config.xml` next to the binary. `config.xml` selects which plugin `macapp` loads (default: `libmetalrenderer.dylib`; switch to `libswrenderer.dylib` to compare).
 
 Notes:
 
@@ -86,6 +87,7 @@ src/macapp/              Cocoa sample app (CMake)
 src/winapp/, src/emfc/   Win32 sample apps (legacy MSVC build)
 src/swrenderer/          Software-renderer plugin (CMake dylib on macOS,
                          legacy MSVC DLL on Windows)
+src/metalrenderer/       Native Apple Metal renderer plugin (CMake dylib, macOS)
 src/{gl,cl,amp}renderer/ Renderer plugin DLLs (legacy MSVC build)
 tests/                   Catch2/CTest unit tests for the forg library
 extern/                  Vendored dependencies (freetype, zlib, OpenCL,
@@ -101,6 +103,7 @@ The rendering abstraction lives in `include/forg/rendering/`. Backends implement
 
 - **Reference software renderer** — compiled into the library itself (`include/forg/rendering/reference/`)
 - **Software renderer plugin** (`src/swrenderer/`) — wraps the reference renderer with a platform presentation layer (CoreGraphics/CALayer on macOS, GDI on Windows); loaded at runtime via `dlopen`/`LoadLibrary` from the driver named in `config.xml`
+- **Metal renderer plugin** (`src/metalrenderer/`) — native Apple Metal backend hosting a `CAMetalLayer` in the sample's `NSView`; macOS only, the default `config.xml` driver
 - **OpenGL / OpenCL / C++ AMP renderers** — separate plugin DLLs loaded at runtime (Windows only, legacy build)
 
 Beyond rendering, the library includes math types, audio output, an XML parser/lexer (`script`), image and mesh loading, a UI layer, filesystem and OS abstractions.
