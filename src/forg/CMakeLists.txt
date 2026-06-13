@@ -11,8 +11,10 @@ target_sources(forg
 )
 
 target_precompile_headers(forg PRIVATE src/forg_pch.h)
-target_include_directories(forg 
+target_include_directories(forg
     PUBLIC include
+    PUBLIC include/forg
+    PUBLIC .
     PRIVATE src
 )
 target_compile_features(forg PUBLIC cxx_std_17)

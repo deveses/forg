@@ -20,6 +20,7 @@
 #define STRINGTOKENIZER_HPP_INCLUDED
 
 #include "base.h"
+#include "debug/dbg.h"
 #include <string>
 //#include "core/string.hpp"
 

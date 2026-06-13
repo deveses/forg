@@ -8,15 +8,32 @@
 #ifdef _WIN32
 #include <Windows.h>
 #else
+    #include <wchar.h>
+
     void OutputDebugString(const char* text)
     {
         printf("%s\n", text);
     }
 
+    void OutputDebugStringA(const char* text)
+    {
+        printf("%s\n", text);
+    }
+
+    void OutputDebugStringW(const wchar_t* text)
+    {
+        wprintf(L"%ls\n", text);
+    }
+
     void DebugBreak()
     {
-        __asm("int3");
+        __builtin_debugtrap();
     }
+
+    #define _vscprintf(fmt, args) (0)
+    #define _vscwprintf(fmt, args) (0)
+    #define _vsnprintf vsnprintf
+    #define _vsnwprintf vswprintf
 #endif
 
 namespace forg { namespace debug {

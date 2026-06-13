@@ -1,3 +1,6 @@
 #add_subdirectory(emfc)
 add_subdirectory(forg)
-add_subdirectory(macapp)
+if(APPLE)
+    add_subdirectory(swrenderer)
+    add_subdirectory(macapp)
+endif()

@@ -187,7 +187,7 @@ namespace forg { namespace xfile {
         if (treader.ReadToken() != EToken::TOKEN_OBRACE) return 1;
         if (treader.ReadGUID(tguid)) return 1;
 
-        std::auto_ptr<XTemplate> aptr_tmpl(new XTemplate(tname.c_str(), tguid));
+        std::unique_ptr<XTemplate> aptr_tmpl(new XTemplate(tname.c_str(), tguid));
 
         if (ReadTemplateParts(treader, aptr_tmpl.get() )) return 1;
 
@@ -300,7 +300,7 @@ namespace forg { namespace xfile {
             return -1;
         }
 
-        std::auto_ptr< XTemplateArray > aptr_array( new XTemplateArray() );
+        std::unique_ptr< XTemplateArray > aptr_array( new XTemplateArray() );
         xstring aname;
 
         if (ReadTemplateArrayDataType(treader, aptr_array.get())) return 1;

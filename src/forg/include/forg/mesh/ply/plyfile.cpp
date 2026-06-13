@@ -78,21 +78,21 @@ int equal_strings(char *s1, char *s2)
     return (strcmp(s1, s2) == 0);
 }
 
-class plyElemFind : public std::binary_function<PlyElement, std::string, bool>
+class plyElemFind
 {
 public:
-    result_type operator()(const PlyElement& elem, const std::string& name) const
+    bool operator()(const PlyElement& elem, const std::string& name) const
     {
-        return (result_type)(elem.name == name);
+        return (elem.name == name);
     }
 };
 
-class plyPropFind : public std::binary_function<PlyProperty, std::string, bool>
+class plyPropFind
 {
 public:
-    result_type operator()(const PlyProperty& prop, const std::string& name) const
+    bool operator()(const PlyProperty& prop, const std::string& name) const
     {
-        return (result_type)(prop.name == name);
+        return (prop.name == name);
     }
 };
 
@@ -161,7 +161,8 @@ bool plyfile::Open(const char *filename)
 
 int plyfile::GetElementCount(const char* elem_name)
 {
-    PlyElementVecI iter = std::find_if(m_elements.begin(), m_elements.end(), std::bind2nd(plyElemFind(), elem_name));
+    PlyElementVecI iter = std::find_if(m_elements.begin(), m_elements.end(),
+        [&](const PlyElement& elem) { return plyElemFind()(elem, elem_name); });
 
     if (iter != m_elements.end())
     {
@@ -317,11 +318,13 @@ bool plyfile::ReadHeader()
 
 void plyfile::GetProperty(const char* elem_name, const char* prop_name, int offset, int type)
 {
-    PlyElementVecI iter = std::find_if(m_elements.begin(), m_elements.end(), std::bind2nd(plyElemFind(), elem_name));
+    PlyElementVecI iter = std::find_if(m_elements.begin(), m_elements.end(),
+        [&](const PlyElement& elem) { return plyElemFind()(elem, elem_name); });
 
     if (iter != m_elements.end())
     {
-        PlyPropertyVecI propi = std::find_if(iter->props.begin(), iter->props.end(), std::bind2nd(plyPropFind(), prop_name));
+        PlyPropertyVecI propi = std::find_if(iter->props.begin(), iter->props.end(),
+            [&](const PlyProperty& prop) { return plyPropFind()(prop, prop_name); });
 
         if (propi != iter->props.end())
         {

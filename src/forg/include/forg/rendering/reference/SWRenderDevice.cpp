@@ -1001,6 +1001,20 @@ namespace forg { namespace rendering { namespace reference {
         PSInput ps_input;
         PSOutput ps_output;
 
+        // The half-space tests below only fill one winding and the device does
+        // not cull, so reorder triangles wound the other way instead of
+        // silently dropping them.
+        VSOutput reordered[3];
+        float area2 = (vertices[1].position.X - vertices[0].position.X) * (vertices[2].position.Y - vertices[0].position.Y)
+                    - (vertices[1].position.Y - vertices[0].position.Y) * (vertices[2].position.X - vertices[0].position.X);
+        if (area2 > 0.0f)
+        {
+            reordered[0] = vertices[0];
+            reordered[1] = vertices[2];
+            reordered[2] = vertices[1];
+            vertices = reordered;
+        }
+
         interpolator.Initialize(vertices[0].position, vertices[1].position, vertices[2].position);
 
         // 28.4 fixed-point coordinates

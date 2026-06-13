@@ -137,7 +137,7 @@ namespace forg { namespace xfile {
         {
             do
             {
-                //std::auto_ptr<IData> data_part;
+                //std::unique_ptr<IData> data_part;
 
                 rval = ReadDataPart(reader, tmpl_mgr);
 
@@ -164,7 +164,7 @@ namespace forg { namespace xfile {
     {
         int rval = 0;
 
-        std::auto_ptr< XDataObject > aptr_object( new XDataObject() );
+        std::unique_ptr< XDataObject > aptr_object( new XDataObject() );
 
         aptr_object->m_identifier.Set(type);
         aptr_object->m_optional_guid = guid;
@@ -188,7 +188,7 @@ namespace forg { namespace xfile {
         int rval = 0;
         static StringList aStrings;
 
-        std::auto_ptr< IData > aptr_data;
+        std::unique_ptr< IData > aptr_data;
 
         switch(primitive_type)
         {
@@ -202,13 +202,13 @@ namespace forg { namespace xfile {
                 // read array of integer types
                 if (count > 1)
                 {
-                    std::auto_ptr<XDataIntegerList> parray( new XDataIntegerList() );
+                    std::unique_ptr<XDataIntegerList> parray( new XDataIntegerList() );
 
                     rval = reader.ReadIntegers(parray->GetIntegers(), count);
                     //parray->Set(aIntergers);
 
                     if (rval == 0)
-                        aptr_data = parray;
+                        aptr_data = std::move(parray);
                 }
                 // read single int
                 else
@@ -218,11 +218,11 @@ namespace forg { namespace xfile {
 
                     if (rval == 0)
                     {
-                        std::auto_ptr<XDataPrimitive> psingle( new XDataPrimitive() );
+                        std::unique_ptr<XDataPrimitive> psingle( new XDataPrimitive() );
 
                         psingle->SetInteger(aIntergers.front());
 
-                        aptr_data = psingle;
+                        aptr_data = std::move(psingle);
                     }
                 }
 
@@ -234,12 +234,12 @@ namespace forg { namespace xfile {
             {
                 if (count > 1)
                 {
-                    std::auto_ptr<XDataFloatList> parray( new XDataFloatList() );
+                    std::unique_ptr<XDataFloatList> parray( new XDataFloatList() );
 
                     rval = reader.ReadFloats(parray->GetFloats(), count);
 
                     if (rval == 0)
-                        aptr_data = parray;
+                        aptr_data = std::move(parray);
                 } else
                 {
                     FloatList aFloats;
@@ -247,11 +247,11 @@ namespace forg { namespace xfile {
 
                     if (rval == 0)
                     {
-                        std::auto_ptr<XDataPrimitive> psingle( new XDataPrimitive() );
+                        std::unique_ptr<XDataPrimitive> psingle( new XDataPrimitive() );
 
                         psingle->SetFloat(aFloats.front());
 
-                        aptr_data = psingle;
+                        aptr_data = std::move(psingle);
                     }
                 }
             }
@@ -271,12 +271,12 @@ namespace forg { namespace xfile {
 
                 } else
                 {
-                    std::auto_ptr<XDataPrimitive> psingle( new XDataPrimitive() );
+                    std::unique_ptr<XDataPrimitive> psingle( new XDataPrimitive() );
 
                     psingle->SetString(aStrings.front());
                     aStrings.pop_front();
 
-                    aptr_data = psingle;
+                    aptr_data = std::move(psingle);
                 }
             }
             break;
@@ -337,11 +337,11 @@ namespace forg { namespace xfile {
         } else
         {
             xstring arr_type = xarray->GetArrayTypeName();
-            std::auto_ptr< XDataObjectList > aptr_data(new XDataObjectList());
+            std::unique_ptr< XDataObjectList > aptr_data(new XDataObjectList());
 
             for (uint i=0; i<array_size; i++)
             {
-                std::auto_ptr< XDataObject > aptr_object( new XDataObject() );
+                std::unique_ptr< XDataObject > aptr_object( new XDataObject() );
 
                 aptr_object->m_identifier.Set(arr_type);
 
@@ -402,7 +402,7 @@ namespace forg { namespace xfile {
 
             if (rval == 0)
             {
-                std::auto_ptr< XDataIntegerList > aptr_data(new XDataIntegerList());
+                std::unique_ptr< XDataIntegerList > aptr_data(new XDataIntegerList());
                 aptr_data->Set(aIntergers);
 
                 AddSubData(aptr_data.release());
@@ -418,7 +418,7 @@ namespace forg { namespace xfile {
 
             if (rval == 0)
             {
-                std::auto_ptr< XDataFloatList > aptr_data(new XDataFloatList());
+                std::unique_ptr< XDataFloatList > aptr_data(new XDataFloatList());
                 aptr_data->Set(aFloats);
 
                 AddSubData(aptr_data.release());
@@ -437,7 +437,7 @@ namespace forg { namespace xfile {
         // if not, check if another object
         if (rval < 0)
         {
-            std::auto_ptr< XDataObject > aptr_object( new XDataObject() );
+            std::unique_ptr< XDataObject > aptr_object( new XDataObject() );
 
             rval = aptr_object->Load(reader, tmpl_mgr);
 

@@ -8,30 +8,28 @@
 #ifdef PLATFORM_WINDOWS
 #include <Windows.h>
 #else
-typedef union _LARGE_INTEGER {
-  struct {
-    uint LowPart;
-    uint HighPart;
-  };
-  struct {
-    uint LowPart;
-    uint HighPart;
-  } u;
-  uint64 QuadPart;
+#include <chrono>
+
+typedef struct _LARGE_INTEGER {
+  forg::uint64 QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
-#define BOOL uint
+typedef forg::uint BOOL;
 
-uint GetLastError() { return 0; }
+static forg::uint GetLastError() { return 0; }
 
-BOOL QueryPerformanceCounter(LARGE_INTEGER* li)
+// counts in nanosecond ticks, matching the QueryPerformance* contract
+static BOOL QueryPerformanceCounter(LARGE_INTEGER* li)
 {
-    return 0;
+    li->QuadPart = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    return 1;
 }
 
-BOOL QueryPerformanceFrequency(LARGE_INTEGER* li)
+static BOOL QueryPerformanceFrequency(LARGE_INTEGER* li)
 {
-    return 0;
+    li->QuadPart = 1000000000ull;
+    return 1;
 }
 
 #endif

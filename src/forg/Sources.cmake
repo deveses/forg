@@ -26,6 +26,7 @@ set(core_includes
 list(TRANSFORM core_includes PREPEND "include/forg/core/")
 set(core_sources
     BitArray.cpp
+    RefCounter.cpp
 )
 list(TRANSFORM core_sources PREPEND "src/core/")
 
@@ -74,5 +75,80 @@ set(script_sources
 list(TRANSFORM script_sources PREPEND "src/script/")
 
 ###############################################################################
+# math
+###############################################################################
+set(math_sources
+    Math.cpp
+    Matrix4.cpp
+    Plane.cpp
+    Quaternion.cpp
+    Vector2.cpp
+    Vector3.cpp
+    Vector4.cpp
+)
+list(TRANSFORM math_sources PREPEND "include/forg/math/")
+
+###############################################################################
+# rendering
+###############################################################################
+set(rendering_sources
+    Camera.cpp
+    Color.cpp
+    IRenderDevice.cpp
+    IRenderer.cpp
+    ISurface.cpp
+    ITexture.cpp
+    Mesh.cpp
+    Ray.cpp
+    Vertex.cpp
+    VertexDeclaration.cpp
+    VertexElement.cpp
+    reference/SWBuffers.cpp
+    reference/SWRenderDevice.cpp
+)
+list(TRANSFORM rendering_sources PREPEND "include/forg/rendering/")
+
+###############################################################################
+# mesh
+###############################################################################
+set(mesh_sources
+    XLoader.cpp
+    ply/plyfile.cpp
+    xfile/xbinreader.cpp
+    xfile/xbzipreader.cpp
+    xfile/xdata.cpp
+    xfile/xdatamgr.cpp
+    xfile/xdefs.cpp
+    xfile/xfile.cpp
+    xfile/xlexer.cpp
+    xfile/xreader.cpp
+    xfile/xstdtemplates.cpp
+    xfile/xtemplate.cpp
+    xfile/xtemplatesmgr.cpp
+    xfile/xtexreader.cpp
+    xfile/xtmembers.cpp
+)
+list(TRANSFORM mesh_sources PREPEND "include/forg/mesh/")
+
+###############################################################################
+# image
+###############################################################################
+set(image_sources
+    Image.cpp
+    bmp/bmp.cpp
+    dds/dds.cpp
+)
+list(TRANSFORM image_sources PREPEND "include/forg/image/")
+
+###############################################################################
+# root / debug
+###############################################################################
+set(root_sources
+    PerformanceCounter.cpp
+    src/debug/debug.cpp
+)
+
+###############################################################################
 list(APPEND all_includes ${audio_includes} ${core_includes} ${fs_includes} ${os_includes} ${script_includes})
-list(APPEND all_sources ${audio_sources} ${core_sources} ${fs_sources} ${os_sources} ${script_sources})
+list(APPEND all_sources ${audio_sources} ${core_sources} ${fs_sources} ${os_sources} ${script_sources}
+    ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources} ${root_sources})

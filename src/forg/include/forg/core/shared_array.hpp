@@ -23,6 +23,8 @@
 #pragma once
 #endif
 
+#include <cstdlib>
+
 namespace forg
 {
     namespace core

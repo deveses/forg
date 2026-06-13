@@ -151,7 +151,7 @@ namespace forg { namespace xfile {
         int rval = 0;
         do
         {
-            std::auto_ptr< XDataObject > aptr_object( new XDataObject() );
+            std::unique_ptr< XDataObject > aptr_object( new XDataObject() );
 
             rval = aptr_object->Load(treader, tmpl_mgr);
 

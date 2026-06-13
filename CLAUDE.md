@@ -20,12 +20,13 @@ cmake --build build
 
 ## What the CMake build actually covers
 
-`src/CMakeLists.txt` only builds two targets:
+`src/CMakeLists.txt` builds:
 
 - **`forg`** — the static library (`src/forg/`), with PCH (`src/forg_pch.h`).
-- **`macapp`** — a minimal Cocoa app (`src/macapp/main.mm`) linking `forg`.
+- **`swrenderer`** (macOS only) — the software-renderer plugin as `libswrenderer.dylib` (`SWRenderer.cpp` + the Cocoa presentation layer `SWRenderDevice_osx.mm`).
+- **`macapp`** (macOS only) — the Cocoa sample app (`src/macapp/main.mm`): reads `config.xml` for window geometry and the renderer driver, `dlopen`s the plugin, renders the demo scene. A post-build step copies `libswrenderer.dylib` and `src/macapp/config.xml` next to the binary.
 
-Everything else under `src/` (`glrenderer`, `swrenderer`, `clrenderer`, `amprenderer`, `winapp`, `emfc`) is **not** part of the CMake build. Those are renderer plugin DLLs and a Win32 sample app from the legacy Windows build, driven by `tools/msvc/*.vcxproj` (Sharpmake-generated; see `tools/sharpmake/`, `tools/generateprojects.bat`).
+Everything else under `src/` (`glrenderer`, `clrenderer`, `amprenderer`, `winapp`, `emfc`, plus the Windows GDI side of `swrenderer`) is **not** part of the CMake build. Those are renderer plugin DLLs and a Win32 sample app from the legacy Windows build, driven by `tools/msvc/*.vcxproj` (Sharpmake-generated; see `tools/sharpmake/`, `tools/generateprojects.bat`).
 
 ### Adding/removing source files
 
