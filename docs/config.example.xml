@@ -1,0 +1,7 @@
+<!-- renderer driver is platform specific:
+     Windows: glrenderer_vc_d.dll / swrenderer_vc_d.dll
+     macOS:   libswrenderer.dylib -->
+<config>
+    <renderer driver="glrenderer_vc_d.dll"/>
+    <window width="800" height="600" posx="100" posy="100"/>
+</config>

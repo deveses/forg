@@ -1,2 +1,5 @@
 /output/
 /bin/
+/build/
+.cache/
+.vscode/

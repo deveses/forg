@@ -1,0 +1,370 @@
+// main.mm : macOS port of the Win32 sample app (src/winapp).
+// Reads config.xml to pick the renderer plugin and window geometry,
+// then renders the demo scene (lit cylinder) in a continuous loop.
+
+// Cocoa must come first: forg's base.h defines macros (null, IN, OUT)
+// that break the system headers if they are seen earlier.
+#import <Cocoa/Cocoa.h>
+#include <MacTypes.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <dlfcn.h>
+#include <unistd.h>
+
+#include <iostream>
+#include <string>
+
+#include "forg.h"
+
+struct AppSettings
+{
+    std::string driver;
+    int winWidth = 100;
+    int winHeight = 100;
+    int winX = 10;
+    int winY = 10;
+};
+
+static forg::Light s_Light = {0};
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
+@interface AppDelegate : NSObject <NSApplicationDelegate>
+{
+    AppSettings m_settings;
+    forg::IRenderer* m_renderer;
+    forg::IRenderDevice* m_device;
+    forg::geometry::Mesh::MeshPtr m_mesh;
+    forg::Matrix4 m_mesh_tm;
+    forg::Camera m_camera;
+    forg::PerformanceCounter m_perf_count;
+    int m_fps;
+    int m_frame_counter;
+
+    NSWindow* m_window;
+    NSView* m_view;
+    NSTimer* m_timer;
+}
+- (instancetype)initWithSettings:(const AppSettings&)settings renderer:(forg::IRenderer*)renderer;
+@end
+
+@implementation AppDelegate
+
+- (instancetype)initWithSettings:(const AppSettings&)settings renderer:(forg::IRenderer*)renderer
+{
+    self = [super init];
+    if (self)
+    {
+        m_settings = settings;
+        m_renderer = renderer;
+        m_device = 0;
+        m_mesh_tm = forg::Matrix4::Identity;
+        m_fps = 0;
+        m_frame_counter = 0;
+        m_perf_count.Start();
+    }
+    return self;
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification*)notification
+{
+    int winWidth = m_settings.winWidth;
+    int winHeight = m_settings.winHeight;
+
+    // config posx/posy are from the top-left corner (Win32 convention)
+    CGFloat screenHeight = [NSScreen mainScreen].frame.size.height;
+    NSRect contentRect = NSMakeRect(m_settings.winX,
+                                    screenHeight - m_settings.winY - winHeight,
+                                    winWidth, winHeight);
+
+    NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
+                              NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
+
+    m_window = [[NSWindow alloc] initWithContentRect:contentRect
+                                           styleMask:style
+                                             backing:NSBackingStoreBuffered
+                                               defer:NO];
+    [m_window setTitle:@"View"];
+
+    m_view = [m_window contentView];
+    [m_view setWantsLayer:YES];
+    [m_view setPostsFrameChangedNotifications:YES];
+
+    forg::RENDER_PARAMETERS rp;
+    rp.BackBufferWidth = winWidth;
+    rp.BackBufferHeight = winHeight;
+
+    m_device = m_renderer->CreateDevice((forg::HWIN)m_view, &rp);
+    if (m_device == 0)
+    {
+        std::cerr << "Unable to create render device!\n";
+        [NSApp terminate:nil];
+        return;
+    }
+
+    m_device->SetRenderState(forg::RenderStates_CullMode, forg::Cull_Clockwise);
+    m_device->SetRenderState(forg::RenderStates_ShadeMode, forg::ShadeMode_Gouraud);
+    m_device->SetRenderState(forg::RenderStates_Lighting, true);
+    m_device->SetRenderState(forg::RenderStates_FillMode, forg::FillMode_Solid);
+
+    m_device->SetRenderState(forg::RenderStates_SourceBlend, forg::Blend_SourceAlpha);
+    m_device->SetRenderState(forg::RenderStates_DestinationBlend, forg::Blend_InvSourceAlpha);
+
+    m_mesh = forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40);
+    DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n", m_mesh->GetNumVertices(), m_mesh->GetNumFaces());
+
+    // Set up a white point light (same setup as the Win32 sample).
+    s_Light.Type = forg::LightType::Point;
+    s_Light.Diffuse.r  = 1.0f;
+    s_Light.Diffuse.g  = 1.0f;
+    s_Light.Diffuse.b  = 0.0f;
+    s_Light.Ambient.r  = 1.0f;
+    s_Light.Ambient.g  = 1.0f;
+    s_Light.Ambient.b  = 1.0f;
+    s_Light.Specular.r = 1.0f;
+    s_Light.Specular.g = 1.0f;
+    s_Light.Specular.b = 1.0f;
+    s_Light.Position.X = 5.0f;
+    s_Light.Position.Y = 5.0f;
+    s_Light.Position.Z = -1.0f;
+    s_Light.Attenuation0 = 1.0f;
+    s_Light.Range        = 1000.0f;
+
+    m_device->SetLight(0, &s_Light);
+    m_device->LightEnable(0, true);
+
+    [self onResize];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(viewFrameChanged:)
+                                                 name:NSViewFrameDidChangeNotification
+                                               object:m_view];
+
+    m_timer = [NSTimer scheduledTimerWithTimeInterval:1.0 / 60.0
+                                               target:self
+                                             selector:@selector(onIdle:)
+                                             userInfo:nil
+                                              repeats:YES];
+
+    [m_window makeKeyAndOrderFront:nil];
+    [NSApp activateIgnoringOtherApps:YES];
+}
+
+// port of Viewport::OnSize
+- (void)onResize
+{
+    NSSize size = m_view.bounds.size;
+
+    if (m_device != 0)
+    {
+        m_device->SetViewport(0, 0, (forg::uint)size.width, (forg::uint)size.height);
+        m_device->Reset();
+    }
+
+    m_camera.set_ScreenSize(size.width, size.height);
+}
+
+- (void)viewFrameChanged:(NSNotification*)notification
+{
+    [self onResize];
+}
+
+// port of Viewport::Render (without the font/UI overlay)
+- (void)render
+{
+    if (m_device == 0) return;
+
+    forg::Matrix4 mlook;
+    m_camera.GetViewMatrix(mlook);
+    m_device->SetTransform(forg::TransformType_View, mlook);
+
+    forg::Matrix4 mproj;
+    m_camera.GetProjectionMatrix(mproj);
+    m_device->SetTransform(forg::TransformType_Projection, mproj);
+
+    m_device->Clear(forg::ClearFlags_Target | forg::ClearFlags_ZBuffer, forg::Color(0.75f, 0.75f, 0.75f), 1.0f, 0);
+    m_device->BeginScene();
+
+    m_device->SetLight(0, &s_Light);
+    m_device->SetRenderState(forg::RenderStates_Lighting, true);
+
+    if (! m_mesh.is_null())
+    {
+        m_device->SetTexture(0, 0);
+        m_device->SetTransform(forg::TransformType_World, m_mesh_tm);
+        m_mesh->DrawSubset(0);
+    }
+
+    m_device->EndScene();
+    m_device->Present();
+}
+
+// port of Viewport::OnPaint + CWinApp::OnIdle
+- (void)onIdle:(NSTimer*)timer
+{
+    forg::PerformanceCounter frame_profiler;
+    frame_profiler.Start();
+    [self render];
+    frame_profiler.Stop();
+
+    m_frame_counter++;
+
+    forg::uint64 duration = 0;
+    m_perf_count.GetDurationInMs(duration);
+    if (duration >= 1000)
+    {
+        frame_profiler.GetDurationInUs(duration);
+
+        m_fps = m_frame_counter;
+        m_frame_counter = 0;
+        m_perf_count.Start();
+        DBG_MSG("fps %d time: %lld us\n", m_fps, duration);
+    }
+}
+
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender
+{
+    return YES;
+}
+
+- (void)applicationWillTerminate:(NSNotification*)notification
+{
+    [m_timer invalidate];
+    m_timer = nil;
+
+    if (! m_mesh.is_null())
+    {
+        delete m_mesh.release();
+    }
+
+    if (m_device)
+    {
+        m_device->Release();
+        m_device = 0;
+    }
+
+    delete m_renderer;
+    m_renderer = 0;
+}
+
+@end
+
+/////////////////////////////////////////////////////////////////////////////////////////
+//
+/////////////////////////////////////////////////////////////////////////////////////////
+
+static void ChangeToResourcesDirectory()
+{
+    CFBundleRef mainBundle = CFBundleGetMainBundle();
+    CFURLRef resBundle = CFBundleCopyResourcesDirectoryURL(mainBundle);
+    char bundlePath[PATH_MAX];
+    if (CFURLGetFileSystemRepresentation(resBundle, TRUE, (UInt8*)bundlePath, PATH_MAX))
+    {
+        std::cout << "resource path: " << bundlePath << "\n";
+        chdir(bundlePath);
+    }
+    CFRelease(resBundle);
+}
+
+// port of the config.xml parsing in CWinApp::InitApplication
+static bool LoadSettings(AppSettings& settings)
+{
+    forg::script::xml::XMLParser config;
+
+    config.Open("config.xml");
+    forg::script::xml::XMLDocument* xml_doc = config.Parse();
+
+    if (xml_doc == 0)
+    {
+        std::cerr << "Unable to load config.xml!\n";
+        return false;
+    }
+
+    if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("renderer"))
+    {
+        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("driver"))
+        {
+            settings.driver = xml_att->GetContent().c_str();
+        }
+    }
+
+    if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("window"))
+    {
+        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("width"))
+        {
+            settings.winWidth = atoi(xml_att->GetContent().c_str());
+        }
+
+        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("height"))
+        {
+            settings.winHeight = atoi(xml_att->GetContent().c_str());
+        }
+
+        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("posx"))
+        {
+            settings.winX = atoi(xml_att->GetContent().c_str());
+        }
+
+        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("posy"))
+        {
+            settings.winY = atoi(xml_att->GetContent().c_str());
+        }
+    }
+
+    return true;
+}
+
+static forg::IRenderer* CreateRenderer(const std::string& driver)
+{
+    if (driver.empty())
+    {
+        std::cerr << "No renderer driver specified in config.xml!\n";
+        return 0;
+    }
+
+    // cwd is the resources directory; "./" keeps dlopen from searching dyld paths
+    std::string path = "./" + driver;
+    void* module = dlopen(path.c_str(), RTLD_NOW);
+    if (module == 0)
+    {
+        std::cerr << "Unable to load renderer <" << driver << ">: " << dlerror() << "\n";
+        return 0;
+    }
+
+    forg::PFCREATERENDERER pfCreateRenderer = (forg::PFCREATERENDERER)dlsym(module, "forgCreateRenderer");
+    if (pfCreateRenderer == 0)
+    {
+        std::cerr << "forgCreateRenderer not found in <" << driver << ">!\n";
+        return 0;
+    }
+
+    return pfCreateRenderer();
+}
+
+int main(int argc, char* argv[])
+{
+    ChangeToResourcesDirectory();
+
+    AppSettings settings;
+    if (! LoadSettings(settings))
+    {
+        return 1;
+    }
+
+    forg::IRenderer* renderer = CreateRenderer(settings.driver);
+    if (renderer == 0)
+    {
+        return 1;
+    }
+
+    NSApplication* app = [NSApplication sharedApplication];
+    [app setActivationPolicy:NSApplicationActivationPolicyRegular];
+
+    AppDelegate* delegate = [[AppDelegate alloc] initWithSettings:settings renderer:renderer];
+    [app setDelegate:delegate];
+
+    [app run];
+
+    return 0;
+}
