@@ -13,7 +13,13 @@
 #include <iostream>
 #include <string>
 
+// Pulled in before forg.h so the C++ threading headers are parsed before
+// base.h defines its null/IN/OUT macros.
+#include "forg/net/CommandQueue.h"
+#include "forg/net/HttpControlServer.h"
+
 #include "forg.h"
+#include "ControlCommands.h"
 
 struct AppSettings
 {
@@ -22,6 +28,8 @@ struct AppSettings
     int winHeight = 100;
     int winX = 10;
     int winY = 10;
+    bool controlEnabled = false;
+    int controlPort = 8080;
 };
 
 static forg::Light s_Light = {};
@@ -48,6 +56,10 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
     int m_fps;
     int m_frame_counter;
 
+    forg::Color m_clear_color;
+    forg::net::CommandQueue* m_cmd_queue;
+    forg::net::HttpControlServer* m_control_server;
+
     NSWindow* m_window;
     NSView* m_view;
     NSTimer* m_timer;
@@ -69,6 +81,9 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
         m_mesh_tm = forg::Matrix4::Identity;
         m_fps = 0;
         m_frame_counter = 0;
+        m_clear_color = forg::Color(0.75f, 0.75f, 0.75f);
+        m_cmd_queue = 0;
+        m_control_server = 0;
         m_perf_count.Start();
     }
     return self;
@@ -140,6 +155,22 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
 
     m_device->SetLight(0, &s_Light);
     m_device->LightEnable(0, true);
+
+    // Optional runtime control server: a background HTTP endpoint queues
+    // commands that are applied on this (main) thread in onIdle:.
+    if (m_settings.controlEnabled)
+    {
+        m_cmd_queue = new forg::net::CommandQueue();
+        m_control_server = new forg::net::HttpControlServer("127.0.0.1", m_settings.controlPort, *m_cmd_queue);
+        if (! m_control_server->Start())
+        {
+            std::cerr << "Control server failed to start on port " << m_settings.controlPort << "\n";
+        }
+        else
+        {
+            std::cout << "Control server listening on http://127.0.0.1:" << m_settings.controlPort << "\n";
+        }
+    }
 
     [self onResize];
 
@@ -238,7 +269,7 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
     m_camera.GetProjectionMatrix(mproj);
     m_device->SetTransform(forg::TransformType_Projection, mproj);
 
-    m_device->Clear(forg::ClearFlags_Target | forg::ClearFlags_ZBuffer, forg::Color(0.75f, 0.75f, 0.75f), 1.0f, 0);
+    m_device->Clear(forg::ClearFlags_Target | forg::ClearFlags_ZBuffer, m_clear_color, 1.0f, 0);
     m_device->BeginScene();
 
     m_device->SetLight(0, &s_Light);
@@ -258,6 +289,28 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
 // port of Viewport::OnPaint + CWinApp::OnIdle
 - (void)onIdle:(NSTimer*)timer
 {
+    // Apply any commands queued by the control server thread (main-thread only).
+    if (m_cmd_queue)
+    {
+        forg::net::QueueItem item;
+        while (m_cmd_queue->TryPop(item))
+        {
+            SceneControlContext ctx;
+            ctx.camera     = &m_camera;
+            ctx.mesh       = &m_mesh;
+            ctx.meshTm     = &m_mesh_tm;
+            ctx.light      = &s_Light;
+            ctx.clearColor = &m_clear_color;
+            ctx.device     = m_device;
+
+            std::string body = DispatchCommand(ctx, item.cmd);
+            if (item.reply)
+            {
+                item.reply->set_value(body);
+            }
+        }
+    }
+
     forg::PerformanceCounter frame_profiler;
     frame_profiler.Start();
     [self render];
@@ -285,6 +338,20 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
 
 - (void)applicationWillTerminate:(NSNotification*)notification
 {
+    // Stop the server (joins its thread) before tearing down the scene it
+    // touches, then free the queue it pushed to.
+    if (m_control_server)
+    {
+        m_control_server->Stop();
+        delete m_control_server;
+        m_control_server = 0;
+    }
+    if (m_cmd_queue)
+    {
+        delete m_cmd_queue;
+        m_cmd_queue = 0;
+    }
+
     [m_timer invalidate];
     m_timer = nil;
 
@@ -370,6 +437,19 @@ static bool LoadSettings(AppSettings& settings)
         if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("posy"))
         {
             settings.winY = atoi(xml_att->GetContent().c_str());
+        }
+    }
+
+    if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("controlserver"))
+    {
+        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("enabled"))
+        {
+            settings.controlEnabled = (std::string(xml_att->GetContent().c_str()) == "true");
+        }
+
+        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("port"))
+        {
+            settings.controlPort = atoi(xml_att->GetContent().c_str());
         }
     }
 

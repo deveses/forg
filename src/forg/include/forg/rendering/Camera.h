@@ -85,10 +85,10 @@ private:
     //////////////////////////////////////////////////////////////////////////
 public:
 	FORG_API const Vector3& get_Target() const;
-	//FORG_API void set_Target(const Vector3& value);
+	FORG_API void set_Target(const Vector3& value);
 
 	FORG_API const Vector3& get_Position() const;
-	//FORG_API void set_Position(const Vector3& value);
+	FORG_API void set_Position(const Vector3& value);
 
     FORG_API float get_ScreenWidth() const;
 
@@ -126,19 +126,19 @@ public:
     //////////////////////////////////////////////////////////////////////////
 public:
 	//Dolly Camera
-	//	Przemieszcza kamerê wzd³u¿ lokalnej osi Z, tj. wzd³u¿ osi sto¿ka widzenia.
+	//	Przemieszcza kamerï¿½ wzdï¿½uï¿½ lokalnej osi Z, tj. wzdï¿½uï¿½ osi stoï¿½ka widzenia.
 	//Dolly Camera + Target
-	//	Przemieszcza kamerê oraz jej cel, wzd³u¿ osi sto¿ka widzenia.
+	//	Przemieszcza kamerï¿½ oraz jej cel, wzdï¿½uï¿½ osi stoï¿½ka widzenia.
 	//Dolly Target
-	//	Przemieszcza cel w kierunku do lub od kamery, wzd³u¿ osi sto¿ka projekcji.
+	//	Przemieszcza cel w kierunku do lub od kamery, wzdï¿½uï¿½ osi stoï¿½ka projekcji.
 	//Perspective
-	//	Przemieszcza kamerê wzd³u¿ osi sto¿ka widzenia i jednoczeœnie zmienia szerokoœæ k¹ta widzenia.
+	//	Przemieszcza kamerï¿½ wzdï¿½uï¿½ osi stoï¿½ka widzenia i jednoczeï¿½nie zmienia szerokoï¿½ï¿½ kï¿½ta widzenia.
 	//Roll camera
-	//	Obraca kamer¹ wokó³ osi sto¿ka widzenia.
+	//	Obraca kamerï¿½ wokï¿½ osi stoï¿½ka widzenia.
 	//Truck Camera
-	//	Przemieszcza kamerê oraz jej cel równolegle do p³aszczyzny okna widokowego.
+	//	Przemieszcza kamerï¿½ oraz jej cel rï¿½wnolegle do pï¿½aszczyzny okna widokowego.
 	//Orbit Camera
-	//	Obraca kamerê wokó³ celu.
+	//	Obraca kamerï¿½ wokï¿½ celu.
 
     // TODO: zoom
     // 90 degrees fovh = 25mm equivalent
@@ -156,7 +156,7 @@ public:
 
     /// Truck Camera
     /**
-    * Przemieszcza kamerê oraz jej cel równolegle do p³aszczyzny okna widokowego.
+    * Przemieszcza kamerï¿½ oraz jej cel rï¿½wnolegle do pï¿½aszczyzny okna widokowego.
     */
 	FORG_API void Truck(float x, float y);
 

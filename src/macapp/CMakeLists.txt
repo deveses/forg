@@ -1,8 +1,9 @@
 add_executable(macapp)
-target_sources(macapp 
-    PRIVATE 
+target_sources(macapp
+    PRIVATE
     #main.cpp
     main.mm
+    ControlCommands.cpp
 )
 find_library(COCOA_LIBRARY Cocoa)
 target_link_libraries(macapp

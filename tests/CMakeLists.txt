@@ -12,6 +12,8 @@ add_executable(forg_tests
     core/BitArrayTests.cpp
     script/XMLParserTests.cpp
     rendering/RenderingValueTests.cpp
+    net/HttpRequestTests.cpp
+    net/CommandQueueTests.cpp
 )
 
 target_link_libraries(forg_tests

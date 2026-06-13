@@ -75,6 +75,24 @@ set(script_sources
 list(TRANSFORM script_sources PREPEND "src/script/")
 
 ###############################################################################
+# net
+###############################################################################
+set(net_includes
+    Command.h
+    HttpRequest.h
+    CommandQueue.h
+    HttpControlServer.h
+)
+list(TRANSFORM net_includes PREPEND "include/forg/net/")
+set(net_sources
+    $<$<NOT:$<BOOL:${FORG_PLATFORM_WINDOWS}>>:Command.cpp>
+    $<$<NOT:$<BOOL:${FORG_PLATFORM_WINDOWS}>>:HttpRequest.cpp>
+    $<$<NOT:$<BOOL:${FORG_PLATFORM_WINDOWS}>>:CommandQueue.cpp>
+    $<$<NOT:$<BOOL:${FORG_PLATFORM_WINDOWS}>>:HttpControlServer.cpp>
+)
+list(TRANSFORM net_sources PREPEND "src/net/")
+
+###############################################################################
 # math
 ###############################################################################
 set(math_sources
@@ -149,6 +167,6 @@ set(root_sources
 )
 
 ###############################################################################
-list(APPEND all_includes ${audio_includes} ${core_includes} ${fs_includes} ${os_includes} ${script_includes})
+list(APPEND all_includes ${audio_includes} ${core_includes} ${fs_includes} ${os_includes} ${script_includes} ${net_includes})
 list(APPEND all_sources ${audio_sources} ${core_sources} ${fs_sources} ${os_sources} ${script_sources}
-    ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources} ${root_sources})
+    ${net_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources} ${root_sources})

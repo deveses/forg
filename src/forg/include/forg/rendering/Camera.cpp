@@ -198,6 +198,18 @@ void Camera::SetUp(const Vector3& value)
     UpdateViewMatrix();
 }
 
+// Public absolute placement: delegate to the protected setters so m_dir and
+// the cached view matrix are kept in sync (same path the movement ops use).
+void Camera::set_Position(const Vector3& value)
+{
+    SetPosition(value);
+}
+
+void Camera::set_Target(const Vector3& value)
+{
+    SetTarget(value);
+}
+
 //////////////////////////////////////////////////////////////////////////
 //	Camera operations
 //////////////////////////////////////////////////////////////////////////
