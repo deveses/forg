@@ -39,6 +39,8 @@ class IRenderer
 {
 public:
 
+	virtual ~IRenderer() {}
+
 	virtual IRenderDevice* CreateDevice(HWIN hWindow, RENDER_PARAMETERS* pPresentationParameters) = 0;
 
 	virtual LPCTSTR get_Name() = 0;

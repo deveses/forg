@@ -28,11 +28,6 @@ namespace forg { namespace math {
 		memcpy(this, m, sizeof(Matrix4));
 	}
 
-	Matrix4::Matrix4( const Matrix4& m)
-	{
-		memcpy(this, &m, sizeof(Matrix4));
-	}
-
     Matrix4& Matrix4::operator*=(float fScalar)
     {
         M11 *= fScalar;

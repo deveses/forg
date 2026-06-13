@@ -41,7 +41,7 @@ namespace forg { namespace xfile {
         char buff[256];
 
         PrintIndent(indent);
-        sprintf(buff, "%s %s { // %d sub-object(s)\n", data->GetIdentifier().ToString().c_str(), data->GetName().c_str(), data->GetSubdataSize());
+        snprintf(buff, sizeof(buff), "%s %s { // %d sub-object(s)\n", data->GetIdentifier().ToString().c_str(), data->GetName().c_str(), data->GetSubdataSize());
         DBG_MSG(buff);
 
         for (uint i=0; i<data->GetSubdataSize(); i++) {
@@ -58,7 +58,7 @@ namespace forg { namespace xfile {
         char buff[256];
 
         PrintIndent(indent);
-        sprintf(buff, "// Float list of size %d\n", data->GetFloats().size());
+        snprintf(buff, sizeof(buff), "// Float list of size %d\n", data->GetFloats().size());
         DBG_MSG(buff);
     }
 
@@ -67,7 +67,7 @@ namespace forg { namespace xfile {
         char buff[256];
 
         PrintIndent(indent);
-        sprintf(buff, "// Integer list\n");
+        snprintf(buff, sizeof(buff), "// Integer list\n");
         DBG_MSG(buff);
     }
 
@@ -76,7 +76,7 @@ namespace forg { namespace xfile {
         char buff[256];
 
         PrintIndent(indent);
-        sprintf(buff, "// String list\n");
+        snprintf(buff, sizeof(buff), "// String list\n");
         DBG_MSG(buff);
     }
 
@@ -85,7 +85,7 @@ namespace forg { namespace xfile {
         char buff[256];
 
         PrintIndent(indent);
-        sprintf(buff, "// Reference\n");
+        snprintf(buff, sizeof(buff), "// Reference\n");
         DBG_MSG(buff);
     }
 
@@ -117,7 +117,7 @@ namespace forg { namespace xfile {
         char buff[256];
 
         DBG_MSG("//===================================================\n");
-        sprintf(buff, "//data (%d):\n", m_data.size());
+        snprintf(buff, sizeof(buff), "//data (%zu):\n", m_data.size());
         DBG_MSG(buff);
 
         for (uint i=0; i<m_data.size(); i++)
@@ -166,7 +166,7 @@ namespace forg { namespace xfile {
         char msg[256];
         uint64 dur = 0;
         perf_counter.GetDurationInMs(dur);
-        sprintf(msg, "[XDataMgr::ReadData] took %dms\n", dur);
+        snprintf(msg, sizeof(msg), "[XDataMgr::ReadData] took %llums\n", dur);
         DBG_MSG(msg);
 
         return rval;

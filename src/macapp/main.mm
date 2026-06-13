@@ -24,7 +24,13 @@ struct AppSettings
     int winY = 10;
 };
 
-static forg::Light s_Light = {0};
+static forg::Light s_Light = {};
+
+// Camera control sensitivities (tune to taste; flip a sign to invert an axis).
+static const float kOrbitSpeed        = 0.01f; // radians per pixel of left-drag
+static const float kTruckSpeed        = 0.01f; // world units per pixel of right-drag
+static const float kZoomSpeed         = 0.30f; // world units per scroll line
+static const float kMinTargetDistance = 0.5f;  // keep the camera off the target when zooming
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -45,6 +51,7 @@ static forg::Light s_Light = {0};
     NSWindow* m_window;
     NSView* m_view;
     NSTimer* m_timer;
+    id m_event_monitor;
 }
 - (instancetype)initWithSettings:(const AppSettings&)settings renderer:(forg::IRenderer*)renderer;
 @end
@@ -149,6 +156,54 @@ static forg::Light s_Light = {0};
 
     [m_window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
+
+    // Turntable camera controls: left-drag orbits, right-drag trucks, scroll zooms.
+    // A local monitor sees the deltas without subclassing the renderer's content view.
+    NSEventMask mask = NSEventMaskLeftMouseDragged |
+                       NSEventMaskRightMouseDragged |
+                       NSEventMaskScrollWheel;
+    // MRC build: __unsafe_unretained avoids a retain cycle; the monitor is removed
+    // in applicationWillTerminate, before the delegate is deallocated.
+    __unsafe_unretained AppDelegate* unretainedSelf = self;
+    m_event_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:mask
+                                                            handler:^NSEvent*(NSEvent* event) {
+        [unretainedSelf handleCameraEvent:event];
+        return event;
+    }];
+}
+
+// Maps mouse/scroll deltas onto the existing Camera movement primitives.
+- (void)handleCameraEvent:(NSEvent*)event
+{
+    switch (event.type)
+    {
+        case NSEventTypeLeftMouseDragged:
+            // Orbit around the cylinder. x = yaw, y = pitch.
+            m_camera.Orbit(-event.deltaX * kOrbitSpeed, event.deltaY * kOrbitSpeed);
+            break;
+
+        case NSEventTypeRightMouseDragged:
+            // Strafe the camera and its target parallel to the view plane.
+            m_camera.Truck(-event.deltaX * kTruckSpeed, event.deltaY * kTruckSpeed);
+            break;
+
+        case NSEventTypeScrollWheel:
+        {
+            // Dolly the camera toward/away from the target, clamped so it never
+            // crosses the target (Camera::Dolly's own guard is disabled).
+            float dolly = (float)event.scrollingDeltaY * kZoomSpeed;
+            float distance = (m_camera.get_Target() - m_camera.get_Position()).Length();
+            if (dolly > distance - kMinTargetDistance)
+            {
+                dolly = distance - kMinTargetDistance;
+            }
+            m_camera.Dolly(dolly, 0.0f);
+            break;
+        }
+
+        default:
+            break;
+    }
 }
 
 // port of Viewport::OnSize
@@ -232,6 +287,12 @@ static forg::Light s_Light = {0};
 {
     [m_timer invalidate];
     m_timer = nil;
+
+    if (m_event_monitor)
+    {
+        [NSEvent removeMonitor:m_event_monitor];
+        m_event_monitor = nil;
+    }
 
     if (! m_mesh.is_null())
     {
@@ -342,7 +403,7 @@ static forg::IRenderer* CreateRenderer(const std::string& driver)
     return pfCreateRenderer();
 }
 
-int main(int argc, char* argv[])
+int main(int, char*[])
 {
     ChangeToResourcesDirectory();
 

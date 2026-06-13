@@ -99,7 +99,7 @@ int xtexreader::EvalToken(xguid& value)
 
         char p1[5] = {0};
 
-        sscanf(m_last_tokens.back().lexem.c_str(), "<%x-%hx-%hx-%hx-%4s%x>", &value.Data1, &value.Data2, &value.Data3, &d1, p1, &d3);
+        sscanf(m_last_tokens.back().lexem.c_str(), "<%lx-%hx-%hx-%x-%4s%x>", &value.Data1, &value.Data2, &value.Data3, &d1, p1, &d3);
         sscanf(p1, "%x", &d2);
 
         value.Data4[0] = (d1 & 0xff00) >> 8;

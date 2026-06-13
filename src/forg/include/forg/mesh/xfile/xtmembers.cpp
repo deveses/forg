@@ -47,8 +47,8 @@ namespace forg { namespace xfile {
             {
                 char buf[128];
 
-                sprintf(buf, "[]");
-                sprintf(buf, "[%d]", dim.GetValue());
+                snprintf(buf, sizeof(buf), "[]");
+                snprintf(buf, sizeof(buf), "[%d]", dim.GetValue());
 
                 output.append(buf);
             }

@@ -101,11 +101,11 @@ namespace forg { namespace debug {
 
         if (iResult != 0)
         {
-            sprintf(dmsg, "%s(%d): %s result=%d\n", strFile, dwLine, strMsg, iResult);
+            snprintf(dmsg, sizeof(dmsg), "%s(%d): %s result=%d\n", strFile, dwLine, strMsg, iResult);
             DbgOutputString(dmsg);
         } else
         {
-            sprintf(dmsg, "%s(%d): %s\n", strFile, dwLine, strMsg);
+            snprintf(dmsg, sizeof(dmsg), "%s(%d): %s\n", strFile, dwLine, strMsg);
             DbgOutputString(dmsg);
         }
 
@@ -118,7 +118,7 @@ namespace forg { namespace debug {
 
         if (iResult != 0)
         {
-            sprintf(dmsg, "%s(%d): %s result=%d\n", strFile, dwLine, strMsg, iResult);
+            snprintf(dmsg, sizeof(dmsg), "%s(%d): %s result=%d\n", strFile, dwLine, strMsg, iResult);
             DbgOutputString(dmsg);
             DebugBreak();
         }
@@ -130,7 +130,7 @@ namespace forg { namespace debug {
 	{
 		TCHAR dmsg[1024];
 
-		sprintf(dmsg, "%s(%d): TRAP: %s\n", strFile, dwLine, strMsg);
+		snprintf(dmsg, sizeof(dmsg), "%s(%d): TRAP: %s\n", strFile, dwLine, strMsg);
 		DbgOutputString(dmsg);
 		DebugBreak();
 	}

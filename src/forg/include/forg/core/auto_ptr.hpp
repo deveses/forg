@@ -41,11 +41,11 @@ namespace forg { namespace core {
 template <typename T>
 struct PointerOwner
 {
-    void acquire(T* p)
+    void acquire(T* /*p*/)
     {
     }
 
-    void release(T* p)
+    void release(T* /*p*/)
     {
     }
 
