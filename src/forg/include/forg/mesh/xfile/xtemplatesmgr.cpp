@@ -114,7 +114,7 @@ namespace forg { namespace xfile {
         char buff[256];
 
         DBG_MSG("//===================================================\n");
-        sprintf(buff, "//templates (%d):\n", m_templates.size());
+        snprintf(buff, sizeof(buff), "//templates (%zu):\n", m_templates.size());
         DBG_MSG(buff);
 
         for (uint i=0; i<m_templates.size(); i++)
@@ -162,7 +162,7 @@ namespace forg { namespace xfile {
         char msg[256];
         uint64 dur = 0;
         counter.GetDurationInMs(dur);
-        sprintf(msg, "[XTemplatesMgr::ReadTemplates] took %dms\n", dur);
+        snprintf(msg, sizeof(msg), "[XTemplatesMgr::ReadTemplates] took %llums\n", dur);
         DBG_MSG(msg);
 
         return (res == 1);

@@ -53,7 +53,6 @@ struct FORG_API Matrix4
     {}
 
     Matrix4( const float * m);
-    Matrix4( const Matrix4& m);
     Matrix4(
         float _11, float _12, float _13, float _14,
         float _21, float _22, float _23, float _24,

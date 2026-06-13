@@ -359,6 +359,8 @@ namespace forg { namespace rendering { namespace reference {
         case TransformType_World:
             m_transforms[TM_WORLD] = matrix;
             break;
+        default:
+            break;
         }
 
         Matrix4::Multiply(m_transforms[TM_MODELVIEW], m_transforms[TM_WORLD], m_transforms[TM_VIEW]);
@@ -377,6 +379,8 @@ namespace forg { namespace rendering { namespace reference {
             break;
         case TransformType_World:
             matrix = m_transforms[TM_WORLD];
+            break;
+        default:
             break;
         }
     }

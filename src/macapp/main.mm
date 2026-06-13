@@ -24,7 +24,7 @@ struct AppSettings
     int winY = 10;
 };
 
-static forg::Light s_Light = {0};
+static forg::Light s_Light = {};
 
 // Camera control sensitivities (tune to taste; flip a sign to invert an axis).
 static const float kOrbitSpeed        = 0.01f; // radians per pixel of left-drag
@@ -403,7 +403,7 @@ static forg::IRenderer* CreateRenderer(const std::string& driver)
     return pfCreateRenderer();
 }
 
-int main(int argc, char* argv[])
+int main(int, char*[])
 {
     ChangeToResourcesDirectory();
 

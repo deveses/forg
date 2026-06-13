@@ -135,7 +135,7 @@ int xbinreader::ReadIntegerList(IntegerList& int_list)
     return rval;
 }
 
-#pragma message(" * dokonczyc ReadFloatList")
+// TODO: dokonczyc ReadFloatList
 int	xbinreader::ReadFloatList(FloatList& float_list)
 {
     if (ReadToken() != EToken::TOKEN_FLOAT_LIST)
@@ -185,7 +185,7 @@ int	xbinreader::ReadFloatList(FloatList& float_list)
     return rval;
 }
 
-#pragma message(" * dokonczyc ReadStringList")
+// TODO: dokonczyc ReadStringList
 int xbinreader::ReadStringList(StringList& string_list)
 {
     // string {list_separator string} list_separator

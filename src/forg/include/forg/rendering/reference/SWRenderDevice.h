@@ -183,7 +183,7 @@ public:
     virtual int Present();
     virtual int Reset();
     
-    virtual LPVERTEXDECLARATION CreateVertexDeclaration(const VertexElement* pVertexElements) { return 0; }
+    virtual LPVERTEXDECLARATION CreateVertexDeclaration(const VertexElement* /*pVertexElements*/) { return 0; }
 	virtual LPVERTEXBUFFER CreateVertexBuffer(
 		uint length,
 		uint usage,
@@ -206,13 +206,13 @@ public:
         );
 
 	virtual LPTEXTURE CreateTextureFromFile(
-		const char* filename,
-		uint Width,
-		uint Height,
-		uint Levels,
-		uint Usage,
-		uint Format,
-		uint Pool
+		const char* /*filename*/,
+		uint /*Width*/,
+		uint /*Height*/,
+		uint /*Levels*/,
+		uint /*Usage*/,
+		uint /*Format*/,
+		uint /*Pool*/
         ) { return 0; }
 
 	virtual int DrawIndexedPrimitive(
@@ -253,15 +253,15 @@ public:
 
     virtual int GetViewport(Viewport* viewport);
 
-    virtual int SetRenderState(uint state, uint value) { return 0; };
+    virtual int SetRenderState(uint /*state*/, uint /*value*/) { return 0; };
 
 	virtual int SetTexture(uint Sampler, ITexture* pTexture);
 
     virtual int SetLight(uint Index, const Light* pLight);
 
     virtual int LightEnable(
-        uint LightIndex,
-        bool bEnable
+        uint /*LightIndex*/,
+        bool /*bEnable*/
         ) { return 0; };
 
     virtual int SetMaterial(const Material* pMaterial);

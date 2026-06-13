@@ -12,7 +12,7 @@
 
 namespace forg { namespace mesh { namespace ply {
 
-char *type_names[] = {
+const char *type_names[] = {
     "invalid",
     "char", "short", "int",
     "uchar", "ushort", "uint",

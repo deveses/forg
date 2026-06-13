@@ -45,7 +45,7 @@ xstring xguid::ToString() const
 {
     char buff[64];
 
-    sprintf(buff, "%lx-%x-%x-%x%x-%x%x%x%x%x%x", Data1, Data2, Data3,
+    snprintf(buff, sizeof(buff), "%lx-%x-%x-%x%x-%x%x%x%x%x%x", Data1, Data2, Data3,
         Data4[0], Data4[1],
         Data4[2], Data4[3], Data4[4], Data4[5], Data4[6], Data4[7]
     );
