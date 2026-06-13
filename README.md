@@ -12,17 +12,28 @@ Any other platform fails CMake configuration with a fatal error.
 
 ## Building
 
-Requires CMake ≥ 3.1 and a C++17 compiler.
+Requires CMake ≥ 3.21 (for presets), Ninja, and a C++17 compiler. `CMakePresets.json` defines `debug` and `release` presets with output in `build/debug` and `build/release`:
 
 ```sh
-cmake -S . -B build -G Ninja
-cmake --build build
+cmake --preset release
+cmake --build --preset release
 ```
 
-The CMake build produces two targets:
+(Use `--preset debug` for a debug build. The software renderer is ~4× faster in release.)
+
+The CMake build produces three targets:
 
 - **`forg`** — the static library (`src/forg/`)
-- **`macapp`** — a minimal Cocoa sample app (`src/macapp/`) linking `forg`
+- **`swrenderer`** (macOS) — the software-renderer plugin, built as `libswrenderer.dylib`
+- **`macapp`** (macOS) — the Cocoa sample app (`src/macapp/`): reads `config.xml` for window geometry and the renderer driver, loads the plugin with `dlopen`, and renders the demo scene
+
+Run the sample with:
+
+```sh
+./build/release/src/macapp/macapp
+```
+
+A post-build step copies `libswrenderer.dylib` and `src/macapp/config.xml` next to the binary.
 
 Notes:
 
@@ -32,7 +43,7 @@ Notes:
 
 ### Legacy Windows build
 
-The renderer plugins (`glrenderer`, `swrenderer`, `clrenderer`, `amprenderer`) and the Win32 sample apps (`winapp`, `emfc`) are **not** part of the CMake build. They are built with the Sharpmake-generated Visual Studio projects under `tools/msvc/` (regenerate with `tools/generateprojects.bat`, sources in `tools/sharpmake/`).
+The remaining renderer plugins (`glrenderer`, `clrenderer`, `amprenderer`, the GDI side of `swrenderer`) and the Win32 sample apps (`winapp`, `emfc`) are **not** part of the CMake build. They are built with the Sharpmake-generated Visual Studio projects under `tools/msvc/` (regenerate with `tools/generateprojects.bat`, sources in `tools/sharpmake/`).
 
 ## Project layout
 
@@ -44,7 +55,9 @@ src/forg/src/            Private implementation, mirroring the module layout;
                          OS-specific code under os/{win32,osx}/
 src/macapp/              Cocoa sample app (CMake)
 src/winapp/, src/emfc/   Win32 sample apps (legacy MSVC build)
-src/{gl,sw,cl,amp}renderer/  Renderer plugin DLLs (legacy MSVC build)
+src/swrenderer/          Software-renderer plugin (CMake dylib on macOS,
+                         legacy MSVC DLL on Windows)
+src/{gl,cl,amp}renderer/ Renderer plugin DLLs (legacy MSVC build)
 extern/                  Vendored dependencies (freetype, zlib, OpenCL,
                          OpenGL headers, Sharpmake) — not wired into CMake
 tools/                   Sharpmake scripts, MSVC projects, clang-format
@@ -57,7 +70,8 @@ The umbrella headers are `forg/forg.h` and `forg/rendering.h`. Note that some `.
 The rendering abstraction lives in `include/forg/rendering/`. Backends implement the `IRenderDevice` family of interfaces:
 
 - **Reference software renderer** — compiled into the library itself (`include/forg/rendering/reference/`)
-- **OpenGL / software / OpenCL / C++ AMP renderers** — separate plugin DLLs loaded at runtime (Windows only)
+- **Software renderer plugin** (`src/swrenderer/`) — wraps the reference renderer with a platform presentation layer (CoreGraphics/CALayer on macOS, GDI on Windows); loaded at runtime via `dlopen`/`LoadLibrary` from the driver named in `config.xml`
+- **OpenGL / OpenCL / C++ AMP renderers** — separate plugin DLLs loaded at runtime (Windows only, legacy build)
 
 Beyond rendering, the library includes math types, audio output, an XML parser/lexer (`script`), image and mesh loading, a UI layer, filesystem and OS abstractions.
 

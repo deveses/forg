@@ -46,8 +46,19 @@ namespace forg
         if (view == nil || buffer == 0 || width == 0 || height == 0)
             return FORG_OK;
 
-        size_t length = (size_t)width * height * 4;
-        CFDataRef data = CFDataCreate(NULL, (const UInt8*)buffer, length);
+        // The rasterizer fills the buffer bottom-up (GDI DIB convention);
+        // CGImage reads rows top-down, so copy the rows reversed.
+        size_t row_bytes = (size_t)width * 4;
+        size_t length = row_bytes * height;
+        CFMutableDataRef data = CFDataCreateMutable(NULL, length);
+        CFDataSetLength(data, length);
+        UInt8* dst = CFDataGetMutableBytePtr(data);
+        for (uint row = 0; row < height; row++)
+        {
+            memcpy(dst + row * row_bytes,
+                   (const UInt8*)buffer + (height - 1 - row) * row_bytes,
+                   row_bytes);
+        }
         CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
         CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
         CGImageRef image = CGImageCreate(width, height, 8, 32, width * 4, colorSpace,

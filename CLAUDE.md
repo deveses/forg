@@ -8,12 +8,16 @@ FORG is a C++17 rendering-API abstraction library (originating from the old forg
 
 ## Build
 
+`CMakePresets.json` defines `debug` and `release` presets (Ninja) with output in `build/debug` and `build/release`:
+
 ```sh
-cmake -S . -B build -G Ninja
-cmake --build build
+cmake --preset debug && cmake --build --preset debug
+cmake --preset release && cmake --build --preset release
 ```
 
-- The checked-in `build/` directory may be stale (it can reference a previous checkout path in its cache). If `cmake --build` fails trying to regenerate from a wrong source path, delete `build/` and reconfigure.
+Run the sample with `./build/<preset>/src/macapp/macapp` (a post-build step puts `libswrenderer.dylib` and `config.xml` next to it). The software renderer is ~4× faster in release (`-O0` debug runs ~20 fps at 800×600, release hits the 60 fps timer cap).
+
+- `build/` is generated (not tracked). If a build tree's cache references a stale checkout path, delete that tree and reconfigure.
 - `CMAKE_OSX_ARCHITECTURES` is hardcoded to `arm64` at the top of the root `CMakeLists.txt`.
 - Options `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, `FORG_USE_ZLIB` exist but default to OFF, and `extern/CMakeLists.txt` is currently empty — the vendored deps in `extern/` are not wired into the build.
 - Only Windows and Apple platforms configure; anything else hits a `FATAL_ERROR`. Platform macros: `FORG_PLATFORM_WINDOWS`, `FORG_PLATFORM_OSX`, `FORG_PLATFORM_IOS`.
