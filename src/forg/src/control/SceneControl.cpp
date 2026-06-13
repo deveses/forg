@@ -1,8 +1,9 @@
-#include <map>
 #include <sstream>
 #include <string>
 
-#include "ControlCommands.h"
+#include "control/SceneControl.h"
+
+namespace forg { namespace control {
 
 namespace {
 
@@ -214,3 +215,5 @@ std::string DispatchCommand(SceneControlContext& ctx, const Command& cmd)
 
     return fail("unknown");
 }
+
+}}

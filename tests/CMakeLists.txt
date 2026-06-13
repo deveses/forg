@@ -14,6 +14,7 @@ add_executable(forg_tests
     rendering/RenderingValueTests.cpp
     net/HttpRequestTests.cpp
     net/CommandQueueTests.cpp
+    control/SceneControlTests.cpp
 )
 
 target_link_libraries(forg_tests

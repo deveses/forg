@@ -19,7 +19,7 @@
 #include "forg/net/HttpControlServer.h"
 
 #include "forg.h"
-#include "ControlCommands.h"
+#include "forg/control/SceneControl.h"
 
 struct AppSettings
 {
@@ -295,7 +295,7 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
         forg::net::QueueItem item;
         while (m_cmd_queue->TryPop(item))
         {
-            SceneControlContext ctx;
+            forg::control::SceneControlContext ctx;
             ctx.camera     = &m_camera;
             ctx.mesh       = &m_mesh;
             ctx.meshTm     = &m_mesh_tm;
@@ -303,7 +303,7 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
             ctx.clearColor = &m_clear_color;
             ctx.device     = m_device;
 
-            std::string body = DispatchCommand(ctx, item.cmd);
+            std::string body = forg::control::DispatchCommand(ctx, item.cmd);
             if (item.reply)
             {
                 item.reply->set_value(body);
