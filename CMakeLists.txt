@@ -1,6 +1,4 @@
-cmake_minimum_required(VERSION 3.1...3.26)
-
-set(CMAKE_OSX_ARCHITECTURES arm64) # arch64: arm64, x86_64
+cmake_minimum_required(VERSION 3.21...4.0)
 
 project(
   Forg

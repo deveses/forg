@@ -75,6 +75,41 @@ set(script_sources
 list(TRANSFORM script_sources PREPEND "src/script/")
 
 ###############################################################################
+# net
+###############################################################################
+set(net_includes
+    Command.h
+    HttpRequest.h
+    CommandQueue.h
+    HttpControlServer.h
+)
+list(TRANSFORM net_includes PREPEND "include/forg/net/")
+# The command/parser/queue pieces are portable; only the BSD-socket server is
+# excluded on Windows (no Winsock implementation yet).
+set(net_sources
+    Command.cpp
+    HttpRequest.cpp
+    CommandQueue.cpp
+    $<$<NOT:$<BOOL:${FORG_PLATFORM_WINDOWS}>>:HttpControlServer.cpp>
+)
+list(TRANSFORM net_sources PREPEND "src/net/")
+
+###############################################################################
+# control
+###############################################################################
+set(control_includes
+    SceneControl.h
+)
+list(TRANSFORM control_includes PREPEND "include/forg/control/")
+set(control_sources
+    SceneControl.cpp
+    commands/camera.cpp
+    commands/mesh.cpp
+    commands/scene.cpp
+)
+list(TRANSFORM control_sources PREPEND "src/control/")
+
+###############################################################################
 # math
 ###############################################################################
 set(math_sources
@@ -149,6 +184,7 @@ set(root_sources
 )
 
 ###############################################################################
-list(APPEND all_includes ${audio_includes} ${core_includes} ${fs_includes} ${os_includes} ${script_includes})
+list(APPEND all_includes ${audio_includes} ${core_includes} ${fs_includes} ${os_includes} ${script_includes}
+    ${net_includes} ${control_includes})
 list(APPEND all_sources ${audio_sources} ${core_sources} ${fs_sources} ${os_sources} ${script_sources}
-    ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources} ${root_sources})
+    ${net_sources} ${control_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources} ${root_sources})

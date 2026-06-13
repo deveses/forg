@@ -1,4 +1,5 @@
 <config>
     <renderer driver="libswrenderer.dylib"/>
     <window width="800" height="600" posx="100" posy="100"/>
+    <controlserver enabled="true" port="8080"/>
 </config>

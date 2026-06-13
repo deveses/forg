@@ -1,6 +1,6 @@
 add_executable(macapp)
-target_sources(macapp 
-    PRIVATE 
+target_sources(macapp
+    PRIVATE
     #main.cpp
     main.mm
 )
