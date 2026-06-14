@@ -44,3 +44,36 @@ TEST_CASE("XMLParser rejects missing files", "[script][xml]")
 
     REQUIRE_FALSE(parser.Open(path.c_str()));
 }
+
+TEST_CASE("XMLParser finds nested and sibling elements", "[script][xml]")
+{
+    forg::script::xml::XMLParser parser;
+    const std::string path = TestDataPath("nested.xml");
+
+    REQUIRE(parser.Open(path.c_str()));
+    forg::script::xml::XMLDocument* document = parser.Parse();
+    REQUIRE(document != nullptr);
+
+    forg::script::xml::XMLNode* graphics = document->FindNode("graphics");
+    REQUIRE(graphics != nullptr);
+
+    forg::script::xml::XMLNode* renderer = document->FindNode("renderer");
+    REQUIRE(renderer != nullptr);
+    REQUIRE(renderer->FindAttribute("driver") != nullptr);
+    REQUIRE(renderer->FindAttribute("driver")->GetContent() == "metal");
+
+    forg::script::xml::XMLNode* audio = document->FindNode("audio");
+    REQUIRE(audio != nullptr);
+
+    forg::script::xml::XMLNode* device = document->FindNode("device");
+    REQUIRE(device != nullptr);
+    REQUIRE(device->FindAttribute("name") != nullptr);
+    REQUIRE(device->FindAttribute("name")->GetContent() == "builtin");
+
+    forg::script::xml::XMLNode* empty = document->FindNode("empty");
+    REQUIRE(empty != nullptr);
+
+    REQUIRE(document->FindNode("network") == nullptr);
+
+    parser.Close();
+}

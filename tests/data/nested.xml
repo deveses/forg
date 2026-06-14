@@ -1,0 +1,9 @@
+<config>
+    <graphics>
+        <renderer driver="metal"/>
+    </graphics>
+    <audio>
+        <device name="builtin"/>
+    </audio>
+    <empty/>
+</config>
