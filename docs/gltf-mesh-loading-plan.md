@@ -1,5 +1,12 @@
 # glTF Static Mesh Loading Plan
 
+> **Status: implemented** (commit `04c0cea`). Deviations from this plan:
+> the loader is split into a device-independent `GltfLoader::Flatten` (for unit
+> testing) plus `GltfLoader::Load`; `TextureFilename` stores the relative glTF
+> image URI (resolved by the caller, as the X loader does); and geometry is
+> loaded faithfully without handedness/winding conversion (a documented v1
+> limitation). `scene::Model::Load` is Win32-app-only and unchanged.
+
 ## Summary
 
 Implement v1 glTF 2.0 loading for static models using vendored `cgltf`.
