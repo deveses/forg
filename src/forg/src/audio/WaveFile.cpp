@@ -4,18 +4,22 @@
 namespace forg::audio
 {
 
-WaveFile::WaveFile() : m_file(0) {}
+void WaveFile::FileCloser::operator()(FILE* file) const
+{
+    if (file)
+    {
+        fclose(file);
+    }
+}
+
+WaveFile::WaveFile() : m_file(nullptr), m_riff_type(0) {}
 
 WaveFile::~WaveFile() { Close(); }
 
 void WaveFile::Close()
 {
-    if (m_file)
-    {
-        fclose(m_file);
-        m_file = NULL;
-    }
-
+    m_file.reset();
+    m_riff_type = 0;
     m_chunks.clear();
 }
 
@@ -33,11 +37,11 @@ bool WaveFile::GetFormat(char* format, unsigned int size)
 
 bool WaveFile::GetChunk(unsigned int id, SWaveChunk& chunk)
 {
-    for (WaveChunkVecI it = m_chunks.begin(); it != m_chunks.end(); ++it)
+    for (const SWaveChunk& wave_chunk : m_chunks)
     {
-        if (it->header.nID == id)
+        if (wave_chunk.header.nID == id)
         {
-            chunk = *it;
+            chunk = wave_chunk;
 
             return true;
         }
@@ -48,16 +52,17 @@ bool WaveFile::GetChunk(unsigned int id, SWaveChunk& chunk)
 
 unsigned int WaveFile::Read(unsigned int offset, char* buf, unsigned int size)
 {
-    fseek(m_file, offset, SEEK_SET);
+    if (!m_file || fseek(m_file.get(), offset, SEEK_SET) != 0)
+    {
+        return 0;
+    }
 
-    return (unsigned int)fread(buf, 1, size, m_file);
+    return (unsigned int)fread(buf, 1, size, m_file.get());
 }
 
 unsigned int WaveFile::ReadChunkData(const SWaveChunk& chunk, char* buf,
                                      unsigned int size)
 {
-    fseek(m_file, chunk.offset + 8, SEEK_SET);
-
     if (chunk.header.nSize < size)
         size = chunk.header.nSize;
 
@@ -68,7 +73,7 @@ bool WaveFile::Open(const char* _filename)
 {
     Close();
 
-    m_file = fopen(_filename, "rb");
+    m_file.reset(fopen(_filename, "rb"));
 
     if (m_file)
     {
@@ -78,17 +83,31 @@ bool WaveFile::Open(const char* _filename)
 
         size_t file_size = 0;
 
-        if (fseek(m_file, 0, SEEK_END) != 0)
+        if (fseek(m_file.get(), 0, SEEK_END) != 0)
+        {
+            Close();
             return false;
-        file_size = ftell(m_file);
-        if (fseek(m_file, 0, SEEK_SET) != 0)
+        }
+
+        long file_end = ftell(m_file.get());
+        if (file_end < 0)
+        {
+            Close();
             return false;
+        }
+
+        file_size = static_cast<size_t>(file_end);
+        if (fseek(m_file.get(), 0, SEEK_SET) != 0)
+        {
+            Close();
+            return false;
+        }
 
         bool riff_found = false;
         size_t cbread = 0;
 
         while (0 <
-               (cbread = fread(&chunk.header, sizeof(chunk.header), 1, m_file)))
+               (cbread = fread(&chunk.header, sizeof(chunk.header), 1, m_file.get())))
         {
             if (riff_found)
             {
@@ -99,7 +118,7 @@ bool WaveFile::Open(const char* _filename)
                     break;
                 }
 
-                if (fseek(m_file, chunk.header.nSize, SEEK_CUR) != 0)
+                if (fseek(m_file.get(), chunk.header.nSize, SEEK_CUR) != 0)
                 {
                     // if we can't skip chunk, break reading
                     break;
@@ -107,7 +126,13 @@ bool WaveFile::Open(const char* _filename)
 
                 m_chunks.push_back(chunk);
 
-                chunk.offset = ftell(m_file);
+                long chunk_offset = ftell(m_file.get());
+                if (chunk_offset < 0)
+                {
+                    break;
+                }
+
+                chunk.offset = static_cast<unsigned int>(chunk_offset);
             }
             else
             {
@@ -115,13 +140,23 @@ bool WaveFile::Open(const char* _filename)
                 {
                     riff_found = true;
 
-                    fread(&m_riff_type, sizeof(m_riff_type), 1, m_file);
+                    if (fread(&m_riff_type, sizeof(m_riff_type), 1,
+                              m_file.get()) != 1)
+                    {
+                        break;
+                    }
 
-                    chunk.offset = ftell(m_file);
+                    long chunk_offset = ftell(m_file.get());
+                    if (chunk_offset < 0)
+                    {
+                        break;
+                    }
+
+                    chunk.offset = static_cast<unsigned int>(chunk_offset);
                 }
                 else
                 {
-                    fseek(m_file, chunk.header.nSize, SEEK_CUR);
+                    fseek(m_file.get(), chunk.header.nSize, SEEK_CUR);
                 }
             }
         }

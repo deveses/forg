@@ -23,8 +23,11 @@
 #pragma once
 #endif
 
+#include <cstdio>
+#include <memory>
+#include <vector>
+
 #include "forg/base.h"
-#include "forg/core/vector.hpp"
 
 namespace forg { namespace audio {
 
@@ -68,12 +71,16 @@ struct CHUNKHDR {
 class FORG_API WaveFile
 {
 private:
-    typedef forg::core::vector<SWaveChunk> WaveChunkVec;
-    typedef WaveChunkVec::iterator WaveChunkVecI;
-    typedef WaveChunkVec::const_iterator WaveChunkVecCI;
+    struct FileCloser
+    {
+        void operator()(FILE* file) const;
+    };
+
+    typedef std::unique_ptr<FILE, FileCloser> FilePtr;
+    typedef std::vector<SWaveChunk> WaveChunkVec;
 
 private:
-    FILE* m_file;
+    FilePtr m_file;
     unsigned int m_riff_type;
     WaveChunkVec m_chunks;
 
