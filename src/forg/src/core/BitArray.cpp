@@ -4,14 +4,31 @@
 
 namespace forg { namespace core {
 
+namespace
+{
+
+uint WordCount(uint length)
+{
+	return (length + 0x1f) >> 5;
+}
+
+int LastWordMask(uint length)
+{
+	uint remainder = length % 0x20;
+	return remainder == 0 ? -1 : static_cast<int>(0xffffffff >> (0x20 - remainder));
+}
+
+bool GetOrFalse(const BitArray& bits, uint index)
+{
+	return index < bits.get_Count() && bits.Get(index);
+}
+
+} // namespace
+
 BitArray::BitArray(const BitArray& bits)
-:	m_array(bits.m_array.size()),
+:	m_array(bits.m_array),
 	m_length(bits.m_length)
 {
-	for (uint i = 0; i < bits.m_array.size(); i++)
-	{
-		m_array[i] = bits.m_array[i];
-	}
 }
 
 //BitArray::BitArray(const array<int>& values)
@@ -54,17 +71,15 @@ BitArray::BitArray(const BitArray& bits)
 //}
 
 BitArray::BitArray(uint length)
-    : m_array((length+0x1f)>>5) // 0x1f = 31
+    : m_array(WordCount(length), 0) // 0x1f = 31
     , m_length(length)
 {
-	m_array.clear();
 }
 
 BitArray::BitArray(uint length, bool defaultValue)
-    : m_array((length+0x1f)>>5)
+    : m_array(WordCount(length), 0)
     , m_length(length)
 {
-	//m_array.clear();
 	SetAll(defaultValue);
 }
 
@@ -77,12 +92,7 @@ BitArray& BitArray::operator = (const BitArray& bits)
 	if (this == &bits)
 		return *this;
 
-	m_array.resize(bits.m_array.size());
-	for (uint i = 0; i < bits.m_array.size(); i++)
-	{
-		m_array[i] = bits.m_array[i];
-	}
-
+	m_array = bits.m_array;
 	m_length = bits.m_length;
 
 	return *this;
@@ -163,11 +173,16 @@ BitArray& BitArray::operator |= (const BitArray& arg)
 BitArray BitArray::operator ~() const
 {
 	BitArray result(m_length, false);
-	uint len = m_array.size();
+	uint len = static_cast<uint>(m_array.size());
 
 	for (uint i = 0; i < len; i++)
 	{
 		result.m_array[i] = ~m_array[i];
+	}
+
+	if (!result.m_array.empty())
+	{
+		result.m_array.back() &= LastWordMask(m_length);
 	}
 
 	return result;
@@ -251,10 +266,15 @@ void BitArray::Set(uint index, bool value)
 void BitArray::SetAll(bool value)
 {
 	int v = value ? -1 : 0;
-	uint len = m_array.size();
+	uint len = static_cast<uint>(m_array.size());
 	for (uint i = 0; i < len; i++)
 	{
 		m_array[i] = v;
+	}
+
+	if (value && !m_array.empty())
+	{
+		m_array.back() &= LastWordMask(m_length);
 	}
 }
 
@@ -270,14 +290,23 @@ uint BitArray::get_Length() const
 
 void BitArray::set_Length(uint value)
 {
-	uint nsize = (value+0x1f)>>5;
+	uint nsize = WordCount(value);
 
 	if (value > m_length && m_array.size()<nsize)
+	{
+		m_array.resize(nsize, 0);
+	}
+	else if (value < m_length && m_array.size() > nsize)
 	{
 		m_array.resize(nsize);
 	}
 
 	m_length = value;
+
+	if (!m_array.empty())
+	{
+		m_array.back() &= LastWordMask(m_length);
+	}
 }
 
 BitArray::string BitArray::ToString()
@@ -295,27 +324,17 @@ BitArray::string BitArray::ToString()
 
 bool operator == (const BitArray& b1, const BitArray& b2)
 {
-	uint len1 = b1.m_array.size();
-	uint len2 = b2.m_array.size();
-	bool equals = true;
+	uint len1 = b1.get_Count();
+	uint len2 = b2.get_Count();
+	uint len = len1 > len2 ? len1 : len2;
 
-	BitArray tmp = b1 | b2;
-
-	if (len1 > len2)
+	for (uint i = 0; i < len; i++)
 	{
-		for (uint i=0; equals && i<len1; i++)
-		{
-			equals = (tmp.m_array[i] == b1.m_array[i]);
-		}
-	}
-	{
-		for (uint i=0; equals && i<len2; i++)
-		{
-			equals = (tmp.m_array[i] == b2.m_array[i]);
-		}
+		if (GetOrFalse(b1, i) != GetOrFalse(b2, i))
+			return false;
 	}
 
-	return equals;
+	return true;
 }
 
 bool operator != (const BitArray& b1, const BitArray& b2)
