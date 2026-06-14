@@ -133,12 +133,12 @@ void HttpControlServer::HandleConnection(int clientFd)
     {
         Command cmd = CommandFromRequest(path, query);
 
-        std::promise<std::string> reply;
-        std::future<std::string> result = reply.get_future();
-        m_queue.Push(cmd, &reply);
+        std::future<std::string> result = m_queue.PushWithReply(cmd);
 
         // The main thread drains the queue and fulfils the promise each frame.
         // The timeout keeps the socket thread from hanging if it has stopped.
+        // The queue owns the promise, so timing out here is safe: the main
+        // thread's later set_value just lands in a value no one reads.
         if (result.wait_for(std::chrono::seconds(1)) == std::future_status::ready)
         {
             body = result.get();

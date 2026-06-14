@@ -9,6 +9,15 @@ using forg::net::TryGetFloat;
 using forg::net::TryGetInt;
 using forg::net::TryGetString;
 
+namespace
+{
+// Keep untrusted request params inside sane bounds so a single request cannot
+// trigger an absurd allocation or degenerate geometry.
+int ClampSegments(int n) { return (n < 3) ? 3 : (n > 512 ? 512 : n); }
+float PositiveOr(float v, float fallback) { return (v > 0.0f) ? v : fallback; }
+float NonNegativeOr(float v, float fallback) { return (v >= 0.0f) ? v : fallback; }
+}
+
 std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
 {
     const std::string& v = cmd.verb;
@@ -33,6 +42,9 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         TryGetFloat(cmd, "w", w);
         TryGetFloat(cmd, "h", h);
         TryGetFloat(cmd, "d", d);
+        w = PositiveOr(w, 1.0f);
+        h = PositiveOr(h, 1.0f);
+        d = PositiveOr(d, 1.0f);
         *ctx.mesh = forg::geometry::Mesh::Box(ctx.device, w, h, d);
         return ok();
     }
@@ -43,6 +55,9 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         TryGetFloat(cmd, "radius", radius);
         TryGetInt(cmd, "slices", slices);
         TryGetInt(cmd, "stacks", stacks);
+        radius = PositiveOr(radius, 1.0f);
+        slices = ClampSegments(slices);
+        stacks = ClampSegments(stacks);
         *ctx.mesh = forg::geometry::Mesh::Sphere(ctx.device, radius, slices, stacks);
         return ok();
     }
@@ -55,6 +70,11 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         TryGetFloat(cmd, "length", length);
         TryGetInt(cmd, "slices", slices);
         TryGetInt(cmd, "stacks", stacks);
+        r1 = NonNegativeOr(r1, 1.0f);   // a cone tip (r == 0) is valid
+        r2 = NonNegativeOr(r2, 1.0f);
+        length = PositiveOr(length, 2.0f);
+        slices = ClampSegments(slices);
+        stacks = ClampSegments(stacks);
         *ctx.mesh = forg::geometry::Mesh::Cylinder(ctx.device, r1, r2, length, slices, stacks);
         return ok();
     }

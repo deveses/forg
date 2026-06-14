@@ -10,17 +10,28 @@ namespace forg {
 const float Camera::minimal_distance = 0.05f;
 
 Camera::Camera(CameraView view_type)
-: m_aspect(1.0f)
+: m_roll(0.0f)
+, m_aspect(1.0f)
 , m_fovy(0.78539816339744830961566084581988f)    // 70 degrees
 , m_near(1.5f)
 , m_far(1000.0f)
+, m_unitm_size(0.0f)
+, m_tanm_halfm_fov(0.0f)
 , m_target(0.0f, 0.0f, 0.0f)
 , m_position(0.0f, 0.0f, 5.0f)
 , m_up(0.0f, 1.0f, 0.0f)
 , m_camera_view(view_type)
+, m_screen_width(0.0f)
+, m_screen_height(0.0f)
 {
     m_dir = m_target - m_position;
     m_dir.Normalize();
+
+    // Compute the cached matrices now so the first GetViewMatrix/
+    // GetProjectionMatrix returns a valid transform even before any movement op
+    // or set_ScreenSize runs (the demo renders frames before the first input).
+    UpdateViewMatrix();
+    UpdateProjectionMatrix();
 }
 
 Camera::~Camera(void)

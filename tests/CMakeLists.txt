@@ -12,7 +12,9 @@ add_executable(forg_tests
     core/BitArrayTests.cpp
     script/XMLParserTests.cpp
     rendering/RenderingValueTests.cpp
+    rendering/CameraTests.cpp
     net/HttpRequestTests.cpp
+    net/CommandTests.cpp
     net/CommandQueueTests.cpp
     control/SceneControlTests.cpp
 )

@@ -2,6 +2,7 @@
 #define _FORG_NET_COMMANDQUEUE_H_
 
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <future>
 #include <string>
@@ -12,16 +13,18 @@ namespace forg { namespace net {
 
 /// A queued command plus an optional channel for its reply.
 /**
-* The server thread fills `reply` (a promise it owns) so it can wait for the
-* main thread to produce a response body. `reply` may be null for callers that
-* do not need a response.
+* When a caller needs a response it uses PushWithReply(), which creates a
+* promise owned by the queue (held via shared_ptr) and hands back the matching
+* future. Queue-owned lifetime is the point: the promise stays alive even if the
+* requester stops waiting (e.g. times out and returns) before the main thread
+* produces the body. `reply` is null for fire-and-forget callers.
 */
 struct QueueItem
 {
     Command cmd;
-    std::promise<std::string>* reply;
+    std::shared_ptr<std::promise<std::string> > reply;
 
-    QueueItem() : reply(0) {}
+    QueueItem() : reply() {}
 };
 
 /// Thread-safe hand-off of commands from the server thread to the main thread.
@@ -32,7 +35,12 @@ struct QueueItem
 class CommandQueue
 {
 public:
-    void Push(const Command& cmd, std::promise<std::string>* reply = 0);
+    /// Queues a fire-and-forget command (no reply channel).
+    void Push(const Command& cmd);
+
+    /// Queues a command and returns a future for its reply. The queue owns the
+    /// promise, so the future stays valid even if the caller stops waiting.
+    std::future<std::string> PushWithReply(const Command& cmd);
 
     /// Pops the oldest item into `out`. Returns false (leaving out untouched)
     /// when the queue is empty.

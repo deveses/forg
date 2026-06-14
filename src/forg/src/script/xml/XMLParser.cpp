@@ -121,7 +121,26 @@ XMLNode::XMLNode(int _type)
     m_type = _type;
 }
 
-XMLNode::~XMLNode() {}
+XMLNode::~XMLNode()
+{
+    // A node owns its children and attributes, each a singly-linked list chained
+    // through the next node's m_next. Free them iteratively (a child's own
+    // destructor recurses into its subtree); m_next itself belongs to the
+    // parent's list, so it is not freed here.
+    for (XMLNode* child = m_children; child != nullptr;)
+    {
+        XMLNode* next = child->m_next;
+        delete child;
+        child = next;
+    }
+
+    for (XMLNode* attr = m_attributes; attr != nullptr;)
+    {
+        XMLNode* next = attr->m_next;
+        delete attr;
+        attr = next;
+    }
+}
 
 XMLNode* XMLNode::FindAttribute(const core::string& _name)
 {
@@ -143,7 +162,10 @@ XMLNode* XMLNode::FindAttribute(const core::string& _name)
 
 XMLDocument::XMLDocument() : m_root(nullptr) {}
 
-XMLDocument::~XMLDocument() {}
+XMLDocument::~XMLDocument()
+{
+    delete m_root; // frees the whole node tree via ~XMLNode
+}
 
 XMLNode* XMLDocument::FindNode(const core::string& _name)
 {

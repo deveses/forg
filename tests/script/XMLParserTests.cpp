@@ -37,6 +37,25 @@ TEST_CASE("XMLParser reads elements and attributes from a file", "[script][xml]"
     parser.Close();
 }
 
+TEST_CASE("XMLParser releases its document tree on destruction", "[script][xml]")
+{
+    // Parse a tree with nested elements, siblings, attributes and an empty
+    // element, then let the parser fall out of scope. Under AddressSanitizer
+    // this exercises the recursive node cleanup with no double-free / invalid
+    // free (and no leak where LeakSanitizer is available).
+    {
+        forg::script::xml::XMLParser parser;
+        const std::string path = TestDataPath("nested.xml");
+
+        REQUIRE(parser.Open(path.c_str()));
+        forg::script::xml::XMLDocument* document = parser.Parse();
+        REQUIRE(document != nullptr);
+        REQUIRE(document->FindNode("device") != nullptr);
+        parser.Close();
+        // `document` is owned by the parser and freed when it goes out of scope.
+    }
+}
+
 TEST_CASE("XMLParser rejects missing files", "[script][xml]")
 {
     forg::script::xml::XMLParser parser;
