@@ -17,6 +17,8 @@ target_include_directories(forg
     PUBLIC .
     PRIVATE src
 )
+# cgltf (header-only) is used privately by the glTF mesh loader.
+target_link_libraries(forg PRIVATE cgltf)
 target_compile_features(forg PUBLIC cxx_std_17)
 
 target_compile_options(forg INTERFACE

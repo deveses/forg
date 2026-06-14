@@ -14,6 +14,7 @@ add_executable(forg_tests
     script/XMLParserTests.cpp
     rendering/RenderingValueTests.cpp
     rendering/CameraTests.cpp
+    mesh/GltfLoaderTests.cpp
     net/HttpRequestTests.cpp
     net/CommandTests.cpp
     net/CommandQueueTests.cpp

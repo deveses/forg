@@ -8,6 +8,7 @@
 
 #include "mesh/ply/plyfile.h"
 #include "mesh/XLoader.h"
+#include "mesh/GLTFLoader.h"
 
 namespace forg
 {
@@ -896,6 +897,8 @@ Mesh::MeshPtr Mesh::FromFile(
 
     if (fname.rfind(".ply") != std::string::npos)
         m = FromPly(filename, options, device);
+    else if (fname.rfind(".gltf") != std::string::npos || fname.rfind(".glb") != std::string::npos)
+        m = FromGltf(filename, options, device, materials);
     else
         m = FromX(filename, options, device, materials);
 
@@ -1207,6 +1210,16 @@ Mesh::MeshPtr Mesh::FromX(
     m = xfile::XLoader::Load(filename, options, device, materials);
 
     return m;
+}
+
+Mesh::MeshPtr Mesh::FromGltf(
+    const char* filename,
+    uint options,
+    IRenderDevice* device,
+    ExtendedMaterialVec& materials
+)
+{
+    return gltf::GltfLoader::Load(filename, options, device, materials);
 }
 
 
