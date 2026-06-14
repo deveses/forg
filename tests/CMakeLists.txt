@@ -9,6 +9,7 @@ FetchContent_MakeAvailable(Catch2)
 
 add_executable(forg_tests
     math/MathTests.cpp
+    audio/WaveFileTests.cpp
     core/BitArrayTests.cpp
     script/XMLParserTests.cpp
     rendering/RenderingValueTests.cpp
