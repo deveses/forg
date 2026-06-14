@@ -24,24 +24,24 @@ namespace forg { namespace script {
 
 SFAState* SFAState::GetState(int _input)
 {
-    for (uint i=0; i<connections.size(); i++)
+    for (const SFAStateConnection& connection : connections)
     {
-        if (connections[i].input == _input)
+        if (connection.input == _input)
         {
-            return connections[i].state;
+            return connection.state;
         }
     }
 
-    return 0;
+    return nullptr;
 }
 
 SFAState* SFAState::Connect(int _input, int _output, bool _accept)
 {
-    for (uint i=0; i<connections.size(); i++)
+    for (const SFAStateConnection& connection : connections)
     {
-        if (connections[i].input == _input)
+        if (connection.input == _input)
         {
-            return connections[i].state;
+            return connection.state;
         }
     }
 
@@ -56,11 +56,11 @@ SFAState* SFAState::Connect(int _input, int _output, bool _accept)
 
 SFAState* SFAState::AddLoopback(int _input)
 {
-    for (uint i=0; i<connections.size(); i++)
+    for (const SFAStateConnection& connection : connections)
     {
-        if (connections[i].input == _input)
+        if (connection.input == _input)
         {
-            return connections[i].state;
+            return connection.state;
         }
     }
 
@@ -80,9 +80,9 @@ StateMachine::StateMachine()
 
 StateMachine::~StateMachine()
 {
-    for (StateVec::iterator it=m_states.begin(); it!=m_states.end(); ++it)
+    for (SFAState* state : m_states)
     {
-        delete *it;
+        delete state;
     }
 }
 
@@ -102,7 +102,7 @@ bool StateMachine::Transition(int _input, int& _output)
 {
     SFAState* next_state = m_current->GetState(_input);
 
-    if (m_current!=next_state && m_current->accept && m_current != &m_start && (next_state == 0 || !next_state->accept))
+    if (m_current!=next_state && m_current->accept && m_current != &m_start && (next_state == nullptr || !next_state->accept))
     {
         // we have terminated token
         _output = m_current->output;
@@ -110,7 +110,7 @@ bool StateMachine::Transition(int _input, int& _output)
         return true;
     } 
     
-    if (next_state != 0)
+    if (next_state != nullptr)
     {
         // we have token, but not terminated
         m_current = next_state;

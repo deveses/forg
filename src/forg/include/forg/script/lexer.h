@@ -23,9 +23,10 @@
 #pragma once
 #endif
 
+#include <vector>
+
 #include "forg/base.h"
 #include "forg/core/string.hpp"
-#include "forg/core/vector.hpp"
 
 namespace forg { namespace script { 
 
@@ -43,7 +44,7 @@ namespace forg { namespace script {
 
     struct SFAState
     {
-        core::vector<SFAStateConnection> connections;
+        std::vector<SFAStateConnection> connections;
 
         int output;
 
@@ -70,7 +71,7 @@ namespace forg { namespace script {
 
     class StateMachine
     {
-        typedef core::vector<SFAState*> StateVec;
+        typedef std::vector<SFAState*> StateVec;
 
         StateVec m_states;
         SFAState m_start;
@@ -140,7 +141,7 @@ namespace forg { namespace script {
 
     class FORG_API Lexer
     {
-        typedef core::vector<STokenDefinition> TokenDefVec;
+        typedef std::vector<STokenDefinition> TokenDefVec;
 
         // scanner state
         SParserState m_state;
