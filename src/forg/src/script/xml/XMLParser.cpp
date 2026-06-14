@@ -1,8 +1,8 @@
 #include "forg_pch.h"
 
 #include <memory>
+#include <vector>
 
-#include "forg/core/vector.hpp"
 #include "forg/script/xml/XMLParser.h"
 
 namespace forg::script::xml
@@ -147,11 +147,11 @@ XMLDocument::~XMLDocument() {}
 
 XMLNode* XMLDocument::FindNode(const core::string& _name)
 {
-    core::vector<XMLNode*> stack;
+    std::vector<XMLNode*> stack;
 
     stack.push_back(m_root);
 
-    while (stack.size() > 0)
+    while (!stack.empty())
     {
         XMLNode* n = stack.back();
         stack.pop_back();

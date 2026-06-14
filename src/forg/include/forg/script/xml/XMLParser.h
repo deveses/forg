@@ -23,8 +23,9 @@
 #pragma once
 #endif
 
+#include <vector>
+
 #include "forg/base.h"
-#include "forg/core/vector.hpp"
 #include "forg/core/string.hpp"
 #include "forg/os/File.h"
 #include "forg/script/lexer.h"
@@ -34,7 +35,7 @@ namespace forg { namespace script { namespace xml {
     class FORG_API ParserBase
     {
     protected:
-        typedef core::vector<SToken> TokenVec;
+        typedef std::vector<SToken> TokenVec;
 
         Lexer m_lexer;
         TokenVec m_tokens;
