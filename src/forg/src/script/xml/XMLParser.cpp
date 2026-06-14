@@ -1,6 +1,7 @@
 #include "forg_pch.h"
 
-#include "forg/core/auto_ptr.hpp"
+#include <memory>
+
 #include "forg/core/vector.hpp"
 #include "forg/script/xml/XMLParser.h"
 
@@ -65,7 +66,7 @@ SToken* ParserBase::GetNextToken()
         return t;
     }
 
-    return 0;
+    return nullptr;
 }
 
 SToken* ParserBase::PeekNextToken()
@@ -75,7 +76,7 @@ SToken* ParserBase::PeekNextToken()
         return &m_tokens[m_current_token];
     }
 
-    return 0;
+    return nullptr;
 }
 
 bool ParserBase::ReadTokens()
@@ -113,10 +114,10 @@ bool ParserBase::ReadTokens()
 ///////////////////////////////////////////////////////////////////////////
 XMLNode::XMLNode(int _type)
 {
-    m_parent = 0;
-    m_next = 0;
-    m_children = 0;
-    m_attributes = 0;
+    m_parent = nullptr;
+    m_next = nullptr;
+    m_children = nullptr;
+    m_attributes = nullptr;
     m_type = _type;
 }
 
@@ -136,11 +137,11 @@ XMLNode* XMLNode::FindAttribute(const core::string& _name)
         n = n->GetNext();
     }
 
-    return 0;
+    return nullptr;
 }
 ///////////////////////////////////////////////////////////////////////////
 
-XMLDocument::XMLDocument() : m_root(NULL) {}
+XMLDocument::XMLDocument() : m_root(nullptr) {}
 
 XMLDocument::~XMLDocument() {}
 
@@ -168,7 +169,7 @@ XMLNode* XMLDocument::FindNode(const core::string& _name)
         }
     }
 
-    return 0;
+    return nullptr;
 }
 ///////////////////////////////////////////////////////////////////////////
 class TokenBackup
@@ -191,7 +192,7 @@ class TokenBackup
         }
     }
 
-    void Reset() { m_parser = 0; }
+    void Reset() { m_parser = nullptr; }
 };
 ///////////////////////////////////////////////////////////////////////////
 namespace ParserError
@@ -204,7 +205,7 @@ enum TYPE
 }
 
 ///////////////////////////////////////////////////////////////////////////
-XMLParser::XMLParser() { m_doc = 0; }
+XMLParser::XMLParser() { m_doc = nullptr; }
 
 XMLParser::~XMLParser()
 {
@@ -337,18 +338,14 @@ XMLDocument* XMLParser::Parse()
     if (m_doc)
     {
         delete m_doc;
-        m_doc = 0;
+        m_doc = nullptr;
     }
 
-    XMLDocument* doc = new XMLDocument();
+    std::unique_ptr<XMLDocument> doc(new XMLDocument());
 
-    if (ReadDocument(doc))
+    if (ReadDocument(doc.get()))
     {
-        m_doc = doc;
-    }
-    else
-    {
-        delete doc;
+        m_doc = doc.release();
     }
 
     return m_doc;
@@ -356,16 +353,14 @@ XMLDocument* XMLParser::Parse()
 
 bool XMLParser::ReadDocument(XMLDocument* _doc)
 {
-    XMLNode* root_node = new XMLNode(EXMLNodeType::Root);
+    std::unique_ptr<XMLNode> root_node(new XMLNode(EXMLNodeType::Root));
 
-    if (ReadContent(root_node))
+    if (ReadContent(root_node.get()))
     {
-        _doc->SetRootNode(root_node);
+        _doc->SetRootNode(root_node.release());
 
         return true;
     }
-
-    delete root_node;
 
     return false;
 }
@@ -376,7 +371,7 @@ bool XMLParser::ReadContent(XMLNode* _node)
     {
         XMLNode* n = ReadElement(_node);
 
-        if (n != 0)
+        if (n != nullptr)
         {
             _node->AddChild(n);
             continue;
@@ -402,14 +397,14 @@ XMLNode* XMLParser::ReadElement(XMLNode* _parent)
     SToken* tok = GetNextToken();
 
     if (tok->token_id != EToken::Start)
-        return 0;
+        return nullptr;
 
     tok = GetNextToken();
 
     if (tok->token_id != EToken::Name)
-        return 0;
+        return nullptr;
 
-    core::auto_ptr<XMLNode> node(new XMLNode(EXMLNodeType::Element));
+    std::unique_ptr<XMLNode> node(new XMLNode(EXMLNodeType::Element));
 
     node->SetName(tok->text);
 
@@ -430,7 +425,7 @@ XMLNode* XMLParser::ReadElement(XMLNode* _parent)
     if (tok->token_id != EToken::Close)
     {
         SetErrorCode(ParserError::UnexpectedToken);
-        return 0;
+        return nullptr;
     }
 
     backup.Reset();
@@ -494,7 +489,7 @@ bool XMLParser::ReadAttribute(XMLNode* _node)
 
     backup.Reset();
 
-    XMLNode* att = new XMLNode(EXMLNodeType::Attribute);
+    std::unique_ptr<XMLNode> att(new XMLNode(EXMLNodeType::Attribute));
 
     core::string vtext =
         tok_value->text.substr(1, tok_value->text.length() - 2);
@@ -502,7 +497,7 @@ bool XMLParser::ReadAttribute(XMLNode* _node)
     att->SetName(tok_name->text);
     att->SetContent(vtext);
 
-    _node->AddAttribute(att);
+    _node->AddAttribute(att.release());
 
     return true;
 }

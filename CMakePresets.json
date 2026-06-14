@@ -16,6 +16,18 @@
             }
         },
         {
+            "name": "debug-asan",
+            "displayName": "Debug with AddressSanitizer and UBSan",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/debug-asan",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
+                "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
+                "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined"
+            }
+        },
+        {
             "name": "release",
             "displayName": "Release",
             "generator": "Ninja",
@@ -31,6 +43,10 @@
             "configurePreset": "debug"
         },
         {
+            "name": "debug-asan",
+            "configurePreset": "debug-asan"
+        },
+        {
             "name": "release",
             "configurePreset": "release"
         }
@@ -40,6 +56,17 @@
             "name": "debug",
             "displayName": "Debug tests",
             "configurePreset": "debug",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error"
+            }
+        },
+        {
+            "name": "debug-asan",
+            "displayName": "Debug ASan/UBSan tests",
+            "configurePreset": "debug-asan",
             "output": {
                 "outputOnFailure": true
             },

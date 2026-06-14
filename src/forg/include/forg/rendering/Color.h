@@ -148,6 +148,7 @@ struct FORG_API Color
 	// Construction
 	//////////////////////////////////////////////////////////////////////////
 	Color(uint argb);
+	Color(const Color& c);
 	Color()
 	: r(1.0f), g(1.0f), b(1.0f), a(1.0f)
     {}

@@ -12,6 +12,7 @@ FORG is a C++17 rendering-API abstraction library (originating from the old forg
 
 ```sh
 cmake --preset debug && cmake --build --preset debug
+cmake --preset debug-asan && cmake --build --preset debug-asan
 cmake --preset release && cmake --build --preset release
 ```
 
@@ -19,6 +20,7 @@ Run tests through the matching CTest presets:
 
 ```sh
 ctest --preset debug
+ctest --preset debug-asan
 ctest --preset release
 ```
 

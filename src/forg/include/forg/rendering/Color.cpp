@@ -9,6 +9,11 @@ Color::Color(uint argb)
 	*this = argb;
 }
 
+Color::Color(const Color& c)
+	: r(c.r), g(c.g), b(c.b), a(c.a)
+{
+}
+
  Color::operator uint() const
 {
 	uint _r = (uint)(r*255.0f);
@@ -40,4 +45,3 @@ Color& Color::operator = (uint argb)
 }
 
 }
-

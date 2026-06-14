@@ -63,6 +63,14 @@ cmake --build --preset release
 ctest --preset release
 ```
 
+For local memory and undefined-behavior checks, use the sanitizer preset:
+
+```sh
+cmake --preset debug-asan
+cmake --build --preset debug-asan
+ctest --preset debug-asan
+```
+
 Testing is controlled by CMake's standard `BUILD_TESTING` option. To configure without tests:
 
 ```sh
