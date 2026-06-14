@@ -85,6 +85,11 @@ namespace forg { namespace script { namespace xml {
         XMLNode(int _type);
         ~XMLNode();
 
+        // Owns its children/attributes (freed in the destructor); non-copyable
+        // so a shallow copy can't double-free the tree.
+        XMLNode(const XMLNode&) = delete;
+        XMLNode& operator=(const XMLNode&) = delete;
+
         void AddChild(XMLNode* _child)
         {
             _child->m_parent = this;
@@ -145,6 +150,10 @@ namespace forg { namespace script { namespace xml {
     public:
         XMLDocument();
         ~XMLDocument();
+
+        // Owns the root node (freed in the destructor); non-copyable.
+        XMLDocument(const XMLDocument&) = delete;
+        XMLDocument& operator=(const XMLDocument&) = delete;
 
         void SetRootNode(XMLNode* _root) { m_root = _root; }
 

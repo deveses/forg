@@ -1,5 +1,8 @@
 #include "net/Command.h"
 
+#include <cerrno>
+#include <climits>
+#include <cmath>
 #include <cstdlib>
 
 namespace forg { namespace net {
@@ -30,6 +33,10 @@ bool TryGetFloat(const Command& cmd, const char* key, float& out)
     {
         return false; // not a number
     }
+    if (!std::isfinite(value))
+    {
+        return false; // reject nan / inf (overflow or literal "nan"/"inf")
+    }
     out = value;
     return true;
 }
@@ -44,10 +51,15 @@ bool TryGetInt(const Command& cmd, const char* key, int& out)
 
     const char* begin = s.c_str();
     char* end = 0;
+    errno = 0;
     long value = std::strtol(begin, &end, 10);
     if (end == begin)
     {
         return false; // not a number
+    }
+    if (errno == ERANGE || value > INT_MAX || value < INT_MIN)
+    {
+        return false; // out of int range
     }
     out = static_cast<int>(value);
     return true;
