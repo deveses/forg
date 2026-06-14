@@ -40,7 +40,7 @@ A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`, and `s
 Notes:
 
 - CMake uses the host default macOS architecture. Pass `-DCMAKE_OSX_ARCHITECTURES=x86_64` or `-DCMAKE_OSX_ARCHITECTURES=arm64` at configure time when you need a specific architecture.
-- The options `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB` default to `OFF`, and the vendored dependencies in `extern/` are not currently wired into the build.
+- The options `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB` default to `OFF`; their vendored dependencies in `extern/` (`freetype`, `zlib`, OpenCL/OpenGL headers) are not currently wired into the build. The header-only `cgltf` parser in `extern/cgltf/` *is* wired in (`extern/CMakeLists.txt`) and linked into `forg` for glTF mesh loading.
 - Source files for the `forg` library are listed explicitly in `src/forg/Sources.cmake` — new files must be added there.
 
 ## Testing
@@ -98,8 +98,9 @@ src/swrenderer/          Software-renderer plugin (CMake dylib on macOS,
 src/metalrenderer/       Native Apple Metal renderer plugin (CMake dylib, macOS)
 src/{gl,cl,amp}renderer/ Renderer plugin DLLs (legacy MSVC build)
 tests/                   Catch2/CTest unit tests for the forg library
-extern/                  Vendored dependencies (freetype, zlib, OpenCL,
-                         OpenGL headers, Sharpmake) — not wired into CMake
+extern/                  Vendored dependencies: cgltf (glTF 2.0 parser, wired
+                         into CMake and linked into forg); freetype, zlib,
+                         OpenCL/OpenGL headers, Sharpmake (not wired into CMake)
 tools/                   Sharpmake scripts, MSVC projects, clang-format
 ```
 
@@ -114,7 +115,7 @@ The rendering abstraction lives in `include/forg/rendering/`. Backends implement
 - **Metal renderer plugin** (`src/metalrenderer/`) — native Apple Metal backend hosting a `CAMetalLayer` in the sample's `NSView`; macOS only, the default `config.xml` driver
 - **OpenGL / OpenCL / C++ AMP renderers** — separate plugin DLLs loaded at runtime (Windows only, legacy build)
 
-Beyond rendering, the library includes math types, audio output, an XML parser/lexer (`script`), image and mesh loading, a UI layer, filesystem and OS abstractions.
+Beyond rendering, the library includes math types, audio output, an XML parser/lexer (`script`), image loading, mesh loading (DirectX `.x`, `.ply`, and glTF 2.0 `.gltf`/`.glb` static meshes via `Mesh::FromFile`), a UI layer, filesystem and OS abstractions.
 
 ## CI
 

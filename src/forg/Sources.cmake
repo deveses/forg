@@ -148,6 +148,7 @@ list(TRANSFORM rendering_sources PREPEND "include/forg/rendering/")
 ###############################################################################
 set(mesh_sources
     XLoader.cpp
+    GLTFLoader.cpp
     ply/plyfile.cpp
     xfile/xbinreader.cpp
     xfile/xbzipreader.cpp

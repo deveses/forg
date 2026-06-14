@@ -259,6 +259,12 @@ public:
         IRenderDevice* device,
         ExtendedMaterialVec& materials
         );
+    static MeshPtr FromGltf(
+        const char* filename,
+        uint options,
+        IRenderDevice* device,
+        ExtendedMaterialVec& materials
+        );
 };
 
 }}
