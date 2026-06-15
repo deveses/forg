@@ -62,15 +62,20 @@ list(TRANSFORM os_sources PREPEND "src/os/")
 ###############################################################################
 set(script_includes
     lexer.h
+    ParserBase.h
     script.h
     xml/XMLParser.h
     xml/XMLSerializer.h
+    yaml/YAMLParser.h
 )
 list(TRANSFORM script_includes PREPEND "include/forg/script/")
 set(script_sources
     lexer.cpp
+    ParserBase.cpp
+    xml/XMLDocument.cpp
     xml/XMLParser.cpp
     xml/XMLSerializer.cpp
+    yaml/YAMLParser.cpp
 )
 list(TRANSFORM script_sources PREPEND "src/script/")
 

@@ -23,40 +23,11 @@
 #pragma once
 #endif
 
-#include <vector>
-
 #include "forg/base.h"
 #include "forg/core/string.hpp"
-#include "forg/os/File.h"
-#include "forg/script/lexer.h"
+#include "forg/script/ParserBase.h"
 
 namespace forg { namespace script { namespace xml {
-
-    class FORG_API ParserBase
-    {
-    protected:
-        typedef std::vector<SToken> TokenVec;
-
-        Lexer m_lexer;
-        TokenVec m_tokens;
-        SParserState m_state;
-        uint m_current_token;
-
-    public:
-        virtual ~ParserBase() {};
-
-        bool ReadTokens();
-
-        bool HasMoreTokens();
-        SToken* GetNextToken();
-        SToken* PeekNextToken();
-
-        uint GetNextTokenIndex() const { return m_current_token; }
-        void SetNextTokenIndex(uint _index) { m_current_token = _index; }
-
-        virtual bool GetChar(int& _ch) = 0;
-        virtual int GetSymbol(int _ch) = 0;
-    };
 
     ///////////////////////////////////////////////////////////////////////////
     namespace EXMLNodeType
@@ -161,10 +132,9 @@ namespace forg { namespace script { namespace xml {
     };
 
     ///////////////////////////////////////////////////////////////////////////
-    class FORG_API XMLParser : public ParserBase
+    class FORG_API XMLParser : public forg::script::TokenParserBase
     {
     private:
-        forg::os::File m_file;
         int m_error_code;
         XMLDocument* m_doc;
 
@@ -172,14 +142,11 @@ namespace forg { namespace script { namespace xml {
         XMLParser();
         ~XMLParser();
 
-        bool Open(const char* _filename);
         XMLDocument* Parse();
-        void Close();
 
     private:
         int GetToken();
         int GetSymbol(int _ch);
-        bool GetChar(int& _ch);
         void EatWhitespace();
         void InitTokens();
 
