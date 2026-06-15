@@ -1,5 +1,5 @@
 // main.mm : macOS port of the Win32 sample app (src/winapp).
-// Reads config.xml to pick the renderer plugin and window geometry,
+// Reads config.yml to pick the renderer plugin and window geometry,
 // then renders the demo scene (lit cylinder) in a continuous loop.
 
 // Cocoa must come first: forg's base.h defines macros (null, IN, OUT)
@@ -20,6 +20,7 @@
 
 #include "forg.h"
 #include "forg/control/SceneControl.h"
+#include "forg/script/yaml/YAMLParser.h"
 
 struct AppSettings
 {
@@ -395,61 +396,61 @@ static void ChangeToResourcesDirectory()
     CFRelease(resBundle);
 }
 
-// port of the config.xml parsing in CWinApp::InitApplication
+// port of the config parsing in CWinApp::InitApplication
 static bool LoadSettings(AppSettings& settings)
 {
-    forg::script::xml::XMLParser config;
+    forg::script::yaml::YAMLParser config;
 
-    config.Open("config.xml");
-    forg::script::xml::XMLDocument* xml_doc = config.Parse();
+    config.Open("config.yml");
+    forg::script::yaml::YAMLDocument* yaml_doc = config.Parse();
 
-    if (xml_doc == 0)
+    if (yaml_doc == 0)
     {
-        std::cerr << "Unable to load config.xml!\n";
+        std::cerr << "Unable to load config.yml!\n";
         return false;
     }
 
-    if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("renderer"))
+    if (forg::script::yaml::YAMLNode* yaml_node = yaml_doc->FindNode("renderer"))
     {
-        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("driver"))
+        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("driver"))
         {
-            settings.driver = xml_att->GetContent().c_str();
+            settings.driver = yaml_att->GetContent().c_str();
         }
     }
 
-    if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("window"))
+    if (forg::script::yaml::YAMLNode* yaml_node = yaml_doc->FindNode("window"))
     {
-        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("width"))
+        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("width"))
         {
-            settings.winWidth = atoi(xml_att->GetContent().c_str());
+            settings.winWidth = atoi(yaml_att->GetContent().c_str());
         }
 
-        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("height"))
+        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("height"))
         {
-            settings.winHeight = atoi(xml_att->GetContent().c_str());
+            settings.winHeight = atoi(yaml_att->GetContent().c_str());
         }
 
-        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("posx"))
+        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("posx"))
         {
-            settings.winX = atoi(xml_att->GetContent().c_str());
+            settings.winX = atoi(yaml_att->GetContent().c_str());
         }
 
-        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("posy"))
+        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("posy"))
         {
-            settings.winY = atoi(xml_att->GetContent().c_str());
+            settings.winY = atoi(yaml_att->GetContent().c_str());
         }
     }
 
-    if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("controlserver"))
+    if (forg::script::yaml::YAMLNode* yaml_node = yaml_doc->FindNode("controlserver"))
     {
-        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("enabled"))
+        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("enabled"))
         {
-            settings.controlEnabled = (std::string(xml_att->GetContent().c_str()) == "true");
+            settings.controlEnabled = (std::string(yaml_att->GetContent().c_str()) == "true");
         }
 
-        if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("port"))
+        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("port"))
         {
-            settings.controlPort = atoi(xml_att->GetContent().c_str());
+            settings.controlPort = atoi(yaml_att->GetContent().c_str());
         }
     }
 
@@ -460,7 +461,7 @@ static forg::IRenderer* CreateRenderer(const std::string& driver)
 {
     if (driver.empty())
     {
-        std::cerr << "No renderer driver specified in config.xml!\n";
+        std::cerr << "No renderer driver specified in config.yml!\n";
         return 0;
     }
 
