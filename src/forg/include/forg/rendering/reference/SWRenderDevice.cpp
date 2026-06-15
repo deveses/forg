@@ -34,6 +34,20 @@ namespace forg { namespace rendering { namespace reference {
         return forg::max(forg::max(a, b), c);
     }
 
+    int clip_code(const Vector4& pos)
+    {
+        int code = 0;
+
+        if (pos.X < -pos.W) code |= 1 << 0;
+        if (pos.X >  pos.W) code |= 1 << 1;
+        if (pos.Y < -pos.W) code |= 1 << 2;
+        if (pos.Y >  pos.W) code |= 1 << 3;
+        if (pos.Z <  0.0f)  code |= 1 << 4;
+        if (pos.Z >  pos.W) code |= 1 << 5;
+
+        return code;
+    }
+
     struct TriangleInterpolator
     {
         float lineA01;
@@ -61,9 +75,13 @@ namespace forg { namespace rendering { namespace reference {
         bool ext20;
 
         bool draw;
+        bool valid;
 
         void Initialize(const Vector4& pos0, const Vector4& pos1, const Vector4& pos2)
         {
+            draw = false;
+            valid = true;
+
             lineA01 = pos0.Y - pos1.Y;
             lineA12 = pos1.Y - pos2.Y;
             lineA20 = pos2.Y - pos0.Y;
@@ -80,6 +98,12 @@ namespace forg { namespace rendering { namespace reference {
             bary12 = line(lineA12, lineB12, lineC12, pos0.X, pos0.Y);
             bary20 = line(lineA20, lineB20, lineC20, pos1.X, pos1.Y);
 
+            if (fabs(bary01) < 1e-5f || fabs(bary12) < 1e-5f || fabs(bary20) < 1e-5f)
+            {
+                valid = false;
+                return;
+            }
+
             ext12 = line(lineA12, lineB12, lineC12, -1, -1)*bary12 > 0.0f;
             ext20 = line(lineA20, lineB20, lineC20, -1, -1)*bary20>0.0f;
             ext01 = line(lineA01, lineB01, lineC01, -1, -1)*bary01>0.0f;
@@ -89,21 +113,21 @@ namespace forg { namespace rendering { namespace reference {
         {
             //TODO: could increment only, because line(x+1,y) = line(x,y)+A
 
+            draw = false;
+
+            if (!valid)
+                return;
+
             bary_a = line(lineA12, lineB12, lineC12, _x, _y)/bary12;
             bary_b = line(lineA20, lineB20, lineC20, _x, _y)/bary20;
             bary_c = line(lineA01, lineB01, lineC01, _x, _y)/bary01;
 
-            bary_a = fabs(bary_a);
-            bary_b = fabs(bary_b);
-            bary_c = fabs(bary_c);
-
-            draw = false;
-
-            if (bary_a>=0.0f && bary_b>=0.0f && bary_c>=0.0f)
+            const float epsilon = -1e-4f;
+            if (bary_a >= epsilon && bary_b >= epsilon && bary_c >= epsilon)
             {
-                if ( (bary_a>0.0f || ext12) 
-                    && (bary_b>0.0f || ext20) 
-                    && (bary_c>0.0f || ext01) )
+                if ( (bary_a > epsilon || ext12)
+                    && (bary_b > epsilon || ext20)
+                    && (bary_c > epsilon || ext01) )
                 {
                     draw = true;
                 }
@@ -563,7 +587,7 @@ namespace forg { namespace rendering { namespace reference {
 
             //Vector3 tri_pos[3];
             //Vector3 tri_uv[3];
-            bool external[3];
+            int outcode[3];
 
             // transform vertices to view space
             for (int k=0; k<3; k++)
@@ -597,13 +621,10 @@ namespace forg { namespace rendering { namespace reference {
 
                 vertex_usage = ProcessVertex(vs_input[k], vs_output[k], vertex_usage);
 
-                // simple culling and clipping
-                float w = vs_output[k].position.W;
-                external[k] = vs_output[k].position.Z < 0.0f || vs_output[k].position.Z > w 
-                    || vs_output[k].position.X < -w || vs_output[k].position.X > w
-                    || vs_output[k].position.Y < -w || vs_output[k].position.Y > w;
+                outcode[k] = clip_code(vs_output[k].position);
 
                 // perspective divide
+                float w = vs_output[k].position.W;
                 if (w!=0.0f)
                 {
                     vs_output[k].position.Scale(1.0f/w);
@@ -613,7 +634,7 @@ namespace forg { namespace rendering { namespace reference {
                 vs_output[k].position.TransformCoordinate(m_transforms[TM_VIEWPORT]);
             }
             
-            if (external[0] && external[1] && external[2])
+            if ((outcode[0] & outcode[1] & outcode[2]) != 0)
             {
             } else
             {
@@ -973,7 +994,7 @@ namespace forg { namespace rendering { namespace reference {
                         int CX2 = CY2;
                         int CX3 = CY3;
 
-                        for(int ix = x; ix < x + q; ix++)
+                        for(int ix = x; ix < x + q && ix < maxx; ix++)
                         {
                             if(CX1 > 0 && CX2 > 0 && CX3 > 0)
                             {
@@ -1011,6 +1032,9 @@ namespace forg { namespace rendering { namespace reference {
         VSOutput reordered[3];
         float area2 = (vertices[1].position.X - vertices[0].position.X) * (vertices[2].position.Y - vertices[0].position.Y)
                     - (vertices[1].position.Y - vertices[0].position.Y) * (vertices[2].position.X - vertices[0].position.X);
+        if (fabs(area2) < 1e-5f)
+            return;
+
         if (area2 > 0.0f)
         {
             reordered[0] = vertices[0];
@@ -1149,7 +1173,7 @@ namespace forg { namespace rendering { namespace reference {
 
                             float d = interpolator.Interpolate(vertices[0].position.Z, vertices[1].position.Z, vertices[2].position.Z); 
 
-                            if (interpolator.CanDraw() && d <= GetDepth(ix, y+iy))
+                            if (interpolator.CanDraw() && d >= m_vp_minz && d <= m_vp_maxz && d <= GetDepth(ix, y+iy))
                             {
                                 Color col = ps_output.color;
                                 SetPixel(ix, y+iy, d, col);
@@ -1169,7 +1193,7 @@ namespace forg { namespace rendering { namespace reference {
                         int CX2 = CY2;
                         int CX3 = CY3;
 
-                        for(int ix = x; ix < x + q; ix++)
+                        for(int ix = x; ix < x + q && ix < maxx; ix++)
                         {
                             if(CX1 > 0 && CX2 > 0 && CX3 > 0)
                             {
@@ -1196,7 +1220,7 @@ namespace forg { namespace rendering { namespace reference {
 
                                 float d = interpolator.Interpolate(vertices[0].position.Z, vertices[1].position.Z, vertices[2].position.Z); 
 
-                                if (interpolator.CanDraw() && d<=GetDepth(ix, iy))
+                                if (interpolator.CanDraw() && d >= m_vp_minz && d <= m_vp_maxz && d<=GetDepth(ix, iy))
                                 {
                                     Color col = ps_output.color;
                                     SetPixel(ix, iy, d, col);
@@ -1219,4 +1243,3 @@ namespace forg { namespace rendering { namespace reference {
     }
 
 } } }
-

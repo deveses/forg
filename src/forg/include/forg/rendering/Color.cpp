@@ -4,6 +4,15 @@
 
 namespace forg {
 
+static uint color_component_to_byte(float value)
+{
+    // NaN fails both comparisons inside clamp(), so catch it here with negatives.
+    if (!(value > 0.0f))
+        return 0;
+
+    return (uint)(clamp(value, 0.0f, 1.0f) * 255.0f);
+}
+
 Color::Color(uint argb)
 {
 	*this = argb;
@@ -16,10 +25,10 @@ Color::Color(const Color& c)
 
  Color::operator uint() const
 {
-	uint _r = (uint)(r*255.0f);
-	uint _g = (uint)(g*255.0f);
-	uint _b = (uint)(b*255.0f);
-	uint _a = (uint)(a*255.0f);
+	uint _r = color_component_to_byte(r);
+	uint _g = color_component_to_byte(g);
+	uint _b = color_component_to_byte(b);
+	uint _a = color_component_to_byte(a);
 
 	return ((_a & 0xff)<<24) | ((_r & 0xff)<<16) | ((_g & 0xff)<<8) | ((_b & 0xff));
 }
