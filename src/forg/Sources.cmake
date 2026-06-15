@@ -61,6 +61,7 @@ list(TRANSFORM os_sources PREPEND "src/os/")
 # script
 ###############################################################################
 set(script_includes
+    generic/Document.h
     lexer.h
     ParserBase.h
     script.h
@@ -70,9 +71,9 @@ set(script_includes
 )
 list(TRANSFORM script_includes PREPEND "include/forg/script/")
 set(script_sources
+    generic/Document.cpp
     lexer.cpp
     ParserBase.cpp
-    xml/XMLDocument.cpp
     xml/XMLParser.cpp
     xml/XMLSerializer.cpp
     yaml/YAMLParser.cpp

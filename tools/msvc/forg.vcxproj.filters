@@ -54,6 +54,9 @@
     <Filter Include="Source Files\script">
       <UniqueIdentifier>{210a415d-081c-42b8-9b24-03f14e90521f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\script\generic">
+      <UniqueIdentifier>{aa751963-267f-4025-aeb2-84289970dfd1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\script\xml">
       <UniqueIdentifier>{50c68fdd-39de-428c-b7fc-ee9f6839cac8}</UniqueIdentifier>
     </Filter>
@@ -299,6 +302,9 @@
     <ClInclude Include="..\..\src\forg\script\ParserBase.h">
       <Filter>Source Files\script</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\forg\script\generic\Document.h">
+      <Filter>Source Files\script\generic</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\forg\script\script.h">
       <Filter>Source Files\script</Filter>
     </ClInclude>
@@ -497,8 +503,8 @@
     <ClCompile Include="..\..\src\forg\script\ParserBase.cpp">
       <Filter>Source Files\script</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\forg\script\xml\XMLDocument.cpp">
-      <Filter>Source Files\script\xml</Filter>
+    <ClCompile Include="..\..\src\forg\script\generic\Document.cpp">
+      <Filter>Source Files\script\generic</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\forg\os\File.cpp">
       <Filter>Source Files\os</Filter>

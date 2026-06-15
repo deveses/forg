@@ -173,7 +173,7 @@ YAMLDocument* YAMLParser::Parse()
 bool YAMLParser::ReadDocument(YAMLDocument* _doc)
 {
     std::unique_ptr<YAMLNode> root_node(
-        new YAMLNode(forg::script::xml::EXMLNodeType::Root));
+        new YAMLNode(forg::script::generic::ENodeType::Root));
 
     std::vector<std::pair<int, YAMLNode*> > stack;
     stack.push_back(std::make_pair(-1, root_node.get()));
@@ -251,7 +251,7 @@ bool YAMLParser::ParseLine(const std::string& _line, int /*_line_number*/,
     if (has_value)
     {
         std::unique_ptr<YAMLNode> attr(
-            new YAMLNode(forg::script::xml::EXMLNodeType::Attribute));
+            new YAMLNode(forg::script::generic::ENodeType::Attribute));
         attr->SetName(key.c_str());
         attr->SetContent(value.c_str());
         parent->AddAttribute(attr.release());
@@ -259,7 +259,7 @@ bool YAMLParser::ParseLine(const std::string& _line, int /*_line_number*/,
     }
 
     std::unique_ptr<YAMLNode> child(
-        new YAMLNode(forg::script::xml::EXMLNodeType::Element));
+        new YAMLNode(forg::script::generic::ENodeType::Element));
     child->SetName(key.c_str());
 
     YAMLNode* child_ptr = child.get();

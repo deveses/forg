@@ -2,12 +2,12 @@
 
 #include <vector>
 
-#include "forg/script/xml/XMLParser.h"
+#include "forg/script/generic/Document.h"
 
-namespace forg::script::xml
+namespace forg::script::generic
 {
 
-XMLNode::XMLNode(int _type)
+Node::Node(int _type)
 {
     m_parent = nullptr;
     m_next = nullptr;
@@ -16,30 +16,30 @@ XMLNode::XMLNode(int _type)
     m_type = _type;
 }
 
-XMLNode::~XMLNode()
+Node::~Node()
 {
     // A node owns its children and attributes, each a singly-linked list chained
     // through the next node's m_next. Free them iteratively (a child's own
     // destructor recurses into its subtree); m_next itself belongs to the
     // parent's list, so it is not freed here.
-    for (XMLNode* child = m_children; child != nullptr;)
+    for (Node* child = m_children; child != nullptr;)
     {
-        XMLNode* next = child->m_next;
+        Node* next = child->m_next;
         delete child;
         child = next;
     }
 
-    for (XMLNode* attr = m_attributes; attr != nullptr;)
+    for (Node* attr = m_attributes; attr != nullptr;)
     {
-        XMLNode* next = attr->m_next;
+        Node* next = attr->m_next;
         delete attr;
         attr = next;
     }
 }
 
-XMLNode* XMLNode::FindAttribute(const core::string& _name)
+Node* Node::FindAttribute(const core::string& _name)
 {
-    XMLNode* n = m_attributes;
+    Node* n = m_attributes;
 
     while (n)
     {
@@ -54,23 +54,23 @@ XMLNode* XMLNode::FindAttribute(const core::string& _name)
     return nullptr;
 }
 
-XMLDocument::XMLDocument() : m_root(nullptr) {}
+Document::Document() : m_root(nullptr) {}
 
-XMLDocument::~XMLDocument()
+Document::~Document()
 {
     delete m_root;
 }
 
-XMLNode* XMLDocument::FindNode(const core::string& _name)
+Node* Document::FindNode(const core::string& _name)
 {
-    std::vector<XMLNode*> stack;
+    std::vector<Node*> stack;
 
     if (m_root)
         stack.push_back(m_root);
 
     while (!stack.empty())
     {
-        XMLNode* n = stack.back();
+        Node* n = stack.back();
         stack.pop_back();
 
         if (n->GetName() == _name)
@@ -89,4 +89,4 @@ XMLNode* XMLDocument::FindNode(const core::string& _name)
     return nullptr;
 }
 
-} // namespace forg::script::xml
+} // namespace forg::script::generic

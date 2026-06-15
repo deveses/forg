@@ -13,12 +13,12 @@
 
 #include "forg/base.h"
 #include "forg/script/ParserBase.h"
-#include "forg/script/xml/XMLParser.h"
+#include "forg/script/generic/Document.h"
 
 namespace forg { namespace script { namespace yaml {
 
-    using YAMLDocument = forg::script::xml::XMLDocument;
-    using YAMLNode = forg::script::xml::XMLNode;
+    using YAMLDocument = forg::script::generic::Document;
+    using YAMLNode = forg::script::generic::Node;
 
     class FORG_API YAMLParser : public forg::script::FileParserBase
     {
