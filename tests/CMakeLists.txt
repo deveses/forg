@@ -12,6 +12,7 @@ add_executable(forg_tests
     audio/WaveFileTests.cpp
     core/BitArrayTests.cpp
     script/XMLParserTests.cpp
+    script/YAMLParserTests.cpp
     rendering/RenderingValueTests.cpp
     rendering/CameraTests.cpp
     mesh/GltfLoaderTests.cpp

@@ -25,8 +25,8 @@ The CMake build produces these main targets:
 
 - **`forg`** — the static library (`src/forg/`)
 - **`swrenderer`** (macOS) — the software-renderer plugin, built as `libswrenderer.dylib`
-- **`metalrenderer`** (macOS) — the native Apple Metal backend, built as `libmetalrenderer.dylib`; the default `config.xml` driver
-- **`macapp`** (macOS) — the Cocoa sample app (`src/macapp/`): reads `config.xml` for window geometry and the renderer driver, loads the plugin with `dlopen`, and renders the demo scene
+- **`metalrenderer`** (macOS) — the native Apple Metal backend, built as `libmetalrenderer.dylib`; the default `config.yml` driver
+- **`macapp`** (macOS) — the Cocoa sample app (`src/macapp/`): reads `config.yml` for window geometry, control-server settings, and the renderer driver, loads the plugin with `dlopen`, and renders the demo scene
 - **`forg_tests`** — Catch2-based unit tests, built when CMake testing is enabled
 
 Run the sample with:
@@ -35,7 +35,7 @@ Run the sample with:
 ./build/release/src/macapp/macapp
 ```
 
-A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`, and `src/macapp/config.xml` next to the binary. `config.xml` selects which plugin `macapp` loads (default: `libmetalrenderer.dylib`; switch to `libswrenderer.dylib` to compare).
+A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`, and `src/macapp/config.yml` next to the binary. `config.yml` selects which plugin `macapp` loads (default: `libmetalrenderer.dylib`; switch to `libswrenderer.dylib` to compare).
 
 Notes:
 
@@ -77,7 +77,7 @@ Testing is controlled by CMake's standard `BUILD_TESTING` option. To configure w
 cmake --preset release -DBUILD_TESTING=OFF
 ```
 
-Initial coverage lives under `tests/` and focuses on deterministic library behavior: math types, `BitArray`, XML parsing, color conversion, and vertex declaration helpers. App/plugin tests, OpenCL, Cocoa windowing, and visual renderer validation are intentionally outside the first test layer.
+Initial coverage lives under `tests/` and focuses on deterministic library behavior: math types, `BitArray`, XML/YAML parsing, color conversion, and vertex declaration helpers. App/plugin tests, OpenCL, Cocoa windowing, and visual renderer validation are intentionally outside the first test layer.
 
 ### Legacy Windows build
 
@@ -111,11 +111,11 @@ The umbrella headers are `forg/forg.h` and `forg/rendering.h`. Note that some `.
 The rendering abstraction lives in `include/forg/rendering/`. Backends implement the `IRenderDevice` family of interfaces:
 
 - **Reference software renderer** — compiled into the library itself (`include/forg/rendering/reference/`)
-- **Software renderer plugin** (`src/swrenderer/`) — wraps the reference renderer with a platform presentation layer (CoreGraphics/CALayer on macOS, GDI on Windows); loaded at runtime via `dlopen`/`LoadLibrary` from the driver named in `config.xml`
-- **Metal renderer plugin** (`src/metalrenderer/`) — native Apple Metal backend hosting a `CAMetalLayer` in the sample's `NSView`; macOS only, the default `config.xml` driver
+- **Software renderer plugin** (`src/swrenderer/`) — wraps the reference renderer with a platform presentation layer (CoreGraphics/CALayer on macOS, GDI on Windows); loaded at runtime via `dlopen`/`LoadLibrary` from the driver named in the sample app config
+- **Metal renderer plugin** (`src/metalrenderer/`) — native Apple Metal backend hosting a `CAMetalLayer` in the sample's `NSView`; macOS only, the default `config.yml` driver
 - **OpenGL / OpenCL / C++ AMP renderers** — separate plugin DLLs loaded at runtime (Windows only, legacy build)
 
-Beyond rendering, the library includes math types, audio output, an XML parser/lexer (`script`), image loading, mesh loading (DirectX `.x`, `.ply`, and glTF 2.0 `.gltf`/`.glb` static meshes via `Mesh::FromFile`), a UI layer, filesystem and OS abstractions.
+Beyond rendering, the library includes math types, audio output, XML and YAML parsers (`script`), image loading, mesh loading (DirectX `.x`, `.ply`, and glTF 2.0 `.gltf`/`.glb` static meshes via `Mesh::FromFile`), a UI layer, filesystem and OS abstractions.
 
 ## CI
 

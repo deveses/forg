@@ -498,10 +498,13 @@
     <ClInclude Include="..\..\src\forg\rendering\Vertex.h" />
     <ClInclude Include="..\..\src\forg\rendering\VertexDeclaration.h" />
     <ClInclude Include="..\..\src\forg\rendering\VertexElement.h" />
+    <ClInclude Include="..\..\src\forg\script\generic\Document.h" />
     <ClInclude Include="..\..\src\forg\script\lexer.h" />
+    <ClInclude Include="..\..\src\forg\script\ParserBase.h" />
     <ClInclude Include="..\..\src\forg\script\script.h" />
     <ClInclude Include="..\..\src\forg\script\xml\XMLParser.h" />
     <ClInclude Include="..\..\src\forg\script\xml\XMLSerializer.h" />
+    <ClInclude Include="..\..\src\forg\script\yaml\YAMLParser.h" />
     <ClInclude Include="..\..\src\forg\ui\gui.h" />
   </ItemGroup>
   <ItemGroup>
@@ -569,9 +572,12 @@
     <ClCompile Include="..\..\src\forg\rendering\Vertex.cpp" />
     <ClCompile Include="..\..\src\forg\rendering\VertexDeclaration.cpp" />
     <ClCompile Include="..\..\src\forg\rendering\VertexElement.cpp" />
+    <ClCompile Include="..\..\src\forg\script\generic\Document.cpp" />
     <ClCompile Include="..\..\src\forg\script\lexer.cpp" />
+    <ClCompile Include="..\..\src\forg\script\ParserBase.cpp" />
     <ClCompile Include="..\..\src\forg\script\xml\XMLParser.cpp" />
     <ClCompile Include="..\..\src\forg\script\xml\XMLSerializer.cpp" />
+    <ClCompile Include="..\..\src\forg\script\yaml\YAMLParser.cpp" />
     <ClCompile Include="..\..\src\forg\ui\gui.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

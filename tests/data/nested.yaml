@@ -1,0 +1,12 @@
+# Nested parser fixture with comments and quoted values.
+config:
+  graphics:
+    renderer:
+      driver: "metal"
+  audio:
+    device:
+      name: 'builtin'
+      description: "Built-in output #0" # keep the hash in quotes
+  empty:
+  controlserver:
+    enabled: true

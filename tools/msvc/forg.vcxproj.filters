@@ -54,8 +54,14 @@
     <Filter Include="Source Files\script">
       <UniqueIdentifier>{210a415d-081c-42b8-9b24-03f14e90521f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\script\generic">
+      <UniqueIdentifier>{aa751963-267f-4025-aeb2-84289970dfd1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\script\xml">
       <UniqueIdentifier>{50c68fdd-39de-428c-b7fc-ee9f6839cac8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\script\yaml">
+      <UniqueIdentifier>{d1f31351-8f43-4c32-8c9d-c2a8ad38f597}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\io">
       <UniqueIdentifier>{57df7398-23d4-4f0f-939b-c276bd30d5f9}</UniqueIdentifier>
@@ -293,6 +299,12 @@
     <ClInclude Include="..\..\src\forg\script\xml\XMLParser.h">
       <Filter>Source Files\script\xml</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\forg\script\ParserBase.h">
+      <Filter>Source Files\script</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\forg\script\generic\Document.h">
+      <Filter>Source Files\script\generic</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\forg\script\script.h">
       <Filter>Source Files\script</Filter>
     </ClInclude>
@@ -304,6 +316,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\forg\script\xml\XMLSerializer.h">
       <Filter>Source Files\script\xml</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\forg\script\yaml\YAMLParser.h">
+      <Filter>Source Files\script\yaml</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\forg\script\lexer.h">
       <Filter>Source Files\script</Filter>
@@ -485,11 +500,20 @@
     <ClCompile Include="..\..\src\forg\script\xml\XMLParser.cpp">
       <Filter>Source Files\script\xml</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\forg\script\ParserBase.cpp">
+      <Filter>Source Files\script</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\forg\script\generic\Document.cpp">
+      <Filter>Source Files\script\generic</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\forg\os\File.cpp">
       <Filter>Source Files\os</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\forg\script\xml\XMLSerializer.cpp">
       <Filter>Source Files\script\xml</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\forg\script\yaml\YAMLParser.cpp">
+      <Filter>Source Files\script\yaml</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\forg\script\lexer.cpp">
       <Filter>Source Files\script</Filter>
