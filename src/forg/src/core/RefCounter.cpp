@@ -3,23 +3,24 @@
 #include "core/RefCounter.h"
 #include "cpu/atomic.h"
 
-namespace forg { namespace core {
+namespace forg
+{
+namespace core
+{
 
-    int RefCounter::AddRef()
+int RefCounter::AddRef() { return cpu::AtomicIncrement(&m_refCount); }
+
+int RefCounter::Release()
+{
+    int c = cpu::AtomicDecrement(&m_refCount);
+
+    if (c == 0)
     {
-        return cpu::AtomicIncrement(&m_refCount);
+        delete this;
     }
 
-    int RefCounter::Release()
-    {
-        int c = cpu::AtomicDecrement(&m_refCount);
+    return c;
+}
 
-        if (c == 0)
-        {
-            delete this;
-        }
-
-	    return c;
-    }
-
-}}
+} // namespace core
+} // namespace forg

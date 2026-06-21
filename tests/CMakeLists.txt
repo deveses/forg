@@ -61,3 +61,20 @@ add_test(NAME forg-package-consumer
         -DFORG_SOURCE_DIR=${PROJECT_SOURCE_DIR}/tests/package
         -DFORG_TEST_CONFIG=$<CONFIG>
         -P ${PROJECT_SOURCE_DIR}/tests/package/RunPackageTest.cmake)
+
+file(GLOB_RECURSE forg_public_headers CONFIGURE_DEPENDS
+    "${PROJECT_SOURCE_DIR}/src/forg/include/forg/*.h"
+    "${PROJECT_SOURCE_DIR}/src/forg/include/forg/*.hpp")
+set(forg_public_header_sources)
+foreach(header IN LISTS forg_public_headers)
+    file(RELATIVE_PATH relative_header
+        "${PROJECT_SOURCE_DIR}/src/forg/include" "${header}")
+    string(MAKE_C_IDENTIFIER "${relative_header}" source_name)
+    set(source "${CMAKE_CURRENT_BINARY_DIR}/public_headers/${source_name}.cpp")
+    file(GENERATE OUTPUT "${source}" CONTENT "#include <${relative_header}>\n")
+    list(APPEND forg_public_header_sources "${source}")
+endforeach()
+
+add_library(forg-public-headers OBJECT ${forg_public_header_sources})
+target_link_libraries(forg-public-headers PRIVATE forg)
+forg_configure_target(forg-public-headers)

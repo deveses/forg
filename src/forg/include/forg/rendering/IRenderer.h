@@ -26,24 +26,25 @@
 #include "base.h"
 #include "rendering/IRenderDevice.h"
 
-namespace forg {
+namespace forg
+{
 
 struct RENDER_PARAMETERS
 {
-	uint BackBufferWidth;
-	uint BackBufferHeight;
-	uint PresentationInterval;
+    uint BackBufferWidth;
+    uint BackBufferHeight;
+    uint PresentationInterval;
 };
 
 class IRenderer
 {
-public:
+  public:
+    virtual ~IRenderer() {}
 
-	virtual ~IRenderer() {}
+    virtual IRenderDevice*
+    CreateDevice(HWIN hWindow, RENDER_PARAMETERS* pPresentationParameters) = 0;
 
-	virtual IRenderDevice* CreateDevice(HWIN hWindow, RENDER_PARAMETERS* pPresentationParameters) = 0;
-
-	virtual LPCTSTR get_Name() = 0;
+    virtual LPCTSTR get_Name() = 0;
 };
 
 typedef IRenderer* LPRENDERER;
@@ -61,12 +62,15 @@ struct RendererPluginDescriptor
 
 using PFGETRENDERERPLUGINDESCRIPTOR = const RendererPluginDescriptor* (*)(void);
 
-inline bool IsRendererPluginCompatible(const RendererPluginDescriptor* descriptor) noexcept
+inline bool
+IsRendererPluginCompatible(const RendererPluginDescriptor* descriptor) noexcept
 {
-    return descriptor != nullptr && descriptor->Size >= sizeof(RendererPluginDescriptor) &&
-           descriptor->ApiVersion == RendererPluginApiVersion && descriptor->CreateRenderer != nullptr;
+    return descriptor != nullptr &&
+           descriptor->Size >= sizeof(RendererPluginDescriptor) &&
+           descriptor->ApiVersion == RendererPluginApiVersion &&
+           descriptor->CreateRenderer != nullptr;
 }
 
-}
+} // namespace forg
 
 #endif //_FORG_IRENDERER_H_

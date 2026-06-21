@@ -2,8 +2,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <limits>
 
-#include "forg/math/Matrix4.h"
 #include "forg/math/Math.h"
+#include "forg/math/Matrix4.h"
 #include "forg/math/Quaternion.h"
 #include "forg/math/Vector2.h"
 #include "forg/math/Vector3.h"
@@ -29,7 +29,8 @@ TEST_CASE("Vector constructors initialize components", "[math][vector]")
     REQUIRE(v4.W == Approx(9.0f));
 }
 
-TEST_CASE("Vector3 arithmetic computes dot, cross, and normalization", "[math][vector]")
+TEST_CASE("Vector3 arithmetic computes dot, cross, and normalization",
+          "[math][vector]")
 {
     const forg::math::Vector3 a(1.0f, 2.0f, 3.0f);
     const forg::math::Vector3 b(4.0f, -5.0f, 6.0f);
@@ -46,13 +47,15 @@ TEST_CASE("Vector3 arithmetic computes dot, cross, and normalization", "[math][v
     REQUIRE(cross.Z == Approx(-13.0f));
 
     forg::math::Vector3 normalized;
-    forg::math::Vector3::Normalize(normalized, forg::math::Vector3(0.0f, 3.0f, 4.0f));
+    forg::math::Vector3::Normalize(normalized,
+                                   forg::math::Vector3(0.0f, 3.0f, 4.0f));
     REQUIRE(normalized.X == Approx(0.0f));
     REQUIRE(normalized.Y == Approx(0.6f));
     REQUIRE(normalized.Z == Approx(0.8f));
 }
 
-TEST_CASE("Matrix4 identity and translation transform coordinates", "[math][matrix]")
+TEST_CASE("Matrix4 identity and translation transform coordinates",
+          "[math][matrix]")
 {
     forg::math::Matrix4 identity;
     forg::math::Vector3 source(1.0f, 2.0f, 3.0f);
@@ -71,7 +74,8 @@ TEST_CASE("Matrix4 identity and translation transform coordinates", "[math][matr
     REQUIRE(transformed.Z == Approx(33.0f));
 }
 
-TEST_CASE("Quaternion normalization produces a unit quaternion", "[math][quaternion]")
+TEST_CASE("Quaternion normalization produces a unit quaternion",
+          "[math][quaternion]")
 {
     forg::math::Quaternion q(0.0f, 0.0f, 0.0f, 2.0f);
     forg::math::Quaternion normalized;

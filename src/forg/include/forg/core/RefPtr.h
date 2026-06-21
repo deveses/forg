@@ -3,20 +3,23 @@
 
 #include <utility>
 
-namespace forg::core {
+namespace forg::core
+{
 
 // Move-only ownership for resources returned with an initial reference count.
-template <typename T>
-class RefPtr
+template <typename T> class RefPtr
 {
-public:
+  public:
     constexpr RefPtr() noexcept = default;
     explicit RefPtr(T* pointer) noexcept : pointer_(pointer) {}
 
     RefPtr(const RefPtr&) = delete;
     RefPtr& operator=(const RefPtr&) = delete;
 
-    RefPtr(RefPtr&& other) noexcept : pointer_(std::exchange(other.pointer_, nullptr)) {}
+    RefPtr(RefPtr&& other) noexcept
+        : pointer_(std::exchange(other.pointer_, nullptr))
+    {
+    }
 
     RefPtr& operator=(RefPtr&& other) noexcept
     {
@@ -35,11 +38,14 @@ public:
     }
 
     [[nodiscard]] T* get() const noexcept { return pointer_; }
-    [[nodiscard]] explicit operator bool() const noexcept { return pointer_ != nullptr; }
+    [[nodiscard]] explicit operator bool() const noexcept
+    {
+        return pointer_ != nullptr;
+    }
     T& operator*() const noexcept { return *pointer_; }
     T* operator->() const noexcept { return pointer_; }
 
-private:
+  private:
     T* pointer_ = nullptr;
 };
 

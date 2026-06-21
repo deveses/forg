@@ -27,42 +27,46 @@
 
 #include <atomic>
 
-namespace forg { namespace core {
+namespace forg
+{
+namespace core
+{
 
 /// BitArray class
 /**
-* BitArray
-* @author eses
-* @version 1.0
-* @date 07-2005
-* @todo
-* @bug
-* @warning
-*/
+ * BitArray
+ * @author eses
+ * @version 1.0
+ * @date 07-2005
+ * @todo
+ * @bug
+ * @warning
+ */
 class FORG_API RefCounter
 {
-	    std::atomic<int> m_refCount{1};
+    std::atomic<int> m_refCount{1};
 
-public:
-	    RefCounter() = default;
-	    virtual ~RefCounter() = default;
+  public:
+    RefCounter() = default;
+    virtual ~RefCounter() = default;
 
-public:
-	/// Brief description
-	/**
-	* Detailed description
-	* @return Number of references.
-	*/
-	virtual int AddRef(void);
+  public:
+    /// Brief description
+    /**
+     * Detailed description
+     * @return Number of references.
+     */
+    virtual int AddRef(void);
 
-	/// Brief description
-	/**
-	* Detailed description
-	* @return Number of references.
-	*/
-	virtual int Release(void);
+    /// Brief description
+    /**
+     * Detailed description
+     * @return Number of references.
+     */
+    virtual int Release(void);
 };
 
-}}
+} // namespace core
+} // namespace forg
 
-#endif  //  _FORG_CORE_REFCOUNTER_H_
+#endif //  _FORG_CORE_REFCOUNTER_H_

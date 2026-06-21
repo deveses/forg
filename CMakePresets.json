@@ -12,7 +12,28 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/debug",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
+                "BUILD_TESTING": "ON",
+                "CMAKE_BUILD_TYPE": "Debug",
+                "FORG_WARNINGS_AS_ERRORS": "ON"
+            }
+        },
+        {
+            "name": "no-pch",
+            "displayName": "Debug without precompiled headers",
+            "inherits": "debug",
+            "binaryDir": "${sourceDir}/build/no-pch",
+            "cacheVariables": {
+                "FORG_ENABLE_PCH": "OFF"
+            }
+        },
+        {
+            "name": "clang-tidy",
+            "displayName": "Debug with clang-tidy",
+            "inherits": "no-pch",
+            "binaryDir": "${sourceDir}/build/clang-tidy",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "FORG_ENABLE_CLANG_TIDY": "ON"
             }
         },
         {
@@ -21,7 +42,9 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/debug-asan",
             "cacheVariables": {
+                "BUILD_TESTING": "ON",
                 "CMAKE_BUILD_TYPE": "Debug",
+                "FORG_WARNINGS_AS_ERRORS": "ON",
                 "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
                 "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
                 "CMAKE_SHARED_LINKER_FLAGS": "-fsanitize=address,undefined"
@@ -33,7 +56,9 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/release",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "BUILD_TESTING": "ON",
+                "CMAKE_BUILD_TYPE": "Release",
+                "FORG_WARNINGS_AS_ERRORS": "ON"
             }
         },
         {
@@ -43,7 +68,8 @@
             "architecture": "x64",
             "binaryDir": "${sourceDir}/build/windows-debug",
             "cacheVariables": {
-                "BUILD_TESTING": "ON"
+                "BUILD_TESTING": "ON",
+                "FORG_WARNINGS_AS_ERRORS": "ON"
             },
             "condition": {
                 "type": "equals",
@@ -58,7 +84,8 @@
             "architecture": "x64",
             "binaryDir": "${sourceDir}/build/windows-release",
             "cacheVariables": {
-                "BUILD_TESTING": "ON"
+                "BUILD_TESTING": "ON",
+                "FORG_WARNINGS_AS_ERRORS": "ON"
             },
             "condition": {
                 "type": "equals",
@@ -75,6 +102,14 @@
         {
             "name": "debug-asan",
             "configurePreset": "debug-asan"
+        },
+        {
+            "name": "no-pch",
+            "configurePreset": "no-pch"
+        },
+        {
+            "name": "clang-tidy",
+            "configurePreset": "clang-tidy"
         },
         {
             "name": "release",
@@ -107,6 +142,17 @@
             "name": "debug-asan",
             "displayName": "Debug ASan/UBSan tests",
             "configurePreset": "debug-asan",
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error"
+            }
+        },
+        {
+            "name": "no-pch",
+            "displayName": "No-PCH tests",
+            "configurePreset": "no-pch",
             "output": {
                 "outputOnFailure": true
             },

@@ -2,7 +2,10 @@
 
 #include "control/commands/Commands.h"
 
-namespace forg { namespace control {
+namespace forg
+{
+namespace control
+{
 
 using forg::net::Command;
 using forg::net::TryGetFloat;
@@ -15,8 +18,11 @@ namespace
 // trigger an absurd allocation or degenerate geometry.
 int ClampSegments(int n) { return (n < 3) ? 3 : (n > 512 ? 512 : n); }
 float PositiveOr(float v, float fallback) { return (v > 0.0f) ? v : fallback; }
-float NonNegativeOr(float v, float fallback) { return (v >= 0.0f) ? v : fallback; }
+float NonNegativeOr(float v, float fallback)
+{
+    return (v >= 0.0f) ? v : fallback;
 }
+} // namespace
 
 std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
 {
@@ -25,13 +31,15 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
     if (v == "mesh.load")
     {
         std::string path;
-        if (!TryGetString(cmd, "path", path)) return fail("badparam");
+        if (!TryGetString(cmd, "path", path))
+            return fail("badparam");
 
         forg::geometry::Mesh::MeshPtr loaded =
             forg::geometry::Mesh::FromFile(path.c_str(), 0, ctx.device);
         // FromFile returns an empty (non-null) mesh on failure; treat a mesh
         // with no geometry as a failed load and keep the current mesh.
-        if (loaded.is_null() || loaded->GetNumVertices() == 0) return fail("loadfailed");
+        if (loaded.is_null() || loaded->GetNumVertices() == 0)
+            return fail("loadfailed");
 
         *ctx.mesh = loaded; // destructive assign frees the previous mesh
         return ok();
@@ -58,7 +66,8 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         radius = PositiveOr(radius, 1.0f);
         slices = ClampSegments(slices);
         stacks = ClampSegments(stacks);
-        *ctx.mesh = forg::geometry::Mesh::Sphere(ctx.device, radius, slices, stacks);
+        *ctx.mesh =
+            forg::geometry::Mesh::Sphere(ctx.device, radius, slices, stacks);
         return ok();
     }
     if (v == "mesh.cylinder")
@@ -70,12 +79,13 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         TryGetFloat(cmd, "length", length);
         TryGetInt(cmd, "slices", slices);
         TryGetInt(cmd, "stacks", stacks);
-        r1 = NonNegativeOr(r1, 1.0f);   // a cone tip (r == 0) is valid
+        r1 = NonNegativeOr(r1, 1.0f); // a cone tip (r == 0) is valid
         r2 = NonNegativeOr(r2, 1.0f);
         length = PositiveOr(length, 2.0f);
         slices = ClampSegments(slices);
         stacks = ClampSegments(stacks);
-        *ctx.mesh = forg::geometry::Mesh::Cylinder(ctx.device, r1, r2, length, slices, stacks);
+        *ctx.mesh = forg::geometry::Mesh::Cylinder(ctx.device, r1, r2, length,
+                                                   slices, stacks);
         return ok();
     }
     if (v == "mesh.transform")
@@ -83,15 +93,19 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         forg::Matrix4 m = forg::Matrix4::Identity;
 
         float sx = 1.0f, sy = 1.0f, sz = 1.0f;
-        if (TryGetFloat(cmd, "sx", sx) && TryGetFloat(cmd, "sy", sy) && TryGetFloat(cmd, "sz", sz))
+        if (TryGetFloat(cmd, "sx", sx) && TryGetFloat(cmd, "sy", sy) &&
+            TryGetFloat(cmd, "sz", sz))
         {
             m.Scale(sx, sy, sz);
         }
 
         float rx = 0.0f, ry = 0.0f, rz = 0.0f;
-        if (TryGetFloat(cmd, "rx", rx)) m.RotateX(rx);
-        if (TryGetFloat(cmd, "ry", ry)) m.RotateY(ry);
-        if (TryGetFloat(cmd, "rz", rz)) m.RotateZ(rz);
+        if (TryGetFloat(cmd, "rx", rx))
+            m.RotateX(rx);
+        if (TryGetFloat(cmd, "ry", ry))
+            m.RotateY(ry);
+        if (TryGetFloat(cmd, "rz", rz))
+            m.RotateZ(rz);
 
         float tx = 0.0f, ty = 0.0f, tz = 0.0f;
         TryGetFloat(cmd, "tx", tx);
@@ -106,4 +120,5 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
     return fail("unknown");
 }
 
-}}
+} // namespace control
+} // namespace forg

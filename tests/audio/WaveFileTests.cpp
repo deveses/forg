@@ -9,8 +9,7 @@
 
 namespace
 {
-template <typename T>
-void WriteValue(std::ofstream& out, T value)
+template <typename T> void WriteValue(std::ofstream& out, T value)
 {
     out.write(reinterpret_cast<const char*>(&value), sizeof(value));
 }
@@ -40,12 +39,12 @@ void WriteTestWaveFile(const std::filesystem::path& path)
 
     WriteValue(out, static_cast<unsigned int>(FormatID));
     WriteValue(out, format_size);
-    WriteValue(out, static_cast<unsigned short>(1));    // PCM
-    WriteValue(out, static_cast<unsigned short>(1));    // mono
-    WriteValue(out, static_cast<unsigned int>(8000));   // sample rate
-    WriteValue(out, static_cast<unsigned int>(8000));   // byte rate
-    WriteValue(out, static_cast<unsigned short>(1));    // block align
-    WriteValue(out, static_cast<unsigned short>(8));    // bits per sample
+    WriteValue(out, static_cast<unsigned short>(1));  // PCM
+    WriteValue(out, static_cast<unsigned short>(1));  // mono
+    WriteValue(out, static_cast<unsigned int>(8000)); // sample rate
+    WriteValue(out, static_cast<unsigned int>(8000)); // byte rate
+    WriteValue(out, static_cast<unsigned short>(1));  // block align
+    WriteValue(out, static_cast<unsigned short>(8));  // bits per sample
 
     const std::array<char, data_size> samples = {
         static_cast<char>(0x01),
@@ -70,7 +69,8 @@ TEST_CASE("WaveFile reads format and data chunks", "[audio][wave]")
     REQUIRE(wave.Open(path.string().c_str()));
 
     std::array<char, 16> format = {};
-    REQUIRE(wave.GetFormat(format.data(), static_cast<unsigned int>(format.size())));
+    REQUIRE(wave.GetFormat(format.data(),
+                           static_cast<unsigned int>(format.size())));
     REQUIRE(static_cast<unsigned char>(format[0]) == 0x01);
     REQUIRE(static_cast<unsigned char>(format[1]) == 0x00);
     REQUIRE(static_cast<unsigned char>(format[2]) == 0x01);

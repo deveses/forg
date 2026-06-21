@@ -20,30 +20,34 @@
 
 #include "mesh/GLTFLoader.h"
 
+#include "debug/dbg.h"
+#include "math/Math.h"
 #include "rendering/IRenderDevice.h"
 #include "rendering/Vertex.h"
-#include "math/Math.h"
-#include "debug/dbg.h"
 
-#include <string>
 #include <cstring>
+#include <string>
 
 #define CGLTF_IMPLEMENTATION
 #include "cgltf.h"
 
-namespace forg { namespace gltf {
+namespace forg
+{
+namespace gltf
+{
 
-namespace {
+namespace
+{
 
-// glTF / cgltf node matrices are column-major: element (row, col) is m[col*4 + row].
+// glTF / cgltf node matrices are column-major: element (row, col) is m[col*4 +
+// row].
 
 // Transform a position (w = 1) by a column-major 4x4 matrix.
 inline Vector3 TransformPoint(const float* m, float x, float y, float z)
 {
-    return Vector3(
-        m[0]*x + m[4]*y + m[8]*z  + m[12],
-        m[1]*x + m[5]*y + m[9]*z  + m[13],
-        m[2]*x + m[6]*y + m[10]*z + m[14]);
+    return Vector3(m[0] * x + m[4] * y + m[8] * z + m[12],
+                   m[1] * x + m[5] * y + m[9] * z + m[13],
+                   m[2] * x + m[6] * y + m[10] * z + m[14]);
 }
 
 // Transform a direction (normal) by the upper-3x3 of a column-major 4x4 matrix.
@@ -52,17 +56,18 @@ inline Vector3 TransformPoint(const float* m, float x, float y, float z)
 // re-normalized by the caller.
 inline Vector3 TransformDir(const float* m, float x, float y, float z)
 {
-    return Vector3(
-        m[0]*x + m[4]*y + m[8]*z,
-        m[1]*x + m[5]*y + m[9]*z,
-        m[2]*x + m[6]*y + m[10]*z);
+    return Vector3(m[0] * x + m[4] * y + m[8] * z,
+                   m[1] * x + m[5] * y + m[9] * z,
+                   m[2] * x + m[6] * y + m[10] * z);
 }
 
-const cgltf_accessor* FindAttribute(const cgltf_primitive* prim, cgltf_attribute_type type, cgltf_int index)
+const cgltf_accessor* FindAttribute(const cgltf_primitive* prim,
+                                    cgltf_attribute_type type, cgltf_int index)
 {
     for (cgltf_size a = 0; a < prim->attributes_count; ++a)
     {
-        if (prim->attributes[a].type == type && prim->attributes[a].index == index)
+        if (prim->attributes[a].type == type &&
+            prim->attributes[a].index == index)
             return prim->attributes[a].data;
     }
     return 0;
@@ -75,11 +80,11 @@ ExtendedMaterial MapMaterial(const cgltf_material* mat)
 {
     ExtendedMaterial em;
 
-    em.Material3D.Diffuse  = Color(1.0f, 1.0f, 1.0f, 1.0f);
-    em.Material3D.Ambient  = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    em.Material3D.Diffuse = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    em.Material3D.Ambient = Color(1.0f, 1.0f, 1.0f, 1.0f);
     em.Material3D.Specular = Color(0.0f, 0.0f, 0.0f, 1.0f);
     em.Material3D.Emissive = Color(0.0f, 0.0f, 0.0f, 1.0f);
-    em.Material3D.Power    = 0.0f;
+    em.Material3D.Power = 0.0f;
 
     if (mat == 0)
         return em;
@@ -90,7 +95,8 @@ ExtendedMaterial MapMaterial(const cgltf_material* mat)
         em.Material3D.Diffuse = Color(bc[0], bc[1], bc[2], bc[3]);
         em.Material3D.Ambient = em.Material3D.Diffuse;
 
-        const cgltf_texture* tex = mat->pbr_metallic_roughness.base_color_texture.texture;
+        const cgltf_texture* tex =
+            mat->pbr_metallic_roughness.base_color_texture.texture;
         if (tex != 0 && tex->image != 0 && tex->image->uri != 0)
         {
             const char* uri = tex->image->uri;
@@ -104,13 +110,16 @@ ExtendedMaterial MapMaterial(const cgltf_material* mat)
                     decoded.resize(n);
                 }
                 // Stored relative to the model file, like the X loader; the
-                // caller (e.g. scene::Model::Load) prepends the model directory.
+                // caller (e.g. scene::Model::Load) prepends the model
+                // directory.
                 em.TextureFilename = forg::core::string(decoded.c_str());
             }
         }
     }
 
-    em.Material3D.Emissive = Color(mat->emissive_factor[0], mat->emissive_factor[1], mat->emissive_factor[2], 1.0f);
+    em.Material3D.Emissive =
+        Color(mat->emissive_factor[0], mat->emissive_factor[1],
+              mat->emissive_factor[2], 1.0f);
 
     return em;
 }
@@ -118,7 +127,8 @@ ExtendedMaterial MapMaterial(const cgltf_material* mat)
 // Recompute per-vertex normals over the vertex range [vStart, vStart+vCount)
 // using the faces [fStart, fStart+fCount). Each glTF primitive owns a disjoint
 // vertex range, so this is self-contained per primitive.
-void ComputeNormals(GltfLoader::CpuMesh& m, uint vStart, uint vCount, uint fStart, uint fCount)
+void ComputeNormals(GltfLoader::CpuMesh& m, uint vStart, uint vCount,
+                    uint fStart, uint fCount)
 {
     for (uint i = 0; i < vCount; ++i)
         m.vertices[vStart + i].Normal.Zero();
@@ -144,23 +154,28 @@ void ComputeNormals(GltfLoader::CpuMesh& m, uint vStart, uint vCount, uint fStar
         m.vertices[vStart + i].Normal.Normalize();
 }
 
-void AppendPrimitive(const cgltf_primitive* prim, const float* world, GltfLoader::CpuMesh& out)
+void AppendPrimitive(const cgltf_primitive* prim, const float* world,
+                     GltfLoader::CpuMesh& out)
 {
     if (prim->type != cgltf_primitive_type_triangles)
     {
-        DBG_MSG("[GltfLoader] Skipping non-triangle primitive (type %d)\n", (int)prim->type);
+        DBG_MSG("[GltfLoader] Skipping non-triangle primitive (type %d)\n",
+                (int)prim->type);
         return;
     }
 
-    const cgltf_accessor* pos = FindAttribute(prim, cgltf_attribute_type_position, 0);
+    const cgltf_accessor* pos =
+        FindAttribute(prim, cgltf_attribute_type_position, 0);
     if (pos == 0 || pos->count == 0)
     {
         DBG_MSG("[GltfLoader] Primitive has no POSITION attribute; skipping\n");
         return;
     }
 
-    const cgltf_accessor* nor = FindAttribute(prim, cgltf_attribute_type_normal, 0);
-    const cgltf_accessor* uv  = FindAttribute(prim, cgltf_attribute_type_texcoord, 0);
+    const cgltf_accessor* nor =
+        FindAttribute(prim, cgltf_attribute_type_normal, 0);
+    const cgltf_accessor* uv =
+        FindAttribute(prim, cgltf_attribute_type_texcoord, 0);
 
     const uint vStart = out.vertices.size();
     const uint vCount = (uint)pos->count;
@@ -169,13 +184,13 @@ void AppendPrimitive(const cgltf_primitive* prim, const float* world, GltfLoader
     {
         PositionNormalTextured v;
 
-        float p[3] = { 0.0f, 0.0f, 0.0f };
+        float p[3] = {0.0f, 0.0f, 0.0f};
         cgltf_accessor_read_float(pos, i, p, 3);
         v.Position = TransformPoint(world, p[0], p[1], p[2]);
 
         if (nor != 0)
         {
-            float n[3] = { 0.0f, 0.0f, 0.0f };
+            float n[3] = {0.0f, 0.0f, 0.0f};
             cgltf_accessor_read_float(nor, i, n, 3);
             v.Normal = TransformDir(world, n[0], n[1], n[2]);
             v.Normal.Normalize();
@@ -187,7 +202,7 @@ void AppendPrimitive(const cgltf_primitive* prim, const float* world, GltfLoader
 
         if (uv != 0)
         {
-            float t[2] = { 0.0f, 0.0f };
+            float t[2] = {0.0f, 0.0f};
             cgltf_accessor_read_float(uv, i, t, 2);
             v.Tu = t[0];
             v.Tv = t[1];
@@ -207,8 +222,9 @@ void AppendPrimitive(const cgltf_primitive* prim, const float* world, GltfLoader
     {
         const cgltf_size ic = prim->indices->count;
 
-	        std::vector<uint> tmp(ic);
-	        cgltf_accessor_unpack_indices(prim->indices, tmp.data(), sizeof(uint), ic);
+        std::vector<uint> tmp(ic);
+        cgltf_accessor_unpack_indices(prim->indices, tmp.data(), sizeof(uint),
+                                      ic);
 
         for (cgltf_size k = 0; k < ic; ++k)
             out.indices.push_back(tmp[(uint)k] + vStart);
@@ -272,8 +288,8 @@ bool GltfLoader::Flatten(const char* filename, CpuMesh& out)
         return false;
     }
 
-    const cgltf_scene* scene = data->scene ? data->scene
-                             : (data->scenes_count ? &data->scenes[0] : 0);
+    const cgltf_scene* scene =
+        data->scene ? data->scene : (data->scenes_count ? &data->scenes[0] : 0);
 
     if (scene != 0)
     {
@@ -303,11 +319,9 @@ bool GltfLoader::Flatten(const char* filename, CpuMesh& out)
     return true;
 }
 
-Mesh::MeshPtr GltfLoader::Load(
-    const char* filename,
-    uint /*options*/,
-    IRenderDevice* device,
-    Mesh::ExtendedMaterialVec& materials)
+Mesh::MeshPtr GltfLoader::Load(const char* filename, uint /*options*/,
+                               IRenderDevice* device,
+                               Mesh::ExtendedMaterialVec& materials)
 {
     CpuMesh cpu;
     if (!Flatten(filename, cpu))
@@ -316,18 +330,15 @@ Mesh::MeshPtr GltfLoader::Load(
     const uint numFaces = cpu.indices.size() / 3;
     const uint numVerts = cpu.vertices.size();
 
-    Mesh::MeshPtr m(
-        new Mesh(
-            numFaces,
-            numVerts,
-            cpu.use32bit ? MeshFlags::Use32Bit : 0,
-            PositionNormalTextured::Declaration,
-            device));
+    Mesh::MeshPtr m(new Mesh(numFaces, numVerts,
+                             cpu.use32bit ? MeshFlags::Use32Bit : 0,
+                             PositionNormalTextured::Declaration, device));
 
     PositionNormalTextured* vb = 0;
     if (m != 0 && m->LockVertexBuffer(0, (void**)&vb) == FORG_OK)
     {
-	        std::memcpy(vb, cpu.vertices.data(), numVerts * sizeof(PositionNormalTextured));
+        std::memcpy(vb, cpu.vertices.data(),
+                    numVerts * sizeof(PositionNormalTextured));
         m->UnlockVertexBuffer();
     }
 
@@ -336,7 +347,7 @@ Mesh::MeshPtr GltfLoader::Load(
     {
         if (cpu.use32bit)
         {
-	            std::memcpy(ib, cpu.indices.data(), numFaces * 3 * sizeof(uint));
+            std::memcpy(ib, cpu.indices.data(), numFaces * 3 * sizeof(uint));
         }
         else
         {
@@ -347,7 +358,8 @@ Mesh::MeshPtr GltfLoader::Load(
         m->UnlockIndexBuffer();
     }
 
-	    m->SetAttributeTable(cpu.subsets.data(), static_cast<uint>(cpu.subsets.size()));
+    m->SetAttributeTable(cpu.subsets.data(),
+                         static_cast<uint>(cpu.subsets.size()));
 
     materials.clear();
     for (uint i = 0; i < cpu.materials.size(); ++i)
@@ -356,4 +368,5 @@ Mesh::MeshPtr GltfLoader::Load(
     return m;
 }
 
-}}
+} // namespace gltf
+} // namespace forg

@@ -11,25 +11,26 @@
 #endif // _MSC_VER > 1000
 
 // Insert your headers here
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
-//#define _WIN32_WINNT 0x0500
-//#define  WINVER 0x0500
-//#define _WIN32_IE 0x0500 
+#define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+// #define _WIN32_WINNT 0x0500
+// #define  WINVER 0x0500
+// #define _WIN32_IE 0x0500
 
-#include <tchar.h>
-#include <Windows.h>
-#include <winuser.h>
+#include "base.h"
 #include <CommCtrl.h>
 #include <Commdlg.h>
-#include "base.h"
+#include <Windows.h>
+#include <tchar.h>
+#include <winuser.h>
 
 // TODO: reference additional headers your program requires here
-//#include <winuser.h>
-//#include "emfc.h"
-//#include <commctrl.h>
+// #include <winuser.h>
+// #include "emfc.h"
+// #include <commctrl.h>
 
-//HINSTANCE AfxGetResourceHandle();
+// HINSTANCE AfxGetResourceHandle();
 //{{AFX_INSERT_LOCATION}}
-// Microsoft Visual C++ will insert additional declarations immediately before the previous line.
+//  Microsoft Visual C++ will insert additional declarations immediately before
+//  the previous line.
 
 #endif // !defined(AFX_STDAFX_H__09292A9F_1CCA_4CA9_9821_5FEF8945E742__INCLUDED_)

@@ -106,8 +106,8 @@ bool WaveFile::Open(const char* _filename)
         bool riff_found = false;
         size_t cbread = 0;
 
-        while (0 <
-               (cbread = fread(&chunk.header, sizeof(chunk.header), 1, m_file.get())))
+        while (0 < (cbread = fread(&chunk.header, sizeof(chunk.header), 1,
+                                   m_file.get())))
         {
             if (riff_found)
             {

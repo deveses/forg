@@ -2,18 +2,20 @@
 
 #include "mesh/XLoader.h"
 
-#include "rendering/IRenderDevice.h"
-#include "rendering/Vertex.h"
-#include "math/Math.h"
 #include "PerformanceCounter.h"
 #include "debug/dbg.h"
+#include "math/Math.h"
+#include "rendering/IRenderDevice.h"
+#include "rendering/Vertex.h"
 
 #include "mesh/xfile/xfile.h"
 
 #include <vector>
 
-namespace forg { namespace xfile {
-
+namespace forg
+{
+namespace xfile
+{
 
 struct mesh_data
 {
@@ -24,13 +26,12 @@ struct mesh_data
 
     uint num_vertices = 0;
     uint num_faces = 0;
-
 };
 
 using MeshDataVec = std::vector<mesh_data>;
 
-
-bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMaterialVec& materials)
+bool ExtractMesh(const xfile::IData* xdata, mesh_data* out,
+                 Mesh::ExtendedMaterialVec& materials)
 {
     //////////////////////////////////////////////////////////////////////////
     // Extract vertices and indices
@@ -56,7 +57,7 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
     {
         const xfile::IData* faces = xdata->GetSubdata(3);
         uint fsize = faces->GetSize(); // size of byte buffer
-        uint icount = fsize >> 2;   // number of uints
+        uint icount = fsize >> 2;      // number of uints
 
         std::vector<uint> face_data(icount);
         uint* iarr = face_data.data();
@@ -67,26 +68,27 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
         // copy indices to our index buffer
         // we assume 4 uints per MeshFace
         uint findex = 0;
-        for (uint i=0; i<icount; i+=4, findex++)
+        for (uint i = 0; i < icount; i += 4, findex++)
         {
-            //ASSERT(iarr[i] == 3);
+            // ASSERT(iarr[i] == 3);
             ASSERT(findex < nFaces);
 
-            out->indices[3*findex+0] = iarr[i+1];
+            out->indices[3 * findex + 0] = iarr[i + 1];
 
             // swap indices for ccw
-            out->indices[3*findex+1] = iarr[i+3];   //iarr[i+2];
-            out->indices[3*findex+2] = iarr[i+2];   //iarr[i+3];
+            out->indices[3 * findex + 1] = iarr[i + 3]; // iarr[i+2];
+            out->indices[3 * findex + 2] = iarr[i + 2]; // iarr[i+3];
 
             // skip rest of indices if not triangle
             if (iarr[i] != 3)
             {
-                DBG_MSG("[XLoader] Warning! Skipping non triangular face %d (%d vertices)\n", findex, iarr[i]);
+                DBG_MSG("[XLoader] Warning! Skipping non triangular face %d "
+                        "(%d vertices)\n",
+                        findex, iarr[i]);
 
                 i += iarr[i] - 3;
             }
         }
-
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -94,35 +96,41 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
     //////////////////////////////////////////////////////////////////////////
 
     // Normals
-    const IData* xmesh_normals = xdata->FindObject(XTemplateMeshTextureCoords::GUID);
+    const IData* xmesh_normals =
+        xdata->FindObject(XTemplateMeshTextureCoords::GUID);
     if (xmesh_normals)
     {
-//         DWORD nNormals;
-//         array Vector normals[nNormals];
-//         DWORD nFaceNormals;
-//         array MeshFace faceNormals[nFaceNormals];
+        //         DWORD nNormals;
+        //         array Vector normals[nNormals];
+        //         DWORD nFaceNormals;
+        //         array MeshFace faceNormals[nFaceNormals];
         uint num_normals = 0;
         uint num_face_normals = 0;
         xdata->GetSubdata(0)->ToByteArray(&num_normals, sizeof(num_normals));
-        xdata->GetSubdata(2)->ToByteArray(&num_face_normals, sizeof(num_face_normals));
+        xdata->GetSubdata(2)->ToByteArray(&num_face_normals,
+                                          sizeof(num_face_normals));
 
         std::vector<Vector3> normals(num_normals);
-        xdata->GetSubdata(1)->ToByteArray(normals.data(), num_normals*sizeof(Vector3));
+        xdata->GetSubdata(1)->ToByteArray(normals.data(),
+                                          num_normals * sizeof(Vector3));
 
         out->normals.resize(out->num_vertices);
         const xfile::IData* faces = xdata->GetSubdata(3);
         uint icount = faces->GetSize() >> 2;
         std::vector<uint> face_normals(icount);
-        faces->ToByteArray(face_normals.data(), icount*4);
+        faces->ToByteArray(face_normals.data(), icount * 4);
 
         uint findex = 0;
-        for (uint i=0; i<icount; i+=4, findex++)
+        for (uint i = 0; i < icount; i += 4, findex++)
         {
             ASSERT(findex < num_face_normals);
 
-            out->normals[out->indices[3*findex+0]] = normals[ face_normals[i+1] ];
-            out->normals[out->indices[3*findex+1]] = normals[ face_normals[i+2] ];
-            out->normals[out->indices[3*findex+2]] = normals[ face_normals[i+3] ];
+            out->normals[out->indices[3 * findex + 0]] =
+                normals[face_normals[i + 1]];
+            out->normals[out->indices[3 * findex + 1]] =
+                normals[face_normals[i + 2]];
+            out->normals[out->indices[3 * findex + 2]] =
+                normals[face_normals[i + 3]];
 
             // skip rest of indices if not triangle
             if (face_normals[i] != 3)
@@ -130,7 +138,6 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
                 i += face_normals[i] - 3;
             }
         }
-
     }
 
     // Texture Coords
@@ -144,7 +151,8 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
 
         out->tverts.resize(out->num_vertices);
 
-        xtcoords->GetSubdata(1)->ToByteArray(out->tverts.data(), sizeof(Vector2)*out->num_vertices);
+        xtcoords->GetSubdata(1)->ToByteArray(
+            out->tverts.data(), sizeof(Vector2) * out->num_vertices);
     }
 
     // Materials
@@ -152,41 +160,49 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
     const IData* xmat_list = xdata->FindObject(XTemplateMeshMaterialList::GUID);
     if (xmat_list)
     {
-//         DWORD nMaterials;
-//         DWORD nFaceIndexes;
-//         array DWORD faceIndexes[nFaceIndexes];
-//         [Material <3D82AB4D-62DA-11CF-AB39-0020AF71E433>]
+        //         DWORD nMaterials;
+        //         DWORD nFaceIndexes;
+        //         array DWORD faceIndexes[nFaceIndexes];
+        //         [Material <3D82AB4D-62DA-11CF-AB39-0020AF71E433>]
 
         uint nMaterials = 0;
         uint nFaceIndexes = 0;
 
         xmat_list->GetSubdata(0)->ToByteArray(&nMaterials, sizeof(nMaterials));
-        xmat_list->GetSubdata(1)->ToByteArray(&nFaceIndexes, sizeof(nFaceIndexes));
+        xmat_list->GetSubdata(1)->ToByteArray(&nFaceIndexes,
+                                              sizeof(nFaceIndexes));
 
         if (nMaterials > 0)
         {
             ExtendedMaterial mesh_emat;
 
-            const IData* xmat = xmat_list->FindObject(xfile::XTemplateMaterial::GUID);
+            const IData* xmat =
+                xmat_list->FindObject(xfile::XTemplateMaterial::GUID);
             if (xmat != 0)
             {
                 Color3f spec_col;
                 Color3f emis_col;
 
-                xmat->GetSubdata(0)->ToByteArray(&mesh_emat.Material3D.Diffuse, sizeof(Color));
-                xmat->GetSubdata(1)->ToByteArray(&mesh_emat.Material3D.Power, sizeof(float));
+                xmat->GetSubdata(0)->ToByteArray(&mesh_emat.Material3D.Diffuse,
+                                                 sizeof(Color));
+                xmat->GetSubdata(1)->ToByteArray(&mesh_emat.Material3D.Power,
+                                                 sizeof(float));
                 xmat->GetSubdata(2)->ToByteArray(&spec_col, sizeof(Color3f));
                 xmat->GetSubdata(3)->ToByteArray(&emis_col, sizeof(Color3f));
 
-                mesh_emat.Material3D.Specular = Color(spec_col.r, spec_col.g, spec_col.b);
-                mesh_emat.Material3D.Emissive = Color(emis_col.r, emis_col.g, emis_col.b);
+                mesh_emat.Material3D.Specular =
+                    Color(spec_col.r, spec_col.g, spec_col.b);
+                mesh_emat.Material3D.Emissive =
+                    Color(emis_col.r, emis_col.g, emis_col.b);
 
-                const IData* xtexfilename = xmat->FindObject(xfile::XTemplateTextureFilename::GUID);
+                const IData* xtexfilename =
+                    xmat->FindObject(xfile::XTemplateTextureFilename::GUID);
                 if (xtexfilename)
                 {
                     uint ssize = xtexfilename->GetSize();
                     mesh_emat.TextureFilename.resize(ssize);
-                    xtexfilename->ToByteArray(&mesh_emat.TextureFilename[0], ssize);
+                    xtexfilename->ToByteArray(&mesh_emat.TextureFilename[0],
+                                              ssize);
                 }
 
                 materials.push_back(mesh_emat);
@@ -204,7 +220,7 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
     uint vert_total = 0;
     uint faces_total = 0;
 
-    for (uint i=0; i<data.size(); i++)
+    for (uint i = 0; i < data.size(); i++)
     {
         vert_total += data[i].num_vertices;
         faces_total += data[i].num_faces;
@@ -217,15 +233,11 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
 
     attribs.resize(data.size());
 
-    m = Mesh::MeshPtr(
-            new Mesh( faces_total, vert_total,
-                MeshFlags::Use32Bit,
-                PositionNormalTextured::Declaration,
-                device )
-        );
+    m = Mesh::MeshPtr(new Mesh(faces_total, vert_total, MeshFlags::Use32Bit,
+                               PositionNormalTextured::Declaration, device));
 
-    PositionNormalTextured *vbuffer = 0;
-    uint *ibuffer = 0;
+    PositionNormalTextured* vbuffer = 0;
+    uint* ibuffer = 0;
     if (m == 0 || m->LockVertexBuffer(0, (void**)&vbuffer) != FORG_OK)
         return Mesh::MeshPtr(0);
     if (m->LockIndexBuffer(0, (void**)&ibuffer) != FORG_OK)
@@ -237,7 +249,7 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
     uint voff = 0;
     uint foff = 0;
 
-    for (uint i=0; i<data.size(); i++)
+    for (uint i = 0; i < data.size(); i++)
     {
         attribs[i].AttribId = i;
         attribs[i].FaceStart = foff;
@@ -245,9 +257,9 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
         attribs[i].VertexStart = voff;
         attribs[i].VertexCount = data[i].num_vertices;
 
-        uint *ib32 = ibuffer + foff*3;
+        uint* ib32 = ibuffer + foff * 3;
         // faces first to add correct vertex offset
-        for (uint j=0; j<data[i].num_faces*3; j++)
+        for (uint j = 0; j < data[i].num_faces * 3; j++)
         {
             ib32[j] = data[i].indices[j] + voff;
         }
@@ -279,26 +291,25 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
             vbuffer[j].Normal.Zero();
         }
 
-        uint *ib32 = (uint*)ibuffer;
+        uint* ib32 = (uint*)ibuffer;
         for (uint j = 0; j < faces_total; j++)
         {
             uint idx0, idx1, idx2;
 
-            idx0 = ib32[j*3];
-            idx1 = ib32[j*3+1];
-            idx2 = ib32[j*3+2];
+            idx0 = ib32[j * 3];
+            idx1 = ib32[j * 3 + 1];
+            idx2 = ib32[j * 3 + 2];
 
             Vector3 e0 = vbuffer[idx1].Position - vbuffer[idx0].Position;
             Vector3 e1 = vbuffer[idx2].Position - vbuffer[idx0].Position;
 
             Vector3 normal;
             Vector3::Cross(normal, e0, e1);
-            //normal.Normalize();
+            // normal.Normalize();
 
             vbuffer[idx0].Normal += normal;
             vbuffer[idx1].Normal += normal;
             vbuffer[idx2].Normal += normal;
-
         }
 
         for (uint j = 0; j < vert_total; j++)
@@ -315,12 +326,9 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
     return m;
 }
 
-Mesh::MeshPtr XLoader::Load(
-    const char* filename,
-    uint /*options*/,
-    IRenderDevice* device,
-    Mesh::ExtendedMaterialVec& materials
-)
+Mesh::MeshPtr XLoader::Load(const char* filename, uint /*options*/,
+                            IRenderDevice* device,
+                            Mesh::ExtendedMaterialVec& materials)
 {
     xfile::XFile loader;
     Mesh::MeshPtr m(0);
@@ -330,31 +338,32 @@ Mesh::MeshPtr XLoader::Load(
 
     if (loader.Open(filename))
     {
-        xfile::XFile::XDataPtrVec objs;     // our stack for DFS search
+        xfile::XFile::XDataPtrVec objs; // our stack for DFS search
 
         //////////////////////////////////////////////////////////////////////////
 
         loader.GetDataObjects(objs);
 
-        while ( ! objs.empty() )
+        while (!objs.empty())
         {
             const xfile::IData* xobj = objs.back();
             objs.pop_back();
 
-//             if ( xobj->GetGUID() == xfile::XTemplateFrameTransformMatrix::GUID )
-//             {
-//                 Matrix4 mat;
-//
-//                 xobj->ToByteArray(&mat, sizeof(mat));
-//             }
-//             else
-            if ( xobj->GetGUID() == xfile::XTemplateMesh::GUID)
+            //             if ( xobj->GetGUID() ==
+            //             xfile::XTemplateFrameTransformMatrix::GUID )
+            //             {
+            //                 Matrix4 mat;
+            //
+            //                 xobj->ToByteArray(&mat, sizeof(mat));
+            //             }
+            //             else
+            if (xobj->GetGUID() == xfile::XTemplateMesh::GUID)
             {
                 mesh_list.push_back(mesh_data());
                 ExtractMesh(xobj, &(mesh_list.back()), materials);
 
                 // TODO: temporary
-                //break;
+                // break;
             }
 
             // push child nodes on our fifo queue
@@ -370,83 +379,85 @@ Mesh::MeshPtr XLoader::Load(
 
     return BuildMesh(device, mesh_list);
 
-/*
-        if (pVertices && pFaces)
-        {
-            Mesh::MeshPtr mtmp(
-                new Mesh(
-                nFacesTotal,
-                nVerticesTotal,
-                MeshFlags::Use32Bit,
-                PositionNormal::Declaration,
-                device
-                )
-                );
-
-            PositionNormal *vbuffer = 0;
-            if (mtmp != 0 && mtmp->LockVertexBuffer(0, (void**)&vbuffer) == FORG_OK)
+    /*
+            if (pVertices && pFaces)
             {
+                Mesh::MeshPtr mtmp(
+                    new Mesh(
+                    nFacesTotal,
+                    nVerticesTotal,
+                    MeshFlags::Use32Bit,
+                    PositionNormal::Declaration,
+                    device
+                    )
+                    );
+
+                PositionNormal *vbuffer = 0;
+                if (mtmp != 0 && mtmp->LockVertexBuffer(0, (void**)&vbuffer) ==
+       FORG_OK)
+                {
+                    for (uint j = 0; j < nVerticesTotal; j++)
+                    {
+                        vbuffer[j].Position = pVerticesAll[j];
+                    }
+                }
+
+
+                char *ibuffer = 0;
+                if (mtmp != 0 && mtmp->LockIndexBuffer(0, (void**)&ibuffer) ==
+       FORG_OK)
+                {
+                    memcpy(ibuffer, pFacesAll, nFacesTotal*3*4);
+                }
+
+                //////////////////////////////////////////////////////////////////////////
+                // Normal computation
+                //////////////////////////////////////////////////////////////////////////
+
                 for (uint j = 0; j < nVerticesTotal; j++)
                 {
-                    vbuffer[j].Position = pVerticesAll[j];
+                    vbuffer[j].Normal.Zero();
                 }
+
+                uint *ib32 = (uint*)ibuffer;
+                for (uint j = 0; j < nFacesTotal; j++)
+                {
+                    uint idx0, idx1, idx2;
+
+                    idx0 = ib32[j*3];
+                    idx1 = ib32[j*3+1];
+                    idx2 = ib32[j*3+2];
+
+                    Vector3 e0 = vbuffer[idx1].Position -
+       vbuffer[idx0].Position; Vector3 e1 = vbuffer[idx2].Position -
+       vbuffer[idx0].Position;
+
+                    Vector3 normal;
+                    Vector3::Cross(normal, e0, e1);
+                    //normal.Normalize();
+
+                    vbuffer[idx0].Normal += normal;
+                    vbuffer[idx1].Normal += normal;
+                    vbuffer[idx2].Normal += normal;
+
+                }
+
+                for (uint j = 0; j < nVerticesTotal; j++)
+                {
+                    vbuffer[j].Normal.Normalize();
+                }
+
+                mtmp->UnlockVertexBuffer();
+                mtmp->UnlockIndexBuffer();
+
+                m = mtmp;
             }
 
-
-            char *ibuffer = 0;
-            if (mtmp != 0 && mtmp->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
-            {
-                memcpy(ibuffer, pFacesAll, nFacesTotal*3*4);
-            }
-
-            //////////////////////////////////////////////////////////////////////////
-            // Normal computation
-            //////////////////////////////////////////////////////////////////////////
-
-            for (uint j = 0; j < nVerticesTotal; j++)
-            {
-                vbuffer[j].Normal.Zero();
-            }
-
-            uint *ib32 = (uint*)ibuffer;
-            for (uint j = 0; j < nFacesTotal; j++)
-            {
-                uint idx0, idx1, idx2;
-
-                idx0 = ib32[j*3];
-                idx1 = ib32[j*3+1];
-                idx2 = ib32[j*3+2];
-
-                Vector3 e0 = vbuffer[idx1].Position - vbuffer[idx0].Position;
-                Vector3 e1 = vbuffer[idx2].Position - vbuffer[idx0].Position;
-
-                Vector3 normal;
-                Vector3::Cross(normal, e0, e1);
-                //normal.Normalize();
-
-                vbuffer[idx0].Normal += normal;
-                vbuffer[idx1].Normal += normal;
-                vbuffer[idx2].Normal += normal;
-
-            }
-
-            for (uint j = 0; j < nVerticesTotal; j++)
-            {
-                vbuffer[j].Normal.Normalize();
-            }
-
-            mtmp->UnlockVertexBuffer();
-            mtmp->UnlockIndexBuffer();
-
-            m = mtmp;
-        }
-
-        delete [] pVerticesAll;
-        delete [] pFacesAll;*/
-
+            delete [] pVerticesAll;
+            delete [] pFacesAll;*/
 
     return m;
 }
 
-
-}}
+} // namespace xfile
+} // namespace forg

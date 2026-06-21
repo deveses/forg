@@ -29,48 +29,52 @@
 
 #include "forg/base.h"
 
-namespace forg { namespace audio {
+namespace forg
+{
+namespace audio
+{
 
-
-struct RIFFHDR {
+struct RIFFHDR
+{
     unsigned int nID;
     unsigned int nSize;
     unsigned int nFileType;
 };
 
-struct LISTHDR {
+struct LISTHDR
+{
     unsigned int nID;
     unsigned int nSize;
     unsigned int nFileType;
 };
 
-struct CHUNKHDR {
+struct CHUNKHDR
+{
     unsigned int nID;
     unsigned int nSize;
 };
 
-    struct SWaveChunk
-    {
-        CHUNKHDR header;
-        unsigned int offset;
-    };
+struct SWaveChunk
+{
+    CHUNKHDR header;
+    unsigned int offset;
+};
 
-
-#define RiffID      'FFIR'
-#define ListID      'TSIL'
-#define WaveID      'EVAW'
-#define FormatID    ' tmf'
-#define DataID      'atad'
+#define RiffID 'FFIR'
+#define ListID 'TSIL'
+#define WaveID 'EVAW'
+#define FormatID ' tmf'
+#define DataID 'atad'
 
 // xaudio2/xma2
-#define XWmaID      'AMWX'
-#define DpdsID      'sdpd'
-#define XMA2ID      '2AMX'
-#define SeekID      'kees'
+#define XWmaID 'AMWX'
+#define DpdsID 'sdpd'
+#define XMA2ID '2AMX'
+#define SeekID 'kees'
 
 class FORG_API WaveFile
 {
-private:
+  private:
     struct FileCloser
     {
         void operator()(FILE* file) const;
@@ -79,25 +83,27 @@ private:
     typedef std::unique_ptr<FILE, FileCloser> FilePtr;
     typedef std::vector<SWaveChunk> WaveChunkVec;
 
-private:
+  private:
     FilePtr m_file;
     unsigned int m_riff_type;
     WaveChunkVec m_chunks;
 
-public:
+  public:
     WaveFile();
     ~WaveFile();
 
-public:
+  public:
     bool Open(const char* _filename);
     void Close();
 
     bool GetFormat(char* format, unsigned int size);
     bool GetChunk(unsigned int id, SWaveChunk& chunk);
-    unsigned int ReadChunkData(const SWaveChunk& chunk, char* buf, unsigned int size);
+    unsigned int ReadChunkData(const SWaveChunk& chunk, char* buf,
+                               unsigned int size);
     unsigned int Read(unsigned int offset, char* buf, unsigned int size);
 };
 
-}}
+} // namespace audio
+} // namespace forg
 
 #endif //_FORG_AUDIO_WAVEFILE_H_

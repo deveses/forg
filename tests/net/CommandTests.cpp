@@ -14,7 +14,7 @@ Command withParam(const char* key, const char* value)
     cmd.params[key] = value;
     return cmd;
 }
-}
+} // namespace
 
 TEST_CASE("TryGetInt parses a plain integer", "[net][command]")
 {

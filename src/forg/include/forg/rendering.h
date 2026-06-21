@@ -25,23 +25,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rendering/Camera.h"
 #include "rendering/Color.h"
-#include "rendering/Light.h"
-#include "rendering/Material.h"
 #include "rendering/IIndexBuffer.h"
-#include "rendering/IRenderer.h"
 #include "rendering/IRenderDevice.h"
+#include "rendering/IRenderer.h"
 #include "rendering/ISurface.h"
 #include "rendering/ITexture.h"
 #include "rendering/IVertexBuffer.h"
+#include "rendering/Light.h"
+#include "rendering/Material.h"
 #include "rendering/Sprite.h"
+#include "rendering/Vertex.h"
 #include "rendering/VertexDeclaration.h"
 #include "rendering/VertexElement.h"
-#include "rendering/Vertex.h"
 
-#include "rendering/Mesh.h"
 #include "rendering/Font.h"
+#include "rendering/Mesh.h"
 
 #include "rendering/reference/SWBuffers.h"
 #include "rendering/reference/SWRenderDevice.h"
 
-#endif  //_FORG_RENDERING_H_
+#endif //_FORG_RENDERING_H_

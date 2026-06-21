@@ -40,10 +40,9 @@
 
 #include "ui/gui.h"
 
-#include "noise.h"
 #include "PerformanceCounter.h"
+#include "noise.h"
 
 #include "rendering.h"
 
 #include "script/script.h"
-

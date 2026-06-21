@@ -23,10 +23,13 @@
 #pragma once
 #endif
 
-#include "forg/base.h"
 #include "forg/audio/AudioDefs.h"
+#include "forg/base.h"
 
-namespace forg { namespace audio {
+namespace forg
+{
+namespace audio
+{
 
 class FORG_API AudioMixer
 {
@@ -35,23 +38,25 @@ class FORG_API AudioMixer
     unsigned int m_num_streams;
     SAudioFormat m_format;
 
-public:
+  public:
     AudioMixer();
     ~AudioMixer();
 
-public:
+  public:
     bool Init();
     void Shutdown();
     void Update();
 
-    void SetStreamBuffer(unsigned int _stream, char* _buffer, unsigned int size);
+    void SetStreamBuffer(unsigned int _stream, char* _buffer,
+                         unsigned int size);
     void SetStreamFormat(unsigned int _stream, SAudioFormat& format);
 
-private:
+  private:
     unsigned int MixStreams(char* _out_buffer, unsigned int _out_size);
     unsigned int MixStreamsFloat(float* _out_samples, unsigned int _count);
 };
 
-}}
+} // namespace audio
+} // namespace forg
 
 #endif

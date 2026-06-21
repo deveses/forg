@@ -26,30 +26,33 @@
 #include "forg/io/ISerializer.h"
 #include "forg/script/xml/XMLParser.h"
 
-namespace forg { namespace io {
+namespace forg
+{
+namespace io
+{
 
-    class XMLSerializer : public ISerializer
-    {
-        forg::script::xml::XMLParser m_parser;
+class XMLSerializer : public ISerializer
+{
+    forg::script::xml::XMLParser m_parser;
 
-    public:
-        XMLSerializer();
-        virtual ~XMLSerializer();
+  public:
+    XMLSerializer();
+    virtual ~XMLSerializer();
 
-        bool Open(const char* _filename);
-        void Close();
+    bool Open(const char* _filename);
+    void Close();
 
-        // ISerializer
-        virtual bool Begin(const char* _name);
-        virtual void End();
+    // ISerializer
+    virtual bool Begin(const char* _name);
+    virtual void End();
 
-        virtual bool Read(void* _buffer, uint32 _size);
-        virtual bool ReadInt32(int& _out, const char* _name);
-        virtual bool ReadFloat32(float& _out, const char* _name);
-        virtual bool ReadString(core::string& _out, const char* _name);
+    virtual bool Read(void* _buffer, uint32 _size);
+    virtual bool ReadInt32(int& _out, const char* _name);
+    virtual bool ReadFloat32(float& _out, const char* _name);
+    virtual bool ReadString(core::string& _out, const char* _name);
+};
 
-    };
-
-}}
+} // namespace io
+} // namespace forg
 
 #endif

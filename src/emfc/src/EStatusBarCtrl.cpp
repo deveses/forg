@@ -2,40 +2,39 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
 #include "EStatusBarCtrl.h"
+#include "stdafx.h"
 
 #include <CommCtrl.h>
 
-namespace emfc {
+namespace emfc
+{
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-EStatusBarCtrl::EStatusBarCtrl()
+EStatusBarCtrl::EStatusBarCtrl() {}
+
+EStatusBarCtrl::~EStatusBarCtrl() {}
+
+DWORD EStatusBarCtrl::Create(DWORD dwStyle, int x, int y, int nWidth,
+                             int nHeight, HWND pParentWnd, UINT nID)
 {
-
-}
-
-EStatusBarCtrl::~EStatusBarCtrl()
-{
-
-}
-
-DWORD EStatusBarCtrl::Create(DWORD dwStyle, int x, int y, int nWidth, int nHeight, HWND pParentWnd, UINT nID)
-{
-    return EWnd::Create(STATUSCLASSNAME,_T(""),x,y,nWidth,nHeight,dwStyle,0,pParentWnd);
+    return EWnd::Create(STATUSCLASSNAME, _T(""), x, y, nWidth, nHeight, dwStyle,
+                        0, pParentWnd);
 }
 
 BOOL EStatusBarCtrl::SetText(LPCTSTR lpszText, int nPane, int nType)
 {
-    return (BOOL)SendMessage(m_hWnd,SB_SETTEXT,(WPARAM) (nPane | nType),(LPARAM) lpszText);
+    return (BOOL)SendMessage(m_hWnd, SB_SETTEXT, (WPARAM)(nPane | nType),
+                             (LPARAM)lpszText);
 }
 
-BOOL EStatusBarCtrl::SetParts(int nParts, int *pWidths)
+BOOL EStatusBarCtrl::SetParts(int nParts, int* pWidths)
 {
-    return (BOOL)SendMessage(m_hWnd,SB_SETPARTS,(WPARAM) nParts,(LPARAM) (LPINT) pWidths);
+    return (BOOL)SendMessage(m_hWnd, SB_SETPARTS, (WPARAM)nParts,
+                             (LPARAM)(LPINT)pWidths);
 }
 
-}
+} // namespace emfc

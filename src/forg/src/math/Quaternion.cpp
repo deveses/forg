@@ -1,215 +1,224 @@
 #include "forg_pch.h"
 
-#include "math/Quaternion.h"
 #include "math/Math.h"
+#include "math/Quaternion.h"
 
-namespace forg { namespace math {
+namespace forg
+{
+namespace math
+{
 
-	const Quaternion Quaternion::Empty = Quaternion(0.0f, 0.0f, 0.0f, 0.0f);
+const Quaternion Quaternion::Empty = Quaternion(0.0f, 0.0f, 0.0f, 0.0f);
 
-	// assignment operators
-	Quaternion& Quaternion::operator += ( const Quaternion& value)
-	{
-        v += value.v;
-        s += value.s;
+// assignment operators
+Quaternion& Quaternion::operator+=(const Quaternion& value)
+{
+    v += value.v;
+    s += value.s;
 
-		return *this;
-	}
+    return *this;
+}
 
-	Quaternion& Quaternion::operator -= ( const Quaternion& value)
-	{
-        v -= value.v;
-        s -= value.s;
+Quaternion& Quaternion::operator-=(const Quaternion& value)
+{
+    v -= value.v;
+    s -= value.s;
 
-		return *this;
-	}
+    return *this;
+}
 
-    Quaternion& Quaternion::operator *= (const Quaternion& value)
+Quaternion& Quaternion::operator*=(const Quaternion& value)
+{
+    Vector3 out_v;
+    float out_s = Vector3::Dot(v, value.v);
+
+    Vector3::Cross(out_v, v, value.v);
+    out_v += s * value.v;
+    out_v += v * value.s;
+
+    s = out_s;
+    v = out_v;
+
+    return *this;
+}
+
+Quaternion& Quaternion::operator*=(float value)
+{
+    v *= value;
+    s *= value;
+
+    return *this;
+}
+
+// binary operators
+Quaternion Quaternion::operator+(const Quaternion& value) const
+{
+    Quaternion result(*this);
+
+    result += value;
+
+    return result;
+}
+
+Quaternion Quaternion::operator-(const Quaternion& value) const
+{
+    Quaternion result(*this);
+
+    result -= value;
+
+    return result;
+}
+
+bool Quaternion::operator==(const Quaternion& value) const
+{
+    if (v == value.v && s == value.s)
+        return true;
+
+    return false;
+}
+
+bool Quaternion::operator!=(const Quaternion& value) const
+{
+    if (s != value.s || v != value.v)
+        return false;
+
+    return false;
+}
+
+Quaternion& Quaternion::Multiply(float scalar)
+{
+    v *= scalar;
+    s *= scalar;
+
+    return *this;
+}
+
+/************************************************************************/
+/* Statics                                                              */
+/************************************************************************/
+
+void Quaternion::Add(Quaternion& out, const Quaternion& left,
+                     const Quaternion& right)
+{
+    Vector3::Add(out.v, left.v, right.v);
+    out.s = left.s + right.s;
+}
+
+void Quaternion::Substract(Quaternion& out, const Quaternion& left,
+                           const Quaternion& right)
+{
+    Vector3::Substract(out.v, left.v, right.v);
+    out.s = left.s - right.s;
+}
+
+Quaternion& Quaternion::Multiply(Quaternion& out, const Quaternion& left,
+                                 const Quaternion& right)
+{
+    Quaternion q;
+
+    q.s = left.s * right.s - Vector3::Dot(left.v, right.v);
+
+    Vector3::Cross(q.v, left.v, right.v);
+    q.v += left.s * right.v;
+    q.v += left.v * right.s;
+
+    return (out = q);
+}
+
+Quaternion& Quaternion::Conjugate(Quaternion& out, const Quaternion& source)
+{
+    out.s = source.s;
+    out.v = -out.v;
+
+    return out;
+}
+
+float Quaternion::Length(const Quaternion& source)
+{
+    return (float)Math::Sqrt(Quaternion::Dot(source, source));
+}
+
+float Quaternion::LengthSq(const Quaternion& source)
+{
+    return Quaternion::Dot(source, source);
+}
+
+float Quaternion::Dot(const Quaternion& left, const Quaternion& right)
+{
+    return (left.s * right.s + Vector3::Dot(left.v, right.v));
+}
+
+Quaternion& Quaternion::Normalize(Quaternion& out, const Quaternion& source)
+{
+    float l = Length(source);
+
+    if (l >= 0)
     {
-        Vector3 out_v;
-        float out_s = Vector3::Dot(v, value.v);
-
-        Vector3::Cross(out_v, v, value.v);
-        out_v += s * value.v;
-        out_v += v * value.s;
-
-        s = out_s;
-        v = out_v;
-
-        return *this;
+        out = source;
+        out *= 1.0f / l;
+    }
+    else
+    {
+        out.Zero();
+        out.s = 1.0f;
     }
 
-    Quaternion& Quaternion::operator *= (float value)
-    {
-        v *= value;
-        s *= value;
+    return out;
+}
 
-        return *this;
-    }
+Quaternion& Quaternion::Inverse(Quaternion& out, const Quaternion& src)
+{
+    Conjugate(out, src);
+    Normalize(out, out);
 
-	// binary operators
-	Quaternion Quaternion::operator + ( const Quaternion& value) const
-	{
-        Quaternion v(*this);
+    return out;
+}
 
-        v += value;
+Quaternion& Quaternion::Ln(Quaternion& out, const Quaternion& source)
+{
+    // Q == (cos(theta), sin(theta) * v) where |v| = 1
+    // The natural logarithm of Q is, ln(Q) = (0, theta * v)
 
-		return v;
-	}
+    float theta = (float)Math::Acos(source.s);
+    float sn = (float)Math::Sin(theta);
 
-	Quaternion Quaternion::operator - ( const Quaternion& value) const
-	{
-        Quaternion v(*this);
+    out.s = 0;
+    out.v = source.v;
 
-        v -= value;
+    out.v *= theta / sn;
 
-        return v;
-	}
+    return out;
+}
 
-	bool Quaternion::operator == ( const Quaternion& value) const
-	{
-        if (v == value.v && s == value.s)
-            return true;
+Quaternion& Quaternion::Exp(Quaternion& out, const Quaternion& source)
+{
+    // Given a pure quaternion defined by:
+    //   q = (0, theta * v);
+    // This method calculates the exponential result.
+    //   exp(Q) = (cos(theta), sin(theta) * v)
 
-		return false;
-	}
+    float theta = source.v.Length();
+    float sn = (float)Math::Sin(theta);
 
-	bool Quaternion::operator != ( const Quaternion& value) const
-	{
-        if (s != value.s || v != value.v)
-            return false;
+    out.s = (float)Math::Cos(theta);
+    out.v = source.v;
 
-		return false;
-	}
+    out.v *= sn / theta;
 
-    Quaternion& Quaternion::Multiply(float scalar)
-    {
-        v *= scalar;
-        s *= scalar;
+    return out;
+}
 
-        return *this;
-    }
+Quaternion& Quaternion::RotationAxis(Quaternion& out, const Vector3& axis,
+                                     float angle)
+{
+    angle *= 0.5f;
+    out.v = axis;
+    out.v.Normalize();
+    out.v *= (float)Math::Sin(angle);
+    out.s = (float)Math::Cos(angle);
 
-    /************************************************************************/
-    /* Statics                                                              */
-    /************************************************************************/
+    return out;
+}
 
-	void Quaternion::Add(Quaternion& out, const Quaternion& left, const Quaternion& right)
-	{
-        Vector3::Add(out.v, left.v, right.v);
-        out.s = left.s + right.s;
-	}
-
-	void Quaternion::Substract(Quaternion& out, const Quaternion& left, const Quaternion& right)
-	{
-        Vector3::Substract(out.v, left.v, right.v);
-        out.s = left.s - right.s;
-	}
-
-    Quaternion& Quaternion::Multiply(Quaternion& out, const Quaternion& left, const Quaternion& right)
-    {
-        Quaternion q;
-
-        q.s = left.s * right.s - Vector3::Dot(left.v, right.v);
-
-        Vector3::Cross(q.v, left.v, right.v);
-        q.v += left.s * right.v;
-        q.v += left.v * right.s;
-
-        return (out = q);
-    }
-
-    Quaternion& Quaternion::Conjugate(Quaternion& out, const Quaternion& source)
-    {
-        out.s = source.s;
-        out.v = -out.v;
-
-        return out;
-    }
-
-    float Quaternion::Length(const Quaternion& source)
-    {
-        return (float)Math::Sqrt( Quaternion::Dot(source, source) );
-    }
-
-    float Quaternion::LengthSq(const Quaternion& source)
-    {
-        return Quaternion::Dot(source, source);
-    }
-
-    float Quaternion::Dot(const Quaternion& left, const Quaternion& right)
-    {
-        return (left.s * right.s + Vector3::Dot(left.v, right.v));
-    }
-
-    Quaternion& Quaternion::Normalize(Quaternion& out, const Quaternion& source)
-    {
-        float l = Length(source);
-
-        if (l >= 0)
-        {
-            out = source;
-            out *= 1.0f/l;
-        } else
-        {
-            out.Zero();
-            out.s = 1.0f;
-        }
-
-        return out;
-    }
-
-    Quaternion& Quaternion::Inverse(Quaternion& out, const Quaternion& src)
-    {
-        Conjugate(out, src);
-        Normalize(out, out);
-
-        return out;
-    }
-
-    Quaternion& Quaternion::Ln(Quaternion& out, const Quaternion& source)
-    {
-        // Q == (cos(theta), sin(theta) * v) where |v| = 1
-        // The natural logarithm of Q is, ln(Q) = (0, theta * v)
-
-        float theta = (float)Math::Acos(source.s);
-        float sn = (float)Math::Sin(theta);
-
-        out.s = 0;
-        out.v = source.v;
-
-        out.v *= theta/sn;
-
-        return out;
-    }
-
-    Quaternion& Quaternion::Exp(Quaternion& out, const Quaternion& source)
-    {
-        //Given a pure quaternion defined by:
-        //  q = (0, theta * v);
-        //This method calculates the exponential result.
-        //  exp(Q) = (cos(theta), sin(theta) * v)
-
-        float theta = source.v.Length();
-        float sn = (float)Math::Sin(theta);
-
-        out.s = (float)Math::Cos(theta);
-        out.v = source.v;
-
-        out.v *= sn/theta;
-
-        return out;
-    }
-
-    Quaternion& Quaternion::RotationAxis(Quaternion& out, const Vector3& axis, float angle)
-    {
-        angle *= 0.5f;
-        out.v = axis;
-        out.v.Normalize();
-        out.v *= (float)Math::Sin(angle);
-        out.s = (float)Math::Cos(angle);
-
-        return out;
-    }
-
-}}
+} // namespace math
+} // namespace forg

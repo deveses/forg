@@ -4,7 +4,8 @@
 
 #include <string>
 
-TEST_CASE("core string copies and moves null-terminated content", "[core][string]")
+TEST_CASE("core string copies and moves null-terminated content",
+          "[core][string]")
 {
     forg::core::string original("wood.png");
     forg::core::string copy(original);
@@ -15,7 +16,8 @@ TEST_CASE("core string copies and moves null-terminated content", "[core][string
     REQUIRE(std::string(copy.c_str()).empty());
 }
 
-TEST_CASE("core string resize and clear preserve a terminator", "[core][string]")
+TEST_CASE("core string resize and clear preserve a terminator",
+          "[core][string]")
 {
     forg::core::string value;
     value.resize(4);

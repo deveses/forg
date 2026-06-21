@@ -1,6 +1,9 @@
 #include "net/CommandQueue.h"
 
-namespace forg { namespace net {
+namespace forg
+{
+namespace net
+{
 
 void CommandQueue::Push(const Command& cmd)
 {
@@ -15,7 +18,7 @@ std::future<std::string> CommandQueue::PushWithReply(const Command& cmd)
 {
     QueueItem item;
     item.cmd = cmd;
-    item.reply = std::make_shared<std::promise<std::string> >();
+    item.reply = std::make_shared<std::promise<std::string>>();
     std::future<std::string> result = item.reply->get_future();
 
     std::lock_guard<std::mutex> lock(m_mutex);
@@ -36,4 +39,5 @@ bool CommandQueue::TryPop(QueueItem& out)
     return true;
 }
 
-}}
+} // namespace net
+} // namespace forg

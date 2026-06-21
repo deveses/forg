@@ -25,37 +25,39 @@
 
 #include "base.h"
 
-namespace forg{
+namespace forg
+{
 
-//#define VertexDeclarationEnd() {0xFF, 0, DeclarationType_Unused, 0, 0}
+// #define VertexDeclarationEnd() {0xFF, 0, DeclarationType_Unused, 0, 0}
 
 /// VertexElement structure
 /**
-* VertexElement
-* @author eses
-* @version 1.0
-* @date 07-2005
-* @todo
-* @bug
-* @warning
-*/
+ * VertexElement
+ * @author eses
+ * @version 1.0
+ * @date 07-2005
+ * @todo
+ * @bug
+ * @warning
+ */
 struct FORG_API VertexElement
 {
-	ushort Stream;
-	ushort Offset;
-	byte Type;
-	byte Usage;
-	byte UsageIndex;
+    ushort Stream;
+    ushort Offset;
+    byte Type;
+    byte Usage;
+    byte UsageIndex;
 
-	static const VertexElement VertexDeclarationEnd;
+    static const VertexElement VertexDeclarationEnd;
 
-	//IVertexElement(ushort stream, ushort offset, DeclarationType declType, DeclarationUsage declUsage, byte usageIndex);
+    // IVertexElement(ushort stream, ushort offset, DeclarationType declType,
+    // DeclarationUsage declUsage, byte usageIndex);
 
-	bool operator != (const VertexElement elem) const;
-	static uint GetTypeSize(byte type);
-	static uint GetTypeCount(byte type);
+    bool operator!=(const VertexElement elem) const;
+    static uint GetTypeSize(byte type);
+    static uint GetTypeCount(byte type);
 };
 
-}
+} // namespace forg
 
 #endif //_FORG_VERTEXELEMENT_H_

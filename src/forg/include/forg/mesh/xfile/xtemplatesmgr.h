@@ -26,14 +26,17 @@
 
 #include <map>
 
-namespace forg { namespace xfile {
+namespace forg
+{
+namespace xfile
+{
 
 using namespace xfile::reader;
 
 class XTemplatesMgr
 {
     // Nested
-public:
+  public:
     typedef std::vector<XTemplate*> XTemplateVec;
     typedef XTemplateVec::iterator XTemplateVectorI;
     typedef std::map<xstring, uint> XStringTemplateIndexMap;
@@ -43,10 +46,9 @@ public:
     typedef XStringTemplateMap::iterator XStringTemplateMapI;
 
     // 'structors
-public:
+  public:
     XTemplatesMgr();
     ~XTemplatesMgr();
-
 
     // Attributes
     XTemplateVec m_templates;
@@ -55,16 +57,16 @@ public:
 
     XStringTemplateMap m_std_string_map;
 
-    //Public methods
-public:
+    // Public methods
+  public:
     int ReadTemplates(xreader& treader);
     const XTemplate* Find(const xstring& name);
     const XTemplate* Find(const xguid& guid);
 
     void PrintTemplates();
 
-    //Helpers
-private:
+    // Helpers
+  private:
     int CheckStandardType(const xguid& guid);
     int ReadTemplate(xreader& treader, XTemplate** tmpl);
 
@@ -80,8 +82,10 @@ private:
     int ReadTemplateReference(xreader& treader, XTemplateMember** member);
     int ReadTemplateOptionInfo(xreader& treader, XTemplate* tmpl);
     int ReadTemplateOptionList(xreader& treader, XTemplate* tmpl);
-    int ReadTemplateOptionPart(xreader& treader, xstring& out_name, xguid& out_guid);
+    int ReadTemplateOptionPart(xreader& treader, xstring& out_name,
+                               xguid& out_guid);
     int ReadTemplateElipsis(xreader& treader, XTemplate* tmpl);
 };
 
-}}
+} // namespace xfile
+} // namespace forg

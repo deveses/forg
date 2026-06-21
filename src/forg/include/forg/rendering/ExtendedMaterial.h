@@ -9,27 +9,27 @@
 #include "core/string.hpp"
 #include "rendering/Material.h"
 
-namespace forg {
+namespace forg
+{
 
-    using namespace forg::math;
-    using namespace forg::core;
+using namespace forg::math;
+using namespace forg::core;
 
-    /**
-    *
-    */
-    struct ExtendedMaterial
-    {
-        ////////////////////////////////////////////////////////////////////////////////
-        // Attributes
-        ////////////////////////////////////////////////////////////////////////////////
+/**
+ *
+ */
+struct ExtendedMaterial
+{
+    ////////////////////////////////////////////////////////////////////////////////
+    // Attributes
+    ////////////////////////////////////////////////////////////////////////////////
 
-        /// Material structure that describes the material properties.
-        Material Material3D;
+    /// Material structure that describes the material properties.
+    Material Material3D;
 
-        /// String that specifies the file name of the texture.
-        string TextureFilename;
-    };
-}
+    /// String that specifies the file name of the texture.
+    string TextureFilename;
+};
+} // namespace forg
 
 #endif //_FORG_MATERIAL_H_
-

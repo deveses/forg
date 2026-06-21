@@ -23,60 +23,65 @@
 #pragma once
 #endif
 
-
-#include "mesh/xfile/xdefs.h"
-#include "mesh/xfile/xtemplatesmgr.h"
 #include "mesh/xfile/xdatamgr.h"
+#include "mesh/xfile/xdefs.h"
 #include "mesh/xfile/xstdtemplates.h"
+#include "mesh/xfile/xtemplatesmgr.h"
 
-namespace forg { namespace xfile {
+#include <fstream>
+
+namespace forg
+{
+namespace xfile
+{
 
 typedef struct
 {
-	DWORD magic_number;
-	DWORD version;
-	DWORD type;
-	DWORD float_size;
+    DWORD magic_number;
+    DWORD version;
+    DWORD type;
+    DWORD float_size;
 } xfile_header;
 
 /// DirectX file loader
 class XFile
 {
-    //Nested
-public:
+    // Nested
+  public:
     typedef std::vector<const IData*> XDataPtrVec;
     typedef XDataPtrVec::iterator XDataPtrVecI;
     typedef XDataPtrVec::iterator XDataPtrVecCI;
 
-public:
-	XFile();
-	~XFile();
+  public:
+    XFile();
+    ~XFile();
 
-private:
+  private:
     std::string m_filename;
     std::ifstream m_input;
 
-	xfile_header m_header;
+    xfile_header m_header;
     XTemplatesMgr m_tmpls_mgr;
     XDataMgr m_data_mgr;
 
-	bool m_bDoubleFloat;
+    bool m_bDoubleFloat;
 
-public:
-	bool Open(const char* filename);
-	void PrintDescription();
+  public:
+    bool Open(const char* filename);
+    void PrintDescription();
 
     /**
-    * Gets objects' instances. IData object has hierarchical structure.
-    * @param data_vec [out] container for top level objects
-    */
+     * Gets objects' instances. IData object has hierarchical structure.
+     * @param data_vec [out] container for top level objects
+     */
     void GetDataObjects(XDataPtrVec& data_vec);
 
-private:
-	int ReadHeader();
-	int ReadData(reader::xreader& reader);
+  private:
+    int ReadHeader();
+    int ReadData(reader::xreader& reader);
 };
 
-}}
+} // namespace xfile
+} // namespace forg
 
 #endif //_XFILE_H_

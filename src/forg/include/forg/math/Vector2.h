@@ -25,7 +25,10 @@
 
 #include "forg/base.h"
 
-namespace forg { namespace math {
+namespace forg
+{
+namespace math
+{
 
 struct FORG_API Vector2
 {
@@ -34,18 +37,17 @@ struct FORG_API Vector2
     //////////////////////////////////////////////////////////////////////////
     // Constructors
     //////////////////////////////////////////////////////////////////////////
-    Vector2(float x = 0.0f, float y = 0.0f)
-        : X(x), Y(y)
-    {}
+    Vector2(float x = 0.0f, float y = 0.0f) : X(x), Y(y) {}
 
     ////////////////////////////////////////////////////////////////////////////////
     // Attributes
     ////////////////////////////////////////////////////////////////////////////////
 
-	float X;
-	float Y;
+    float X;
+    float Y;
 };
 
-}}
+} // namespace math
+} // namespace forg
 
 #endif // _FORG_MATH_VECTOR2_H_

@@ -29,35 +29,30 @@
 namespace forg
 {
 
-	/// IIndexBuffer interface
-	/**
-	* IIndexBuffer
-	* @author eses
-	* @version 1.0
-	* @date 07-2005
-	* @todo
-	* @bug
-	* @warning
-	*/
-	class IIndexBuffer : public core::RefCounter
-	{
-	public:
-		virtual ~IIndexBuffer(){}
+/// IIndexBuffer interface
+/**
+ * IIndexBuffer
+ * @author eses
+ * @version 1.0
+ * @date 07-2005
+ * @todo
+ * @bug
+ * @warning
+ */
+class IIndexBuffer : public core::RefCounter
+{
+  public:
+    virtual ~IIndexBuffer() {}
 
-	public:
-		virtual int Lock(
-			uint offsetToLock,
-			uint sizeToLock,
-			void ** ppbData,
-			uint flags
-			) = 0;
+  public:
+    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
+                     uint flags) = 0;
 
-		virtual int Unlock() = 0;
-	};
+    virtual int Unlock() = 0;
+};
 
-	typedef IIndexBuffer* LPINDEXBUFFER;
+typedef IIndexBuffer* LPINDEXBUFFER;
 
-}
+} // namespace forg
 
 #endif //_FORG_IINDEXBUFFER_H_
-

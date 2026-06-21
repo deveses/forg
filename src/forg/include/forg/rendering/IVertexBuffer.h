@@ -29,32 +29,28 @@ namespace forg
 {
 /// IVertexBuffer interface
 /**
-* IVertexBuffer
-* @author eses
-* @version 1.0
-* @date 07-2005
-* @todo
-* @bug
-* @warning
-*/
+ * IVertexBuffer
+ * @author eses
+ * @version 1.0
+ * @date 07-2005
+ * @todo
+ * @bug
+ * @warning
+ */
 class IVertexBuffer : public core::RefCounter
 {
-public:
-	virtual ~IVertexBuffer(){}
+  public:
+    virtual ~IVertexBuffer() {}
 
-public:
-	virtual int Lock(
-		uint offsetToLock,
-		uint sizeToLock,
-		void ** ppbData,
-		uint flags
-		) = 0;
+  public:
+    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
+                     uint flags) = 0;
 
-	virtual int Unlock() = 0;
+    virtual int Unlock() = 0;
 };
 
 typedef IVertexBuffer* LPVERTEXBUFFER;
 
-}
+} // namespace forg
 
 #endif //_FORG_IVERTEXBUFFER_H_

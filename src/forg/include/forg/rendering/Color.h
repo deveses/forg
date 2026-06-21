@@ -22,194 +22,189 @@
 #include "base.h"
 #include "math/Vector4.h"
 
-namespace forg {
-
-template <typename ColorComponentType>
-struct TColor3
+namespace forg
 {
-public:
 
-	ColorComponentType r{};
-	ColorComponentType g{};
-	ColorComponentType b{};
+template <typename ColorComponentType> struct TColor3
+{
+  public:
+    ColorComponentType r{};
+    ColorComponentType g{};
+    ColorComponentType b{};
 
-	constexpr TColor3() = default;
+    constexpr TColor3() = default;
 
-	constexpr TColor3(ColorComponentType red, ColorComponentType green, ColorComponentType blue)
-	    : r(red), g(green), b(blue)
-	{}
+    constexpr TColor3(ColorComponentType red, ColorComponentType green,
+                      ColorComponentType blue)
+        : r(red), g(green), b(blue)
+    {
+    }
 
-	    constexpr bool operator < (const TColor3& _rhs) const
+    constexpr bool operator<(const TColor3& _rhs) const
     {
         return (r < _rhs.r && g < _rhs.g && b < _rhs.b);
     }
 
-	    constexpr bool operator > (const TColor3& _rhs) const
+    constexpr bool operator>(const TColor3& _rhs) const
     {
         return (r > _rhs.r && g > _rhs.g && b > _rhs.b);
     }
 
-	    constexpr TColor3 operator * (const ColorComponentType& _value) const
+    constexpr TColor3 operator*(const ColorComponentType& _value) const
     {
-        return TColor3(r*_value, g*_value, b*_value);
+        return TColor3(r * _value, g * _value, b * _value);
     }
 
-	    constexpr TColor3 operator / (const ColorComponentType& _value) const
+    constexpr TColor3 operator/(const ColorComponentType& _value) const
     {
-        return TColor3(r/_value, g/_value, b/_value);
+        return TColor3(r / _value, g / _value, b / _value);
     }
 
-	    constexpr TColor3 operator + (const TColor3& _rhs) const
+    constexpr TColor3 operator+(const TColor3& _rhs) const
     {
-        return TColor3(r+_rhs.r, g+_rhs.g, b+_rhs.b);
+        return TColor3(r + _rhs.r, g + _rhs.g, b + _rhs.b);
     }
 
-	    constexpr void operator = (const ColorComponentType& _value)
+    constexpr void operator=(const ColorComponentType& _value)
     {
         r = g = b = _value;
     }
 };
 
-template <typename ColorComponentType>
-struct TColor4
+template <typename ColorComponentType> struct TColor4
 {
-public:
+  public:
+    ColorComponentType r{};
+    ColorComponentType g{};
+    ColorComponentType b{};
+    ColorComponentType a{};
 
-	ColorComponentType r{};
-	ColorComponentType g{};
-	ColorComponentType b{};
-	ColorComponentType a{};
+    constexpr TColor4() = default;
 
-	constexpr TColor4() = default;
+    constexpr TColor4(ColorComponentType red, ColorComponentType green,
+                      ColorComponentType blue, ColorComponentType alpha)
+        : r(red), g(green), b(blue), a(alpha)
+    {
+    }
 
-	constexpr TColor4(ColorComponentType red, ColorComponentType green, ColorComponentType blue, ColorComponentType alpha)
-	    : r(red), g(green), b(blue), a(alpha)
-	{}
-
-	    constexpr bool operator < (const TColor4& _rhs) const
+    constexpr bool operator<(const TColor4& _rhs) const
     {
         return (r < _rhs.r && g < _rhs.g && b < _rhs.b && a < _rhs.a);
     }
 
-	    constexpr bool operator > (const TColor4& _rhs) const
+    constexpr bool operator>(const TColor4& _rhs) const
     {
         return (r > _rhs.r && g > _rhs.g && b > _rhs.b && a > _rhs.a);
     }
 
-	    constexpr TColor4 operator * (const ColorComponentType& _value) const
+    constexpr TColor4 operator*(const ColorComponentType& _value) const
     {
-        return TColor4(r*_value, g*_value, b*_value, a*_value);
+        return TColor4(r * _value, g * _value, b * _value, a * _value);
     }
 
-	    constexpr TColor4 operator / (const ColorComponentType& _value) const
+    constexpr TColor4 operator/(const ColorComponentType& _value) const
     {
-        return TColor4(r/_value, g/_value, b/_value, a/_value);
+        return TColor4(r / _value, g / _value, b / _value, a / _value);
     }
 
-	    constexpr TColor4 operator + (const TColor4& _rhs) const
+    constexpr TColor4 operator+(const TColor4& _rhs) const
     {
-        return TColor4(r+_rhs.r, g+_rhs.g, b+_rhs.b, a+_rhs.a);
+        return TColor4(r + _rhs.r, g + _rhs.g, b + _rhs.b, a + _rhs.a);
     }
 
-	    constexpr void operator = (const ColorComponentType& _value)
+    constexpr void operator=(const ColorComponentType& _value)
     {
         r = g = b = a = _value;
     }
 };
 
-	using Color3f = TColor3<float>;
-	using Color4f = TColor4<float>;
+using Color3f = TColor3<float>;
+using Color4f = TColor4<float>;
 
-	using Color3b = TColor3<byte>;
-	using Color4b = TColor4<byte>;
+using Color3b = TColor3<byte>;
+using Color4b = TColor4<byte>;
 
 struct FORG_API Color
 {
-	float r;
-	float g;
-	float b;
-	float a;
+    float r;
+    float g;
+    float b;
+    float a;
 
+    //////////////////////////////////////////////////////////////////////////
+    // Construction
+    //////////////////////////////////////////////////////////////////////////
+    Color(uint argb);
+    Color(const Color& c) = default;
+    constexpr Color() noexcept : r(1.0f), g(1.0f), b(1.0f), a(1.0f) {}
 
-	//////////////////////////////////////////////////////////////////////////
-	// Construction
-	//////////////////////////////////////////////////////////////////////////
-	Color(uint argb);
-	Color(const Color& c) = default;
-	constexpr Color() noexcept
-	: r(1.0f), g(1.0f), b(1.0f), a(1.0f)
-    {}
-
-	    constexpr Color(float red, float green, float blue, float alpha) noexcept
-	: r(red), g(green), b(blue), a(alpha)
-    {}
-
-	constexpr Color(float red, float green, float blue) noexcept
-	: r(red), g(green), b(blue), a(1.0f)
-    {}
-
-	    constexpr Color(const math::Vector4& v) noexcept
-    : r(v.X), g(v.Y), b(v.Z), a(v.W)
+    constexpr Color(float red, float green, float blue, float alpha) noexcept
+        : r(red), g(green), b(blue), a(alpha)
     {
     }
-      
- 
- 	//D3DXCOLOR( DWORD argb );
-	//D3DXCOLOR( CONST FLOAT * );
-	//D3DXCOLOR( CONST D3DXFLOAT16 * );
-	//D3DXCOLOR( CONST D3DCOLORVALUE& );
 
-	//// casting
-	operator uint () const;
-
-    operator math::Vector4 () const
+    constexpr Color(float red, float green, float blue) noexcept
+        : r(red), g(green), b(blue), a(1.0f)
     {
-        return math::Vector4(r, g, b, a);
     }
 
-	Color& operator = (uint argb);
-	Color& operator = (const Color& c) = default;
+    constexpr Color(const math::Vector4& v) noexcept
+        : r(v.X), g(v.Y), b(v.Z), a(v.W)
+    {
+    }
 
-  
-	    constexpr void BlendTo(const Color& arg) noexcept
+    // D3DXCOLOR( DWORD argb );
+    // D3DXCOLOR( CONST FLOAT * );
+    // D3DXCOLOR( CONST D3DXFLOAT16 * );
+    // D3DXCOLOR( CONST D3DCOLORVALUE& );
+
+    //// casting
+    operator uint() const;
+
+    operator math::Vector4() const { return math::Vector4(r, g, b, a); }
+
+    Color& operator=(uint argb);
+    Color& operator=(const Color& c) = default;
+
+    constexpr void BlendTo(const Color& arg) noexcept
     {
         r = a * r + (1.0f - a) * arg.r;
         g = a * g + (1.0f - a) * arg.g;
-        b = a * b + (1.0f - a) * arg.b;     
-        a = arg.a; 
+        b = a * b + (1.0f - a) * arg.b;
+        a = arg.a;
     }
-      
-   	//operator FLOAT* ();
-	//operator CONST FLOAT* () const;
 
-	//operator D3DCOLORVALUE* ();
-	//operator CONST D3DCOLORVALUE* () const;
+    // operator FLOAT* ();
+    // operator CONST FLOAT* () const;
 
-	//operator D3DCOLORVALUE& ();
-	//operator CONST D3DCOLORVALUE& () const;
+    // operator D3DCOLORVALUE* ();
+    // operator CONST D3DCOLORVALUE* () const;
 
-	//// assignment operators
-	//D3DXCOLOR& operator += ( CONST D3DXCOLOR& );
-	//D3DXCOLOR& operator -= ( CONST D3DXCOLOR& );
-	//D3DXCOLOR& operator *= ( FLOAT );
-	//D3DXCOLOR& operator /= ( FLOAT );
+    // operator D3DCOLORVALUE& ();
+    // operator CONST D3DCOLORVALUE& () const;
 
-	//// unary operators
-	//D3DXCOLOR operator + () const;
-	//D3DXCOLOR operator - () const;
+    //// assignment operators
+    // D3DXCOLOR& operator += ( CONST D3DXCOLOR& );
+    // D3DXCOLOR& operator -= ( CONST D3DXCOLOR& );
+    // D3DXCOLOR& operator *= ( FLOAT );
+    // D3DXCOLOR& operator /= ( FLOAT );
 
-	//// binary operators
-	//D3DXCOLOR operator + ( CONST D3DXCOLOR& ) const;
-	//D3DXCOLOR operator - ( CONST D3DXCOLOR& ) const;
-	//D3DXCOLOR operator * ( FLOAT ) const;
-	//D3DXCOLOR operator / ( FLOAT ) const;
+    //// unary operators
+    // D3DXCOLOR operator + () const;
+    // D3DXCOLOR operator - () const;
 
-	//friend D3DXCOLOR operator * ( FLOAT, CONST D3DXCOLOR& );
+    //// binary operators
+    // D3DXCOLOR operator + ( CONST D3DXCOLOR& ) const;
+    // D3DXCOLOR operator - ( CONST D3DXCOLOR& ) const;
+    // D3DXCOLOR operator * ( FLOAT ) const;
+    // D3DXCOLOR operator / ( FLOAT ) const;
 
-	//BOOL operator == ( CONST D3DXCOLOR& ) const;
-	//BOOL operator != ( CONST D3DXCOLOR& ) const;
+    // friend D3DXCOLOR operator * ( FLOAT, CONST D3DXCOLOR& );
+
+    // BOOL operator == ( CONST D3DXCOLOR& ) const;
+    // BOOL operator != ( CONST D3DXCOLOR& ) const;
 };
 
-}
+} // namespace forg
 
 #endif // FORG_RENDERING_COLOR_H

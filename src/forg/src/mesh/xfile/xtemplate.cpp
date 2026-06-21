@@ -2,42 +2,41 @@
 
 #include "mesh/xfile/xtemplate.h"
 
-namespace forg { namespace xfile {
+namespace forg
+{
+namespace xfile
+{
 
 //////////////////////////////////////////////////////////////////////////
 // TEMPLATE
 //////////////////////////////////////////////////////////////////////////
 
-//int xtemplate::IsStandardType()
+// int xtemplate::IsStandardType()
 //{
-//    for (int i=0; i<XTEMPLATE_TYPES_COUNT; i++)
-//    {
-//        if (guid.Data1 == xtemplate_standard_guids[i].Data1 &&
-//            guid.Data2 == xtemplate_standard_guids[i].Data2 &&
-//            guid.Data3 == xtemplate_standard_guids[i].Data3)
-//        {
-//            bool data4eq = true;
-//            for (int j=0; j<8 && data4eq; j++)
-//            {
-//                data4eq = (guid.Data4[j] == xtemplate_standard_guids[i].Data4[j]);
-//            }
+//     for (int i=0; i<XTEMPLATE_TYPES_COUNT; i++)
+//     {
+//         if (guid.Data1 == xtemplate_standard_guids[i].Data1 &&
+//             guid.Data2 == xtemplate_standard_guids[i].Data2 &&
+//             guid.Data3 == xtemplate_standard_guids[i].Data3)
+//         {
+//             bool data4eq = true;
+//             for (int j=0; j<8 && data4eq; j++)
+//             {
+//                 data4eq = (guid.Data4[j] ==
+//                 xtemplate_standard_guids[i].Data4[j]);
+//             }
 //
-//            if (data4eq)
-//                return i;
-//        }
-//    }
+//             if (data4eq)
+//                 return i;
+//         }
+//     }
 //
-//    return XTEMPLATE_TYPE_UNKNOWN;
-//}
+//     return XTEMPLATE_TYPE_UNKNOWN;
+// }
 
+XTemplate::XTemplate() : m_bOpen(false) {}
 
-XTemplate::XTemplate()
-: m_bOpen(false)
-{
-}
-
-XTemplate::XTemplate(const char* name, xguid guid, bool _open)
-: m_bOpen(_open)
+XTemplate::XTemplate(const char* name, xguid guid, bool _open) : m_bOpen(_open)
 {
     m_sName = name;
     m_guid = guid;
@@ -46,11 +45,11 @@ XTemplate::XTemplate(const char* name, xguid guid, bool _open)
 XTemplate::~XTemplate()
 {
 
-    for (XTemplateMemberVectorI iter = m_members.begin(); iter != m_members.end(); ++iter)
+    for (XTemplateMemberVectorI iter = m_members.begin();
+         iter != m_members.end(); ++iter)
     {
         delete *iter;
     }
-
 }
 
 void XTemplate::AddMember(XTemplateMember* member)
@@ -66,10 +65,7 @@ void XTemplate::AddOption(const xstring& name, const xguid& guid)
     m_options.push_back(opt);
 }
 
-int XTemplate::Load(xreader& /*treader*/)
-{
-    return 0;
-}
+int XTemplate::Load(xreader& /*treader*/) { return 0; }
 
 const XTemplateMember* XTemplate::GetMember(uint idx) const
 {
@@ -83,9 +79,10 @@ const XTemplateOption& XTemplate::GetOption(uint idx) const
 
 uint XTemplate::GetMemberIndex(const xstring& name) const
 {
-    for (XTemplateMemberVectorCI iter = m_members.begin(); iter != m_members.end(); ++iter)
+    for (XTemplateMemberVectorCI iter = m_members.begin();
+         iter != m_members.end(); ++iter)
     {
-        if ( (*iter)->GetName() == name )
+        if ((*iter)->GetName() == name)
         {
             return (uint)(iter - m_members.begin());
         }
@@ -96,9 +93,10 @@ uint XTemplate::GetMemberIndex(const xstring& name) const
 
 const XTemplateMember* XTemplate::FindMemberByName(const xstring& name) const
 {
-    for (XTemplateMemberVectorCI iter = m_members.begin(); iter != m_members.end(); ++iter)
+    for (XTemplateMemberVectorCI iter = m_members.begin();
+         iter != m_members.end(); ++iter)
     {
-        if ( (*iter)->GetName() == name )
+        if ((*iter)->GetName() == name)
         {
             return *iter;
         }
@@ -107,21 +105,17 @@ const XTemplateMember* XTemplate::FindMemberByName(const xstring& name) const
     return NULL;
 }
 
-
-void XTemplate::SetOpenMode(bool mode)
-{
-    m_bOpen = mode;
-}
-
+void XTemplate::SetOpenMode(bool mode) { m_bOpen = mode; }
 
 xstring XTemplate::ToString() const
 {
     std::stringstream sstream;
 
-    sstream << "template " << m_sName << " {\n\t<" << m_guid.ToString() << ">\n";
+    sstream << "template " << m_sName << " {\n\t<" << m_guid.ToString()
+            << ">\n";
     sstream << "\t// members count: " << m_members.size() << "\n";
 
-    for (uint j=0; j<m_members.size(); j++)
+    for (uint j = 0; j < m_members.size(); j++)
     {
         const XTemplateMember* mem = m_members[j];
 
@@ -140,5 +134,5 @@ xstring XTemplate::ToString() const
     return sstream.str();
 }
 
-
-}}
+} // namespace xfile
+} // namespace forg

@@ -3,12 +3,16 @@
 
 #include "control/commands/Commands.h"
 
-namespace forg { namespace control {
+namespace forg
+{
+namespace control
+{
 
 using forg::net::Command;
 using forg::net::TryGetFloat;
 
-namespace {
+namespace
+{
 
 std::string buildState(SceneControlContext& ctx)
 {
@@ -24,14 +28,17 @@ std::string buildState(SceneControlContext& ctx)
     std::ostringstream o;
     o << "{\"ok\":true,"
       << "\"camera\":{"
-      <<   "\"position\":[" << p.X << "," << p.Y << "," << p.Z << "],"
-      <<   "\"target\":["   << t.X << "," << t.Y << "," << t.Z << "],"
-      <<   "\"fov\":" << ctx.camera->get_FOV() << "},"
+      << "\"position\":[" << p.X << "," << p.Y << "," << p.Z << "],"
+      << "\"target\":[" << t.X << "," << t.Y << "," << t.Z << "],"
+      << "\"fov\":" << ctx.camera->get_FOV() << "},"
       << "\"light\":{"
-      <<   "\"position\":[" << l.Position.X << "," << l.Position.Y << "," << l.Position.Z << "],"
-      <<   "\"diffuse\":["  << l.Diffuse.r  << "," << l.Diffuse.g  << "," << l.Diffuse.b  << "]},"
+      << "\"position\":[" << l.Position.X << "," << l.Position.Y << ","
+      << l.Position.Z << "],"
+      << "\"diffuse\":[" << l.Diffuse.r << "," << l.Diffuse.g << ","
+      << l.Diffuse.b << "]},"
       << "\"clearColor\":[" << c.r << "," << c.g << "," << c.b << "],"
-      << "\"mesh\":{\"vertices\":" << vertices << ",\"faces\":" << faces << "}}";
+      << "\"mesh\":{\"vertices\":" << vertices << ",\"faces\":" << faces
+      << "}}";
     return o.str();
 }
 
@@ -44,13 +51,20 @@ std::string DispatchScene(SceneControlContext& ctx, const Command& cmd)
     if (v == "light.set")
     {
         float value;
-        if (TryGetFloat(cmd, "px", value)) ctx.light->Position.X = value;
-        if (TryGetFloat(cmd, "py", value)) ctx.light->Position.Y = value;
-        if (TryGetFloat(cmd, "pz", value)) ctx.light->Position.Z = value;
-        if (TryGetFloat(cmd, "dr", value)) ctx.light->Diffuse.r = value;
-        if (TryGetFloat(cmd, "dg", value)) ctx.light->Diffuse.g = value;
-        if (TryGetFloat(cmd, "db", value)) ctx.light->Diffuse.b = value;
-        if (TryGetFloat(cmd, "range", value)) ctx.light->Range = value;
+        if (TryGetFloat(cmd, "px", value))
+            ctx.light->Position.X = value;
+        if (TryGetFloat(cmd, "py", value))
+            ctx.light->Position.Y = value;
+        if (TryGetFloat(cmd, "pz", value))
+            ctx.light->Position.Z = value;
+        if (TryGetFloat(cmd, "dr", value))
+            ctx.light->Diffuse.r = value;
+        if (TryGetFloat(cmd, "dg", value))
+            ctx.light->Diffuse.g = value;
+        if (TryGetFloat(cmd, "db", value))
+            ctx.light->Diffuse.b = value;
+        if (TryGetFloat(cmd, "range", value))
+            ctx.light->Range = value;
         return ok();
     }
     if (v == "clear.color")
@@ -70,4 +84,5 @@ std::string DispatchScene(SceneControlContext& ctx, const Command& cmd)
     return fail("unknown");
 }
 
-}}
+} // namespace control
+} // namespace forg

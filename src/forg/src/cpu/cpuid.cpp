@@ -1,28 +1,32 @@
-#include <forg_pch.h>
 #include <cpu/cpuid.h>
 #include <debug/dbg.h>
+#include <forg_pch.h>
 
 #include <intrin.h>
 
-namespace forg { namespace cpu {
-
-uint32 invoke_cpuid(int param, uint32& _eax, uint32& _ebx, uint32& _ecx, uint32& _edx)
+namespace forg
 {
-	int cpui[4];
-	__cpuid(cpui, param);
+namespace cpu
+{
+
+uint32 invoke_cpuid(int param, uint32& _eax, uint32& _ebx, uint32& _ecx,
+                    uint32& _edx)
+{
+    int cpui[4];
+    __cpuid(cpui, param);
 
     _eax = cpui[0];
-	_ebx = cpui[1];
-	_ecx = cpui[2];
-	_edx = cpui[3];
+    _ebx = cpui[1];
+    _ecx = cpui[2];
+    _edx = cpui[3];
 
-	return cpui[0];
+    return cpui[0];
 }
 
 cpuid::cpuid()
 {
     uint32 eax, ebx, ecx, edx;
- 
+
     // vendor id
     m_vendorid[0] = 0;
     uint32* t = (uint32*)m_vendorid;
@@ -32,10 +36,12 @@ cpuid::cpuid()
 
     // signature
     eax = invoke_cpuid(1, eax, ebx, ecx, edx);
-    
+
     m_proc_sig.value = eax;
-    DBG_MSG("[CPUID] signature: %x:%x:%x:%x:%x:%x\n", m_proc_sig.sig.SteppingID, m_proc_sig.sig.ModelNumber, m_proc_sig.sig.FamilyCode, m_proc_sig.sig.Type,
-        m_proc_sig.sig.ExtendedModel, m_proc_sig.sig.ExtendedFamily);
+    DBG_MSG("[CPUID] signature: %x:%x:%x:%x:%x:%x\n", m_proc_sig.sig.SteppingID,
+            m_proc_sig.sig.ModelNumber, m_proc_sig.sig.FamilyCode,
+            m_proc_sig.sig.Type, m_proc_sig.sig.ExtendedModel,
+            m_proc_sig.sig.ExtendedFamily);
 
     // feature flags
     m_feat_flags1.value = ecx;
@@ -44,7 +50,7 @@ cpuid::cpuid()
 
     // extended functions
     eax = invoke_cpuid(0x80000000, eax, ebx, ecx, edx);
-    eax ^= 0x80000000;  
+    eax ^= 0x80000000;
 
     m_brand[0] = 0;
     if (eax >= 4)
@@ -60,4 +66,5 @@ cpuid::cpuid()
     }
 }
 
-}}
+} // namespace cpu
+} // namespace forg

@@ -24,28 +24,28 @@
 #endif
 
 #include "base.h"
-#include "rendering/reference/SWRenderDevice.h"
-#include "rendering/VertexDeclaration.h"
-#include "math/Vector4.h"
 #include "math/Vector2.h"
+#include "math/Vector4.h"
+#include "rendering/VertexDeclaration.h"
+#include "rendering/reference/SWRenderDevice.h"
 
-namespace forg {
+namespace forg
+{
 
-class SWRenderDevice
-	: public forg::rendering::reference::SWRenderDevice
+class SWRenderDevice : public forg::rendering::reference::SWRenderDevice
 {
     typedef forg::rendering::reference::SWRenderDevice super;
 
-public:
+  public:
     SWRenderDevice(HWIN handle);
-	virtual ~SWRenderDevice();
+    virtual ~SWRenderDevice();
 
     // IRenderDevice implementation
-public:
+  public:
     virtual int Present();
     virtual int Reset();
 };
 
-}
+} // namespace forg
 
 #endif

@@ -1,10 +1,11 @@
-#include "forg_pch.h"
-#include "core/auto_ptr.hpp"
 #include "rendering/Sprite.h"
-#include "rendering/Vertex.h"
+#include "core/auto_ptr.hpp"
+#include "forg_pch.h"
 #include "math/Math.h"
+#include "rendering/Vertex.h"
 
-namespace forg {
+namespace forg
+{
 
 Sprite* Sprite::CreateSprite(IRenderDevice* device)
 {
@@ -37,7 +38,8 @@ int Sprite::SetTransform(const Matrix4* transform)
     {
         // TODO: could be some memcopy
         m_transform = *transform;
-    } else
+    }
+    else
     {
         m_transform = Matrix4::Identity;
     }
@@ -72,20 +74,13 @@ int Sprite::End()
     return FORG_OK;
 }
 
-int Sprite::Flush()
-{
-    return FORG_OK;
-}
+int Sprite::Flush() { return FORG_OK; }
 
-
-int Sprite::Draw(ITexture* srcTexture,
-                  const Rectangle* srcRectangle,
-                  const Vector3* center,
-                  const Vector3* position,
-                  Color4b color)
+int Sprite::Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
+                 const Vector3* center, const Vector3* position, Color4b color)
 {
-	if (!srcTexture)
-		return FORG_INVALID_CALL;
+    if (!srcTexture)
+        return FORG_INVALID_CALL;
 
     uint tex_width = 0;
     uint tex_height = 0;
@@ -129,8 +124,7 @@ int Sprite::Draw(ITexture* srcTexture,
         {0.0f, absh, 0.0f, 0xffffffff, u0, v0}  // top-left
     };
     */
-    forg::geometry::PositionColoredTextured points[4] =
-    {
+    forg::geometry::PositionColoredTextured points[4] = {
         {0.0f, 0.0f, 0.0f, 0xffffffff, u0, v0}, // bottom-left
         {absw, 0.0f, 0.0f, 0xffffffff, u1, v0}, // bottom-right
         {absw, absh, 0.0f, 0xffffffff, u1, v1}, // top-right
@@ -138,15 +132,14 @@ int Sprite::Draw(ITexture* srcTexture,
     };
 
     const short indices[4] = {3, 2, 0, 1};
-    const VertexDeclaration decl(forg::geometry::PositionColoredTextured::Declaration);
+    const VertexDeclaration decl(
+        forg::geometry::PositionColoredTextured::Declaration);
 
     Matrix4 tm = m_transform;
 
-    float screen_x = 0.0f;  // left by default
+    float screen_x = 0.0f; // left by default
     float screen_y = 0.0f; //(float)sprite_height;
     float screen_z = 0.0f;
-
-
 
     if (center)
     {
@@ -160,7 +153,8 @@ int Sprite::Draw(ITexture* srcTexture,
 
         Vector3 tm_scale;
         m_transform.Decompose(&tm_scale, 0, 0);
-        Matrix4::Translation(trans_tm, center->X*tm_scale.X, center->Y*tm_scale.Y, center->Z*tm_scale.Z);
+        Matrix4::Translation(trans_tm, center->X * tm_scale.X,
+                             center->Y * tm_scale.Y, center->Z * tm_scale.Z);
         tm.Multiply(trans_tm);
     }
 
@@ -205,7 +199,8 @@ int Sprite::Draw(ITexture* srcTexture,
             tm.SetRow(right, 0);
             tm.SetRow(up, 1);
             tm.SetRow(look, 2);
-        } else
+        }
+        else
         {
             tm.SetRow(right, 0);
             tm.SetRow(up, 1);
@@ -218,12 +213,15 @@ int Sprite::Draw(ITexture* srcTexture,
     if (m_Flags & SpriteFlags::ObjectSpace)
     {
         m_device->SetTransform(TransformType_World, tm);
-    } else
+    }
+    else
     {
         Matrix4 proj_tm;
-        Matrix4::OrthoOffCenterRH(proj_tm, 0, vp.Width, vp.Height, 0, 0.0f, 100.0f);
+        Matrix4::OrthoOffCenterRH(proj_tm, 0, vp.Width, vp.Height, 0, 0.0f,
+                                  100.0f);
 
-        m_device->SetTransform(TransformType_Projection, proj_tm /*Matrix4::Identity*/);
+        m_device->SetTransform(TransformType_Projection,
+                               proj_tm /*Matrix4::Identity*/);
         m_device->SetTransform(TransformType_View, Matrix4::Identity);
         m_device->SetTransform(TransformType_World, tm);
     }
@@ -232,9 +230,11 @@ int Sprite::Draw(ITexture* srcTexture,
     m_device->SetIndices(0);
     m_device->SetTexture(0, srcTexture);
     m_device->SetVertexDeclaration(&decl);
-    m_device->DrawIndexedUserPrimitives(PrimitiveType_TriangleStrip, 0, 4, 2, indices, true, points, forg::geometry::PositionColoredTextured::StrideSize);
+    m_device->DrawIndexedUserPrimitives(
+        PrimitiveType_TriangleStrip, 0, 4, 2, indices, true, points,
+        forg::geometry::PositionColoredTextured::StrideSize);
 
     return FORG_OK;
 }
 
-}
+} // namespace forg

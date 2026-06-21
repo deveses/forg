@@ -3,19 +3,22 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-namespace {
+namespace
+{
 
 class TestRefCounter : public forg::core::RefCounter
 {
-public:
-    explicit TestRefCounter(bool* destroyed = nullptr) : destroyed_(destroyed) {}
+  public:
+    explicit TestRefCounter(bool* destroyed = nullptr) : destroyed_(destroyed)
+    {
+    }
     ~TestRefCounter() override
     {
         if (destroyed_ != nullptr)
             *destroyed_ = true;
     }
 
-private:
+  private:
     bool* destroyed_;
 };
 
@@ -34,7 +37,8 @@ TEST_CASE("RefPtr releases adopted resources", "[core][refcount]")
 {
     bool destroyed = false;
     {
-        forg::core::RefPtr<TestRefCounter> pointer(new TestRefCounter(&destroyed));
+        forg::core::RefPtr<TestRefCounter> pointer(
+            new TestRefCounter(&destroyed));
         REQUIRE(pointer);
     }
     REQUIRE(destroyed);

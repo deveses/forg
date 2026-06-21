@@ -23,64 +23,68 @@
 #ifndef XFILE_XLEXER_INCLUDED
 #define XFILE_XLEXER_INCLUDED
 
-#include <base.h>
 #include "mesh/xfile/xdefs.h"
+#include <base.h>
 
+#include <list>
 #include <string>
 #include <vector>
-#include <list>
 
-namespace forg { namespace xfile {
+namespace forg
+{
+namespace xfile
+{
 
-    struct ScannerToken
+struct ScannerToken
+{
+    // change EToken::TYPE to int?
+    EToken::TYPE token;
+
+    std::string lexem;
+
+    int line;
+    int col;
+};
+
+class XLexer
+{
+    // Nested
+  private:
+    struct LexerState
     {
-        // change EToken::TYPE to int?
-        EToken::TYPE token;
+        std::ifstream* yyinput;
+        int yyline;
+        int yycol;
+        char yychar;
+        std::string yylexem;
 
-        std::string lexem;
-
-        int line;
-        int col;
-    };
-
-    class XLexer
-    {
-        // Nested
-        private:
-        struct LexerState
+        void Reset()
         {
-            std::ifstream* yyinput;
-            int yyline;
-            int yycol;
-            char yychar;
-            std::string yylexem;
-
-            void Reset()
-            {
-                yyline = yycol = 0;
-                yychar = 0;
-                yyinput = 0;
-            }
-        };
-
-        public:
-        XLexer();
-
-        // Attributes
-        private:
-        LexerState m_state;
-        bool m_initialized;
-
-        // Public methods
-        public:
-        int GetToken( ScannerToken& stok );
-
-        void SetInput( std::ifstream* _input ) { m_state.yyinput = _input; };
-
-        private:
-        void Initialize();
+            yyline = yycol = 0;
+            yychar = 0;
+            yyinput = 0;
+        }
     };
 
-}}
+  public:
+    XLexer();
+
+    // Attributes
+  private:
+    LexerState m_state;
+    bool m_initialized;
+
+    // Public methods
+  public:
+    int GetToken(ScannerToken& stok);
+
+    void SetInput(std::ifstream* _input) { m_state.yyinput = _input; };
+
+  private:
+    void Initialize();
+};
+
+} // namespace xfile
+} // namespace forg
 
 #endif

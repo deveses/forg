@@ -2,10 +2,10 @@
 
 #include "forg/net/HttpRequest.h"
 
-using forg::net::ParseRequestLine;
-using forg::net::ParseQuery;
-using forg::net::CommandFromRequest;
 using forg::net::Command;
+using forg::net::CommandFromRequest;
+using forg::net::ParseQuery;
+using forg::net::ParseRequestLine;
 
 TEST_CASE("ParseRequestLine splits method, path and query", "[net][http]")
 {
@@ -47,7 +47,8 @@ TEST_CASE("ParseQuery decodes key/value pairs", "[net][http]")
 
 TEST_CASE("ParseQuery percent- and plus-decodes values", "[net][http]")
 {
-    std::map<std::string, std::string> q = ParseQuery("path=a%2Fb.ply&name=hello+world");
+    std::map<std::string, std::string> q =
+        ParseQuery("path=a%2Fb.ply&name=hello+world");
 
     REQUIRE(q["path"] == "a/b.ply");
     REQUIRE(q["name"] == "hello world");
@@ -77,7 +78,8 @@ TEST_CASE("CommandFromRequest handles a single-segment path", "[net][http]")
 
 TEST_CASE("Command param helpers read typed values", "[net][command]")
 {
-    Command cmd = CommandFromRequest("/mesh/box", "w=1.5&slices=24&path=cube.ply");
+    Command cmd =
+        CommandFromRequest("/mesh/box", "w=1.5&slices=24&path=cube.ply");
 
     float w = 0.0f;
     REQUIRE(forg::net::TryGetFloat(cmd, "w", w));

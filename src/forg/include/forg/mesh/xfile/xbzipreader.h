@@ -28,43 +28,50 @@
 #include "mesh/xfile/xbinreader.h"
 
 #define CAB_BLOCKMAX (32768)
-#define CAB_INPUTMAX (CAB_BLOCKMAX+6144)
+#define CAB_INPUTMAX (CAB_BLOCKMAX + 6144)
 
-namespace forg { namespace xfile { namespace reader {
+namespace forg
+{
+namespace xfile
+{
+namespace reader
+{
 
-	class xbzipreader : public xbinreader {
+class xbzipreader : public xbinreader
+{
 
-    public:
-		xbzipreader(std::ifstream& input, bool doubleFloat);
-        virtual ~xbzipreader();
+  public:
+    xbzipreader(std::ifstream& input, bool doubleFloat);
+    virtual ~xbzipreader();
 
-    private:
-        unsigned int m_org_size;
-        void* m_zstream;
+  private:
+    unsigned int m_org_size;
+    void* m_zstream;
 
-        char m_buf_in[CAB_INPUTMAX];    ///< buffer with compressed data
-        char m_buf_out[CAB_BLOCKMAX];   ///< buffer with uncompressed data
-        char m_dict[CAB_INPUTMAX];      ///< previous uncompressed data
-        char* m_unpacked;
+    char m_buf_in[CAB_INPUTMAX];  ///< buffer with compressed data
+    char m_buf_out[CAB_BLOCKMAX]; ///< buffer with uncompressed data
+    char m_dict[CAB_INPUTMAX];    ///< previous uncompressed data
+    char* m_unpacked;
 
-        unsigned int m_data_size;       ///< compressed size
-        unsigned int m_block_size;      ///< uncompressed size
+    unsigned int m_data_size;  ///< compressed size
+    unsigned int m_block_size; ///< uncompressed size
 
-        unsigned int m_num_avail;       ///< number of bytes available from block of uncompressed data
+    unsigned int m_num_avail; ///< number of bytes available from block of
+                              ///< uncompressed data
 
-    protected:
-        /// returns true if read failed
-        bool read_data(char* buffer, unsigned int count);
+  protected:
+    /// returns true if read failed
+    bool read_data(char* buffer, unsigned int count);
 
-        bool read_next_block();
+    bool read_next_block();
 
-        bool unpack_data();
-	};
+    bool unpack_data();
+};
 
-
-}}}
+} // namespace reader
+} // namespace xfile
+} // namespace forg
 
 #endif
 
 #endif // XFILE_XBZIPREADER_INCLUDED
-

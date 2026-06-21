@@ -24,47 +24,47 @@
 #endif
 
 #include "base.h"
-#include "rendering/Color.h"
 #include "math/Vector3.h"
+#include "rendering/Color.h"
 
-namespace forg {
+namespace forg
+{
 
-    using namespace forg::math;
+using namespace forg::math;
 
-    /** Light properties
-    * Attenuation = 1/( att0 + att1 * d + att2 * d^2)
-    *
-    */
-    struct Light
-    {
-        ////////////////////////////////////////////////////////////////////////////////
-        // Attributes
-        ////////////////////////////////////////////////////////////////////////////////
+/** Light properties
+ * Attenuation = 1/( att0 + att1 * d + att2 * d^2)
+ *
+ */
+struct Light
+{
+    ////////////////////////////////////////////////////////////////////////////////
+    // Attributes
+    ////////////////////////////////////////////////////////////////////////////////
 
-        uint Type;
-        Color Diffuse;
-        Color Specular;
-        Color Ambient;
-        Vector3 Position;
-        Vector3 Direction;
+    uint Type;
+    Color Diffuse;
+    Color Specular;
+    Color Ambient;
+    Vector3 Position;
+    Vector3 Direction;
 
-        float Range;            ///< Distance beyond which the light has no effect.
-        float Falloff;          ///< Falloff factor (spotlight attenuation speed)
-        float Attenuation0;     ///< Constant attenuation factor
-        float Attenuation1;     ///< Linear attenuation factor
-        float Attenuation2;     ///< Quadratic attenuation factor
-        float Theta;            ///< Umbra angle of spotlight in radians (inner cone)
-        float Phi;              ///< Penumbra angle of spotlight in radians (outer cone)
+    float Range;        ///< Distance beyond which the light has no effect.
+    float Falloff;      ///< Falloff factor (spotlight attenuation speed)
+    float Attenuation0; ///< Constant attenuation factor
+    float Attenuation1; ///< Linear attenuation factor
+    float Attenuation2; ///< Quadratic attenuation factor
+    float Theta;        ///< Umbra angle of spotlight in radians (inner cone)
+    float Phi;          ///< Penumbra angle of spotlight in radians (outer cone)
 
-        //////////////////////////////////////////////////////////////////////////
-        // Operators
-        //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    // Operators
+    //////////////////////////////////////////////////////////////////////////
 
-        // casting
-        operator float* () { return (float*)this; };
-        operator const float* () const { return (const float*)this; };
-    };
-}
+    // casting
+    operator float*() { return (float*)this; };
+    operator const float*() const { return (const float*)this; };
+};
+} // namespace forg
 
 #endif //_FORG_LIGHT_H_
-

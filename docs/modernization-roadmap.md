@@ -4,6 +4,17 @@
 
 Modernize incrementally to C++20 while preserving existing source compatibility. Keep macOS and Windows first-class, retain current renderer behavior, and deliver each phase as a separately reviewable change.
 
+Detailed execution plans, current status, and acceptance gates are indexed in
+[`modernization/README.md`](modernization/README.md).
+
+## Current Progress
+
+As of 2026-06-20, Phase 1 implementation is complete locally. Warning-clean
+debug, release, no-PCH, and sanitizer builds pass on AppleClang, along with all
+75 tests, the installed-package consumer, the formatting gate, and 91
+standalone public-header checks. The configured MSVC and clang-tidy GitHub
+Actions jobs remain the final cross-platform acceptance gates.
+
 ## Implementation
 
 1. **Build and quality baseline**

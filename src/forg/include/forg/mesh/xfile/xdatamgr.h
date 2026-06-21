@@ -24,47 +24,52 @@
 #endif
 
 #include "base.h"
-#include "mesh/xfile/xreader.h"
 #include "mesh/xfile/xdata.h"
+#include "mesh/xfile/xreader.h"
 
-namespace forg { namespace xfile {
+namespace forg
+{
+namespace xfile
+{
 
-    class XTemplatesMgr;
-    class XTemplateArray;
-    class XTemplatePrimitive;
+class XTemplatesMgr;
+class XTemplateArray;
+class XTemplatePrimitive;
 
-    class XDataMgr {
-        // Nested
-    public:
-        typedef std::vector<XDataObject*> XDataObjectVector;
-        typedef XDataObjectVector::iterator XDataObjectVectorI;
+class XDataMgr
+{
+    // Nested
+  public:
+    typedef std::vector<XDataObject*> XDataObjectVector;
+    typedef XDataObjectVector::iterator XDataObjectVectorI;
 
-        // 'structors
-    public:
-        XDataMgr();
-        ~XDataMgr();
+    // 'structors
+  public:
+    XDataMgr();
+    ~XDataMgr();
 
-        // Attributes
-    private:
-        XDataObjectVector m_data;
+    // Attributes
+  private:
+    XDataObjectVector m_data;
 
-        // Public Methods
-    public:
-        int ReadData(xreader& treader, XTemplatesMgr& tmpl_mgr);
-        void PrintInfo() const;
-        uint GetDataObjectsCount() const;
-        const XDataObject* GetDataObject(uint nIndex) const;
+    // Public Methods
+  public:
+    int ReadData(xreader& treader, XTemplatesMgr& tmpl_mgr);
+    void PrintInfo() const;
+    uint GetDataObjectsCount() const;
+    const XDataObject* GetDataObject(uint nIndex) const;
 
-        // Helpers
-    private:
-        void PrintInfo(const IData* data, int indent) const;
-        void PrintInfo(const XDataObject *data, int indent) const;
-        void PrintInfo(const XDataFloatList *data, int indent) const;
-        void PrintInfo(const XDataIntegerList *data, int indent) const;
-        void PrintInfo(const XDataStringList *data, int indent) const;
-        void PrintInfo(const XDataReference *data, int indent) const;
-    };
+    // Helpers
+  private:
+    void PrintInfo(const IData* data, int indent) const;
+    void PrintInfo(const XDataObject* data, int indent) const;
+    void PrintInfo(const XDataFloatList* data, int indent) const;
+    void PrintInfo(const XDataIntegerList* data, int indent) const;
+    void PrintInfo(const XDataStringList* data, int indent) const;
+    void PrintInfo(const XDataReference* data, int indent) const;
+};
 
-}}
+} // namespace xfile
+} // namespace forg
 
-#endif  //_XDATAMGR_H_
+#endif //_XDATAMGR_H_

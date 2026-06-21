@@ -2,10 +2,7 @@
 
 #include "rendering/ISurface.h"
 
-namespace forg{
-
-
-
+namespace forg
+{
 
 }
-

@@ -17,7 +17,8 @@ TEST_CASE("BitArray tracks length and individual bits", "[core][bitarray]")
     REQUIRE(bits.ToString() == "10000001");
 }
 
-TEST_CASE("BitArray grows when setting past the current length", "[core][bitarray]")
+TEST_CASE("BitArray grows when setting past the current length",
+          "[core][bitarray]")
 {
     forg::core::BitArray bits(2, false);
 
@@ -107,7 +108,8 @@ TEST_CASE("BitArray Not flips only logical bits", "[core][bitarray]")
     REQUIRE(inverted.ToString() == "01101");
 }
 
-TEST_CASE("BitArray compares equal across lengths when stored bits match", "[core][bitarray]")
+TEST_CASE("BitArray compares equal across lengths when stored bits match",
+          "[core][bitarray]")
 {
     forg::core::BitArray shortBits(1, false);
     forg::core::BitArray longBits(2, false);
@@ -119,7 +121,8 @@ TEST_CASE("BitArray compares equal across lengths when stored bits match", "[cor
     REQUIRE(shortBits != longBits);
 }
 
-TEST_CASE("BitArray growth initializes intermediate bits to false", "[core][bitarray]")
+TEST_CASE("BitArray growth initializes intermediate bits to false",
+          "[core][bitarray]")
 {
     forg::core::BitArray bits(1, false);
 

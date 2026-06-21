@@ -15,8 +15,22 @@ option(FORG_WARNINGS_AS_ERRORS "Treat FORG compiler warnings as errors" OFF)
 option(FORG_ENABLE_CLANG_TIDY "Run clang-tidy while compiling FORG targets" OFF)
 option(FORG_ENABLE_PCH "Use precompiled headers for FORG targets" ON)
 
+find_program(FORG_CLANG_FORMAT_EXECUTABLE NAMES clang-format)
+if(FORG_CLANG_FORMAT_EXECUTABLE)
+    add_custom_target(forg-format-check
+        COMMAND ${CMAKE_COMMAND}
+            -DCLANG_FORMAT_EXECUTABLE=${FORG_CLANG_FORMAT_EXECUTABLE}
+            -DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckFormat.cmake
+        VERBATIM)
+endif()
+
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
+
+if(FORG_ENABLE_CLANG_TIDY)
+    find_program(FORG_CLANG_TIDY_EXECUTABLE NAMES clang-tidy REQUIRED)
+endif()
 
 function(forg_configure_target target)
     target_compile_features(${target} PUBLIC cxx_std_20)
@@ -31,13 +45,12 @@ function(forg_configure_target target)
             "$<${msvc_cxx}:/WX>"
         )
     endif()
-endfunction()
 
-if(FORG_ENABLE_CLANG_TIDY)
-    find_program(FORG_CLANG_TIDY_EXECUTABLE NAMES clang-tidy REQUIRED)
-    set(CMAKE_CXX_CLANG_TIDY
-        "${FORG_CLANG_TIDY_EXECUTABLE};--config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy")
-endif()
+    if(FORG_ENABLE_CLANG_TIDY)
+        set_property(TARGET ${target} PROPERTY CXX_CLANG_TIDY
+            "${FORG_CLANG_TIDY_EXECUTABLE};--config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy")
+    endif()
+endfunction()
 
 message(NOTICE "CMAKE_SYSTEM: " ${CMAKE_SYSTEM})
 message(NOTICE "CMAKE_HOST_SYSTEM: " ${CMAKE_HOST_SYSTEM})

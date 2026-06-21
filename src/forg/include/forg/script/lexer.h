@@ -28,143 +28,150 @@
 #include "forg/base.h"
 #include "forg/core/string.hpp"
 
-namespace forg { namespace script { 
+namespace forg
+{
+namespace script
+{
 
-    // ========================================================================
-    // State machine
-    // ========================================================================
+// ========================================================================
+// State machine
+// ========================================================================
 
-    struct SFAState;
+struct SFAState;
 
-    struct SFAStateConnection
+struct SFAStateConnection
+{
+    int input;
+    SFAState* state;
+};
+
+struct SFAState
+{
+    std::vector<SFAStateConnection> connections;
+
+    int output;
+
+    bool accept;
+
+    SFAState()
     {
-        int input;
-        SFAState* state;
-    };
+        accept = true;
+        output = 0;
+    }
 
-    struct SFAState
+    SFAState(int _output, bool _accept)
     {
-        std::vector<SFAStateConnection> connections;
+        accept = _accept;
+        output = _output;
+    }
 
-        int output;
+    SFAState* GetState(int _input);
 
-        bool accept;
+    SFAState* Connect(int _input, int _output, bool _accept);
 
-        SFAState()
-        {
-            accept = true;
-            output = 0;
-        }
+    SFAState* AddLoopback(int _input);
+};
 
-        SFAState(int _output, bool _accept)
-        {
-            accept = _accept;
-            output = _output;
-        }
+class StateMachine
+{
+    typedef std::vector<SFAState*> StateVec;
 
-        SFAState* GetState(int _input);
+    StateVec m_states;
+    SFAState m_start;
+    SFAState* m_current;
 
-        SFAState* Connect(int _input, int _output, bool _accept);
+  public:
+    StateMachine();
+    ~StateMachine();
 
-        SFAState* AddLoopback(int _input);
-    };
+    SFAState* GetStart() { return &m_start; }
+    SFAState* GetNextState(int _input) { return m_current->GetState(_input); }
+    SFAState* GetCurrentState() { return m_current; }
+    bool Transition(int _input, int& _output);
 
-    class StateMachine
+    SFAState* CreateState();
+    void DeleteState(SFAState* _state);
+};
+
+// ========================================================================
+// Regular expression
+// ========================================================================
+class RegularExpression
+{
+    core::string m_def;
+
+  public:
+    void Set(const core::string& _re);
+
+    bool Match(const core::string& _text);
+};
+
+// ========================================================================
+// Lexer analyzer
+// ========================================================================
+
+struct SToken
+{
+    int token_id;
+
+    core::string text;
+};
+
+struct STokenDefinition
+{
+    core::string definition;
+    int identifier;
+
+    RegularExpression rexp;
+};
+
+struct SParserState
+{
+    int char_read;
+    int symbol;
+    int line;
+    int column;
+
+    void Reset()
     {
-        typedef std::vector<SFAState*> StateVec;
+        char_read = 0;
+        line = 0;
+        column = 0;
+    }
+};
 
-        StateVec m_states;
-        SFAState m_start;
-        SFAState* m_current;
+enum
+{
+    MAX_TOKEN_LENGTH = 1024
+};
 
-    public:
-        StateMachine();
-        ~StateMachine();
+class FORG_API Lexer
+{
+    typedef std::vector<STokenDefinition> TokenDefVec;
 
-        SFAState* GetStart() { return &m_start; }
-        SFAState* GetNextState(int _input) { return m_current->GetState(_input); }
-        SFAState* GetCurrentState() { return m_current; }
-        bool Transition(int _input, int& _output);
+    // scanner state
+    SParserState m_state;
 
-        SFAState* CreateState();
-        void DeleteState(SFAState* _state);
-    };
+    // state machine
+    StateMachine m_machine;
 
-    // ========================================================================
-    // Regular expression
-    // ========================================================================
-    class RegularExpression
-    {
-        core::string m_def;
+    TokenDefVec m_token_defs;
 
-    public:
-        void Set(const core::string& _re);
+    char m_text[MAX_TOKEN_LENGTH];
+    uint m_text_lenght;
 
-        bool Match(const core::string& _text);
-    };
+  public:
+    Lexer();
+    ~Lexer();
 
-    // ========================================================================
-    // Lexer analyzer
-    // ========================================================================
+    void DefineToken(int _token, const core::string _def);
+    // SLexerState* GetStartNode() { return &m_start_state; };
+    SFAState* GetStartNode() { return m_machine.GetStart(); };
+    int ReadToken(int _char, int _symbol, SToken& _token);
+    int Flush(SToken& _token);
+};
 
-    struct SToken
-    {
-        int token_id;
-
-        core::string text;
-    };
-
-    struct STokenDefinition
-    {
-        core::string definition;
-        int identifier;
-
-        RegularExpression rexp;
-    };
-
-    struct SParserState
-    {
-        int char_read;
-        int symbol;
-        int line;
-        int column;
-
-        void Reset()
-        {
-            char_read = 0;
-            line = 0;
-            column = 0;
-        }
-    };
-
-    enum {MAX_TOKEN_LENGTH = 1024};
-
-    class FORG_API Lexer
-    {
-        typedef std::vector<STokenDefinition> TokenDefVec;
-
-        // scanner state
-        SParserState m_state;
-
-        // state machine
-        StateMachine m_machine;
-
-        TokenDefVec m_token_defs;
-
-        char m_text[MAX_TOKEN_LENGTH];
-        uint m_text_lenght;
-
-    public:
-        Lexer();
-        ~Lexer();
-
-        void DefineToken(int _token, const core::string _def);
-        //SLexerState* GetStartNode() { return &m_start_state; };
-        SFAState* GetStartNode() { return m_machine.GetStart(); };
-        int ReadToken(int _char, int _symbol, SToken& _token);
-        int Flush(SToken& _token);
-    };
-
-}}
+} // namespace script
+} // namespace forg
 
 #endif

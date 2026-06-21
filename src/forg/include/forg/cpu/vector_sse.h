@@ -23,53 +23,114 @@
 #pragma once
 #endif
 
-#include <xmmintrin.h>
-#include <emmintrin.h>
+#if defined(__SSE__) || defined(_M_IX86) || defined(_M_X64)
 
-namespace forg { namespace cpu { namespace simd {
+#include <emmintrin.h>
+#include <xmmintrin.h>
+
+namespace forg
+{
+namespace cpu
+{
+namespace simd
+{
 
 class vec
 {
     __m128 value;
 
-public:
-    typedef const vec&  param;
-    typedef const vec&  param3;
-    typedef vec&        param_out;
-    typedef const vec   returned;
+  public:
+    typedef const vec& param;
+    typedef const vec& param3;
+    typedef vec& param_out;
+    typedef const vec returned;
 
     vec() {}
     vec(__m128 x) : value(x) {}
     vec(float x, float y, float z, float w) { value = _mm_set_ps(w, z, y, x); }
     vec(float x, float y, float z) { value = _mm_set_ps(0, z, y, x); }
     explicit vec(float x) { value = _mm_set_ps1(x); }
-    explicit vec(bool zero) { value = _mm_setzero_ps(); zero; }
+    explicit vec(bool) { value = _mm_setzero_ps(); }
 
     operator __m128() const { return value; }
 
-    float x() const { float v; _mm_store_ss(&v, value); return v; }
-    float y() const { float v; _mm_store_ss(&v, _mm_shuffle_ps(value, value, _MM_SHUFFLE(1,1,1,1))); return v; }
-    float z() const { float v; _mm_store_ss(&v, _mm_shuffle_ps(value, value, _MM_SHUFFLE(2,2,2,2))); return v; }
-    float w() const { float v; _mm_store_ss(&v, _mm_shuffle_ps(value, value, _MM_SHUFFLE(3,3,3,3))); return v; }
+    float x() const
+    {
+        float v;
+        _mm_store_ss(&v, value);
+        return v;
+    }
+    float y() const
+    {
+        float v;
+        _mm_store_ss(&v, _mm_shuffle_ps(value, value, _MM_SHUFFLE(1, 1, 1, 1)));
+        return v;
+    }
+    float z() const
+    {
+        float v;
+        _mm_store_ss(&v, _mm_shuffle_ps(value, value, _MM_SHUFFLE(2, 2, 2, 2)));
+        return v;
+    }
+    float w() const
+    {
+        float v;
+        _mm_store_ss(&v, _mm_shuffle_ps(value, value, _MM_SHUFFLE(3, 3, 3, 3)));
+        return v;
+    }
 
-    returned xxxx() const { return _mm_shuffle_ps(value, value, _MM_SHUFFLE(0,0,0,0)); }
-    returned yyyy() const { return _mm_shuffle_ps(value, value, _MM_SHUFFLE(1,1,1,1)); }
-    returned zzzz() const { return _mm_shuffle_ps(value, value, _MM_SHUFFLE(2,2,2,2)); }
-    returned wwww() const { return _mm_shuffle_ps(value, value, _MM_SHUFFLE(3,3,3,3)); }
-    returned wzyx() const { return _mm_shuffle_ps(value, value, _MM_SHUFFLE(0,1,2,3)); }
-    returned yzxw() const { return _mm_shuffle_ps(value, value, _MM_SHUFFLE(3,0,2,1)); }
-    returned zxyw() const { return _mm_shuffle_ps(value, value, _MM_SHUFFLE(3,1,0,2)); }
+    returned xxxx() const
+    {
+        return _mm_shuffle_ps(value, value, _MM_SHUFFLE(0, 0, 0, 0));
+    }
+    returned yyyy() const
+    {
+        return _mm_shuffle_ps(value, value, _MM_SHUFFLE(1, 1, 1, 1));
+    }
+    returned zzzz() const
+    {
+        return _mm_shuffle_ps(value, value, _MM_SHUFFLE(2, 2, 2, 2));
+    }
+    returned wwww() const
+    {
+        return _mm_shuffle_ps(value, value, _MM_SHUFFLE(3, 3, 3, 3));
+    }
+    returned wzyx() const
+    {
+        return _mm_shuffle_ps(value, value, _MM_SHUFFLE(0, 1, 2, 3));
+    }
+    returned yzxw() const
+    {
+        return _mm_shuffle_ps(value, value, _MM_SHUFFLE(3, 0, 2, 1));
+    }
+    returned zxyw() const
+    {
+        return _mm_shuffle_ps(value, value, _MM_SHUFFLE(3, 1, 0, 2));
+    }
 
     void zero() { value = _mm_setzero_ps(); }
-    void set(float x, float y, float z, float w) { value = _mm_set_ps(w, z, y, x); }
-    void set_vector(float x, float y, float z) { value = _mm_set_ps(0, z, y, x); }
-    void set_point(float x, float y, float z) { value = _mm_set_ps(1.0f, z, y, x); }
+    void set(float x, float y, float z, float w)
+    {
+        value = _mm_set_ps(w, z, y, x);
+    }
+    void set_vector(float x, float y, float z)
+    {
+        value = _mm_set_ps(0, z, y, x);
+    }
+    void set_point(float x, float y, float z)
+    {
+        value = _mm_set_ps(1.0f, z, y, x);
+    }
     void set(float x) { value = _mm_set_ps1(x); }
 
     void load_u(const float* v) { value = _mm_loadu_ps(v); }
     void load_a(const float* v) { value = _mm_load_ps(v); }
 };
 
-}}} // namespace forg::cpu::simd
+} // namespace simd
+} // namespace cpu
+} // namespace forg
+
+#endif
 
 #endif

@@ -10,9 +10,10 @@ std::string TestDataPath(const char* filename)
 {
     return std::string(FORG_TEST_DATA_DIR) + "/" + filename;
 }
-}
+} // namespace
 
-TEST_CASE("XMLParser reads elements and attributes from a file", "[script][xml]")
+TEST_CASE("XMLParser reads elements and attributes from a file",
+          "[script][xml]")
 {
     forg::script::xml::XMLParser parser;
     const std::string path = TestDataPath("simple.xml");
@@ -27,7 +28,8 @@ TEST_CASE("XMLParser reads elements and attributes from a file", "[script][xml]"
     forg::script::xml::XMLNode* renderer = document->FindNode("renderer");
     REQUIRE(renderer != nullptr);
     REQUIRE(renderer->FindAttribute("driver") != nullptr);
-    REQUIRE(renderer->FindAttribute("driver")->GetContent() == "libswrenderer.dylib");
+    REQUIRE(renderer->FindAttribute("driver")->GetContent() ==
+            "libswrenderer.dylib");
 
     forg::script::xml::XMLNode* window = document->FindNode("window");
     REQUIRE(window != nullptr);
@@ -37,7 +39,8 @@ TEST_CASE("XMLParser reads elements and attributes from a file", "[script][xml]"
     parser.Close();
 }
 
-TEST_CASE("XMLParser releases its document tree on destruction", "[script][xml]")
+TEST_CASE("XMLParser releases its document tree on destruction",
+          "[script][xml]")
 {
     // Parse a tree with nested elements, siblings, attributes and an empty
     // element, then let the parser fall out of scope. Under AddressSanitizer
@@ -52,7 +55,8 @@ TEST_CASE("XMLParser releases its document tree on destruction", "[script][xml]"
         REQUIRE(document != nullptr);
         REQUIRE(document->FindNode("device") != nullptr);
         parser.Close();
-        // `document` is owned by the parser and freed when it goes out of scope.
+        // `document` is owned by the parser and freed when it goes out of
+        // scope.
     }
 }
 

@@ -26,37 +26,38 @@
 #include "base.h"
 #include "rendering/VertexElement.h"
 
-namespace forg{
+namespace forg
+{
 
 /// VertexDeclaration class
 /**
-* VertexDeclaration
-* @author eses
-* @version 1.0
-* @date 07-2005
-* @todo
-* @bug
-* @warning
-*/
+ * VertexDeclaration
+ * @author eses
+ * @version 1.0
+ * @date 07-2005
+ * @todo
+ * @bug
+ * @warning
+ */
 class FORG_API VertexDeclaration
 {
-public:
-	VertexDeclaration(const VertexElement* pDecl);
-	virtual ~VertexDeclaration(void);
+  public:
+    VertexDeclaration(const VertexElement* pDecl);
+    virtual ~VertexDeclaration(void);
 
-private:
-	VertexElement elements[256];
-	uint m_nElementsCount;
-	uint m_nVertexSize;
+  private:
+    VertexElement elements[256];
+    uint m_nElementsCount;
+    uint m_nVertexSize;
 
-public:
-	const VertexElement* GetDeclaration() const;
-	uint GetElementsCount() const;
-	uint GetVertexSize() const;
+  public:
+    const VertexElement* GetDeclaration() const;
+    uint GetElementsCount() const;
+    uint GetVertexSize() const;
 };
 
 typedef VertexDeclaration* LPVERTEXDECLARATION;
 
-}
+} // namespace forg
 
 #endif //_FORG_IVERTEXDECLARATION_H_

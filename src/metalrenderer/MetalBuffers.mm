@@ -22,16 +22,13 @@
 
 #include "MetalBuffers.h"
 
-namespace forg {
+namespace forg
+{
 
 /////////////////////////////////////////////////////////////////////////////////////
 // MetalVertexBuffer
 /////////////////////////////////////////////////////////////////////////////////////
-MetalVertexBuffer::MetalVertexBuffer()
-    : m_buffer(0)
-    , m_length(0)
-{
-}
+MetalVertexBuffer::MetalVertexBuffer() : m_buffer(0), m_length(0) {}
 
 MetalVertexBuffer::~MetalVertexBuffer()
 {
@@ -45,15 +42,18 @@ MetalVertexBuffer::~MetalVertexBuffer()
 int MetalVertexBuffer::Create(void* mtlDevice, uint length)
 {
     id<MTLDevice> dev = (id<MTLDevice>)mtlDevice;
-    id<MTLBuffer> buf = [dev newBufferWithLength:length options:MTLResourceStorageModeShared];
+    id<MTLBuffer> buf = [dev newBufferWithLength:length
+                                         options:MTLResourceStorageModeShared];
 
-    m_buffer = (void*)buf;   // newBuffer... is +1 owned; released in the destructor
+    m_buffer =
+        (void*)buf; // newBuffer... is +1 owned; released in the destructor
     m_length = length;
 
     return (buf != nil) ? FORG_OK : FORG_INVALID_CALL;
 }
 
-int MetalVertexBuffer::Lock(uint offsetToLock, uint /*sizeToLock*/, void** ppbData, uint /*flags*/)
+int MetalVertexBuffer::Lock(uint offsetToLock, uint /*sizeToLock*/,
+                            void** ppbData, uint /*flags*/)
 {
     if (m_buffer == 0 || ppbData == 0)
         return FORG_INVALID_CALL;
@@ -71,10 +71,7 @@ int MetalVertexBuffer::Unlock()
 /////////////////////////////////////////////////////////////////////////////////////
 // MetalIndexBuffer
 /////////////////////////////////////////////////////////////////////////////////////
-MetalIndexBuffer::MetalIndexBuffer()
-    : m_buffer(0)
-    , m_length(0)
-    , m_short(true)
+MetalIndexBuffer::MetalIndexBuffer() : m_buffer(0), m_length(0), m_short(true)
 {
 }
 
@@ -87,10 +84,12 @@ MetalIndexBuffer::~MetalIndexBuffer()
     }
 }
 
-int MetalIndexBuffer::Create(void* mtlDevice, uint length, bool sixteenBitIndices)
+int MetalIndexBuffer::Create(void* mtlDevice, uint length,
+                             bool sixteenBitIndices)
 {
     id<MTLDevice> dev = (id<MTLDevice>)mtlDevice;
-    id<MTLBuffer> buf = [dev newBufferWithLength:length options:MTLResourceStorageModeShared];
+    id<MTLBuffer> buf = [dev newBufferWithLength:length
+                                         options:MTLResourceStorageModeShared];
 
     m_buffer = (void*)buf;
     m_length = length;
@@ -99,7 +98,8 @@ int MetalIndexBuffer::Create(void* mtlDevice, uint length, bool sixteenBitIndice
     return (buf != nil) ? FORG_OK : FORG_INVALID_CALL;
 }
 
-int MetalIndexBuffer::Lock(uint offsetToLock, uint /*sizeToLock*/, void** ppbData, uint /*flags*/)
+int MetalIndexBuffer::Lock(uint offsetToLock, uint /*sizeToLock*/,
+                           void** ppbData, uint /*flags*/)
 {
     if (m_buffer == 0 || ppbData == 0)
         return FORG_INVALID_CALL;
@@ -108,9 +108,6 @@ int MetalIndexBuffer::Lock(uint offsetToLock, uint /*sizeToLock*/, void** ppbDat
     return FORG_OK;
 }
 
-int MetalIndexBuffer::Unlock()
-{
-    return FORG_OK;
-}
+int MetalIndexBuffer::Unlock() { return FORG_OK; }
 
-}
+} // namespace forg

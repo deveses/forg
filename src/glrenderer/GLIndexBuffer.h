@@ -25,44 +25,38 @@
 
 #include "rendering/IIndexBuffer.h"
 
-namespace forg {
+namespace forg
+{
 
 class GLRenderDevice;
 class GLDeviceCaps;
 
 class GLIndexBuffer : public IIndexBuffer
 {
-public:
-	GLIndexBuffer(GLRenderDevice* device, uint sizeOfBufferInBytes, uint usage, uint pool, bool sixteenBitIndices);
+  public:
+    GLIndexBuffer(GLRenderDevice* device, uint sizeOfBufferInBytes, uint usage,
+                  uint pool, bool sixteenBitIndices);
 
-	~GLIndexBuffer(void);
+    ~GLIndexBuffer(void);
 
-public:
-	int Lock(
-		uint offsetToLock,
-		uint sizeToLock,
-		void ** ppbData,
-		uint flags
-		);
+  public:
+    int Lock(uint offsetToLock, uint sizeToLock, void** ppbData, uint flags);
 
-	int Unlock();
+    int Unlock();
 
-	uint m_buffer_id;
-	bool m_sixteen;
-	uint m_size;
-private:
-	GLRenderDevice* m_device;
-	const GLDeviceCaps* m_caps;
+    uint m_buffer_id;
+    bool m_sixteen;
+    uint m_size;
 
-	uint m_usage;
-	uint m_pool;
-	uint m_type;
+  private:
+    GLRenderDevice* m_device;
+    const GLDeviceCaps* m_caps;
 
-
+    uint m_usage;
+    uint m_pool;
+    uint m_type;
 };
 
-
-}
+} // namespace forg
 
 #endif //   _GL_INDEX_BUFFER_H_
-

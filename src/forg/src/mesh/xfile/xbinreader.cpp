@@ -1,8 +1,13 @@
-#include "forg_pch.h"
 #include "mesh/xfile/xbinreader.h"
 #include "debug/dbg.h"
+#include "forg_pch.h"
 
-namespace forg { namespace xfile { namespace reader {
+namespace forg
+{
+namespace xfile
+{
+namespace reader
+{
 
 /*
 template <typename T>
@@ -22,8 +27,7 @@ int read_value(T* buffer, size_t count, std::ifstream& input)
 }
 */
 
-xbinreader::xbinreader(std::ifstream& input, bool doubleFloat)
-: m_input(input)
+xbinreader::xbinreader(std::ifstream& input, bool doubleFloat) : m_input(input)
 {
     m_bDoubleFloat = doubleFloat;
 }
@@ -37,40 +41,40 @@ bool xbinreader::read_data(char* buffer, unsigned int count)
 
 WORD xbinreader::ReadToken()
 {
-	WORD token = 0;
+    WORD token = 0;
 
-	if (m_next_tokens.size() == 0)
-	{
-        if ( read_value(token))
+    if (m_next_tokens.size() == 0)
+    {
+        if (read_value(token))
             return 0;
 
-        //m_input.read((char*)&token, sizeof(token));
-        //if (m_input.fail())
-        //    return 0;
+        // m_input.read((char*)&token, sizeof(token));
+        // if (m_input.fail())
+        //     return 0;
 
-		m_next_tokens.push_back(token);
-	}
+        m_next_tokens.push_back(token);
+    }
 
-	token = m_next_tokens.front();
-	m_next_tokens.pop_front();
-	m_last_tokens.push_back(token);
+    token = m_next_tokens.front();
+    m_next_tokens.pop_front();
+    m_last_tokens.push_back(token);
 
-	return token;
+    return token;
 }
 
 int xbinreader::UnreadToken()
 {
-	if (m_last_tokens.size() == 0)
-	{	//nie zostalo jeszcze nic przeczytane
-		return 1;
-	}
+    if (m_last_tokens.size() == 0)
+    { // nie zostalo jeszcze nic przeczytane
+        return 1;
+    }
 
-	//wrzucamy token spowrotem do kolejki nastepnych
-	WORD token = m_last_tokens.back();
-	m_last_tokens.pop_back();
-	m_next_tokens.push_front(token);
+    // wrzucamy token spowrotem do kolejki nastepnych
+    WORD token = m_last_tokens.back();
+    m_last_tokens.pop_back();
+    m_next_tokens.push_front(token);
 
-	return 0;
+    return 0;
 }
 
 int xbinreader::ReadInteger(int& value)
@@ -78,13 +82,13 @@ int xbinreader::ReadInteger(int& value)
 
     if (ReadToken() != EToken::TOKEN_INTEGER)
     {
-    	UnreadToken();
-    	return -1;
+        UnreadToken();
+        return -1;
     }
 
     int ret = read_value(value);
 
-    //DBG_MSG("[xbinreader::ReadInteger] value: %d\n", value);
+    // DBG_MSG("[xbinreader::ReadInteger] value: %d\n", value);
 
     return ret;
 }
@@ -93,8 +97,8 @@ int xbinreader::ReadIntegerList(IntegerList& int_list)
 {
     if (ReadToken() != EToken::TOKEN_INTEGER_LIST)
     {
-    	UnreadToken();
-    	return -1;
+        UnreadToken();
+        return -1;
     }
 
     DWORD count = 0;
@@ -102,7 +106,7 @@ int xbinreader::ReadIntegerList(IntegerList& int_list)
     if (read_value(count))
         return 1;
 
-    //int_list.reserve(count);
+    // int_list.reserve(count);
 
     int rval = 0;
 
@@ -115,33 +119,34 @@ int xbinreader::ReadIntegerList(IntegerList& int_list)
         int_list.swap(iarr);
     }
 
-/*
-    DWORD v;
-    for(DWORD i=0; i<count; i++)
-    {
-        if (read_value(v, m_input))
+    /*
+        DWORD v;
+        for(DWORD i=0; i<count; i++)
         {
-            rval = 1;
-            break;
-        } else
-        {
-            int_list.push_back(v);
+            if (read_value(v, m_input))
+            {
+                rval = 1;
+                break;
+            } else
+            {
+                int_list.push_back(v);
+            }
         }
-    }
-*/
+    */
 
-    //DBG_MSG("[xbinreader::ReadIntegerList] first: %d last: %d\n", int_list.front(), int_list.back());
+    // DBG_MSG("[xbinreader::ReadIntegerList] first: %d last: %d\n",
+    // int_list.front(), int_list.back());
 
     return rval;
 }
 
 // TODO: dokonczyc ReadFloatList
-int	xbinreader::ReadFloatList(FloatList& float_list)
+int xbinreader::ReadFloatList(FloatList& float_list)
 {
     if (ReadToken() != EToken::TOKEN_FLOAT_LIST)
     {
-    	UnreadToken();
-    	return -1;
+        UnreadToken();
+        return -1;
     }
 
     DWORD count = 0;
@@ -149,8 +154,8 @@ int	xbinreader::ReadFloatList(FloatList& float_list)
 
     int rval = 0;
 
-//     float fv = 0.0f;
-//     double dv = 0.0;
+    //     float fv = 0.0f;
+    //     double dv = 0.0;
 
     if (count > 0)
     {
@@ -161,26 +166,26 @@ int	xbinreader::ReadFloatList(FloatList& float_list)
         float_list.swap(farr);
     }
 
-/*
-    for (DWORD i = 0; i<count && !rval; i++)
-    {
-        if (m_bDoubleFloat)
-        {
-            rval = read_value(dv, m_input);
-        } else
-        {
-            rval = read_value(fv, m_input);
-        }
-
-        if (rval == 0)
+    /*
+        for (DWORD i = 0; i<count && !rval; i++)
         {
             if (m_bDoubleFloat)
-                float_list.push_back((float)dv);
-            else
-                float_list.push_back(fv);
+            {
+                rval = read_value(dv, m_input);
+            } else
+            {
+                rval = read_value(fv, m_input);
+            }
+
+            if (rval == 0)
+            {
+                if (m_bDoubleFloat)
+                    float_list.push_back((float)dv);
+                else
+                    float_list.push_back(fv);
+            }
         }
-    }
-*/
+    */
 
     return rval;
 }
@@ -190,38 +195,40 @@ int xbinreader::ReadStringList(StringList& string_list)
 {
     // string {list_separator string} list_separator
 
-//string_list           : string_list_1 list_separator
-//
-//string_list_1         : string
-//						| string_list_1 list_separator string
-//
+    // string_list           : string_list_1 list_separator
+    //
+    // string_list_1         : string
+    //						| string_list_1 list_separator
+    // string
+    //
 
-//list_separator        : comma
-//						| semicolon
-//
+    // list_separator        : comma
+    //						| semicolon
+    //
     int rval = 0;
     int list_size = 0;
 
     do
     {
-    	xstring str;
+        xstring str;
 
-    	rval = ReadString(str);
+        rval = ReadString(str);
 
-    	if (rval == 0)	//list_separator check follows
-    	{
+        if (rval == 0) // list_separator check follows
+        {
             string_list.push_back(str);
             list_size++;
 
             WORD tok = ReadToken();
 
-    		rval = ((tok != EToken::TOKEN_COMMA) && (tok != EToken::TOKEN_SEMICOLON));
+            rval = ((tok != EToken::TOKEN_COMMA) &&
+                    (tok != EToken::TOKEN_SEMICOLON));
             if (rval)
             {
                 UnreadToken();
                 rval = -1;
             }
-    	}
+        }
 
     } while (rval == 0);
 
@@ -230,23 +237,22 @@ int xbinreader::ReadStringList(StringList& string_list)
 
 int xbinreader::ReadName(xstring& name)
 {
-	WORD tok = ReadToken();
+    WORD tok = ReadToken();
 
-	if (tok != EToken::TOKEN_NAME)
-	{
-		name = "";
-		UnreadToken();
-		return -1;
-	}
+    if (tok != EToken::TOKEN_NAME)
+    {
+        name = "";
+        UnreadToken();
+        return -1;
+    }
 
-	DWORD count = 0;
-	int rval = 0;
-
+    DWORD count = 0;
+    int rval = 0;
 
     read_value(count);
-    char *charr = new char[count+1];
+    char* charr = new char[count + 1];
 
-    if ( read_value(charr, count))
+    if (read_value(charr, count))
         rval = 1;
     else
     {
@@ -254,9 +260,9 @@ int xbinreader::ReadName(xstring& name)
         name = charr;
     }
 
-    delete [] charr;
+    delete[] charr;
 
-	return rval;
+    return rval;
 }
 
 int xbinreader::ReadString(xstring& str)
@@ -265,9 +271,9 @@ int xbinreader::ReadString(xstring& str)
 
     if (tok != EToken::TOKEN_STRING)
     {
-    	str = "";
-    	UnreadToken();
-    	return -1;
+        str = "";
+        UnreadToken();
+        return -1;
     }
 
     DWORD count = 0;
@@ -276,18 +282,20 @@ int xbinreader::ReadString(xstring& str)
 
     read_value(count);
 
-    char* char_array = new char[count+1];
+    char* char_array = new char[count + 1];
 
-    if ( read_value(char_array, count) || read_value(terminator))
+    if (read_value(char_array, count) || read_value(terminator))
     {
         rval = 1;
     }
 
-    //terminator &= 0xffff;
-    if (terminator != EToken::TOKEN_SEMICOLON && terminator != EToken::TOKEN_COMMA)
+    // terminator &= 0xffff;
+    if (terminator != EToken::TOKEN_SEMICOLON &&
+        terminator != EToken::TOKEN_COMMA)
     {
-    	rval = 1;
-    } else
+        rval = 1;
+    }
+    else
     {
         char_array[(uint)count] = 0;
         str = char_array;
@@ -302,8 +310,8 @@ int xbinreader::ReadGUID(xguid& tguid)
 {
     if (ReadToken() != EToken::TOKEN_GUID)
     {
-    	UnreadToken();
-    	return -1;
+        UnreadToken();
+        return -1;
     }
 
     read_value(tguid);
@@ -311,5 +319,6 @@ int xbinreader::ReadGUID(xguid& tguid)
     return 0;
 }
 
-
-}}}
+} // namespace reader
+} // namespace xfile
+} // namespace forg

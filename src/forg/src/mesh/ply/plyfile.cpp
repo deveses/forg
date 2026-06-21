@@ -1,40 +1,39 @@
 #include "forg_pch.h"
 
-#include "mesh/ply/plyfile.h"
 #include "core/StringTokenizer.hpp"
+#include "mesh/ply/plyfile.h"
 #include <string>
 #undef max
 #undef min
-#include <sstream>
-#include <iostream>
-#include <functional>
 #include <algorithm>
+#include <functional>
+#include <iostream>
+#include <sstream>
 
-namespace forg { namespace mesh { namespace ply {
+namespace forg
+{
+namespace mesh
+{
+namespace ply
+{
 
-const char *type_names[] = {
-    "invalid",
-    "char", "short", "int",
-    "uchar", "ushort", "uint",
-    "float", "double",
+const char* type_names[] = {
+    "invalid", "char", "short", "int",    "uchar",
+    "ushort",  "uint", "float", "double",
 };
 
-int ply_type_size[] = {
-    0, 1, 2, 4, 1, 2, 4, 4, 8
-};
+int ply_type_size[] = {0, 1, 2, 4, 1, 2, 4, 4, 8};
 
-#define NO_OTHER_PROPS  -1
+#define NO_OTHER_PROPS -1
 
-#define DONT_STORE_PROP  0
-#define STORE_PROP       1
+#define DONT_STORE_PROP 0
+#define STORE_PROP 1
 
-#define OTHER_PROP       0
-#define NAMED_PROP       1
-
+#define OTHER_PROP 0
+#define NAMED_PROP 1
 
 template <class T>
-bool from_string(T& t,
-                 const std::string& s,
+bool from_string(T& t, const std::string& s,
                  std::ios_base& (*f)(std::ios_base&) = std::dec)
 {
     std::istringstream iss(s);
@@ -73,14 +72,11 @@ bool from_string<double>(double& t,
 }
 */
 
-int equal_strings(char *s1, char *s2)
-{
-    return (strcmp(s1, s2) == 0);
-}
+int equal_strings(char* s1, char* s2) { return (strcmp(s1, s2) == 0); }
 
 class plyElemFind
 {
-public:
+  public:
     bool operator()(const PlyElement& elem, const std::string& name) const
     {
         return (elem.name == name);
@@ -89,7 +85,7 @@ public:
 
 class plyPropFind
 {
-public:
+  public:
     bool operator()(const PlyProperty& prop, const std::string& name) const
     {
         return (prop.name == name);
@@ -121,15 +117,9 @@ int get_prop_type(const std::string& type_name)
 /*                                                                      */
 /************************************************************************/
 
-plyfile::plyfile()
-{
+plyfile::plyfile() {}
 
-}
-
-plyfile::~plyfile()
-{
-    Clean();
-}
+plyfile::~plyfile() { Clean(); }
 
 void plyfile::Clean()
 {
@@ -143,13 +133,13 @@ void plyfile::Clean()
 
 //////////////////////////////////////////////////////////////////////////
 
-bool plyfile::Open(const char *filename)
+bool plyfile::Open(const char* filename)
 {
     Clean();
 
-    m_input.open(filename, std::ios_base::in|std::ios_base::binary);
+    m_input.open(filename, std::ios_base::in | std::ios_base::binary);
 
-    if (! m_input.is_open())
+    if (!m_input.is_open())
         return false;
 
     m_filename = filename;
@@ -161,7 +151,8 @@ bool plyfile::Open(const char *filename)
 
 int plyfile::GetElementCount(const char* elem_name)
 {
-    PlyElementVecI iter = std::find_if(m_elements.begin(), m_elements.end(),
+    PlyElementVecI iter = std::find_if(
+        m_elements.begin(), m_elements.end(),
         [&](const PlyElement& elem) { return plyElemFind()(elem, elem_name); });
 
     if (iter != m_elements.end())
@@ -176,26 +167,25 @@ int plyfile::GetElementCount(const char* elem_name)
 
 bool plyfile::ReadHeader()
 {
-    if (! m_input.is_open())
+    if (!m_input.is_open())
         return false;
 
     /* read and parse the file's header */
 
     std::string str;
     std::getline(m_input, str);
-/*
-    m_data_offset = m_input.gcount();
-    m_data_offset = m_input.tellg();*/
-
+    /*
+        m_data_offset = m_input.gcount();
+        m_data_offset = m_input.tellg();*/
 
     if (str != "ply")
         return false;
 
-    m_filetype = PLY_ASCII; //default type
+    m_filetype = PLY_ASCII; // default type
 
     bool header_end = false;
 
-    while ( m_input )
+    while (m_input)
     {
         core::StringTokenizer<char> tokenizer(str, " \n\0");
 
@@ -203,7 +193,8 @@ bool plyfile::ReadHeader()
         {
             std::string tok = tokenizer.NextToken();
 
-            if (tok == "format") {
+            if (tok == "format")
+            {
                 tok = tokenizer.NextToken();
 
                 if (tok == "ascii")
@@ -241,18 +232,21 @@ bool plyfile::ReadHeader()
 
                 tok = tokenizer.NextToken();
 
-                if (tok == "list") {       /* is a list */
+                if (tok == "list")
+                { /* is a list */
                     prop.is_list = 1;
-                    prop.count_external = get_prop_type (tokenizer.NextToken());
-                    prop.external_type = get_prop_type (tokenizer.NextToken());
+                    prop.count_external = get_prop_type(tokenizer.NextToken());
+                    prop.external_type = get_prop_type(tokenizer.NextToken());
                     prop.name = tokenizer.NextToken();
-                    elem.size += ply_type_size[ prop.external_type ] + ply_type_size[ prop.count_external ];
+                    elem.size += ply_type_size[prop.external_type] +
+                                 ply_type_size[prop.count_external];
                 }
-                else {                                        /* not a list */
-                    prop.external_type = get_prop_type (tok);
+                else
+                { /* not a list */
+                    prop.external_type = get_prop_type(tok);
                     prop.name = tokenizer.NextToken();
                     prop.is_list = 0;
-                    elem.size += ply_type_size[ prop.external_type ];
+                    elem.size += ply_type_size[prop.external_type];
                 }
 
                 prop.store = false;
@@ -263,7 +257,7 @@ bool plyfile::ReadHeader()
 
                 comment = tokenizer.NextToken("\n\0");
 
-                m_comment.push_back( comment );
+                m_comment.push_back(comment);
             }
             else if (tok == "obj_info")
             {
@@ -273,7 +267,7 @@ bool plyfile::ReadHeader()
                     info += tokenizer.NextToken();
                 }
 
-                m_obj_info.push_back( info );
+                m_obj_info.push_back(info);
             }
             else if (tok == "end_header")
             {
@@ -291,19 +285,20 @@ bool plyfile::ReadHeader()
         std::getline(m_input, str);
     }
 
-/*
+    /*
 
-    / * create tags for each property of each element, to be used * /
-    / * later to say whether or not to store each property for the user * /
+        / * create tags for each property of each element, to be used * /
+        / * later to say whether or not to store each property for the user * /
 
-    for (i = 0; i < plyfile->nelems; i++) {
-        elem = plyfile->elems[i];
-        elem->store_prop = (char *) malloc (sizeof (char) * elem->nprops);
-        for (j = 0; j < elem->nprops; j++)
-            elem->store_prop[j] = DONT_STORE_PROP;
-        elem->other_offset = NO_OTHER_PROPS; / * no "other" props by default * /
-    }
-*/
+        for (i = 0; i < plyfile->nelems; i++) {
+            elem = plyfile->elems[i];
+            elem->store_prop = (char *) malloc (sizeof (char) * elem->nprops);
+            for (j = 0; j < elem->nprops; j++)
+                elem->store_prop[j] = DONT_STORE_PROP;
+            elem->other_offset = NO_OTHER_PROPS; / * no "other" props by default
+       * /
+        }
+    */
 
     m_elem_index = 0;
     m_elem_read = 0;
@@ -316,15 +311,18 @@ bool plyfile::ReadHeader()
     return true;
 }
 
-void plyfile::GetProperty(const char* elem_name, const char* prop_name, int offset, int type)
+void plyfile::GetProperty(const char* elem_name, const char* prop_name,
+                          int offset, int type)
 {
-    PlyElementVecI iter = std::find_if(m_elements.begin(), m_elements.end(),
+    PlyElementVecI iter = std::find_if(
+        m_elements.begin(), m_elements.end(),
         [&](const PlyElement& elem) { return plyElemFind()(elem, elem_name); });
 
     if (iter != m_elements.end())
     {
-        PlyPropertyVecI propi = std::find_if(iter->props.begin(), iter->props.end(),
-            [&](const PlyProperty& prop) { return plyPropFind()(prop, prop_name); });
+        PlyPropertyVecI propi = std::find_if(
+            iter->props.begin(), iter->props.end(), [&](const PlyProperty& prop)
+            { return plyPropFind()(prop, prop_name); });
 
         if (propi != iter->props.end())
         {
@@ -341,7 +339,8 @@ void GetAsciiItem(char* item_ptr, int in_type, int out_type, std::string& item)
     uint v_uint = 0;
     double v_double = 0.0;
 
-    switch (in_type) {
+    switch (in_type)
+    {
     case PLY_CHAR:
     case PLY_UCHAR:
     case PLY_SHORT:
@@ -375,45 +374,45 @@ void GetAsciiItem(char* item_ptr, int in_type, int out_type, std::string& item)
         break;
     }
 
+    unsigned char* puchar;
+    short int* pshort;
+    unsigned short int* pushort;
+    int* pint;
+    unsigned int* puint;
+    float* pfloat;
+    double* pdouble;
 
-    unsigned char *puchar;
-    short int *pshort;
-    unsigned short int *pushort;
-    int *pint;
-    unsigned int *puint;
-    float *pfloat;
-    double *pdouble;
-
-    switch (out_type) {
+    switch (out_type)
+    {
     case PLY_CHAR:
         *item_ptr = v_int;
         break;
     case PLY_UCHAR:
-        puchar = (unsigned char *) item_ptr;
+        puchar = (unsigned char*)item_ptr;
         *puchar = v_int;
         break;
     case PLY_SHORT:
-        pshort = (short *) item_ptr;
+        pshort = (short*)item_ptr;
         *pshort = v_int;
         break;
     case PLY_USHORT:
-        pushort = (unsigned short *) item_ptr;
+        pushort = (unsigned short*)item_ptr;
         *pushort = v_int;
         break;
     case PLY_INT:
-        pint = (int *) item_ptr;
+        pint = (int*)item_ptr;
         *pint = v_int;
         break;
     case PLY_UINT:
-        puint = (unsigned int *) item_ptr;
+        puint = (unsigned int*)item_ptr;
         *puint = v_uint;
         break;
     case PLY_FLOAT:
-        pfloat = (float *) item_ptr;
+        pfloat = (float*)item_ptr;
         *pfloat = (float)v_double;
         break;
     case PLY_DOUBLE:
-        pdouble = (double *) item_ptr;
+        pdouble = (double*)item_ptr;
         *pdouble = v_double;
         break;
     }
@@ -424,7 +423,7 @@ void SwapEndian(char* data, int size)
     char t = 0;
     int k = size >> 1;
 
-    for (int i=0; i<k; i++)
+    for (int i = 0; i < k; i++)
     {
         t = data[i];
         data[i] = data[size - 1 - i];
@@ -432,7 +431,8 @@ void SwapEndian(char* data, int size)
     }
 }
 
-void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap, std::ifstream& item)
+void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap,
+                   std::ifstream& item)
 {
     int v_int = 0;
     uint v_uint = 0;
@@ -440,14 +440,16 @@ void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap, std::if
     float v_float = 0.0f;
     int size_in = ply_type_size[in_type];
 
-    switch (in_type) {
+    switch (in_type)
+    {
     case PLY_CHAR:
     case PLY_UCHAR:
     case PLY_SHORT:
     case PLY_USHORT:
     case PLY_INT:
         item.read((char*)&v_int, size_in);
-        if (swap) SwapEndian((char*)&v_int, size_in);
+        if (swap)
+            SwapEndian((char*)&v_int, size_in);
         if (in_type != out_type)
         {
             v_uint = v_int;
@@ -457,7 +459,8 @@ void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap, std::if
 
     case PLY_UINT:
         item.read((char*)&v_uint, size_in);
-        if (swap) SwapEndian((char*)&v_uint, size_in);
+        if (swap)
+            SwapEndian((char*)&v_uint, size_in);
         if (in_type != out_type)
         {
             v_int = v_uint;
@@ -467,7 +470,8 @@ void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap, std::if
 
     case PLY_FLOAT:
         item.read((char*)&v_float, size_in);
-        if (swap) SwapEndian((char*)&v_float, size_in);
+        if (swap)
+            SwapEndian((char*)&v_float, size_in);
         if (in_type != out_type)
         {
             v_double = v_float;
@@ -477,7 +481,8 @@ void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap, std::if
         break;
     case PLY_DOUBLE:
         item.read((char*)&v_double, size_in);
-        if (swap) SwapEndian((char*)&v_double, size_in);
+        if (swap)
+            SwapEndian((char*)&v_double, size_in);
         if (in_type != out_type)
         {
             v_uint = (uint)v_double;
@@ -486,51 +491,51 @@ void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap, std::if
         break;
     }
 
+    unsigned char* puchar;
+    short int* pshort;
+    unsigned short int* pushort;
+    int* pint;
+    unsigned int* puint;
+    float* pfloat;
+    double* pdouble;
 
-    unsigned char *puchar;
-    short int *pshort;
-    unsigned short int *pushort;
-    int *pint;
-    unsigned int *puint;
-    float *pfloat;
-    double *pdouble;
-
-    switch (out_type) {
+    switch (out_type)
+    {
     case PLY_CHAR:
         *item_ptr = v_int;
         break;
     case PLY_UCHAR:
-        puchar = (unsigned char *) item_ptr;
+        puchar = (unsigned char*)item_ptr;
         *puchar = v_int;
         break;
     case PLY_SHORT:
-        pshort = (short *) item_ptr;
+        pshort = (short*)item_ptr;
         *pshort = v_int;
         break;
     case PLY_USHORT:
-        pushort = (unsigned short *) item_ptr;
+        pushort = (unsigned short*)item_ptr;
         *pushort = v_int;
         break;
     case PLY_INT:
-        pint = (int *) item_ptr;
+        pint = (int*)item_ptr;
         *pint = v_int;
         break;
     case PLY_UINT:
-        puint = (unsigned int *) item_ptr;
+        puint = (unsigned int*)item_ptr;
         *puint = v_uint;
         break;
     case PLY_FLOAT:
-        pfloat = (float *) item_ptr;
+        pfloat = (float*)item_ptr;
         *pfloat = (float)v_float;
         break;
     case PLY_DOUBLE:
-        pdouble = (double *) item_ptr;
+        pdouble = (double*)item_ptr;
         *pdouble = v_double;
         break;
     }
 }
 
-void plyfile::GetElement(void *elem_ptr)
+void plyfile::GetElement(void* elem_ptr)
 {
     if (m_filetype == PLY_ASCII)
         GetElementAscii(elem_ptr);
@@ -538,9 +543,9 @@ void plyfile::GetElement(void *elem_ptr)
         GetElementBinary(elem_ptr);
 }
 
-void plyfile::GetElementAscii(void *elem_ptr)
+void plyfile::GetElementAscii(void* elem_ptr)
 {
-    if (! m_input.is_open())
+    if (!m_input.is_open())
         return;
 
     if (m_elem_index >= m_elements.size())
@@ -553,11 +558,12 @@ void plyfile::GetElementAscii(void *elem_ptr)
 
     core::StringTokenizer<char> tokenizer(str, " \n\0");
 
-    for (PlyPropertyVecI propi=elem.props.begin(); propi != elem.props.end(); ++propi)
+    for (PlyPropertyVecI propi = elem.props.begin(); propi != elem.props.end();
+         ++propi)
     {
         std::string tok = tokenizer.NextToken();
 
-        if (! propi->store)
+        if (!propi->store)
             continue;
 
         if (propi->is_list)
@@ -567,15 +573,18 @@ void plyfile::GetElementAscii(void *elem_ptr)
 
             from_string(count, tok);
 
-            for (int k=0; k<count; k++)
+            for (int k = 0; k < count; k++)
             {
                 tok = tokenizer.NextToken();
 
-                GetAsciiItem((char*)elem_ptr + propi->offset + k*item_size, propi->external_type, propi->internal_type, tok);
+                GetAsciiItem((char*)elem_ptr + propi->offset + k * item_size,
+                             propi->external_type, propi->internal_type, tok);
             }
-        } else
+        }
+        else
         {
-            GetAsciiItem((char*)elem_ptr + propi->offset, propi->external_type, propi->internal_type, tok);
+            GetAsciiItem((char*)elem_ptr + propi->offset, propi->external_type,
+                         propi->internal_type, tok);
         }
     }
 
@@ -588,9 +597,9 @@ void plyfile::GetElementAscii(void *elem_ptr)
     }
 }
 
-void plyfile::GetElementBinary(void *elem_ptr)
+void plyfile::GetElementBinary(void* elem_ptr)
 {
-    if (! m_input.is_open())
+    if (!m_input.is_open())
         return;
 
     if (m_elem_index >= m_elements.size())
@@ -598,28 +607,37 @@ void plyfile::GetElementBinary(void *elem_ptr)
 
     PlyElement& elem = m_elements[m_elem_index];
 
-    for (PlyPropertyVecI propi=elem.props.begin(); propi != elem.props.end(); ++propi)
+    for (PlyPropertyVecI propi = elem.props.begin(); propi != elem.props.end();
+         ++propi)
     {
         if (propi->is_list)
         {
             int count = 0;
             int item_size = ply_type_size[propi->internal_type];
 
-            GetBinaryItem((char*)&count, propi->count_external, PLY_INT, m_swap_endian, m_input);
+            GetBinaryItem((char*)&count, propi->count_external, PLY_INT,
+                          m_swap_endian, m_input);
 
-            for (int k=0; k<count; k++)
+            for (int k = 0; k < count; k++)
             {
                 if (propi->store)
-                    GetBinaryItem((char*)elem_ptr + propi->offset + k*item_size, propi->external_type, propi->internal_type, m_swap_endian, m_input);
+                    GetBinaryItem((char*)elem_ptr + propi->offset +
+                                      k * item_size,
+                                  propi->external_type, propi->internal_type,
+                                  m_swap_endian, m_input);
                 else
                     m_input.seekg(item_size, std::ios_base::cur);
             }
-        } else
+        }
+        else
         {
             if (propi->store)
-                GetBinaryItem((char*)elem_ptr + propi->offset, propi->external_type, propi->internal_type, m_swap_endian, m_input);
+                GetBinaryItem((char*)elem_ptr + propi->offset,
+                              propi->external_type, propi->internal_type,
+                              m_swap_endian, m_input);
             else
-                m_input.seekg(ply_type_size[propi->external_type], std::ios_base::cur);
+                m_input.seekg(ply_type_size[propi->external_type],
+                              std::ios_base::cur);
         }
     }
 
@@ -632,4 +650,6 @@ void plyfile::GetElementBinary(void *elem_ptr)
     }
 }
 
-}}} //namespaces
+} // namespace ply
+} // namespace mesh
+} // namespace forg

@@ -23,45 +23,52 @@
 #ifndef XFILE_XTEXREADER_INCLUDED
 #define XFILE_XTEXREADER_INCLUDED
 
-#include "mesh/xfile/xreader.h"
 #include "mesh/xfile/xlexer.h"
-#include <list>
-#include <iostream>
+#include "mesh/xfile/xreader.h"
 #include <fstream>
+#include <iostream>
+#include <list>
 
-namespace forg { namespace xfile { namespace reader {
+namespace forg
+{
+namespace xfile
+{
+namespace reader
+{
 
-	class xtexreader : public xreader {
-	public:
-		xtexreader(std::ifstream& input, bool doubleFloat);
+class xtexreader : public xreader
+{
+  public:
+    xtexreader(std::ifstream& input, bool doubleFloat);
 
-	private:
-		std::list<ScannerToken> m_last_tokens;
-		std::list<ScannerToken> m_next_tokens;
-        bool m_bDoubleFloat;
-        std::ifstream& m_input;
-        XLexer m_lexer;
+  private:
+    std::list<ScannerToken> m_last_tokens;
+    std::list<ScannerToken> m_next_tokens;
+    bool m_bDoubleFloat;
+    std::ifstream& m_input;
+    XLexer m_lexer;
 
-	public:
-		WORD ReadToken();
-		int UnreadToken();
+  public:
+    WORD ReadToken();
+    int UnreadToken();
 
-        int EvalToken(xstring& value);
-        int EvalToken(xguid& value);
-        int EvalToken(int& value);
-        int EvalToken(FloatList& value);
-        int EvalToken(IntegerList& value);
+    int EvalToken(xstring& value);
+    int EvalToken(xguid& value);
+    int EvalToken(int& value);
+    int EvalToken(FloatList& value);
+    int EvalToken(IntegerList& value);
 
-		int ReadInteger(int& value);
-		int ReadIntegerList(IntegerList& int_list);
-		int	ReadFloatList(FloatList& float_list);
-		int ReadStringList(StringList& string_list);
-		int ReadName(xstring& name);
-		int ReadString(xstring& str);
-		int ReadGUID(xguid& tguid);
-	};
+    int ReadInteger(int& value);
+    int ReadIntegerList(IntegerList& int_list);
+    int ReadFloatList(FloatList& float_list);
+    int ReadStringList(StringList& string_list);
+    int ReadName(xstring& name);
+    int ReadString(xstring& str);
+    int ReadGUID(xguid& tguid);
+};
 
-
-}}}
+} // namespace reader
+} // namespace xfile
+} // namespace forg
 
 #endif // XFILE_XTEXREADER_INCLUDED

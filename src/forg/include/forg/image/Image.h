@@ -25,7 +25,8 @@
 
 #include "base.h"
 
-namespace forg {
+namespace forg
+{
 
 struct ImageDescription
 {
@@ -37,20 +38,20 @@ struct ImageDescription
 /// Raw image with mipmaps
 class Image
 {
-public:
+  public:
     // 'structors
     Image();
     ~Image();
 
     // Attributes
-private:
-    char** m_data;  ///< array of mipmaps
+  private:
+    char** m_data; ///< array of mipmaps
     uint m_width;
     uint m_height;
     uint m_num_mipmaps;
 
     // Public Methods
-public:
+  public:
     bool Load(const char* _filename);
 
     const char* GetData(uint _level = 0) const;
@@ -67,22 +68,21 @@ public:
 
     /// Change image size
     /**
-    * @param _width new width, 0 - no change
-    * @param _height new height, 0 - no change
-    */
+     * @param _width new width, 0 - no change
+     * @param _height new height, 0 - no change
+     */
     void Resize(uint _width, uint _height);
 
     /**
-    * Generates mipmaps chain
-    * @return Number of mipmaps
-    */
+     * Generates mipmaps chain
+     * @return Number of mipmaps
+     */
     uint GenerateMipmaps();
-private:
-    void Clean();
 
+  private:
+    void Clean();
 };
 
+} // namespace forg
 
-}
-
-#endif  //_FORG_IMAGE_H_
+#endif //_FORG_IMAGE_H_

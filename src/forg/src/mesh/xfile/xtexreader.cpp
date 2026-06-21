@@ -1,12 +1,16 @@
 #include "forg_pch.h"
 
-#include "mesh/xfile/xtexreader.h"
 #include "debug//dbg.h"
+#include "mesh/xfile/xtexreader.h"
 
-namespace forg { namespace xfile { namespace reader {
+namespace forg
+{
+namespace xfile
+{
+namespace reader
+{
 
-xtexreader::xtexreader(std::ifstream& input, bool doubleFloat)
-: m_input(input)
+xtexreader::xtexreader(std::ifstream& input, bool doubleFloat) : m_input(input)
 {
     m_bDoubleFloat = doubleFloat;
     m_lexer.SetInput(&input);
@@ -16,22 +20,26 @@ WORD xtexreader::ReadToken()
 {
     ScannerToken scan;
 
-	if (m_next_tokens.size() == 0)
-	{
-        if ( m_lexer.GetToken( scan ) == 0 )
+    if (m_next_tokens.size() == 0)
+    {
+        if (m_lexer.GetToken(scan) == 0)
         {
-            if (! m_input.eof())
+            if (!m_input.eof())
             {
-                DBG_MSG("[xtexreader::ReadToken] Unknown token (lexem <%s> at line %d, column %d)\n", scan.lexem.c_str(), scan.line, scan.col);
+                DBG_MSG("[xtexreader::ReadToken] Unknown token (lexem <%s> at "
+                        "line %d, column %d)\n",
+                        scan.lexem.c_str(), scan.line, scan.col);
             }
 
             return 0;
         }
 
-        //DBG_MSG("[xtexreader::ReadToken] lexem <%s> at line %d, column %d\n", scan.lexem.c_str(), scan.line, scan.col);
+        // DBG_MSG("[xtexreader::ReadToken] lexem <%s> at line %d, column %d\n",
+        // scan.lexem.c_str(), scan.line, scan.col);
 
         m_last_tokens.push_back(scan);
-	} else
+    }
+    else
     {
         scan = m_next_tokens.front();
         m_next_tokens.pop_front();
@@ -39,23 +47,23 @@ WORD xtexreader::ReadToken()
         m_last_tokens.push_back(scan);
     }
 
-	return scan.token;
+    return scan.token;
 }
 
 int xtexreader::UnreadToken()
 {
-	if (m_last_tokens.size() == 0)
-	{	//nie zostalo jeszcze nic przeczytane
-		return 1;
-	}
+    if (m_last_tokens.size() == 0)
+    { // nie zostalo jeszcze nic przeczytane
+        return 1;
+    }
 
-	//wrzucamy token spowrotem do kolejki nastepnych
-	ScannerToken token = m_last_tokens.back();
-	m_last_tokens.pop_back();
+    // wrzucamy token spowrotem do kolejki nastepnych
+    ScannerToken token = m_last_tokens.back();
+    m_last_tokens.pop_back();
 
-	m_next_tokens.push_front(token);
+    m_next_tokens.push_front(token);
 
-	return 0;
+    return 0;
 }
 
 int xtexreader::EvalToken(xstring& value)
@@ -99,7 +107,8 @@ int xtexreader::EvalToken(xguid& value)
 
         char p1[5] = {0};
 
-        sscanf(m_last_tokens.back().lexem.c_str(), "<%lx-%hx-%hx-%x-%4s%x>", &value.Data1, &value.Data2, &value.Data3, &d1, p1, &d3);
+        sscanf(m_last_tokens.back().lexem.c_str(), "<%lx-%hx-%hx-%x-%4s%x>",
+               &value.Data1, &value.Data2, &value.Data3, &d1, p1, &d3);
         sscanf(p1, "%x", &d2);
 
         value.Data4[0] = (d1 & 0xff00) >> 8;
@@ -111,8 +120,6 @@ int xtexreader::EvalToken(xguid& value)
         value.Data4[5] = (d3 & 0xff0000) >> 16;
         value.Data4[6] = (d3 & 0xff00) >> 8;
         value.Data4[7] = (d3 & 0xff);
-
-
 
         return 0;
     }
@@ -137,7 +144,7 @@ int xtexreader::EvalToken(IntegerList& value)
     if (m_last_tokens.size())
     {
         size_t tlen = m_last_tokens.back().lexem.size();
-        char* text = new char[tlen+1];
+        char* text = new char[tlen + 1];
 
         m_last_tokens.back().lexem.copy(text, tlen);
         text[tlen] = 0;
@@ -154,7 +161,7 @@ int xtexreader::EvalToken(IntegerList& value)
             token = strtok(NULL, ",;");
         }
 
-        delete [] text;
+        delete[] text;
 
         return 0;
     }
@@ -167,7 +174,7 @@ int xtexreader::EvalToken(FloatList& value)
     if (m_last_tokens.size())
     {
         size_t tlen = m_last_tokens.back().lexem.size();
-        char* text = new char[tlen+1];
+        char* text = new char[tlen + 1];
 
         m_last_tokens.back().lexem.copy(text, tlen);
         text[tlen] = 0;
@@ -184,7 +191,7 @@ int xtexreader::EvalToken(FloatList& value)
             token = strtok(NULL, ",;");
         }
 
-        delete [] text;
+        delete[] text;
 
         return 0;
     }
@@ -197,8 +204,8 @@ int xtexreader::ReadInteger(int& value)
 
     if (ReadToken() != EToken::TOKEN_INTEGER)
     {
-    	UnreadToken();
-    	return -1;
+        UnreadToken();
+        return -1;
     }
 
     return EvalToken(value);
@@ -210,19 +217,19 @@ int xtexreader::ReadIntegerList(IntegerList& int_list)
 
     if (tok != EToken::TOKEN_INTEGER_LIST && tok != EToken::TOKEN_INTEGER)
     {
-    	UnreadToken();
-    	return -1;
+        UnreadToken();
+        return -1;
     }
 
     return EvalToken(int_list);
 }
 
-int	xtexreader::ReadFloatList(FloatList& float_list)
+int xtexreader::ReadFloatList(FloatList& float_list)
 {
     if (ReadToken() != EToken::TOKEN_FLOAT_LIST)
     {
-    	UnreadToken();
-    	return -1;
+        UnreadToken();
+        return -1;
     }
 
     int rval = EvalToken(float_list);
@@ -234,38 +241,40 @@ int xtexreader::ReadStringList(StringList& string_list)
 {
     // string {list_separator string} list_separator
 
-//string_list           : string_list_1 list_separator
-//
-//string_list_1         : string
-//						| string_list_1 list_separator string
-//
+    // string_list           : string_list_1 list_separator
+    //
+    // string_list_1         : string
+    //						| string_list_1 list_separator
+    // string
+    //
 
-//list_separator        : comma
-//						| semicolon
-//
+    // list_separator        : comma
+    //						| semicolon
+    //
     int rval = 0;
     int list_size = 0;
 
     do
     {
-    	xstring str;
+        xstring str;
 
-    	rval = ReadString(str);
+        rval = ReadString(str);
 
-    	if (rval == 0)	//list_separator check follows
-    	{
+        if (rval == 0) // list_separator check follows
+        {
             string_list.push_back(str);
             list_size++;
 
             WORD tok = ReadToken();
 
-    		rval = ((tok != EToken::TOKEN_COMMA) && (tok != EToken::TOKEN_SEMICOLON));
+            rval = ((tok != EToken::TOKEN_COMMA) &&
+                    (tok != EToken::TOKEN_SEMICOLON));
             if (rval)
             {
                 UnreadToken();
                 rval = -1;
             }
-    	}
+        }
 
     } while (rval == 0);
 
@@ -274,14 +283,14 @@ int xtexreader::ReadStringList(StringList& string_list)
 
 int xtexreader::ReadName(xstring& name)
 {
-	WORD tok = ReadToken();
+    WORD tok = ReadToken();
 
-	if (tok != EToken::TOKEN_NAME)
-	{
-		name = "";
-		UnreadToken();
-		return -1;
-	}
+    if (tok != EToken::TOKEN_NAME)
+    {
+        name = "";
+        UnreadToken();
+        return -1;
+    }
 
     return EvalToken(name);
 }
@@ -292,9 +301,9 @@ int xtexreader::ReadString(xstring& str)
 
     if (tok != EToken::TOKEN_STRING)
     {
-    	str = "";
-    	UnreadToken();
-    	return -1;
+        str = "";
+        UnreadToken();
+        return -1;
     }
 
     return EvalToken(str);
@@ -304,12 +313,13 @@ int xtexreader::ReadGUID(xguid& tguid)
 {
     if (ReadToken() != EToken::TOKEN_GUID)
     {
-    	UnreadToken();
-    	return -1;
+        UnreadToken();
+        return -1;
     }
 
     return EvalToken(tguid);
 }
 
-
-}}}
+} // namespace reader
+} // namespace xfile
+} // namespace forg

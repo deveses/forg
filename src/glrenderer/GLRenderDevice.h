@@ -23,29 +23,47 @@
 #pragma once
 #endif
 
+#include "GLDeviceCaps.h"
 #include "base.h"
 #include "rendering/IRenderDevice.h"
 #include "rendering/VertexDeclaration.h"
-#include "GLDeviceCaps.h"
 
-namespace forg {
+namespace forg
+{
 
 #ifdef _DEBUG
 extern int GLErrorCheck(int line, LPCSTR file, LPCSTR func);
 
-#define GLV(func) func; GLErrorCheck(__LINE__, __FILE__, #func)
-#define GLV_RETURNV(func, rvalue) func; if(GLErrorCheck(__LINE__, __FILE__, #func) != GL_NO_ERROR) return rvalue
-#define GLV_RETURN(func) func; if (GLErrorCheck(__LINE__, __FILE__, #func) != GL_NO_ERROR) return
+#define GLV(func)                                                              \
+    func;                                                                      \
+    GLErrorCheck(__LINE__, __FILE__, #func)
+#define GLV_RETURNV(func, rvalue)                                              \
+    func;                                                                      \
+    if (GLErrorCheck(__LINE__, __FILE__, #func) != GL_NO_ERROR)                \
+    return rvalue
+#define GLV_RETURN(func)                                                       \
+    func;                                                                      \
+    if (GLErrorCheck(__LINE__, __FILE__, #func) != GL_NO_ERROR)                \
+    return
 
-#else	//RELEASE
+#else // RELEASE
 
-#define GLV(func) { func; }
-#define GLV_RETURN(func) {\
-	func; if (glGetError() != GL_NO_ERROR) return;\
-}
-#define GLV_RETURNV(func, rvalue) func; if(glGetError() != GL_NO_ERROR) {\
-	return rvalue;\
-}
+#define GLV(func)                                                              \
+    {                                                                          \
+        func;                                                                  \
+    }
+#define GLV_RETURN(func)                                                       \
+    {                                                                          \
+        func;                                                                  \
+        if (glGetError() != GL_NO_ERROR)                                       \
+            return;                                                            \
+    }
+#define GLV_RETURNV(func, rvalue)                                              \
+    func;                                                                      \
+    if (glGetError() != GL_NO_ERROR)                                           \
+    {                                                                          \
+        return rvalue;                                                         \
+    }
 
 #endif
 
@@ -67,180 +85,131 @@ class IPixelShader
 
 typedef IPixelShader* LPPIXELSHADER;
 
-class GLRenderDevice
-	: public IRenderDevice
+class GLRenderDevice : public IRenderDevice
 {
-	friend class GLRenderer;
+    friend class GLRenderer;
 
-private:
-	GLRenderDevice();
+  private:
+    GLRenderDevice();
 
-public:
-	~GLRenderDevice(void);
+  public:
+    ~GLRenderDevice(void);
 
-//Attributes
-private:
+    // Attributes
+  private:
     int m_refCount;
-	HWIN m_hWnd;
-	HANDLE m_hDC;
-	HANDLE m_hRC;
+    HWIN m_hWnd;
+    HANDLE m_hDC;
+    HANDLE m_hRC;
 
-    Matrix4 m_matView;          // World to Camera Transformation
-    Matrix4 m_matWorld;         // Object to World Transformation
-    Matrix4 m_matProjection;    // Camera to Screen Transformation
-    Matrix4 m_matModelView;     // Object to Camera Transformation
+    Matrix4 m_matView;       // World to Camera Transformation
+    Matrix4 m_matWorld;      // Object to World Transformation
+    Matrix4 m_matProjection; // Camera to Screen Transformation
+    Matrix4 m_matModelView;  // Object to Camera Transformation
 
-	VertexElement m_internal_decl[255];
-	LPVERTEXBUFFER m_vertex_buffer;
-	LPINDEXBUFFER m_index_buffer;
-	const VertexDeclaration *m_pVertexDeclaration;
+    VertexElement m_internal_decl[255];
+    LPVERTEXBUFFER m_vertex_buffer;
+    LPINDEXBUFFER m_index_buffer;
+    const VertexDeclaration* m_pVertexDeclaration;
 
     SRenderStates m_render_states;
-	GLDeviceCaps m_caps;
+    GLDeviceCaps m_caps;
 
     bool m_use_shaders;
 
-//IRenderDevice methods
-public:
-	int BeginScene(void);
-	int EndScene(void);
+    // IRenderDevice methods
+  public:
+    int BeginScene(void);
+    int EndScene(void);
 
-	int Clear(uint flags, Color color, float zdepth, int stencil);
-	int Present();
-	int Reset();
+    int Clear(uint flags, Color color, float zdepth, int stencil);
+    int Present();
+    int Reset();
 
-	LPVERTEXDECLARATION CreateVertexDeclaration(const VertexElement* pVertexElements);
+    LPVERTEXDECLARATION
+    CreateVertexDeclaration(const VertexElement* pVertexElements);
 
-	LPVERTEXBUFFER CreateVertexBuffer(
-		uint length,
-		uint usage,
-		uint pool
-		//IVertexBuffer** ppVertexBuffer
-		);
-
-	LPINDEXBUFFER CreateIndexBuffer(
-		uint length,
-		uint usage,
-		bool sixteenBitIndices,
-		uint pool
-		//IIndexBuffer** ppIndexBuffer
-		);
-
-    LPVERTEXSHADER CreateVertexShader(
-        const void *pFunction
-        //IDirect3DVertexShader9 **ppShader
+    LPVERTEXBUFFER CreateVertexBuffer(uint length, uint usage, uint pool
+                                      // IVertexBuffer** ppVertexBuffer
     );
 
-    LPPIXELSHADER CreatePixelShader(
-        const void *pFunction
-        //IDirect3DVertexShader9 **ppShader
+    LPINDEXBUFFER CreateIndexBuffer(uint length, uint usage,
+                                    bool sixteenBitIndices, uint pool
+                                    // IIndexBuffer** ppIndexBuffer
     );
 
-	LPTEXTURE CreateTexture(
-		uint Width,
-		uint Height,
-		uint Levels,
-		uint Usage,
-		uint Format,
-		uint Pool
-		);
+    LPVERTEXSHADER CreateVertexShader(const void* pFunction
+                                      // IDirect3DVertexShader9 **ppShader
+    );
 
-	LPTEXTURE CreateTextureFromFile(
-		const char* filename,
-		uint Width,
-		uint Height,
-		uint Levels,
-		uint Usage,
-		uint Format,
-		uint Pool
-		);
+    LPPIXELSHADER CreatePixelShader(const void* pFunction
+                                    // IDirect3DVertexShader9 **ppShader
+    );
 
-	int DrawIndexedPrimitive(
-		PrimitiveType primitiveType,
-		int baseVertex,
-		int minVertexIndex,
-		int numVertices,
-		int startIndex,
-		int primCount);
+    LPTEXTURE CreateTexture(uint Width, uint Height, uint Levels, uint Usage,
+                            uint Format, uint Pool);
 
-	int DrawIndexedUserPrimitives(
-		PrimitiveType primitiveType,
-		uint minVertexIndex,
-		uint numVertexIndices,
-		uint primitiveCount,
-		const void* indexData,
-		bool sixteenBitIndices,
-		const void* vertexStreamZeroData,
-		uint VertexStreamZeroStride);
+    LPTEXTURE CreateTextureFromFile(const char* filename, uint Width,
+                                    uint Height, uint Levels, uint Usage,
+                                    uint Format, uint Pool);
 
-	int SetRenderState(uint state, uint value);
+    int DrawIndexedPrimitive(PrimitiveType primitiveType, int baseVertex,
+                             int minVertexIndex, int numVertices,
+                             int startIndex, int primCount);
 
-	int SetViewport(uint X, uint Y,uint Width, uint Height, float MinZ = 0.0f, float MaxZ = 1.0f);
+    int DrawIndexedUserPrimitives(PrimitiveType primitiveType,
+                                  uint minVertexIndex, uint numVertexIndices,
+                                  uint primitiveCount, const void* indexData,
+                                  bool sixteenBitIndices,
+                                  const void* vertexStreamZeroData,
+                                  uint VertexStreamZeroStride);
+
+    int SetRenderState(uint state, uint value);
+
+    int SetViewport(uint X, uint Y, uint Width, uint Height, float MinZ = 0.0f,
+                    float MaxZ = 1.0f);
 
     int GetViewport(Viewport* viewport);
 
-	void SetTransform(TransformType state, const Matrix4& matrix);
+    void SetTransform(TransformType state, const Matrix4& matrix);
 
-	void GetTransform(TransformType state, Matrix4& matrix);
+    void GetTransform(TransformType state, Matrix4& matrix);
 
-	int SetVertexDeclaration(const VertexDeclaration* pDecl);
+    int SetVertexDeclaration(const VertexDeclaration* pDecl);
 
     int SetVertexShader(IVertexShader* shader);
 
     int SetPixelShader(IPixelShader* shader);
 
-	int SetStreamSource(
-		int streamNumber,
-		IVertexBuffer* streamData,
-		int offsetInBytes,
-		int stride);
+    int SetStreamSource(int streamNumber, IVertexBuffer* streamData,
+                        int offsetInBytes, int stride);
 
-	int SetIndices(
-		IIndexBuffer* pIndexData
-		);
+    int SetIndices(IIndexBuffer* pIndexData);
 
-	int SetTexture(
-		uint Sampler,
-		ITexture* pTexture
-		);
+    int SetTexture(uint Sampler, ITexture* pTexture);
 
-    int SetLight(
-        uint Index,
-        const Light* pLight
-        );
+    int SetLight(uint Index, const Light* pLight);
 
-    int LightEnable(
-        uint LightIndex,
-        bool bEnable
-        );
+    int LightEnable(uint LightIndex, bool bEnable);
 
-    int SetMaterial(
-        const Material* pMaterial
-        );
+    int SetMaterial(const Material* pMaterial);
 
-	const GLDeviceCaps* get_DeviceCaps() const;
+    const GLDeviceCaps* get_DeviceCaps() const;
 
-//////////////////////////////////////////////////////////////////////////
-//Helpers
-//////////////////////////////////////////////////////////////////////////
-private:
-	int SetRenderState_CullMode(uint value);
-	int SetRenderState_ShadeMode(uint value);
-	int SetRenderState_FillMode(uint value);
-
+    //////////////////////////////////////////////////////////////////////////
+    // Helpers
+    //////////////////////////////////////////////////////////////////////////
+  private:
+    int SetRenderState_CullMode(uint value);
+    int SetRenderState_ShadeMode(uint value);
+    int SetRenderState_FillMode(uint value);
 
     int DrawIndexedUserPrimitives_Slow(
-        PrimitiveType primitiveType,
-        uint minVertexIndex,
-        uint numVertexIndices,
-        uint primitiveCount,
-        const void* indexData,
-        bool sixteenBitIndices,
-        const void* vertexStreamZeroData,
-        uint VertexStreamZeroStride);
+        PrimitiveType primitiveType, uint minVertexIndex, uint numVertexIndices,
+        uint primitiveCount, const void* indexData, bool sixteenBitIndices,
+        const void* vertexStreamZeroData, uint VertexStreamZeroStride);
 };
 
-}
+} // namespace forg
 
-#endif  // _GL_RENDER_DEVICE_H_
-
+#endif // _GL_RENDER_DEVICE_H_

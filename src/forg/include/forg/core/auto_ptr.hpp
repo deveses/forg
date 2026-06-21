@@ -23,46 +23,39 @@
 #pragma once
 #endif
 
-
 #include "forg/base.h"
 
 /*
-	smart pointers.
+        smart pointers.
 
-	to do:
-	reference counting,
-	reference linking (smart pointers as double-linked list
-	with pointers to previous and next smart pointer,
-	deleting object if both sides are null),
+        to do:
+        reference counting,
+        reference linking (smart pointers as double-linked list
+        with pointers to previous and next smart pointer,
+        deleting object if both sides are null),
 */
 
-namespace forg { namespace core {
-
-template <typename T>
-struct PointerOwner
+namespace forg
 {
-    void acquire(T* /*p*/)
-    {
-    }
+namespace core
+{
 
-    void release(T* /*p*/)
-    {
-    }
+template <typename T> struct PointerOwner
+{
+    void acquire(T* /*p*/) {}
 
-    void destroy(T* p)
-    {
-        delete p;
-    }
+    void release(T* /*p*/) {}
+
+    void destroy(T* p) { delete p; }
 };
 
-template <typename T>
-struct RefCountOwner
+template <typename T> struct RefCountOwner
 {
     void acquire(T* p)
     {
         if (p)
         {
-            //p->AddRef();
+            // p->AddRef();
         }
     }
 
@@ -70,7 +63,7 @@ struct RefCountOwner
     {
         if (p)
         {
-            //p->Release();
+            // p->Release();
         }
     }
 
@@ -83,266 +76,244 @@ struct RefCountOwner
     }
 };
 
-template<typename T>
-struct auto_ptr_ref
+template <typename T> struct auto_ptr_ref
 {
     T* m_ptr;
 
-    explicit
-    auto_ptr_ref(T* p): m_ptr(p) 
-    { 
-    }
+    explicit auto_ptr_ref(T* p) : m_ptr(p) {}
 };
-
 
 /// auto_ptr template
 /**
-* Basic smart pointer with destructive copy.
-* @author eses
-* @version 1.0
-* @date 10-2005
-* @todo
-* @bug
-* @warning
-*/
-template<typename T, typename OwnPolicy = PointerOwner<T>>
-class auto_ptr
+ * Basic smart pointer with destructive copy.
+ * @author eses
+ * @version 1.0
+ * @date 10-2005
+ * @todo
+ * @bug
+ * @warning
+ */
+template <typename T, typename OwnPolicy = PointerOwner<T>> class auto_ptr
 {
-	private:
-		T* m_ptr;
+  private:
+    T* m_ptr;
 
-        OwnPolicy own_policy;
+    OwnPolicy own_policy;
 
-		typedef auto_ptr<T, OwnPolicy> this_type;
+    typedef auto_ptr<T, OwnPolicy> this_type;
 
-	public:
+  public:
+    typedef T element_type;
 
-		typedef T element_type;
+    //////////////////////////////////////////////////////////////////////////
+    // Construction / Destruction
+    //////////////////////////////////////////////////////////////////////////
+    auto_ptr() : m_ptr(0) // never throws
+    {
+    }
 
-		//////////////////////////////////////////////////////////////////////////
-		// Construction / Destruction
-		//////////////////////////////////////////////////////////////////////////
-		auto_ptr(): m_ptr(0) // never throws
-		{
-		}
+    // destructive copy
+    auto_ptr(auto_ptr& aptr) : m_ptr(aptr.release()) {}
 
-		//destructive copy
-		auto_ptr(auto_ptr& aptr)
-			: m_ptr( aptr.release() )
-		{
-		}
+    template <typename U> auto_ptr(auto_ptr<U>& aptr) : m_ptr(aptr.release())
+    {
+        own_policy.acquire(m_ptr);
+    }
 
-        template<typename U>
-		auto_ptr(auto_ptr<U>& aptr)
-			: m_ptr( aptr.release() )
-		{
-            own_policy.acquire(m_ptr);
-		}
+    explicit auto_ptr(element_type* p) : m_ptr(p) // never throws
+    {
+    }
 
+    ~auto_ptr() // never throws
+    {
+        // boost::checked_delete(ptr);
+        own_policy.destroy(m_ptr);
+        m_ptr = 0;
+    }
 
-		explicit auto_ptr(element_type* p): m_ptr(p) // never throws
-		{
-		}
+    //////////////////////////////////////////////////////////////////////////
+    // Operators
+    //////////////////////////////////////////////////////////////////////////
 
-		~auto_ptr() // never throws
-		{
-			//boost::checked_delete(ptr);
-            own_policy.destroy(m_ptr);
-			m_ptr = 0;
-		}
+    // destructive copy
+    auto_ptr& operator=(auto_ptr& b)
+    {
+        reset(b.release());
+        return (*this);
+    }
 
-		//////////////////////////////////////////////////////////////////////////
-		// Operators
-		//////////////////////////////////////////////////////////////////////////
+    template <typename U> auto_ptr& operator=(auto_ptr<U>& b)
+    {
+        reset(b.release());
+        return (*this);
+    }
 
-		//destructive copy
-		auto_ptr& operator = (auto_ptr& b)
-		{
-			reset(b.release());
-			return (*this);
-		}
-
-        template<typename U>
-		auto_ptr& operator = (auto_ptr<U>& b)
-		{
-			reset(b.release());
-			return (*this);
-		}
-
-        // assigment implies an implicit conversion
-        /*
-		auto_ptr& operator = (T* ptr)
-		{
-			Reset(ptr);
-			return (*this);
-		}
-		*/
-
-		element_type& operator*() const // never throws
-		{
-			return *m_ptr;
-		}
-
-		element_type* operator->() const // never throws
-		{
-			return m_ptr;
-		}
-
-		// implicit conversion to "bool"
-		// commented because unwanted conversion to integer in some situations
-		//operator bool () const
-		//{
-		//	return ptr != 0;
-		//}
-
-		bool operator !() const // never throws
-		{
-			return m_ptr == 0;
-		}
-
-		//almost never applies because its templated version
-		//except "if (sp == 0)" for example
-		inline friend bool operator ==(const auto_ptr& lhs, const T* rhs)
-		{
-			return lhs.m_ptr == rhs;
-		}
-
-		inline friend bool operator ==(const T* lhs, const auto_ptr& rhs)
-		{
-			return lhs == rhs->m_ptr;
-		}
-
-		inline friend bool operator !=(const auto_ptr& lhs, const T* rhs)
-		{
-			return lhs.m_ptr != rhs;
-		}
-
-		inline friend bool operator !=(const T* lhs, const auto_ptr& rhs)
-		{
-			return lhs != rhs->m_ptr;
-		}
-
-		//templated versions
-
-		template <class U>
-		inline friend bool operator ==(const auto_ptr& lhs, const U* rhs)
-		{
-			return lhs.m_ptr == rhs;
-		}
-
-		template <class U>
-		inline friend bool operator ==(const U* lhs, const auto_ptr& rhs)
-		{
-			return lhs == rhs->m_ptr;
-		}
-
-		template <class U>
-		inline friend bool operator !=(const auto_ptr& lhs, const U* rhs)
-		{
-			return lhs.m_ptr != rhs;
-		}
-
-		template <class U>
-		inline friend bool operator !=(const U* lhs, const auto_ptr& rhs)
-		{
-			return lhs != rhs->ptr;
-		}
-
-		//operators for distinct smart pointer types
-
-		template <class U>
-		bool operator ==(const auto_ptr<U>& rhs)
-		{
-			return m_ptr == rhs.m_ptr;
-		}
-
-		template <class U>
-		bool operator !=(const auto_ptr<U>& rhs)
-		{
-			return m_ptr != rhs.m_ptr;
-		}
-
-		//////////////////////////////////////////////////////////////////////////
-		// Public Methods
-		//////////////////////////////////////////////////////////////////////////
-
-        bool is_null() const
-        {
-            return (m_ptr == 0);
-        }
-
-		element_type* release()
-		{
-			T* tmp = m_ptr;
-
-			m_ptr = 0;
-
-            own_policy.release(tmp);
-
-			return (tmp);
-		}
-
-		void reset(element_type* p = 0) // never throws
-		{
-			this_type(p).swap(*this);
-		}
-
-		element_type* get() const // never throws
-		{
-			return m_ptr;
-		}
-
-		void swap(auto_ptr& b) // never throws
-		{
-			T* tmp = b.m_ptr;
-			b.m_ptr = m_ptr;
-			m_ptr = tmp;
-		}
-
-		// automatic conversion
-
-	    auto_ptr(auto_ptr_ref<element_type> ref)
-        : m_ptr(ref.m_ptr) { }
-
-        auto_ptr& operator = (auto_ptr_ref<element_type> ref)
-        {
-            if (ref.m_ptr != this->get())
+    // assigment implies an implicit conversion
+    /*
+            auto_ptr& operator = (T* ptr)
             {
-                own_policy.destroy(m_ptr);
-
-                m_ptr = ref.m_ptr;
+                    Reset(ptr);
+                    return (*this);
             }
+            */
 
-            return *this;
-        }
+    element_type& operator*() const // never throws
+    {
+        return *m_ptr;
+    }
 
-        template<typename U>
-        operator auto_ptr_ref<U>()
+    element_type* operator->() const // never throws
+    {
+        return m_ptr;
+    }
+
+    // implicit conversion to "bool"
+    // commented because unwanted conversion to integer in some situations
+    // operator bool () const
+    //{
+    //	return ptr != 0;
+    //}
+
+    bool operator!() const // never throws
+    {
+        return m_ptr == 0;
+    }
+
+    // almost never applies because its templated version
+    // except "if (sp == 0)" for example
+    inline friend bool operator==(const auto_ptr& lhs, const T* rhs)
+    {
+        return lhs.m_ptr == rhs;
+    }
+
+    inline friend bool operator==(const T* lhs, const auto_ptr& rhs)
+    {
+        return lhs == rhs->m_ptr;
+    }
+
+    inline friend bool operator!=(const auto_ptr& lhs, const T* rhs)
+    {
+        return lhs.m_ptr != rhs;
+    }
+
+    inline friend bool operator!=(const T* lhs, const auto_ptr& rhs)
+    {
+        return lhs != rhs->m_ptr;
+    }
+
+    // templated versions
+
+    template <class U>
+    inline friend bool operator==(const auto_ptr& lhs, const U* rhs)
+    {
+        return lhs.m_ptr == rhs;
+    }
+
+    template <class U>
+    inline friend bool operator==(const U* lhs, const auto_ptr& rhs)
+    {
+        return lhs == rhs->m_ptr;
+    }
+
+    template <class U>
+    inline friend bool operator!=(const auto_ptr& lhs, const U* rhs)
+    {
+        return lhs.m_ptr != rhs;
+    }
+
+    template <class U>
+    inline friend bool operator!=(const U* lhs, const auto_ptr& rhs)
+    {
+        return lhs != rhs->ptr;
+    }
+
+    // operators for distinct smart pointer types
+
+    template <class U> bool operator==(const auto_ptr<U>& rhs)
+    {
+        return m_ptr == rhs.m_ptr;
+    }
+
+    template <class U> bool operator!=(const auto_ptr<U>& rhs)
+    {
+        return m_ptr != rhs.m_ptr;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Public Methods
+    //////////////////////////////////////////////////////////////////////////
+
+    bool is_null() const { return (m_ptr == 0); }
+
+    element_type* release()
+    {
+        T* tmp = m_ptr;
+
+        m_ptr = 0;
+
+        own_policy.release(tmp);
+
+        return (tmp);
+    }
+
+    void reset(element_type* p = 0) // never throws
+    {
+        this_type(p).swap(*this);
+    }
+
+    element_type* get() const // never throws
+    {
+        return m_ptr;
+    }
+
+    void swap(auto_ptr& b) // never throws
+    {
+        T* tmp = b.m_ptr;
+        b.m_ptr = m_ptr;
+        m_ptr = tmp;
+    }
+
+    // automatic conversion
+
+    auto_ptr(auto_ptr_ref<element_type> ref) : m_ptr(ref.m_ptr) {}
+
+    auto_ptr& operator=(auto_ptr_ref<element_type> ref)
+    {
+        if (ref.m_ptr != this->get())
         {
-            return auto_ptr_ref<U>(this->release());
+            own_policy.destroy(m_ptr);
+
+            m_ptr = ref.m_ptr;
         }
 
-        template<typename U>
-        operator auto_ptr<U>()
-        {
-            return auto_ptr<U>(this->release());
-        }
-	};
+        return *this;
+    }
 
-	template<class T> inline void swap(auto_ptr<T>& a, auto_ptr<T>& b) // never throws
-	{
-		a.Swap(b);
-	}
+    template <typename U> operator auto_ptr_ref<U>()
+    {
+        return auto_ptr_ref<U>(this->release());
+    }
 
-	// get_pointer(p) is a generic way to say p.get()
+    template <typename U> operator auto_ptr<U>()
+    {
+        return auto_ptr<U>(this->release());
+    }
+};
 
-	template<class T> inline T* get_pointer(const auto_ptr<T>& p)
-	{
-		return p.Get();
-	}
+template <class T>
+inline void swap(auto_ptr<T>& a, auto_ptr<T>& b) // never throws
+{
+    a.Swap(b);
+}
 
+// get_pointer(p) is a generic way to say p.get()
 
-}}
+template <class T> inline T* get_pointer(const auto_ptr<T>& p)
+{
+    return p.Get();
+}
+
+} // namespace core
+} // namespace forg
 
 #endif //_FORG_CORE_AUTOPTR_H_
-

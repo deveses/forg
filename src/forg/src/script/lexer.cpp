@@ -2,7 +2,10 @@
 
 #include "forg/script/lexer.h"
 
-namespace forg { namespace script {
+namespace forg
+{
+namespace script
+{
 
 // RegExp
 // 1. boolean or
@@ -73,10 +76,7 @@ SFAState* SFAState::AddLoopback(int _input)
     return sc.state;
 }
 
-StateMachine::StateMachine()
-{
-    m_current = &m_start;
-}
+StateMachine::StateMachine() { m_current = &m_start; }
 
 StateMachine::~StateMachine()
 {
@@ -93,23 +93,21 @@ SFAState* StateMachine::CreateState()
     return m_states.back();
 }
 
-void StateMachine::DeleteState(SFAState* _state)
-{
-    delete _state;
-}
+void StateMachine::DeleteState(SFAState* _state) { delete _state; }
 
 bool StateMachine::Transition(int _input, int& _output)
 {
     SFAState* next_state = m_current->GetState(_input);
 
-    if (m_current!=next_state && m_current->accept && m_current != &m_start && (next_state == nullptr || !next_state->accept))
+    if (m_current != next_state && m_current->accept && m_current != &m_start &&
+        (next_state == nullptr || !next_state->accept))
     {
         // we have terminated token
         _output = m_current->output;
         m_current = &m_start;
         return true;
-    } 
-    
+    }
+
     if (next_state != nullptr)
     {
         // we have token, but not terminated
@@ -122,15 +120,9 @@ bool StateMachine::Transition(int _input, int& _output)
 ///////////////////////////////////////////////////////////////////////////////
 // Regular Expression
 ///////////////////////////////////////////////////////////////////////////////
-void RegularExpression::Set(const core::string& _re)
-{
-    m_def = _re;
-}
+void RegularExpression::Set(const core::string& _re) { m_def = _re; }
 
-bool RegularExpression::Match(const core::string&)
-{
-    return false;
-}
+bool RegularExpression::Match(const core::string&) { return false; }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Lexer
@@ -143,9 +135,7 @@ Lexer::Lexer()
     m_text_lenght = 0;
 }
 
-Lexer::~Lexer()
-{
-}
+Lexer::~Lexer() {}
 
 void Lexer::DefineToken(int _token, const core::string _def)
 {
@@ -184,10 +174,10 @@ int Lexer::ReadToken(int _char, int _symbol, SToken& _token)
     m_state.column++;
     m_state.symbol = _symbol;
 
-    if (_char=='\n')
+    if (_char == '\n')
     {
         m_state.line++;
-        m_state.column=0;
+        m_state.column = 0;
     }
 
     // update state machine
@@ -208,13 +198,14 @@ int Lexer::ReadToken(int _char, int _symbol, SToken& _token)
     m_text[m_text_lenght] = (core::string::char_type)_char;
     m_text_lenght++;
 
-    if (m_machine.GetCurrentState() == m_machine.GetStart() && m_text_lenght>0)
+    if (m_machine.GetCurrentState() == m_machine.GetStart() &&
+        m_text_lenght > 0)
     {
-        m_text_lenght=0;
-    } 
+        m_text_lenght = 0;
+    }
 
     return result;
 }
 
-
-}}
+} // namespace script
+} // namespace forg

@@ -8,7 +8,8 @@
 #include <dlfcn.h>
 #endif
 
-namespace {
+namespace
+{
 
 void CheckPlugin(const char* path)
 {
@@ -42,10 +43,12 @@ void CheckPlugin(const char* path)
 
 } // namespace
 
-TEST_CASE("Renderer plugin descriptors reject incompatible contracts", "[rendering][plugin]")
+TEST_CASE("Renderer plugin descriptors reject incompatible contracts",
+          "[rendering][plugin]")
 {
     forg::RendererPluginDescriptor descriptor{
-        sizeof(forg::RendererPluginDescriptor), forg::RendererPluginApiVersion + 1, nullptr};
+        sizeof(forg::RendererPluginDescriptor),
+        forg::RendererPluginApiVersion + 1, nullptr};
     REQUIRE_FALSE(forg::IsRendererPluginCompatible(&descriptor));
 
     descriptor.ApiVersion = forg::RendererPluginApiVersion;
@@ -53,14 +56,16 @@ TEST_CASE("Renderer plugin descriptors reject incompatible contracts", "[renderi
 }
 
 #ifdef FORG_TEST_SWRENDERER_PATH
-TEST_CASE("Software renderer plugin has a compatible lifecycle", "[rendering][plugin]")
+TEST_CASE("Software renderer plugin has a compatible lifecycle",
+          "[rendering][plugin]")
 {
     CheckPlugin(FORG_TEST_SWRENDERER_PATH);
 }
 #endif
 
 #ifdef FORG_TEST_METALRENDERER_PATH
-TEST_CASE("Metal renderer plugin has a compatible lifecycle", "[rendering][plugin]")
+TEST_CASE("Metal renderer plugin has a compatible lifecycle",
+          "[rendering][plugin]")
 {
     CheckPlugin(FORG_TEST_METALRENDERER_PATH);
 }

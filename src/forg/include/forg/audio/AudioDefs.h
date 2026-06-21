@@ -23,7 +23,10 @@
 #pragma once
 #endif
 
-namespace forg { namespace audio {
+namespace forg
+{
+namespace audio
+{
 
 enum
 {
@@ -32,9 +35,9 @@ enum
 
 struct SAudioFormat
 {
-    int freq;   // samples per second
-    int bps;    // bytes per sample
-    int chan;   // channels
+    int freq; // samples per second
+    int bps;  // bytes per sample
+    int chan; // channels
 };
 
 struct SAudioBuffer
@@ -64,7 +67,7 @@ struct SAudioStream
 
 class IAudioOutput
 {
-public:
+  public:
     virtual bool CanWrite() = 0;
     virtual void Write(char* data, unsigned int size) = 0;
 
@@ -72,6 +75,7 @@ public:
     virtual void Release() = 0;
 };
 
-}}
+} // namespace audio
+} // namespace forg
 
 #endif

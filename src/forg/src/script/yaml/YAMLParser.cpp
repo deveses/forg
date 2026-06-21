@@ -137,7 +137,7 @@ bool HasBalancedQuotes(const std::string& text)
     return !in_single_quote && !in_double_quote;
 }
 
-}
+} // namespace
 
 YAMLParser::YAMLParser()
 {
@@ -145,10 +145,7 @@ YAMLParser::YAMLParser()
     m_error_code = ParserError::NoErrors;
 }
 
-YAMLParser::~YAMLParser()
-{
-    delete m_doc;
-}
+YAMLParser::~YAMLParser() { delete m_doc; }
 
 YAMLDocument* YAMLParser::Parse()
 {
@@ -175,7 +172,7 @@ bool YAMLParser::ReadDocument(YAMLDocument* _doc)
     std::unique_ptr<YAMLNode> root_node(
         new YAMLNode(forg::script::generic::ENodeType::Root));
 
-    std::vector<std::pair<int, YAMLNode*> > stack;
+    std::vector<std::pair<int, YAMLNode*>> stack;
     stack.push_back(std::make_pair(-1, root_node.get()));
 
     std::string line;
@@ -194,7 +191,7 @@ bool YAMLParser::ReadDocument(YAMLDocument* _doc)
 }
 
 bool YAMLParser::ParseLine(const std::string& _line, int /*_line_number*/,
-                           std::vector<std::pair<int, YAMLNode*> >& _stack)
+                           std::vector<std::pair<int, YAMLNode*>>& _stack)
 {
     if (IsBlankOrComment(_line))
         return true;

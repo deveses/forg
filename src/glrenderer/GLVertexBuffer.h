@@ -23,39 +23,36 @@
 #pragma once
 #endif
 
-#include <forg.h>
 #include "GLRenderDevice.h"
+#include <forg.h>
 
-namespace forg {
-
-	class GLVertexBuffer : public IVertexBuffer
+namespace forg
 {
-public:
-	GLVertexBuffer(GLRenderDevice* device, uint sizeOfBufferInBytes, uint usage, uint pool);
-	~GLVertexBuffer(void);
 
-public:
-	int Lock(
-		uint offsetToLock,
-		uint sizeToLock,
-		void ** ppbData,
-		uint flags
-		);
+class GLVertexBuffer : public IVertexBuffer
+{
+  public:
+    GLVertexBuffer(GLRenderDevice* device, uint sizeOfBufferInBytes, uint usage,
+                   uint pool);
+    ~GLVertexBuffer(void);
 
-	int Unlock();
+  public:
+    int Lock(uint offsetToLock, uint sizeToLock, void** ppbData, uint flags);
 
-	uint m_buffer_id;
-private:
-	GLRenderDevice* m_device;
-	const GLDeviceCaps* m_caps;
+    int Unlock();
 
-	uint m_usage;
-	uint m_pool;
-	uint m_type;
-	bool m_created;
+    uint m_buffer_id;
 
+  private:
+    GLRenderDevice* m_device;
+    const GLDeviceCaps* m_caps;
+
+    uint m_usage;
+    uint m_pool;
+    uint m_type;
+    bool m_created;
 };
 
-}
+} // namespace forg
 
-#endif  // _GL_VERTEX_BUFFER_H_
+#endif // _GL_VERTEX_BUFFER_H_

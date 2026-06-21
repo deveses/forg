@@ -20,19 +20,21 @@
 #define _FORG_METAL_BUFFERS_H_
 
 #include "base.h"
-#include "rendering/IVertexBuffer.h"
 #include "rendering/IIndexBuffer.h"
+#include "rendering/IVertexBuffer.h"
 
-namespace forg {
+namespace forg
+{
 
 // Both buffers wrap a single MTLBuffer (storageModeShared) so the CPU pointer
-// returned by Lock() points straight at GPU-visible memory; Unlock() is a no-op.
-// The MTLBuffer handle is stored as void* so this header stays includable from
-// plain C++ (the factory in MetalRenderer.cpp never sees an ObjC type).
+// returned by Lock() points straight at GPU-visible memory; Unlock() is a
+// no-op. The MTLBuffer handle is stored as void* so this header stays
+// includable from plain C++ (the factory in MetalRenderer.cpp never sees an
+// ObjC type).
 
 class MetalVertexBuffer : public IVertexBuffer
 {
-public:
+  public:
     MetalVertexBuffer();
     virtual ~MetalVertexBuffer();
 
@@ -40,37 +42,39 @@ public:
     int Create(void* mtlDevice, uint length);
 
     void* GetMTLBuffer() const { return m_buffer; }
-    uint  GetLength() const { return m_length; }
+    uint GetLength() const { return m_length; }
 
-    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData, uint flags);
+    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
+                     uint flags);
     virtual int Unlock();
 
-private:
-    void* m_buffer;   // id<MTLBuffer>, retained
-    uint  m_length;
+  private:
+    void* m_buffer; // id<MTLBuffer>, retained
+    uint m_length;
 };
 
 class MetalIndexBuffer : public IIndexBuffer
 {
-public:
+  public:
     MetalIndexBuffer();
     virtual ~MetalIndexBuffer();
 
     int Create(void* mtlDevice, uint length, bool sixteenBitIndices);
 
     void* GetMTLBuffer() const { return m_buffer; }
-    uint  GetLength() const { return m_length; }
-    bool  IsIndexShort() const { return m_short; }
+    uint GetLength() const { return m_length; }
+    bool IsIndexShort() const { return m_short; }
 
-    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData, uint flags);
+    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
+                     uint flags);
     virtual int Unlock();
 
-private:
-    void* m_buffer;   // id<MTLBuffer>, retained
-    uint  m_length;
-    bool  m_short;
+  private:
+    void* m_buffer; // id<MTLBuffer>, retained
+    uint m_length;
+    bool m_short;
 };
 
-}
+} // namespace forg
 
 #endif //_FORG_METAL_BUFFERS_H_

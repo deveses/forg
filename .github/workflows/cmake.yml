@@ -10,6 +10,20 @@ permissions:
   contents: read
 
 jobs:
+  format:
+    name: format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install clang-format
+        run: pip install clang-format==18.1.5
+
+      - name: Check formatting
+        run: cmake -DCLANG_FORMAT_EXECUTABLE=clang-format -DPROJECT_SOURCE_DIR="$PWD" -P cmake/CheckFormat.cmake
+
   macos:
     name: ${{ matrix.preset }}
     runs-on: macos-latest
@@ -31,6 +45,59 @@ jobs:
 
       - name: Test
         run: ctest --preset ${{ matrix.preset }}
+
+  no-pch:
+    name: no-pch
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure
+        run: cmake --preset no-pch
+
+      - name: Build
+        run: cmake --build --preset no-pch
+
+      - name: Test
+        run: ctest --preset no-pch
+
+  clang-tidy:
+    name: clang-tidy
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install clang-tidy
+        run: |
+          brew install llvm
+          echo "$(brew --prefix llvm)/bin" >> "$GITHUB_PATH"
+
+      - name: Configure
+        run: cmake --preset clang-tidy
+
+      - name: Build
+        run: cmake --build --preset clang-tidy
+
+  sanitizer:
+    name: sanitizer
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure
+        run: cmake --preset debug-asan
+
+      - name: Build
+        run: cmake --build --preset debug-asan
+
+      - name: Test
+        run: ctest --preset debug-asan
 
   windows:
     name: ${{ matrix.preset }}

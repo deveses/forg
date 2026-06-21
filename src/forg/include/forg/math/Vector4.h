@@ -24,9 +24,12 @@
 #endif
 
 #include "forg/base.h"
-//#include "Matrix4.h"
+// #include "Matrix4.h"
 
-namespace forg { namespace math {
+namespace forg
+{
+namespace math
+{
 
 struct Matrix4;
 
@@ -38,74 +41,81 @@ struct FORG_API Vector4
     //////////////////////////////////////////////////////////////////////////
     // Constructors
     //////////////////////////////////////////////////////////////////////////
-    explicit Vector4(float x = 0.0f, float y = 0.0f, float z = 0.0f, float w = 0.0f)
+    explicit Vector4(float x = 0.0f, float y = 0.0f, float z = 0.0f,
+                     float w = 0.0f)
         : X(x), Y(y), Z(z), W(w)
-    {}
+    {
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
     // Attributes
     ////////////////////////////////////////////////////////////////////////////////
-	float X;
-	float Y;
-	float Z;
+    float X;
+    float Y;
+    float Z;
     float W;
 
     //////////////////////////////////////////////////////////////////////////
     // Operators
     //////////////////////////////////////////////////////////////////////////
 
-	// casting
-    operator float* () { return (float*)this; };
-    operator const float* () const { return (const float*)this; };
+    // casting
+    operator float*() { return (float*)this; };
+    operator const float*() const { return (const float*)this; };
 
-	// assignment operators
-	Vector4& operator += ( const Vector4& value);
-	Vector4& operator -= ( const Vector4& value);
-	Vector4& operator *= ( float value);
-	Vector4& operator /= ( float value);
+    // assignment operators
+    Vector4& operator+=(const Vector4& value);
+    Vector4& operator-=(const Vector4& value);
+    Vector4& operator*=(float value);
+    Vector4& operator/=(float value);
 
-	// unary operators
-    Vector4 operator + () const { return Vector4(*this); };
-    Vector4 operator - () const { return Vector4(-X, -Y, -Z); };
+    // unary operators
+    Vector4 operator+() const { return Vector4(*this); };
+    Vector4 operator-() const { return Vector4(-X, -Y, -Z); };
 
-	// binary operators
-	Vector4 operator + ( const Vector4& value) const;
-	Vector4 operator - ( const Vector4& value) const;
-	Vector4 operator * ( float value) const;
-	Vector4 operator / ( float value) const;
+    // binary operators
+    Vector4 operator+(const Vector4& value) const;
+    Vector4 operator-(const Vector4& value) const;
+    Vector4 operator*(float value) const;
+    Vector4 operator/(float value) const;
 
-	float operator * (const Vector4& value) const;	//Dot
+    float operator*(const Vector4& value) const; // Dot
 
-	friend Vector4 operator * ( float scalar, const Vector4& value);
+    friend Vector4 operator*(float scalar, const Vector4& value);
 
-	bool operator == ( const Vector4& value) const;
-	bool operator != ( const Vector4& value) const;
+    bool operator==(const Vector4& value) const;
+    bool operator!=(const Vector4& value) const;
 
     ////////////////////////////////////////////////////////////////////////////////
     // Public Methods
     ////////////////////////////////////////////////////////////////////////////////
-	static void Add(Vector4& vOut, const Vector4& vLeft, const Vector4& vRight);
-	static void Substract(Vector4& vOut, const Vector4& vLeft, const Vector4& vRight);
-	static float Dot( const Vector4& vLeft, const Vector4& vRight );
-	static Vector4& Normalize(Vector4& vOut, const Vector4& vSource);
-    /// Transforms a 3D vector by a given matrix, projecting the result back into w = 1.
-	static Vector4& TransformCoordinate(Vector4& vOut, const Vector4& vSource, const Matrix4& mTransformation);
+    static void Add(Vector4& vOut, const Vector4& vLeft, const Vector4& vRight);
+    static void Substract(Vector4& vOut, const Vector4& vLeft,
+                          const Vector4& vRight);
+    static float Dot(const Vector4& vLeft, const Vector4& vRight);
+    static Vector4& Normalize(Vector4& vOut, const Vector4& vSource);
+    /// Transforms a 3D vector by a given matrix, projecting the result back
+    /// into w = 1.
+    static Vector4& TransformCoordinate(Vector4& vOut, const Vector4& vSource,
+                                        const Matrix4& mTransformation);
 
-    static Vector4& CatmullRom(Vector4& vOut, const Vector4& v0, const Vector4& v1, const Vector4& v2, const Vector4& v3, float s);
+    static Vector4& CatmullRom(Vector4& vOut, const Vector4& v0,
+                               const Vector4& v1, const Vector4& v2,
+                               const Vector4& v3, float s);
 
-	void Scale(float fScale);
-    float Dot( const Vector4& v ) const;
+    void Scale(float fScale);
+    float Dot(const Vector4& v) const;
     float LengthSq() const;
     float Length() const;
     Vector4& Normalize();
-    /// Transforms a 3D vector by a given matrix, projecting the result back into w = 1.
-	Vector4& TransformCoordinate(const Matrix4& mTransformation);
+    /// Transforms a 3D vector by a given matrix, projecting the result back
+    /// into w = 1.
+    Vector4& TransformCoordinate(const Matrix4& mTransformation);
 
     void Zero() { X = Y = Z = W = 0.0f; }
 };
 
-
-}}
+} // namespace math
+} // namespace forg
 
 #endif // _FORG_MATH_VECTOR4_H_
-

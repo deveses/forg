@@ -20,7 +20,7 @@ bool Flatten(const char* name, GltfLoader::CpuMesh& out)
 {
     return GltfLoader::Flatten(Asset(name).c_str(), out);
 }
-}
+} // namespace
 
 TEST_CASE("GltfLoader flattens an embedded .gltf triangle", "[mesh][gltf]")
 {
@@ -69,7 +69,8 @@ TEST_CASE("GltfLoader loads an external .bin buffer", "[mesh][gltf]")
     REQUIRE(m.materials[0].Material3D.Diffuse.b == Approx(0.75f));
 }
 
-TEST_CASE("GltfLoader bakes static node transforms into positions", "[mesh][gltf]")
+TEST_CASE("GltfLoader bakes static node transforms into positions",
+          "[mesh][gltf]")
 {
     GltfLoader::CpuMesh m;
     REQUIRE(Flatten("translated_triangle.gltf", m));
@@ -98,7 +99,8 @@ TEST_CASE("GltfLoader computes normals when missing", "[mesh][gltf]")
     }
 }
 
-TEST_CASE("GltfLoader produces one subset per primitive/material", "[mesh][gltf]")
+TEST_CASE("GltfLoader produces one subset per primitive/material",
+          "[mesh][gltf]")
 {
     GltfLoader::CpuMesh m;
     REQUIRE(Flatten("two_materials.gltf", m));
@@ -123,7 +125,8 @@ TEST_CASE("GltfLoader produces one subset per primitive/material", "[mesh][gltf]
     REQUIRE(m.materials[1].Material3D.Diffuse.g == Approx(1.0f));
 }
 
-TEST_CASE("GltfLoader reads a textured .glb and its texture filename", "[mesh][gltf]")
+TEST_CASE("GltfLoader reads a textured .glb and its texture filename",
+          "[mesh][gltf]")
 {
     GltfLoader::CpuMesh m;
     REQUIRE(Flatten("quad_textured.glb", m));
@@ -135,7 +138,8 @@ TEST_CASE("GltfLoader reads a textured .glb and its texture filename", "[mesh][g
     REQUIRE(std::string(m.materials[0].TextureFilename.c_str()) == "wood.png");
 }
 
-TEST_CASE("GltfLoader flags 32-bit indices above 65535 vertices", "[mesh][gltf]")
+TEST_CASE("GltfLoader flags 32-bit indices above 65535 vertices",
+          "[mesh][gltf]")
 {
     GltfLoader::CpuMesh m;
     REQUIRE(Flatten("grid32.glb", m));

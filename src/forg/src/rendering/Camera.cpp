@@ -1,28 +1,23 @@
 #include "forg_pch.h"
 
-#include "rendering/Camera.h"
 #include "math/Math.h"
 #include "math/Matrix4.h"
-//#include <d3dx9math.h>
+#include "rendering/Camera.h"
+// #include <d3dx9math.h>
 
-namespace forg {
+namespace forg
+{
 
 const float Camera::minimal_distance = 0.05f;
 
 Camera::Camera(CameraView view_type)
-: m_roll(0.0f)
-, m_aspect(1.0f)
-, m_fovy(0.78539816339744830961566084581988f)    // 70 degrees
-, m_near(1.5f)
-, m_far(1000.0f)
-, m_unitm_size(0.0f)
-, m_tanm_halfm_fov(0.0f)
-, m_target(0.0f, 0.0f, 0.0f)
-, m_position(0.0f, 0.0f, 5.0f)
-, m_up(0.0f, 1.0f, 0.0f)
-, m_camera_view(view_type)
-, m_screen_width(0.0f)
-, m_screen_height(0.0f)
+    : m_roll(0.0f), m_aspect(1.0f),
+      m_fovy(0.78539816339744830961566084581988f) // 70 degrees
+      ,
+      m_near(1.5f), m_far(1000.0f), m_unitm_size(0.0f), m_tanm_halfm_fov(0.0f),
+      m_target(0.0f, 0.0f, 0.0f), m_position(0.0f, 0.0f, 5.0f),
+      m_up(0.0f, 1.0f, 0.0f), m_camera_view(view_type), m_screen_width(0.0f),
+      m_screen_height(0.0f)
 {
     m_dir = m_target - m_position;
     m_dir.Normalize();
@@ -34,122 +29,89 @@ Camera::Camera(CameraView view_type)
     UpdateProjectionMatrix();
 }
 
-Camera::~Camera(void)
-{
-}
+Camera::~Camera(void) {}
 
 //////////////////////////////////////////////////////////////////////////
 // Camera properties
 //////////////////////////////////////////////////////////////////////////
 
+const Vector3& Camera::get_Target() const { return m_target; }
 
-const Vector3& Camera::get_Target() const
-{
-	return m_target;
-}
+const Vector3& Camera::get_Position() const { return m_position; }
 
-const Vector3& Camera::get_Position() const
-{
-    return m_position;
-}
+float Camera::get_ScreenWidth() const { return m_screen_width; }
 
-float Camera::get_ScreenWidth() const
-{
-    return m_screen_width;
-}
+float Camera::get_ScreenHeight() const { return m_screen_height; }
 
-float Camera::get_ScreenHeight() const
-{
-    return m_screen_height;
-}
+float Camera::get_FOV() const { return m_fovy; }
 
-float Camera::get_FOV() const
-{
-    return m_fovy;
-}
+float Camera::get_Aspect() const { return m_aspect; }
 
-float Camera::get_Aspect() const
-{
-    return m_aspect;
-}
+float Camera::get_NearRange() const { return m_near; }
 
-float Camera::get_NearRange() const
-{
-    return m_near;
-}
-
-float Camera::get_FarRange() const
-{
-    return m_far;
-}
+float Camera::get_FarRange() const { return m_far; }
 
 /*
 
 void Camera::set_Target(const Vector3& value)
 {
-	m_target = value;
+        m_target = value;
 }
 
 void Camera::set_Position(const Vector3& value)
 {
-	m_position = value;
+        m_position = value;
 }
 
 const Vector3& Camera::get_Up() const
 {
-	return m_up;
+        return m_up;
 }
 void Camera::set_Up(const Vector3& value)
 {
-	m_up = value;
+        m_up = value;
 }
 
 void Camera::set_View(CameraView value)
 {
-	m_camera_view = value;
+        m_camera_view = value;
 }
 
 
 void Camera::set_FOV(float value)
 {
-	m_fov = value;
+        m_fov = value;
 }
 
 
 void Camera::set_Aspect(float value)
 {
-	m_aspect = value;
+        m_aspect = value;
 }
 
 
 void Camera::set_NearRange(float value)
 {
-	m_near = value;
+        m_near = value;
 }
 
 
 void Camera::set_FarRange(float value)
 {
-	m_far = value;
+        m_far = value;
 }*/
 
-CameraView Camera::get_View() const
-{
-    return m_camera_view;
-}
+CameraView Camera::get_View() const { return m_camera_view; }
 
 void Camera::set_ScreenSize(float width, float height)
 {
-	m_screen_width = width;
-	m_screen_height = height;
+    m_screen_width = width;
+    m_screen_height = height;
 
-	SetAspect(m_screen_width / m_screen_height);
+    SetAspect(m_screen_width / m_screen_height);
 }
 
-void Camera::GetViewMatrix(Matrix4& view)
-{
-    view = m_matView;
-}
+void Camera::GetViewMatrix(Matrix4& view) { view = m_matView; }
 
 void Camera::GetProjectionMatrix(Matrix4& projection)
 {
@@ -211,56 +173,43 @@ void Camera::SetUp(const Vector3& value)
 
 // Public absolute placement: delegate to the protected setters so m_dir and
 // the cached view matrix are kept in sync (same path the movement ops use).
-void Camera::set_Position(const Vector3& value)
-{
-    SetPosition(value);
-}
+void Camera::set_Position(const Vector3& value) { SetPosition(value); }
 
-void Camera::set_Target(const Vector3& value)
-{
-    SetTarget(value);
-}
+void Camera::set_Target(const Vector3& value) { SetTarget(value); }
 
 //////////////////////////////////////////////////////////////////////////
 //	Camera operations
 //////////////////////////////////////////////////////////////////////////
 
-
 void Camera::Dolly(float camera, float target)
 {
-	Vector3 new_position = m_position;
-	Vector3 new_target = m_target;
-	Vector3 c = m_dir * camera;
-	Vector3 t = m_dir * target;
+    Vector3 new_position = m_position;
+    Vector3 new_target = m_target;
+    Vector3 c = m_dir * camera;
+    Vector3 t = m_dir * target;
 
-	//if ((m_dir - c).Length() > minimal_distance)
-	new_position += c;
+    // if ((m_dir - c).Length() > minimal_distance)
+    new_position += c;
 
-	//if ((m_dir - t).Length() > minimal_distance)
-	new_target += t;
+    // if ((m_dir - t).Length() > minimal_distance)
+    new_target += t;
 
-	SetPosition(new_position);
-	SetTarget(new_target);
-
+    SetPosition(new_position);
+    SetTarget(new_target);
 }
 
 void Camera::Roll(float angle)
 {
-	Matrix4 rot;
-	Vector3 up = m_up;
+    Matrix4 rot;
+    Vector3 up = m_up;
 
-	up.TransformCoordinate(Matrix4::RotationAxis(
-		rot,
-		m_position - m_target,
-		angle));
+    up.TransformCoordinate(
+        Matrix4::RotationAxis(rot, m_position - m_target, angle));
 
-	SetUp(up);
+    SetUp(up);
 }
 
-void Camera::FieldOfView(float fov_change)
-{
-	SetFOVY(m_fovy + fov_change);
-}
+void Camera::FieldOfView(float fov_change) { SetFOVY(m_fovy + fov_change); }
 
 void Camera::Truck(float x, float y)
 {
@@ -276,39 +225,38 @@ void Camera::Truck(float x, float y)
     Vector3 truck;
     Vector3::Add(truck, right, up);
 
-	SetPosition(m_position + truck);
-	SetTarget(m_target + truck);
+    SetPosition(m_position + truck);
+    SetTarget(m_target + truck);
 }
 
 void Camera::Orbit(float x, float y)
 {
-	Vector3 normal(0.0f, 1.0f, 0.0f);
+    Vector3 normal(0.0f, 1.0f, 0.0f);
 
-	Vector3 direction = m_position - m_target;
-	Vector3 n_dir;
-	Vector3 horizon;
-	Matrix4 rot;
-	Vector3 dir;
-	Vector3 up;
+    Vector3 direction = m_position - m_target;
+    Vector3 n_dir;
+    Vector3 horizon;
+    Matrix4 rot;
+    Vector3 dir;
+    Vector3 up;
 
-	Vector3::Cross(horizon, m_up, Vector3::Normalize(n_dir, direction));
-	Matrix4::RotationAxis(rot, horizon, y);
-	Vector3::TransformCoordinate(dir, direction, rot);
-	SetPosition(dir + m_target);
-	up = m_up;
-	up.TransformCoordinate(rot);
-	SetUp(up);
+    Vector3::Cross(horizon, m_up, Vector3::Normalize(n_dir, direction));
+    Matrix4::RotationAxis(rot, horizon, y);
+    Vector3::TransformCoordinate(dir, direction, rot);
+    SetPosition(dir + m_target);
+    up = m_up;
+    up.TransformCoordinate(rot);
+    SetUp(up);
 
+    direction = m_position - m_target;
+    Vector3::Cross(horizon, m_up, Vector3::Normalize(n_dir, direction));
+    Matrix4::RotationAxis(rot, normal, -x);
+    Vector3::TransformCoordinate(dir, direction, rot);
 
-	direction = m_position - m_target;
-	Vector3::Cross(horizon, m_up, Vector3::Normalize(n_dir, direction));
-	Matrix4::RotationAxis(rot, normal, - x);
-	Vector3::TransformCoordinate(dir, direction, rot);
-
-	SetPosition(dir + m_target);
-	up = m_up;
-	up.TransformCoordinate(rot);
-	SetUp(up);
+    SetPosition(dir + m_target);
+    up = m_up;
+    up.TransformCoordinate(rot);
+    SetUp(up);
 }
 
 void Camera::Pan(float x, float y)
@@ -338,34 +286,34 @@ void Camera::Pan(float x, float y)
 /*
 void Camera::Pan(float x, float y)
 {
-	Vector3 normal(0.0f, 1.0f, 0.0f);
+        Vector3 normal(0.0f, 1.0f, 0.0f);
     Vector3 direction = m_target - m_position;
-	Vector3 n_dir;
-	Vector3 horizon;
-	Vector3 dir;
-	Vector3 up;
-	Matrix4 rot;
+        Vector3 n_dir;
+        Vector3 horizon;
+        Vector3 dir;
+        Vector3 up;
+        Matrix4 rot;
     Matrix4 rotx;
     Matrix4 roty;
 
     Vector3::Cross(horizon, m_up, m_dir);
 
     // vertical rotation
-	Matrix4::RotationAxis(rotx, horizon, -y);
+        Matrix4::RotationAxis(rotx, horizon, -y);
     // horizontal rotation
     Matrix4::RotationAxis(roty, normal, -x);
 
     Matrix4::Multiply(rot, rotx, roty);
 
     // move view cone axis up/down
-	Vector3::TransformCoordinate(dir, direction, rot);
+        Vector3::TransformCoordinate(dir, direction, rot);
 
     up = m_up;
     up.TransformCoordinate(rot);
 
     SetTarget(m_position + dir);
-	SetUp(up);
+        SetUp(up);
 }
 */
 
-}
+} // namespace forg

@@ -23,39 +23,43 @@
 #pragma once
 #endif
 
-#include "os/ILibrary.h"
 #include "base.h"
+#include "os/ILibrary.h"
 
 #ifdef WIN32
 #include <windows.h>
 
-namespace forg { namespace os {
+namespace forg
+{
+namespace os
+{
 
 class WindowsLibrary : public ILibrary
 {
     //////////////////////////////////////////////////////////////////////
     // 'structors
     //////////////////////////////////////////////////////////////////////
-    public:
+  public:
     WindowsLibrary();
     ~WindowsLibrary();
 
     //////////////////////////////////////////////////////////////////////
     // Attributes
     //////////////////////////////////////////////////////////////////////
-    private:
+  private:
     HMODULE m_hModule;
 
     //////////////////////////////////////////////////////////////////////
     // ILibrary implementation
     //////////////////////////////////////////////////////////////////////
-    public:
+  public:
     virtual int Open(LPCTSTR szName, int nFlags);
     virtual void Close();
     virtual void* Address(LPCSTR szName);
 };
 
-}}  // namespace
+} // namespace os
+} // namespace forg
 
 #endif
 

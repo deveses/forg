@@ -63,11 +63,11 @@ uint File::Read(void* _buffer, uint _size)
 
 bool File::GetSize(uint& _out_size)
 {
-	    if (!m_handle)
-	        return false;
+    if (!m_handle)
+        return false;
 
-	    _out_size = m_size;
-	    return true;
+    _out_size = m_size;
+    return true;
 }
 
 } // namespace forg::os

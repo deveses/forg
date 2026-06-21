@@ -26,35 +26,36 @@
 #include "base.h"
 #include "rendering/Color.h"
 
-namespace forg {
+namespace forg
+{
 
-    using namespace forg::math;
+using namespace forg::math;
 
-    /**
-    *
-    */
-    struct Material
-    {
-        ////////////////////////////////////////////////////////////////////////////////
-        // Attributes
-        ////////////////////////////////////////////////////////////////////////////////
-        Color Diffuse;
-        Color Ambient;
-        Color Specular;
-        Color Emissive;
+/**
+ *
+ */
+struct Material
+{
+    ////////////////////////////////////////////////////////////////////////////////
+    // Attributes
+    ////////////////////////////////////////////////////////////////////////////////
+    Color Diffuse;
+    Color Ambient;
+    Color Specular;
+    Color Emissive;
 
-        /// Floating-point value specifying the sharpness of specular highlights. The higher the value, the sharper the highlight.
-        float Power;
+    /// Floating-point value specifying the sharpness of specular highlights.
+    /// The higher the value, the sharper the highlight.
+    float Power;
 
-        //////////////////////////////////////////////////////////////////////////
-        // Operators
-        //////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////
+    // Operators
+    //////////////////////////////////////////////////////////////////////////
 
-        // casting
-        operator float* () { return (float*)this; };
-        operator const float* () const { return (const float*)this; };
-    };
-}
+    // casting
+    operator float*() { return (float*)this; };
+    operator const float*() const { return (const float*)this; };
+};
+} // namespace forg
 
 #endif //_FORG_MATERIAL_H_
-

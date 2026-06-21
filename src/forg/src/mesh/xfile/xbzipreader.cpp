@@ -1,6 +1,6 @@
-#include "forg_pch.h"
 #include "mesh/xfile/xbzipreader.h"
 #include "debug/dbg.h"
+#include "forg_pch.h"
 
 #ifdef FORG_USE_ZLIB
 #include <zlib.h>
@@ -8,23 +8,23 @@
 
 #define MSZIP_MAGIC 0x4B43
 
-namespace forg { namespace xfile { namespace reader {
+namespace forg
+{
+namespace xfile
+{
+namespace reader
+{
 
 #ifdef FORG_USE_ZLIB
- voidpf MSZipAlloc(voidpf opaque, uInt items, uInt size)
+voidpf MSZipAlloc(voidpf opaque, uInt items, uInt size)
 {
     return new char[items * size];
 }
 
-void MSZipFree (voidpf opaque, voidpf address)
-{
-    delete [] (char*)address;
-}
+void MSZipFree(voidpf opaque, voidpf address) { delete[] (char*)address; }
 
 xbzipreader::xbzipreader(std::ifstream& input, bool doubleFloat)
-: xbinreader(input, doubleFloat)
-, m_org_size(0)
-, m_zstream(0)
+    : xbinreader(input, doubleFloat), m_org_size(0), m_zstream(0)
 {
     m_input.read((char*)&m_org_size, sizeof(m_org_size));
 
@@ -58,14 +58,14 @@ bool xbzipreader::read_next_block()
     unsigned short block_size = 0;
     unsigned short data_size = 0;
     unsigned short magic_num = 0;
-    
+
     m_input.read((char*)&block_size, sizeof(block_size));
     m_input.read((char*)&data_size, sizeof(data_size));
     m_input.read((char*)&magic_num, sizeof(magic_num));
 
     m_block_size = block_size;
     m_data_size = data_size - 2;
-    
+
     m_input.read(m_buf_in, m_data_size);
 
     z_stream* strm = (z_stream*)m_zstream;
@@ -113,7 +113,7 @@ bool xbzipreader::read_data(char* buffer, unsigned int count)
             ret = inflateReset(strm);
             ret = inflateSetDictionary(strm, (Bytef*)m_dict, m_block_size);
 
-            if ( read_next_block() || unpack_data())
+            if (read_next_block() || unpack_data())
                 return true;
         }
 
@@ -129,65 +129,68 @@ bool xbzipreader::read_data(char* buffer, unsigned int count)
 
     } while (to_read > 0 && ret == Z_OK);
 
-
     return false;
 
-/*
-    z_stream* strm = (z_stream*)m_zstream;
+    /*
+        z_stream* strm = (z_stream*)m_zstream;
 
-    if (strm->avail_out == 0)
-    {
-        strm->avail_out = count;
-        strm->next_out = (Bytef*)buffer;
-    }
-
-    int ret = 0;
-    int total_out = strm->total_out;
-    
-    do 
-    {
-        int before = strm->total_out;
-
-        ret = inflate(strm, Z_NO_FLUSH);
-
-        memcpy(m_dict + total_out, buffer, strm->total_out - before);
-
-        if (strm->avail_in == 0 && ! m_input.eof() && ! m_input.fail())
+        if (strm->avail_out == 0)
         {
-            ret = inflateReset(strm);
-            ret = inflateSetDictionary(strm, (Bytef*)m_dict, m_block_size);
-
-            DBG_MSG("[xbzipreader::read_data] dictionary size: %d\n", m_block_size);
-            
-            total_out = 0;
-
-            unsigned short block_size = 0;
-            unsigned short data_size = 0;
-            unsigned short magic_num = 0;
-            m_input.read((char*)&block_size, sizeof(block_size));
-            m_input.read((char*)&data_size, sizeof(data_size));
-            m_input.read((char*)&magic_num, sizeof(magic_num));
-
-            if (magic_num != MSZIP_MAGIC)
-                return 1;
-
-            m_block_size = block_size;
-            m_data_size = data_size - 2;
-            m_input.read(m_buf_in, m_data_size);
-
-            strm->avail_in = m_input.gcount();
-            strm->next_in = (Bytef*)m_buf_in;
-
-            DBG_MSG("[xbzipreader::read_data] block size: %d, data size: %d\n", block_size, data_size);
+            strm->avail_out = count;
+            strm->next_out = (Bytef*)buffer;
         }
 
-    } while (strm->avail_out > 0 && ret == Z_OK);
+        int ret = 0;
+        int total_out = strm->total_out;
 
-    return (ret != Z_OK);
-*/
+        do
+        {
+            int before = strm->total_out;
+
+            ret = inflate(strm, Z_NO_FLUSH);
+
+            memcpy(m_dict + total_out, buffer, strm->total_out - before);
+
+            if (strm->avail_in == 0 && ! m_input.eof() && ! m_input.fail())
+            {
+                ret = inflateReset(strm);
+                ret = inflateSetDictionary(strm, (Bytef*)m_dict, m_block_size);
+
+                DBG_MSG("[xbzipreader::read_data] dictionary size: %d\n",
+       m_block_size);
+
+                total_out = 0;
+
+                unsigned short block_size = 0;
+                unsigned short data_size = 0;
+                unsigned short magic_num = 0;
+                m_input.read((char*)&block_size, sizeof(block_size));
+                m_input.read((char*)&data_size, sizeof(data_size));
+                m_input.read((char*)&magic_num, sizeof(magic_num));
+
+                if (magic_num != MSZIP_MAGIC)
+                    return 1;
+
+                m_block_size = block_size;
+                m_data_size = data_size - 2;
+                m_input.read(m_buf_in, m_data_size);
+
+                strm->avail_in = m_input.gcount();
+                strm->next_in = (Bytef*)m_buf_in;
+
+                DBG_MSG("[xbzipreader::read_data] block size: %d, data size:
+       %d\n", block_size, data_size);
+            }
+
+        } while (strm->avail_out > 0 && ret == Z_OK);
+
+        return (ret != Z_OK);
+    */
 }
 
 #else
 #endif
 
-}}}
+} // namespace reader
+} // namespace xfile
+} // namespace forg

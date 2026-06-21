@@ -27,408 +27,423 @@
 #include "mesh/xfile/xdefs.h"
 #include "mesh/xfile/xreader.h"
 
-namespace forg { namespace xfile {
-
-    using namespace xfile::reader;
-
-	enum EDataObjectType {
-		EDataObjectType_Unknown = 0,
-		EDataObjectType_IntegerList = 1,
-		EDataObjectType_FloatList = 2,
-		EDataObjectType_StringList = 3,
-		EDataObjectType_DataReference = 4,
-		EDataObjectType_Object = 5,
-        EDataObjectType_Primitive = 6,
-        EDataObjectType_Array = 7,
-	};
-
-    class XTemplatesMgr;
-    class XTemplate;
-    class XTemplatePrimitive;
-    class XTemplateArray;
-    /************************************************************************/
-
-    class XDataIdentifier {
-    public:
-        XDataIdentifier();
-
-    private:
-        xstring m_sName;
-        ETemplatePrimitiveType::TYPE m_iPrimitiveType;
-        bool m_bPrimitive;
-
-    public:
-        void Set(const xstring& sName)
-        {
-            m_sName = sName;
-            m_bPrimitive = false;
-        }
-
-        void Set(ETemplatePrimitiveType::TYPE iType)
-        {
-            m_iPrimitiveType = iType;
-            m_bPrimitive = true;
-        }
-
-        bool IsPrimitiveType() const
-        {
-            return m_bPrimitive;
-        }
-
-        const xstring& GetName() const
-        {
-            return m_sName;
-        }
-
-        int GetType() const
-        {
-            return m_iPrimitiveType;
-        }
-
-        xstring ToString() const;
-
-        int Load(xreader& reader);
-    };
-
-    /************************************************************************/
-
-    class IData {
-    public:
-        virtual ~IData() {};
-
-        virtual int GetDataType() const = 0;
-
-        virtual uint GetSize() const = 0;
-
-        virtual xguid GetGUID() const = 0;
-
-        virtual uint GetSubdataSize() const = 0;
-
-        virtual const IData* GetSubdata(uint index) const = 0;
-
-        virtual void ToByteArray(void* /*buffer*/, uint /*buffer_size*/) const {};
-
-        bool IsObject() const { return GetDataType() == EDataObjectType_Object; }
-
-        bool IsArray() const { return GetDataType() == EDataObjectType_Array; }
-
-        const IData* FindObject(const xguid& guid) const
-        {
-            uint c = GetSubdataSize();
-            for (uint i=0; i<c; i++)
-            {
-                const IData* sub = GetSubdata(i);
-
-                if (sub->GetGUID() == guid)
-                {
-                    return sub;
-                }
-            }
-
-            return NULL;
-        }
-    };
-
-    /************************************************************************/
-
-    class XDataPrimitive : public IData {
-    public:
-        enum EPrimitiveType {
-            EPrimitiveType_Integer,
-            EPrimitiveType_Float,
-            EPrimitiveType_Double,
-            EPrimitiveType_String
-        };
-
-        union{
-            int iValue;
-            float fValue;
-            double dValue;
-        };
-        xstring strValue;
-        uint m_size;
-        EPrimitiveType m_type;
-
-    public:
-        void SetInteger(int v) { iValue = v; m_size = 4; m_type = EPrimitiveType_Integer; }
-        void SetFloat(float v) { fValue = v; m_size = 4; m_type = EPrimitiveType_Float; }
-        void SetDouble(double v) { dValue = v; m_size = 8; m_type = EPrimitiveType_Double; }
-        void SetString(const xstring& v) { strValue = v; m_size = (uint)v.size() + 1; m_type = EPrimitiveType_String; }
-
-        //////////////////////////////////////////////////////////////////////////
-        // IData implementation
-        //////////////////////////////////////////////////////////////////////////
-    public:
-        int GetDataType() const { return EDataObjectType_Primitive; }
-
-        uint GetSize() const { return m_size; };
-
-        xguid GetGUID() const { return xguid::Empty; }
-
-        virtual uint GetSubdataSize() const { return 0; };
-
-        virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
-
-        virtual void ToByteArray(void* buffer, uint buffer_size) const;
-    };
-
-    /************************************************************************/
-
-    class XDataIntegerList : public IData {
-    private:
-        IntegerList m_aIntegers;
-
-    public:
-        void Set(IntegerList& aIntegers)
-        {
-            m_aIntegers = aIntegers;
-        }
-
-        const IntegerList& GetIntegers() const
-        {
-            return m_aIntegers;
-        }
-
-        IntegerList& GetIntegers()
-        {
-            return m_aIntegers;
-        }
-
-        //////////////////////////////////////////////////////////////////////////
-        // IData implementation
-        //////////////////////////////////////////////////////////////////////////
-    public:
-        int GetDataType() const { return EDataObjectType_IntegerList; };
-
-        uint GetSize() const { return (uint)m_aIntegers.size()*4; }
-
-        xguid GetGUID() const { return xguid::Empty; }
-
-        virtual uint GetSubdataSize() const { return 0; };
-
-        virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
-
-        virtual void ToByteArray(void* buffer, uint buffer_size) const;
-    };
-
-    /************************************************************************/
-
-    class XDataFloatList : public IData {
-    private:
-        FloatList m_aFloats;
-
-    public:
-        void Set(FloatList& aFloats)
-        {
-            m_aFloats = aFloats;
-        }
-
-        FloatList& GetFloats()
-        {
-            return m_aFloats;
-        }
-
-        const FloatList& GetFloats() const
-        {
-            return m_aFloats;
-        }
-
-        //////////////////////////////////////////////////////////////////////////
-        // IData implementation
-        //////////////////////////////////////////////////////////////////////////
-    public:
-        int GetDataType() const { return EDataObjectType_FloatList; };
-
-        uint GetSize() const { return (uint)m_aFloats.size()*4;}
-
-        xguid GetGUID() const { return xguid::Empty; }
-
-        virtual uint GetSubdataSize() const { return 0; };
-
-        virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
-
-        virtual void ToByteArray(void* buffer, uint buffer_size) const;
-    };
-
-    /************************************************************************/
-
-    class XDataStringList : public IData {
-
-        //////////////////////////////////////////////////////////////////////////
-        // IData implementation
-        //////////////////////////////////////////////////////////////////////////
-    public:
-        int GetDataType() const { return EDataObjectType_StringList; };
-
-        uint GetSize() const { return 0; }
-
-        xguid GetGUID() const { return xguid::Empty; }
-
-        virtual uint GetSubdataSize() const { return 0; };
-
-        virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
-    };
-
-    /************************************************************************/
-
-    class XDataObjectList : public IData
+namespace forg
+{
+namespace xfile
+{
+
+using namespace xfile::reader;
+
+enum EDataObjectType
+{
+    EDataObjectType_Unknown = 0,
+    EDataObjectType_IntegerList = 1,
+    EDataObjectType_FloatList = 2,
+    EDataObjectType_StringList = 3,
+    EDataObjectType_DataReference = 4,
+    EDataObjectType_Object = 5,
+    EDataObjectType_Primitive = 6,
+    EDataObjectType_Array = 7,
+};
+
+class XTemplatesMgr;
+class XTemplate;
+class XTemplatePrimitive;
+class XTemplateArray;
+/************************************************************************/
+
+class XDataIdentifier
+{
+  public:
+    XDataIdentifier();
+
+  private:
+    xstring m_sName;
+    ETemplatePrimitiveType::TYPE m_iPrimitiveType;
+    bool m_bPrimitive;
+
+  public:
+    void Set(const xstring& sName)
     {
-        // Nested
-    public:
-        typedef std::vector<IData*> XDataVector;
-        typedef XDataVector::iterator XDataVectorI;
-        typedef XDataVector::const_iterator XDataVectorCI;
+        m_sName = sName;
+        m_bPrimitive = false;
+    }
 
-    private:
-        XDataVector m_objects;
-        uint m_size;
+    void Set(ETemplatePrimitiveType::TYPE iType)
+    {
+        m_iPrimitiveType = iType;
+        m_bPrimitive = true;
+    }
 
-    public:
-        XDataObjectList()
-            : m_size(0)
+    bool IsPrimitiveType() const { return m_bPrimitive; }
+
+    const xstring& GetName() const { return m_sName; }
+
+    int GetType() const { return m_iPrimitiveType; }
+
+    xstring ToString() const;
+
+    int Load(xreader& reader);
+};
+
+/************************************************************************/
+
+class IData
+{
+  public:
+    virtual ~IData() {};
+
+    virtual int GetDataType() const = 0;
+
+    virtual uint GetSize() const = 0;
+
+    virtual xguid GetGUID() const = 0;
+
+    virtual uint GetSubdataSize() const = 0;
+
+    virtual const IData* GetSubdata(uint index) const = 0;
+
+    virtual void ToByteArray(void* /*buffer*/, uint /*buffer_size*/) const {};
+
+    bool IsObject() const { return GetDataType() == EDataObjectType_Object; }
+
+    bool IsArray() const { return GetDataType() == EDataObjectType_Array; }
+
+    const IData* FindObject(const xguid& guid) const
+    {
+        uint c = GetSubdataSize();
+        for (uint i = 0; i < c; i++)
         {
-        }
+            const IData* sub = GetSubdata(i);
 
-        virtual ~XDataObjectList()
-        {
-            for (XDataVectorI iter = m_objects.begin(); iter != m_objects.end(); ++iter)
+            if (sub->GetGUID() == guid)
             {
-                delete *iter;
+                return sub;
             }
         }
 
-        void AddObject(IData* object)
-        {
-            m_objects.push_back(object);
+        return NULL;
+    }
+};
 
-            m_size += object->GetSize();
-        }
+/************************************************************************/
 
-        //////////////////////////////////////////////////////////////////////////
-        // IData implementation
-        //////////////////////////////////////////////////////////////////////////
-    public:
-        int GetDataType() const { return EDataObjectType_Array; }
-
-        uint GetSize() const { return m_size; };
-
-        xguid GetGUID() const { return xguid::Empty; }
-
-        virtual uint GetSubdataSize() const { return (uint)m_objects.size(); };
-
-        virtual const IData* GetSubdata(uint index) const { return m_objects[index]; };
-
-        virtual void ToByteArray(void* buffer, uint buffer_size) const;
+class XDataPrimitive : public IData
+{
+  public:
+    enum EPrimitiveType
+    {
+        EPrimitiveType_Integer,
+        EPrimitiveType_Float,
+        EPrimitiveType_Double,
+        EPrimitiveType_String
     };
 
-    /************************************************************************/
+    union
+    {
+        int iValue;
+        float fValue;
+        double dValue;
+    };
+    xstring strValue;
+    uint m_size;
+    EPrimitiveType m_type;
 
-    class XDataReference : public IData {
-    public:
-        XDataReference(const xstring& name)
+  public:
+    void SetInteger(int v)
+    {
+        iValue = v;
+        m_size = 4;
+        m_type = EPrimitiveType_Integer;
+    }
+    void SetFloat(float v)
+    {
+        fValue = v;
+        m_size = 4;
+        m_type = EPrimitiveType_Float;
+    }
+    void SetDouble(double v)
+    {
+        dValue = v;
+        m_size = 8;
+        m_type = EPrimitiveType_Double;
+    }
+    void SetString(const xstring& v)
+    {
+        strValue = v;
+        m_size = (uint)v.size() + 1;
+        m_type = EPrimitiveType_String;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    // IData implementation
+    //////////////////////////////////////////////////////////////////////////
+  public:
+    int GetDataType() const { return EDataObjectType_Primitive; }
+
+    uint GetSize() const { return m_size; };
+
+    xguid GetGUID() const { return xguid::Empty; }
+
+    virtual uint GetSubdataSize() const { return 0; };
+
+    virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
+
+    virtual void ToByteArray(void* buffer, uint buffer_size) const;
+};
+
+/************************************************************************/
+
+class XDataIntegerList : public IData
+{
+  private:
+    IntegerList m_aIntegers;
+
+  public:
+    void Set(IntegerList& aIntegers) { m_aIntegers = aIntegers; }
+
+    const IntegerList& GetIntegers() const { return m_aIntegers; }
+
+    IntegerList& GetIntegers() { return m_aIntegers; }
+
+    //////////////////////////////////////////////////////////////////////////
+    // IData implementation
+    //////////////////////////////////////////////////////////////////////////
+  public:
+    int GetDataType() const { return EDataObjectType_IntegerList; };
+
+    uint GetSize() const { return (uint)m_aIntegers.size() * 4; }
+
+    xguid GetGUID() const { return xguid::Empty; }
+
+    virtual uint GetSubdataSize() const { return 0; };
+
+    virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
+
+    virtual void ToByteArray(void* buffer, uint buffer_size) const;
+};
+
+/************************************************************************/
+
+class XDataFloatList : public IData
+{
+  private:
+    FloatList m_aFloats;
+
+  public:
+    void Set(FloatList& aFloats) { m_aFloats = aFloats; }
+
+    FloatList& GetFloats() { return m_aFloats; }
+
+    const FloatList& GetFloats() const { return m_aFloats; }
+
+    //////////////////////////////////////////////////////////////////////////
+    // IData implementation
+    //////////////////////////////////////////////////////////////////////////
+  public:
+    int GetDataType() const { return EDataObjectType_FloatList; };
+
+    uint GetSize() const { return (uint)m_aFloats.size() * 4; }
+
+    xguid GetGUID() const { return xguid::Empty; }
+
+    virtual uint GetSubdataSize() const { return 0; };
+
+    virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
+
+    virtual void ToByteArray(void* buffer, uint buffer_size) const;
+};
+
+/************************************************************************/
+
+class XDataStringList : public IData
+{
+
+    //////////////////////////////////////////////////////////////////////////
+    // IData implementation
+    //////////////////////////////////////////////////////////////////////////
+  public:
+    int GetDataType() const { return EDataObjectType_StringList; };
+
+    uint GetSize() const { return 0; }
+
+    xguid GetGUID() const { return xguid::Empty; }
+
+    virtual uint GetSubdataSize() const { return 0; };
+
+    virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
+};
+
+/************************************************************************/
+
+class XDataObjectList : public IData
+{
+    // Nested
+  public:
+    typedef std::vector<IData*> XDataVector;
+    typedef XDataVector::iterator XDataVectorI;
+    typedef XDataVector::const_iterator XDataVectorCI;
+
+  private:
+    XDataVector m_objects;
+    uint m_size;
+
+  public:
+    XDataObjectList() : m_size(0) {}
+
+    virtual ~XDataObjectList()
+    {
+        for (XDataVectorI iter = m_objects.begin(); iter != m_objects.end();
+             ++iter)
         {
-            m_sName = name;
-            m_optional_guid = xguid::Empty;
+            delete *iter;
         }
+    }
 
-        XDataReference(const xstring& name, const xguid& guid)
-        {
-            m_sName = name;
-            m_optional_guid = guid;
-        }
+    void AddObject(IData* object)
+    {
+        m_objects.push_back(object);
 
-    private:
-        xstring m_sName;
-        xguid m_optional_guid;
+        m_size += object->GetSize();
+    }
 
-        //////////////////////////////////////////////////////////////////////////
-        // IData implementation
-        //////////////////////////////////////////////////////////////////////////
-    public:
-        int GetDataType() const { return EDataObjectType_DataReference; };
+    //////////////////////////////////////////////////////////////////////////
+    // IData implementation
+    //////////////////////////////////////////////////////////////////////////
+  public:
+    int GetDataType() const { return EDataObjectType_Array; }
 
-        uint GetSize() const { return 0; }
+    uint GetSize() const { return m_size; };
 
-        xguid GetGUID() const { return xguid::Empty; }
+    xguid GetGUID() const { return xguid::Empty; }
 
-        virtual uint GetSubdataSize() const { return 0; };
+    virtual uint GetSubdataSize() const { return (uint)m_objects.size(); };
 
-        virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
+    virtual const IData* GetSubdata(uint index) const
+    {
+        return m_objects[index];
     };
 
-    /************************************************************************/
+    virtual void ToByteArray(void* buffer, uint buffer_size) const;
+};
 
-    class XDataObject : public IData {
-        // Nested
-    public:
-        typedef std::vector<IData*> XDataVector;
-        typedef XDataVector::iterator XDataVectorI;
-        typedef XDataVector::const_iterator XDataVectorCI;
+/************************************************************************/
 
-        // 'structors
-    public:
-        XDataObject();
-        virtual ~XDataObject();
+class XDataReference : public IData
+{
+  public:
+    XDataReference(const xstring& name)
+    {
+        m_sName = name;
+        m_optional_guid = xguid::Empty;
+    }
 
-        // Attributes
-    private:
-        XDataIdentifier m_identifier;   ///< template / data type
-        xstring m_optional_name;    ///< object name
-        xguid m_optional_guid;
+    XDataReference(const xstring& name, const xguid& guid)
+    {
+        m_sName = name;
+        m_optional_guid = guid;
+    }
 
-        XDataVector m_subdata;
+  private:
+    xstring m_sName;
+    xguid m_optional_guid;
 
-        uint m_size;    ///< size in bytes
+    //////////////////////////////////////////////////////////////////////////
+    // IData implementation
+    //////////////////////////////////////////////////////////////////////////
+  public:
+    int GetDataType() const { return EDataObjectType_DataReference; };
 
-        // Associations
-    private:
-        const XTemplate* m_template;
+    uint GetSize() const { return 0; }
 
-        // Public Methods
-    public:
-        void AddSubData(IData* pData);
+    xguid GetGUID() const { return xguid::Empty; }
 
-        void SetIdentifier(const xstring& sIdent) { m_identifier.Set(sIdent); }
+    virtual uint GetSubdataSize() const { return 0; };
 
-        void SetIdentifier(ETemplatePrimitiveType::TYPE nIdent) { m_identifier.Set(nIdent); }
+    virtual const IData* GetSubdata(uint /*index*/) const { return 0; };
+};
 
-        void SetName(const xstring& sName) { m_optional_name = sName; }
+/************************************************************************/
 
-        void SetGUID(const xguid& guid) { m_optional_guid = guid; }
+class XDataObject : public IData
+{
+    // Nested
+  public:
+    typedef std::vector<IData*> XDataVector;
+    typedef XDataVector::iterator XDataVectorI;
+    typedef XDataVector::const_iterator XDataVectorCI;
 
-        const xstring& GetName() const { return m_optional_name; }
+    // 'structors
+  public:
+    XDataObject();
+    virtual ~XDataObject();
 
-        const XDataIdentifier& GetIdentifier() const { return m_identifier; }
+    // Attributes
+  private:
+    XDataIdentifier m_identifier; ///< template / data type
+    xstring m_optional_name;      ///< object name
+    xguid m_optional_guid;
 
-        int Load(xreader& reader, XTemplatesMgr& tmpl_mgr);
+    XDataVector m_subdata;
 
-        //////////////////////////////////////////////////////////////////////////
-        // IData implementation
-        //////////////////////////////////////////////////////////////////////////
-    public:
-        int GetDataType() const { return EDataObjectType_Object; }
+    uint m_size; ///< size in bytes
 
-        uint GetSize() const { return m_size; }
+    // Associations
+  private:
+    const XTemplate* m_template;
 
-        xguid GetGUID() const;
+    // Public Methods
+  public:
+    void AddSubData(IData* pData);
 
-        uint GetSubdataSize() const { return (uint)m_subdata.size();};
+    void SetIdentifier(const xstring& sIdent) { m_identifier.Set(sIdent); }
 
-        const IData* GetSubdata(uint index) const;
+    void SetIdentifier(ETemplatePrimitiveType::TYPE nIdent)
+    {
+        m_identifier.Set(nIdent);
+    }
 
-        void ToByteArray(void* buffer, uint buffer_size) const;
-        //////////////////////////////////////////////////////////////////////////
-        // Helpers
-        //////////////////////////////////////////////////////////////////////////
-    private:
-        int ReadMembers(xreader& reader, XTemplatesMgr& tmpl_mgr);
-        int ReadPrimitive(xreader& reader, int primitive_type, uint count = 1);
-        int ReadArray(xreader& reader, XTemplatesMgr& tmpl_mgr, const XTemplateArray* xarray);
-        int ReadDataPart(xreader& reader, XTemplatesMgr& tmpl_mgr);
-        int ReadDataReference(xreader& treader);
-        int ReadSubObject(xreader& reader, XTemplatesMgr& tmpl_mgr, const xstring& type, const xstring& name, const xguid& guid);
-    };
+    void SetName(const xstring& sName) { m_optional_name = sName; }
 
-}}
+    void SetGUID(const xguid& guid) { m_optional_guid = guid; }
 
-#endif  //_XDATA_H_
+    const xstring& GetName() const { return m_optional_name; }
+
+    const XDataIdentifier& GetIdentifier() const { return m_identifier; }
+
+    int Load(xreader& reader, XTemplatesMgr& tmpl_mgr);
+
+    //////////////////////////////////////////////////////////////////////////
+    // IData implementation
+    //////////////////////////////////////////////////////////////////////////
+  public:
+    int GetDataType() const { return EDataObjectType_Object; }
+
+    uint GetSize() const { return m_size; }
+
+    xguid GetGUID() const;
+
+    uint GetSubdataSize() const { return (uint)m_subdata.size(); };
+
+    const IData* GetSubdata(uint index) const;
+
+    void ToByteArray(void* buffer, uint buffer_size) const;
+    //////////////////////////////////////////////////////////////////////////
+    // Helpers
+    //////////////////////////////////////////////////////////////////////////
+  private:
+    int ReadMembers(xreader& reader, XTemplatesMgr& tmpl_mgr);
+    int ReadPrimitive(xreader& reader, int primitive_type, uint count = 1);
+    int ReadArray(xreader& reader, XTemplatesMgr& tmpl_mgr,
+                  const XTemplateArray* xarray);
+    int ReadDataPart(xreader& reader, XTemplatesMgr& tmpl_mgr);
+    int ReadDataReference(xreader& treader);
+    int ReadSubObject(xreader& reader, XTemplatesMgr& tmpl_mgr,
+                      const xstring& type, const xstring& name,
+                      const xguid& guid);
+};
+
+} // namespace xfile
+} // namespace forg
+
+#endif //_XDATA_H_

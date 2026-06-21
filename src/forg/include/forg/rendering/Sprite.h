@@ -26,7 +26,8 @@
 #include "base.h"
 #include "rendering/IRenderDevice.h"
 
-namespace forg {
+namespace forg
+{
 
 // TODO: move somewhere
 struct Rectangle
@@ -36,7 +37,13 @@ struct Rectangle
     int right;
     int bottom;
 
-    void Offset(int dx, int dy) { left += dx; right += dx; top += dy; bottom += dy; }
+    void Offset(int dx, int dy)
+    {
+        left += dx;
+        right += dx;
+        top += dy;
+        bottom += dy;
+    }
     int Height() const { return bottom - top; }
     int Width() const { return right - left; }
 };
@@ -49,59 +56,55 @@ struct Point
 
 /// Sprite
 /**
-* Sprite
-* @author eses
-* @version 1.0
-* @date 04-2008
-* @todo
-* @bug
-* @warning
-*/
+ * Sprite
+ * @author eses
+ * @version 1.0
+ * @date 04-2008
+ * @todo
+ * @bug
+ * @warning
+ */
 class Sprite
 {
     // 'structors
-    private:
+  private:
     Sprite();
 
-    public:
+  public:
     FORG_API static Sprite* CreateSprite(IRenderDevice* device);
 
     FORG_API ~Sprite();
 
     // Attributes
-    private:
+  private:
     IRenderDevice* m_device;
     Matrix4 m_transform;
     uint m_Flags;
 
     // Public methods
-    public:
+  public:
     /// Prepares a device for drawing sprites.
     FORG_API int Begin(uint Flags);
 
     /// Adds a sprite to the list of batched sprites.
     FORG_API int Flush();
 
-    /// Calls Flush and restores the device state to how it was before Begin was called.
+    /// Calls Flush and restores the device state to how it was before Begin was
+    /// called.
     FORG_API int End();
 
     /// Adds a sprite to the list of batched sprites.
-    FORG_API int Draw(
-        ITexture* srcTexture,
-        const Rectangle* srcRectangle,
-        const Vector3* center,
-        const Vector3* position,
-        Color4b color
-        );
+    FORG_API int Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
+                      const Vector3* center, const Vector3* position,
+                      Color4b color);
 
     FORG_API int SetTransform(const Matrix4* transform);
 
     FORG_API int SetWorldViewLH(const Matrix4* world, const Matrix4* view);
 
     FORG_API int SetWorldViewRH(const Matrix4* world, const Matrix4* view);
-
 };
 
-}
+} // namespace forg
 
 #endif // SPRITE_H_INCLUDED

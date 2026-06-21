@@ -67,9 +67,11 @@ TEST_CASE("CommandQueue reply survives the requester giving up", "[net][queue]")
     // set_value on the consumer side is not a use-after-free.
     CommandQueue queue;
     {
-        std::future<std::string> result = queue.PushWithReply(makeCommand("state"));
+        std::future<std::string> result =
+            queue.PushWithReply(makeCommand("state"));
         (void)result;
-    } // future (and the requester's scope) gone here; the queue owns the promise
+    } // future (and the requester's scope) gone here; the queue owns the
+      // promise
 
     QueueItem item;
     REQUIRE(queue.TryPop(item));
@@ -82,12 +84,14 @@ TEST_CASE("CommandQueue is safe across a producer thread", "[net][queue]")
     CommandQueue queue;
     const int total = 1000;
 
-    std::thread producer([&queue]() {
-        for (int i = 0; i < total; ++i)
+    std::thread producer(
+        [&queue]()
         {
-            queue.Push(makeCommand("x"));
-        }
-    });
+            for (int i = 0; i < total; ++i)
+            {
+                queue.Push(makeCommand("x"));
+            }
+        });
 
     int drained = 0;
     QueueItem item;

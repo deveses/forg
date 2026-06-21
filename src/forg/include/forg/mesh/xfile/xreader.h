@@ -25,39 +25,45 @@
 
 #include "mesh/xfile/xdefs.h"
 
-namespace forg { namespace xfile { namespace reader {
+namespace forg
+{
+namespace xfile
+{
+namespace reader
+{
 
-	class xreader {
-    public:
-        virtual ~xreader(){}
+class xreader
+{
+  public:
+    virtual ~xreader() {}
 
+  private:
+    IntegerList m_Integers;
+    IntegerListI m_IntBegin;
 
-    private:
-        IntegerList m_Integers;
-        IntegerListI m_IntBegin;
+    FloatList m_Floats;
+    FloatListI m_FloatBegin;
 
-        FloatList m_Floats;
-        FloatListI m_FloatBegin;
+  public:
+    virtual WORD ReadToken() = 0;
+    virtual int UnreadToken() = 0;
 
-    public:
-		virtual WORD ReadToken() = 0;
-		virtual int UnreadToken() = 0;
+    virtual int ReadInteger(int& value) = 0;
+    virtual int ReadIntegerList(IntegerList& int_list) = 0;
 
-		virtual int ReadInteger(int& value) = 0;
-		virtual int ReadIntegerList(IntegerList& int_list) = 0;
+    virtual int ReadFloatList(FloatList& float_list) = 0;
+    virtual int ReadStringList(StringList& string_list) = 0;
+    virtual int ReadName(xstring& name) = 0;
+    virtual int ReadString(xstring& str) = 0;
+    virtual int ReadGUID(xguid& tguid) = 0;
 
-		virtual int	ReadFloatList(FloatList& float_list) = 0;
-		virtual int ReadStringList(StringList& string_list) = 0;
-		virtual int ReadName(xstring& name) = 0;
-		virtual int ReadString(xstring& str) = 0;
-		virtual int ReadGUID(xguid& tguid) = 0;
+    int ReadPrimitiveType(ETemplatePrimitiveType::TYPE& primitive_type);
+    int ReadIntegers(IntegerList& int_list, DWORD count);
+    int ReadFloats(FloatList& float_list, DWORD count);
+};
 
-        int ReadPrimitiveType(ETemplatePrimitiveType::TYPE& primitive_type);
-        int ReadIntegers(IntegerList& int_list, DWORD count);
-        int ReadFloats(FloatList& float_list, DWORD count);
-	};
-
-
-}}}
+} // namespace reader
+} // namespace xfile
+} // namespace forg
 
 #endif

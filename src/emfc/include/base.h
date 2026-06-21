@@ -5,7 +5,7 @@
 #else
 #ifdef EMFC_STATIC
 #define EMFC_API
-#else 
+#else
 #define EMFC_API __declspec(dllimport)
 #endif
 #endif
