@@ -6,6 +6,7 @@
 #include "stdafx.h"
 
 #include "forg.h"
+#include "forg/script/yaml/YAMLParser.h"
 
 #include <cstring>
 
@@ -47,39 +48,60 @@ void ShowLastError()
     }
 }
 
+bool ChangeToExecutableDirectory()
+{
+    TCHAR path[MAX_PATH] = {};
+    DWORD length = GetModuleFileName(NULL, path, MAX_PATH);
+    if (length == 0)
+        return false;
+
+    if (length >= MAX_PATH)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return false;
+    }
+
+    TCHAR* lastSlash = _tcsrchr(path, _T('\\'));
+    if (lastSlash == nullptr)
+        return true;
+
+    *lastSlash = _T('\0');
+    return SetCurrentDirectory(path) != FALSE;
+}
+
 AppConfig LoadConfig()
 {
     AppConfig config;
     strncpy_s(config.Driver, config.DefaultDriver, _TRUNCATE);
 
-    forg::script::xml::XMLParser parser;
-    parser.Open("config.xml");
-    forg::script::xml::XMLDocument* document = parser.Parse();
+    forg::script::yaml::YAMLParser parser;
+    parser.Open("config.yml");
+    forg::script::yaml::YAMLDocument* document = parser.Parse();
 
     if (!document)
         return config;
 
-    if (forg::script::xml::XMLNode* node = document->FindNode("renderer"))
+    if (forg::script::yaml::YAMLNode* node = document->FindNode("renderer"))
     {
-        if (forg::script::xml::XMLNode* driver =
+        if (forg::script::yaml::YAMLNode* driver =
                 node->FindAttribute("driver"))
         {
             strncpy_s(config.Driver, driver->GetContent().c_str(), _TRUNCATE);
         }
     }
 
-    if (forg::script::xml::XMLNode* node = document->FindNode("window"))
+    if (forg::script::yaml::YAMLNode* node = document->FindNode("window"))
     {
-        if (forg::script::xml::XMLNode* width = node->FindAttribute("width"))
+        if (forg::script::yaml::YAMLNode* width = node->FindAttribute("width"))
             config.Width = atoi(width->GetContent().c_str());
 
-        if (forg::script::xml::XMLNode* height = node->FindAttribute("height"))
+        if (forg::script::yaml::YAMLNode* height = node->FindAttribute("height"))
             config.Height = atoi(height->GetContent().c_str());
 
-        if (forg::script::xml::XMLNode* posx = node->FindAttribute("posx"))
+        if (forg::script::yaml::YAMLNode* posx = node->FindAttribute("posx"))
             config.X = atoi(posx->GetContent().c_str());
 
-        if (forg::script::xml::XMLNode* posy = node->FindAttribute("posy"))
+        if (forg::script::yaml::YAMLNode* posy = node->FindAttribute("posy"))
             config.Y = atoi(posy->GetContent().c_str());
     }
 
@@ -145,6 +167,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     commonControls.dwSize = sizeof(commonControls);
     commonControls.dwICC = ICC_BAR_CLASSES;
     InitCommonControlsEx(&commonControls);
+
+    if (!ChangeToExecutableDirectory())
+    {
+        ShowLastError();
+        return 1;
+    }
 
     AppConfig config = LoadConfig();
     HMODULE module = LoadLibraryA(config.Driver);

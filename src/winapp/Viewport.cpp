@@ -166,8 +166,16 @@ DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth,
             return GetLastError();
     }
 
+    RECT windowRect = {0, 0, nWidth, nHeight};
+    if (!AdjustWindowRectEx(&windowRect, style, FALSE, exstyle))
+        return GetLastError();
+
+    int windowWidth = windowRect.right - windowRect.left;
+    int windowHeight = windowRect.bottom - windowRect.top;
+
     m_hWnd = CreateWindowEx(exstyle, class_name, TEXT("View"), style, x, y,
-                            nWidth, nHeight, hParent, NULL, m_hInstance, this);
+                            windowWidth, windowHeight, hParent, NULL,
+                            m_hInstance, this);
     if (m_hWnd == NULL)
         return GetLastError();
 
@@ -179,6 +187,11 @@ DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth,
     m_device = renderer->CreateDevice(m_hWnd, &rp);
     if (m_device == 0)
         return 1;
+
+    RECT clientRect = {};
+    GetClientRect(m_hWnd, &clientRect);
+    OnSize(SIZE_RESTORED, clientRect.right - clientRect.left,
+           clientRect.bottom - clientRect.top);
 
     m_device->SetRenderState(forg::RenderStates_CullMode, forg::Cull_Clockwise);
     m_device->SetRenderState(forg::RenderStates_ShadeMode,

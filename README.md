@@ -83,6 +83,8 @@ Initial coverage lives under `tests/` and focuses on deterministic library behav
 
 Use the `windows-debug` and `windows-release` presets with Visual Studio 2022. CMake builds `forg`, the direct Win32 `winapp`, `emfc` as a legacy compatibility target, `glrenderer`, the Windows software renderer, and the test suite. OpenCL and C++ AMP remain legacy-only; the checked-in Sharpmake projects are retained temporarily for comparison while CMake parity is validated.
 
+A post-build step copies `glrenderer.dll`, `swrenderer.dll`, and `src/winapp/config.yml` next to `winapp.exe`. `config.yml` selects which plugin `winapp` loads and controls the initial window geometry.
+
 ## Project layout
 
 ```text
