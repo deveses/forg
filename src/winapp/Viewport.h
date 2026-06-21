@@ -2,7 +2,9 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "EWnd.h"
+#include "forg.h"
+
+#include <windows.h>
 
 namespace forg::scene {
 
@@ -24,8 +26,10 @@ class Model
 
 } // namespace forg::scene
 
-class Viewport : public emfc::EWnd
+class Viewport
 {
+    HWND m_hWnd;
+    HINSTANCE m_hInstance;
     forg::IRenderDevice* m_device;
     forg::Camera m_camera;
 
@@ -61,17 +65,24 @@ class Viewport : public emfc::EWnd
 
     DWORD Create(forg::IRenderer* renderer, int x, int y, int nWidth,
                  int nHeight, HWND hParent);
+    BOOL ShowWindow(int nCmdShow);
+    HWND SetFocus();
+    HWND GetHwnd() const { return m_hWnd; }
 
     // Overrides
   public:
-    virtual void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
-    virtual void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
-    virtual void OnMouseMove(UINT nFlags, POINTS point);
-    virtual void OnMouseWheel(UINT nFlags, POINTS point, int delta);
-    virtual void OnLButtonDown(UINT nFlags, POINT point);
-    virtual void OnSize(UINT nType, int cx, int cy);
-    virtual void OnPaint();
+    void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
+    void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+    void OnMouseMove(UINT nFlags, POINTS point);
+    void OnMouseWheel(UINT nFlags, POINTS point, int delta);
+    void OnLButtonDown(UINT nFlags, POINT point);
+    void OnSize(UINT nType, int cx, int cy);
+    void OnPaint();
 
   private:
+    static LRESULT CALLBACK StaticWindowProc(HWND hWnd, UINT uMsg,
+                                             WPARAM wParam, LPARAM lParam);
+    LRESULT WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
+    void Invalidate(BOOL bErase = TRUE);
     void RenderUI();
 };

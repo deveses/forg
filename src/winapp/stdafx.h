@@ -15,13 +15,12 @@
 // Windows Header Files:
 #include <windows.h>
 #include <CommCtrl.h>
+#include <commdlg.h>
 
 // C RunTime Header Files
 #include <malloc.h>
 #include <memory.h>
 #include <stdlib.h>
 #include <tchar.h>
-
-#include "emfc.h"
 
 // TODO: reference additional headers your program requires here

@@ -5,6 +5,8 @@
 #include "Viewport.h"
 #include "stdafx.h"
 
+#include <commdlg.h>
+
 forg::Light s_Light = {0};
 
 namespace forg::scene {
@@ -95,6 +97,8 @@ void Model::Render(IRenderDevice* _device)
 
 Viewport::Viewport()
 {
+    m_hWnd = 0;
+    m_hInstance = 0;
     m_device = 0;
     m_font = 0;
     m_bMouseCaptured = FALSE;
@@ -109,6 +113,12 @@ Viewport::Viewport()
 
 Viewport::~Viewport()
 {
+    if (m_hWnd)
+    {
+        DestroyWindow(m_hWnd);
+        m_hWnd = 0;
+    }
+
     m_Dialog.Close();
 
     if (m_font)
@@ -132,17 +142,34 @@ Viewport::~Viewport()
 DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth,
                        int nHeight, HWND hParent)
 {
-    DWORD ret;
+    m_hInstance = GetModuleHandle(NULL);
 
     DWORD style = WS_SIZEBOX | WS_MAXIMIZEBOX |
                   /*WS_MAXIMIZE|*/ WS_TILEDWINDOW | WS_CLIPCHILDREN |
                   WS_CLIPSIBLINGS;
     DWORD exstyle = WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
-    ret = EWnd::Create(TEXT("Viewport"), TEXT("View"), x, y, nWidth, nHeight,
-                       style, exstyle, hParent);
 
-    if (ret != 0)
-        return ret;
+    const LPCTSTR class_name = TEXT("ForgViewport");
+    WNDCLASSEX wc;
+    if (!GetClassInfoEx(m_hInstance, class_name, &wc))
+    {
+        ZeroMemory(&wc, sizeof(wc));
+        wc.cbSize = sizeof(wc);
+        wc.hInstance = m_hInstance;
+        wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+        wc.lpfnWndProc = Viewport::StaticWindowProc;
+        wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+        wc.hbrBackground = GetSysColorBrush(COLOR_3DFACE);
+        wc.lpszClassName = class_name;
+
+        if (!RegisterClassEx(&wc))
+            return GetLastError();
+    }
+
+    m_hWnd = CreateWindowEx(exstyle, class_name, TEXT("View"), style, x, y,
+                            nWidth, nHeight, hParent, NULL, m_hInstance, this);
+    if (m_hWnd == NULL)
+        return GetLastError();
 
     forg::RENDER_PARAMETERS rp;
 
@@ -209,8 +236,95 @@ DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth,
     m_device->SetLight(0, &s_Light);
     m_device->LightEnable(0, true);
 
-    UpdateWindow();
-    return ret;
+    UpdateWindow(m_hWnd);
+    return 0;
+}
+
+BOOL Viewport::ShowWindow(int nCmdShow) { return ::ShowWindow(m_hWnd, nCmdShow); }
+
+HWND Viewport::SetFocus() { return ::SetFocus(m_hWnd); }
+
+void Viewport::Invalidate(BOOL bErase) { InvalidateRect(m_hWnd, NULL, bErase); }
+
+LRESULT CALLBACK Viewport::StaticWindowProc(HWND hWnd, UINT uMsg,
+                                            WPARAM wParam, LPARAM lParam)
+{
+    Viewport* viewport = reinterpret_cast<Viewport*>(
+        GetWindowLongPtr(hWnd, GWLP_USERDATA));
+
+    if (uMsg == WM_NCCREATE)
+    {
+        auto* create = reinterpret_cast<CREATESTRUCT*>(lParam);
+        viewport = reinterpret_cast<Viewport*>(create->lpCreateParams);
+        viewport->m_hWnd = hWnd;
+        SetWindowLongPtr(hWnd, GWLP_USERDATA,
+                         reinterpret_cast<LONG_PTR>(viewport));
+    }
+
+    if (viewport)
+        return viewport->WindowProc(uMsg, wParam, lParam);
+
+    return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT Viewport::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    POINT pt;
+
+    switch (uMsg)
+    {
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        BeginPaint(m_hWnd, &ps);
+        EndPaint(m_hWnd, &ps);
+        OnPaint();
+        return 0;
+    }
+    case WM_ERASEBKGND:
+        return 1;
+    case WM_LBUTTONDOWN:
+        pt.x = static_cast<short>(LOWORD(lParam));
+        pt.y = static_cast<short>(HIWORD(lParam));
+        OnLButtonDown(static_cast<UINT>(wParam), pt);
+        return 0;
+    case WM_LBUTTONUP:
+        pt.x = static_cast<short>(LOWORD(lParam));
+        pt.y = static_cast<short>(HIWORD(lParam));
+        OnLButtonUp(static_cast<UINT>(wParam), pt);
+        return 0;
+    case WM_MOUSEMOVE:
+        OnMouseMove(static_cast<UINT>(wParam), MAKEPOINTS(lParam));
+        return 0;
+    case WM_MOUSEWHEEL:
+        OnMouseWheel(static_cast<UINT>(wParam), MAKEPOINTS(lParam),
+                     GET_WHEEL_DELTA_WPARAM(wParam));
+        return 0;
+    case WM_SIZE:
+        OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
+        return 0;
+    case WM_KEYDOWN:
+        OnKeyDown(static_cast<UINT>(wParam), lParam & 0xffff, lParam >> 16);
+        return 0;
+    case WM_KEYUP:
+        OnKeyUp(static_cast<UINT>(wParam), lParam & 0xffff, lParam >> 16);
+        return 0;
+    case WM_CLOSE:
+        DestroyWindow(m_hWnd);
+        return 0;
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        return 0;
+    case WM_NCDESTROY:
+    {
+        HWND hWnd = m_hWnd;
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, 0);
+        m_hWnd = 0;
+        return DefWindowProc(hWnd, uMsg, wParam, lParam);
+    }
+    default:
+        return DefWindowProc(m_hWnd, uMsg, wParam, lParam);
+    }
 }
 
 void Viewport::Cleanup()
@@ -287,9 +401,10 @@ void Viewport::ToggleFullscreen()
     AdjustWindowRectEx(&WindowRect, dwStyle, FALSE,
                        dwExStyle); // Adjust Window To True Requested Size
 
-    SetWindowLong(GWL_STYLE, dwStyle | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
-    SetWindowLong(GWL_EXSTYLE, dwExStyle);
-    SetWindowPos(HWND_TOP, 0, 0, WindowRect.right - WindowRect.left,
+    SetWindowLong(m_hWnd, GWL_STYLE,
+                  dwStyle | WS_CLIPSIBLINGS | WS_CLIPCHILDREN);
+    SetWindowLong(m_hWnd, GWL_EXSTYLE, dwExStyle);
+    SetWindowPos(m_hWnd, HWND_TOP, 0, 0, WindowRect.right - WindowRect.left,
                  WindowRect.bottom - WindowRect.top, SWP_SHOWWINDOW);
 
     m_fullscreen = fullscreen;
@@ -419,10 +534,19 @@ void Viewport::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
     case 'O':
     case 'o':
     {
-        emfc::EOpenFileDialog ofd;
-        if (IDOK == ofd.ShowDialog())
+        char filename[MAX_PATH] = {};
+        OPENFILENAMEA ofn = {};
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = m_hWnd;
+        ofn.lpstrFile = filename;
+        ofn.nMaxFile = sizeof(filename);
+        ofn.lpstrFilter = "All\0*.*\0Text\0*.TXT\0";
+        ofn.nFilterIndex = 1;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
+
+        if (GetOpenFileNameA(&ofn))
         {
-            m_model.Load(ofd.GetFileName(), m_device);
+            m_model.Load(filename, m_device);
         }
     }
     break;

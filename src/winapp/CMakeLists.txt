@@ -7,7 +7,7 @@ add_executable(winapp WIN32
 forg_configure_target(winapp)
 target_precompile_headers(winapp PRIVATE stdafx.h)
 target_compile_definitions(winapp PRIVATE NOMINMAX WIN32_LEAN_AND_MEAN)
-target_link_libraries(winapp PRIVATE forg emfc comctl32)
+target_link_libraries(winapp PRIVATE forg comctl32 comdlg32)
 add_dependencies(winapp glrenderer swrenderer)
 
 add_custom_command(TARGET winapp POST_BUILD

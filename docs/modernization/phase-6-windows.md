@@ -6,7 +6,8 @@ In progress and partially verified. Visual Studio 2022 presets, Windows CI jobs,
 and CMake targets for `forg`, `emfc`, software/OpenGL renderers, and `winapp`
 build with MSVC x64. Local Windows debug and release CMake builds and CTest runs
 pass, including package consumption and software/OpenGL plugin lifecycle tests.
-Interactive `winapp` smoke validation and Sharpmake retirement remain pending.
+`winapp` now uses a direct Win32 shell instead of `emfc`. Interactive `winapp`
+smoke validation and Sharpmake/`emfc` retirement remain pending.
 
 ## Objective
 

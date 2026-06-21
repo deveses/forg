@@ -81,7 +81,7 @@ Initial coverage lives under `tests/` and focuses on deterministic library behav
 
 ### Windows build
 
-Use the `windows-debug` and `windows-release` presets with Visual Studio 2022. CMake builds `forg`, `emfc`, `winapp`, `glrenderer`, the Windows software renderer, and the test suite. OpenCL and C++ AMP remain legacy-only; the checked-in Sharpmake projects are retained temporarily for comparison while CMake parity is validated.
+Use the `windows-debug` and `windows-release` presets with Visual Studio 2022. CMake builds `forg`, the direct Win32 `winapp`, `emfc` as a legacy compatibility target, `glrenderer`, the Windows software renderer, and the test suite. OpenCL and C++ AMP remain legacy-only; the checked-in Sharpmake projects are retained temporarily for comparison while CMake parity is validated.
 
 ## Project layout
 
@@ -92,7 +92,8 @@ src/forg/include/forg/   Public headers, one directory per module:
 src/forg/src/            Private implementation, mirroring the module layout;
                          OS-specific code under os/{win32,osx}/
 src/macapp/              Cocoa sample app (CMake)
-src/winapp/, src/emfc/   Win32 sample apps (legacy MSVC build)
+src/winapp/              Direct Win32 sample app (CMake)
+src/emfc/                Legacy MFC-like wrapper library retained temporarily
 src/swrenderer/          Software-renderer plugin (CMake dylib on macOS,
                          legacy MSVC DLL on Windows)
 src/metalrenderer/       Native Apple Metal renderer plugin (CMake dylib, macOS)
