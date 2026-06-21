@@ -30,7 +30,10 @@
 #include "rendering/ExtendedMaterial.h"
 
 #include "core/auto_ptr.hpp"
+#include "core/RefPtr.h"
 #include "core/vector.hpp"
+
+#include <vector>
 
 namespace forg { namespace geometry {
 
@@ -64,8 +67,8 @@ public:
     typedef auto_ptr<IVertexBuffer, RefCountOwner<IVertexBuffer> > VertexBufferPtr;
     typedef auto_ptr<IIndexBuffer, RefCountOwner<IIndexBuffer> > IndexBufferPtr;
 
-    typedef core::vector<ExtendedMaterial> ExtendedMaterialVec;
-    typedef core::vector<AttributeRange> AttributeRangeVec;
+	    using ExtendedMaterialVec = std::vector<ExtendedMaterial>;
+	    using AttributeRangeVec = std::vector<AttributeRange>;
 
     //////////////////////////////////////////////////////////////////////
     // 'structors
@@ -84,8 +87,8 @@ public:
     // Attributes
     //////////////////////////////////////////////////////////////////////////
 private:
-	VertexBufferPtr m_vertex_buffer;
-	IndexBufferPtr m_index_buffer;
+	core::RefPtr<IVertexBuffer> m_vertex_buffer;
+	core::RefPtr<IIndexBuffer> m_index_buffer;
 	VertexDeclaration m_vertex_declaration;
     AttributeRangeVec m_attribtab;
 

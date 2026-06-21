@@ -1,86 +1,83 @@
 #include "forg_pch.h"
 
 #include "math/Math.h"
-#include <math.h>
-#include <float.h>
+#include <cmath>
+#include <cfloat>
+#include <numbers>
 
 namespace forg { namespace math {
 
 
-	const double Math::PI = 3.1415926535897932384626433832795;
-	const double Math::SQRT2_2 = 0.70710678118654752440084436210485;
-    const double Math::RAD2DEG = 57.295779513082320876798154814105;
-    const double Math::DEG2RAD = 0.017453292519943295769236907684886;
+	const double Math::PI = std::numbers::pi;
+	const double Math::SQRT2_2 = std::numbers::sqrt2 / 2.0;
+	const double Math::RAD2DEG = 180.0 / std::numbers::pi;
+	const double Math::DEG2RAD = std::numbers::pi / 180.0;
 	const float Math::FloatMinValue = FLT_MIN;
 	const float Math::FloatMaxValue = FLT_MAX;
 
 	double Math::Sin(double d)
 	{
-		return sin(d);
+		return std::sin(d);
 	}
 
 	double Math::Cos(double d)
 	{
-		return cos(d);
+		return std::cos(d);
 	}
 
 	double Math::Tan(double d)
 	{
-		return tan(d);
+		return std::tan(d);
 	}
 
 	double Math::Atan(double d)
 	{
-		return atan(d);
+		return std::atan(d);
 	}
 
 	double Math::Atan2(double y, double x)
 	{
-		return atan2(y, x);
+		return std::atan2(y, x);
 	}
 
 	double Math::Acos(double d)
 	{
-		return acos(d);
+		return std::acos(d);
 	}
 
 	bool Math::IsNaN(double d)
 	{
-#ifdef WIN32
-		return _isnan(d)!=0;
-#else
-        return isnan(d)!=0;
-#endif
+		return std::isnan(d);
 	}
 
 	double Math::Sqrt(double d)
 	{
-		return sqrt(d);
+		return std::sqrt(d);
 	}
 
 	double Math::Abs(double d)
 	{
-		return (d > 0.0 ? d : -d);
+		return std::abs(d);
 	}
 
 	double Math::Log(double d)
 	{
-		return log(d);
+		return std::log(d);
 	}
 
 	double Math::Floor(double d)
 	{
-		return floor(d);
+		return std::floor(d);
 	}
 
 	double Math::Log10(double d)
 	{
-		return log10(d);
+		return std::log10(d);
 	}
 
 	double Math::Pow(double a, double b)
 	{
-		return pow(a, b);
+		return std::pow(a, b);
 	}
 
 	//Quaternion& Math::RotationVectors(

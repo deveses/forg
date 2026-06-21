@@ -25,6 +25,8 @@
 
 #include "base.h"
 
+#include <atomic>
+
 namespace forg { namespace core {
 
 /// BitArray class
@@ -39,11 +41,11 @@ namespace forg { namespace core {
 */
 class FORG_API RefCounter
 {
-    int m_refCount;
+	    std::atomic<int> m_refCount{1};
 
 public:
-    RefCounter() { m_refCount = 1; }
-    virtual ~RefCounter() {}
+	    RefCounter() = default;
+	    virtual ~RefCounter() = default;
 
 public:
 	/// Brief description

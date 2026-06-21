@@ -50,7 +50,23 @@ typedef IRenderer* LPRENDERER;
 
 typedef IRenderer* (*PFCREATERENDERER)(void);
 
+inline constexpr uint32 RendererPluginApiVersion = 1;
+
+struct RendererPluginDescriptor
+{
+    uint32 Size;
+    uint32 ApiVersion;
+    PFCREATERENDERER CreateRenderer;
+};
+
+using PFGETRENDERERPLUGINDESCRIPTOR = const RendererPluginDescriptor* (*)(void);
+
+inline bool IsRendererPluginCompatible(const RendererPluginDescriptor* descriptor) noexcept
+{
+    return descriptor != nullptr && descriptor->Size >= sizeof(RendererPluginDescriptor) &&
+           descriptor->ApiVersion == RendererPluginApiVersion && descriptor->CreateRenderer != nullptr;
+}
+
 }
 
 #endif //_FORG_IRENDERER_H_
-

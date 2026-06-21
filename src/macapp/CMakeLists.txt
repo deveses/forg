@@ -1,4 +1,5 @@
 add_executable(macapp)
+forg_configure_target(macapp)
 target_sources(macapp
     PRIVATE
     #main.cpp

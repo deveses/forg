@@ -3,6 +3,8 @@
 // #include "forgbase.h"
 #include "forg/math/Math.h"
 
+#include <cfloat>
+
 namespace forg {
 namespace audio {
 namespace dsp {

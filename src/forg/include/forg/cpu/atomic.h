@@ -16,18 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_CPU_ATOMIC_H_
-#define _FORG_CPU_ATOMIC_H_
+#ifndef FORG_CPU_ATOMIC_H
+#define FORG_CPU_ATOMIC_H
 
-#if _MSC_VER > 1000
-#pragma once
-#endif
+#include <atomic>
 
 namespace forg { namespace cpu {
 
-    inline int AtomicIncrement(int volatile *value) { return (*value)++; }
-    inline int AtomicDecrement(int volatile *value) { return --(*value); }
+	    inline int AtomicIncrement(std::atomic<int>* value) noexcept { return ++(*value); }
+	    inline int AtomicDecrement(std::atomic<int>* value) noexcept { return --(*value); }
 
 }}
 
-#endif
+#endif // FORG_CPU_ATOMIC_H

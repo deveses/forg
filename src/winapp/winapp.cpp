@@ -94,7 +94,20 @@ BOOL CWinApp::InitApplication()
     //HMODULE module = LoadLibrary("swrenderer_vc_d.dll");
     if (module == 0) return FALSE;
 
-    forg::PFCREATERENDERER pfCreateRenderer = (forg::PFCREATERENDERER)GetProcAddress(module, "forgCreateRenderer");
+    auto getDescriptor = reinterpret_cast<forg::PFGETRENDERERPLUGINDESCRIPTOR>(
+        GetProcAddress(module, "forgGetRendererPluginDescriptor"));
+    forg::PFCREATERENDERER pfCreateRenderer = nullptr;
+    if (getDescriptor != nullptr)
+    {
+        const forg::RendererPluginDescriptor* descriptor = getDescriptor();
+        if (forg::IsRendererPluginCompatible(descriptor))
+            pfCreateRenderer = descriptor->CreateRenderer;
+    }
+    else
+    {
+        pfCreateRenderer = reinterpret_cast<forg::PFCREATERENDERER>(
+            GetProcAddress(module, "forgCreateRenderer"));
+    }
     if (pfCreateRenderer == 0) return FALSE;
 
     //m_renderer = forgCreateRenderer();
@@ -137,4 +150,3 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
 	return 0;
 }
-

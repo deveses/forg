@@ -207,9 +207,8 @@ void AppendPrimitive(const cgltf_primitive* prim, const float* world, GltfLoader
     {
         const cgltf_size ic = prim->indices->count;
 
-        core::vector<uint> tmp;
-        tmp.resize((uint)ic);
-        cgltf_accessor_unpack_indices(prim->indices, tmp.get(), sizeof(uint), ic);
+	        std::vector<uint> tmp(ic);
+	        cgltf_accessor_unpack_indices(prim->indices, tmp.data(), sizeof(uint), ic);
 
         for (cgltf_size k = 0; k < ic; ++k)
             out.indices.push_back(tmp[(uint)k] + vStart);
@@ -328,7 +327,7 @@ Mesh::MeshPtr GltfLoader::Load(
     PositionNormalTextured* vb = 0;
     if (m != 0 && m->LockVertexBuffer(0, (void**)&vb) == FORG_OK)
     {
-        std::memcpy(vb, cpu.vertices.get(), numVerts * sizeof(PositionNormalTextured));
+	        std::memcpy(vb, cpu.vertices.data(), numVerts * sizeof(PositionNormalTextured));
         m->UnlockVertexBuffer();
     }
 
@@ -337,7 +336,7 @@ Mesh::MeshPtr GltfLoader::Load(
     {
         if (cpu.use32bit)
         {
-            std::memcpy(ib, cpu.indices.get(), numFaces * 3 * sizeof(uint));
+	            std::memcpy(ib, cpu.indices.data(), numFaces * 3 * sizeof(uint));
         }
         else
         {
@@ -348,7 +347,7 @@ Mesh::MeshPtr GltfLoader::Load(
         m->UnlockIndexBuffer();
     }
 
-    m->SetAttributeTable(cpu.subsets.get(), cpu.subsets.size());
+	    m->SetAttributeTable(cpu.subsets.data(), static_cast<uint>(cpu.subsets.size()));
 
     materials.clear();
     for (uint i = 0; i < cpu.materials.size(); ++i)

@@ -1,7 +1,9 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <limits>
 
 #include "forg/math/Matrix4.h"
+#include "forg/math/Math.h"
 #include "forg/math/Quaternion.h"
 #include "forg/math/Vector2.h"
 #include "forg/math/Vector3.h"
@@ -81,4 +83,27 @@ TEST_CASE("Quaternion normalization produces a unit quaternion", "[math][quatern
     REQUIRE(normalized.v.Z == Approx(0.0f));
     REQUIRE(normalized.s == Approx(1.0f));
     REQUIRE(forg::math::Quaternion::Length(normalized) == Approx(1.0f));
+}
+
+TEST_CASE("Math bit helpers preserve boundary behavior", "[math][bit]")
+{
+    using forg::math::Math;
+
+    STATIC_REQUIRE(Math::bit_sign(-1) == -1);
+    STATIC_REQUIRE(Math::bit_sign(0) == 1);
+    STATIC_REQUIRE(Math::bit_min(std::numeric_limits<int>::min(), 4) ==
+                   std::numeric_limits<int>::min());
+    STATIC_REQUIRE(Math::bit_max(std::numeric_limits<int>::max(), -4) ==
+                   std::numeric_limits<int>::max());
+    STATIC_REQUIRE(Math::bit_avarage(std::numeric_limits<int>::min(),
+                                     std::numeric_limits<int>::max()) == 0);
+    STATIC_REQUIRE_FALSE(Math::is_pow2(0));
+    STATIC_REQUIRE(Math::is_pow2(1024));
+    STATIC_REQUIRE(Math::count_bits_set(0xf0f0U) == 8);
+    STATIC_REQUIRE(Math::bit_log2(0) == 0);
+    STATIC_REQUIRE(Math::bit_log2(1024) == 10);
+    STATIC_REQUIRE(Math::count_zeros_trail(0) == 32);
+    STATIC_REQUIRE(Math::first_bit_num(0x40U) == 6);
+    STATIC_REQUIRE(Math::next_pow2(0) == 0);
+    STATIC_REQUIRE(Math::next_pow2(17) == 32);
 }

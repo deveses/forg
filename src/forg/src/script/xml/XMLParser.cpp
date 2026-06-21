@@ -214,7 +214,7 @@ bool XMLParser::ReadContent(XMLNode* _node)
     return true;
 }
 
-XMLNode* XMLParser::ReadElement(XMLNode* _parent)
+XMLNode* XMLParser::ReadElement(XMLNode*)
 {
     bool empty_element = false;
 

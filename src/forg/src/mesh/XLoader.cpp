@@ -10,60 +10,24 @@
 
 #include "mesh/xfile/xfile.h"
 
+#include <vector>
+
 namespace forg { namespace xfile {
 
 
 struct mesh_data
 {
-    Vector3* points;
-    Vector3* normals;
-    Vector2* tverts;
-    uint*    indices;
+    std::vector<Vector3> points;
+    std::vector<Vector3> normals;
+    std::vector<Vector2> tverts;
+    std::vector<uint> indices;
 
-    uint     num_vertices;
-    uint     num_faces;
-
-    mesh_data()
-    {
-        reset();
-    }
-
-    ~mesh_data()
-    {
-        clear();
-    }
-
-    void clear()
-    {
-        if (points)
-            delete [] points;
-
-        if (normals)
-            delete [] normals;
-
-        if (tverts)
-            delete [] tverts;
-
-        if (indices)
-            delete [] indices;
-
-        reset();
-    }
-
-    void reset()
-    {
-        points = 0;
-        normals = 0;
-        tverts = 0;
-        indices = 0;
-
-        num_vertices = 0;
-        num_faces = 0;
-    }
+    uint num_vertices = 0;
+    uint num_faces = 0;
 
 };
 
-typedef core::vector<mesh_data> MeshDataVec;
+using MeshDataVec = std::vector<mesh_data>;
 
 
 bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMaterialVec& materials)
@@ -81,12 +45,12 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
     out->num_vertices = nVertices;
     out->num_faces = nFaces;
 
-    out->points = new Vector3[out->num_vertices];
-    out->indices = new uint[out->num_faces*3];
+    out->points.resize(out->num_vertices);
+    out->indices.resize(out->num_faces * 3);
 
     // extract points
     const xfile::IData* vert = xdata->GetSubdata(1);
-    vert->ToByteArray(out->points, nVertices * sizeof(Vector3));
+    vert->ToByteArray(out->points.data(), nVertices * sizeof(Vector3));
 
     // extract indices
     {
@@ -94,10 +58,10 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
         uint fsize = faces->GetSize(); // size of byte buffer
         uint icount = fsize >> 2;   // number of uints
 
-        char *fb = new char[fsize];
-        uint *iarr = (uint*)fb;
+        std::vector<uint> face_data(icount);
+        uint* iarr = face_data.data();
 
-        faces->ToByteArray(fb, fsize);
+        faces->ToByteArray(face_data.data(), fsize);
         // TODO: check if there are 3 indices per face
 
         // copy indices to our index buffer
@@ -123,7 +87,6 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
             }
         }
 
-        delete [] fb;
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -143,14 +106,14 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
         xdata->GetSubdata(0)->ToByteArray(&num_normals, sizeof(num_normals));
         xdata->GetSubdata(2)->ToByteArray(&num_face_normals, sizeof(num_face_normals));
 
-        Vector3* normals = new Vector3[num_normals];
-        xdata->GetSubdata(1)->ToByteArray(normals, num_normals*sizeof(Vector3));
+        std::vector<Vector3> normals(num_normals);
+        xdata->GetSubdata(1)->ToByteArray(normals.data(), num_normals*sizeof(Vector3));
 
-        out->normals = new Vector3[out->num_vertices];
+        out->normals.resize(out->num_vertices);
         const xfile::IData* faces = xdata->GetSubdata(3);
         uint icount = faces->GetSize() >> 2;
-        uint *face_normals = new uint[icount];
-        faces->ToByteArray(face_normals, icount*4);
+        std::vector<uint> face_normals(icount);
+        faces->ToByteArray(face_normals.data(), icount*4);
 
         uint findex = 0;
         for (uint i=0; i<icount; i+=4, findex++)
@@ -168,8 +131,6 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
             }
         }
 
-        delete [] face_normals;
-        delete [] normals;
     }
 
     // Texture Coords
@@ -181,9 +142,9 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
 
         xtcoords->GetSubdata(0)->ToByteArray(&tc_count, sizeof(tc_count));
 
-        out->tverts = new Vector2[out->num_vertices];
+        out->tverts.resize(out->num_vertices);
 
-        xtcoords->GetSubdata(1)->ToByteArray(out->tverts, sizeof(Vector2)*out->num_vertices);
+        xtcoords->GetSubdata(1)->ToByteArray(out->tverts.data(), sizeof(Vector2)*out->num_vertices);
     }
 
     // Materials
@@ -239,7 +200,7 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out, Mesh::ExtendedMateri
 Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
 {
     Mesh::MeshPtr m(0);
-    core::vector<AttributeRange> attribs;
+    std::vector<AttributeRange> attribs;
     uint vert_total = 0;
     uint faces_total = 0;
 
@@ -265,8 +226,13 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
 
     PositionNormalTextured *vbuffer = 0;
     uint *ibuffer = 0;
-    bool no_error = (m != 0 && m->LockVertexBuffer(0, (void**)&vbuffer) == FORG_OK
-                            && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK);
+    if (m == 0 || m->LockVertexBuffer(0, (void**)&vbuffer) != FORG_OK)
+        return Mesh::MeshPtr(0);
+    if (m->LockIndexBuffer(0, (void**)&ibuffer) != FORG_OK)
+    {
+        m->UnlockVertexBuffer();
+        return Mesh::MeshPtr(0);
+    }
 
     uint voff = 0;
     uint foff = 0;
@@ -290,7 +256,7 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
         {
             vbuffer[voff].Position = data[i].points[j];
 
-            if (data[i].tverts)
+            if (!data[i].tverts.empty())
             {
                 vbuffer[voff].Tu = data[i].tverts[j].X;
                 vbuffer[voff].Tv = data[i].tverts[j].Y;
@@ -305,7 +271,7 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
     //////////////////////////////////////////////////////////////////////////
     // Normal computation
     //////////////////////////////////////////////////////////////////////////
-    if (data.size() && data[0].normals == 0)
+    if (!data.empty() && data[0].normals.empty())
     {
 
         for (uint j = 0; j < vert_total; j++)
@@ -344,7 +310,7 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
     m->UnlockVertexBuffer();
     m->UnlockIndexBuffer();
 
-    m->SetAttributeTable(attribs.get(), attribs.size());
+    m->SetAttributeTable(attribs.data(), static_cast<uint>(attribs.size()));
 
     return m;
 }

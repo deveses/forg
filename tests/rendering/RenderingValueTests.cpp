@@ -1,5 +1,6 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <limits>
 
 #include "forg/enums.h"
 #include "forg/rendering/Color.h"
@@ -17,6 +18,23 @@ TEST_CASE("Color converts between ARGB integers and float channels", "[rendering
     REQUIRE(color.g == Approx(32.0f / 255.0f));
     REQUIRE(color.b == Approx(16.0f / 255.0f));
     REQUIRE(static_cast<forg::uint>(color) == 0x80402010u);
+}
+
+TEST_CASE("Color conversion clamps invalid channels", "[rendering][color]")
+{
+    const forg::Color color(-1.0f, 2.0f, std::numeric_limits<float>::quiet_NaN(), 1.0f);
+
+    REQUIRE(static_cast<forg::uint>(color) == 0xff00ff00U);
+}
+
+TEST_CASE("Color component values are constexpr and const-correct", "[rendering][color]")
+{
+    constexpr forg::Color3f color(0.25f, 0.5f, 0.75f);
+    constexpr forg::Color3f doubled = color * 2.0f;
+
+    STATIC_REQUIRE(doubled.r == 0.5f);
+    STATIC_REQUIRE(doubled.g == 1.0f);
+    STATIC_REQUIRE(doubled.b == 1.5f);
 }
 
 TEST_CASE("VertexElement reports declaration type sizes and component counts", "[rendering][vertex]")

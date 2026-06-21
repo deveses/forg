@@ -26,6 +26,8 @@
 #include "rendering/Mesh.h"
 #include "rendering/Vertex.h"
 
+#include <vector>
+
 namespace forg { namespace gltf {
 
     using namespace forg;
@@ -50,8 +52,8 @@ namespace forg { namespace gltf {
         */
         struct CpuMesh
         {
-            core::vector<PositionNormalTextured> vertices;
-            core::vector<uint>                   indices;   // triangle list, global, 32-bit
+	            std::vector<PositionNormalTextured> vertices;
+	            std::vector<uint>                   indices;   // triangle list, global, 32-bit
             Mesh::AttributeRangeVec              subsets;   // one per triangle primitive
             Mesh::ExtendedMaterialVec            materials; // parallel to subsets
             bool                                 use32bit;

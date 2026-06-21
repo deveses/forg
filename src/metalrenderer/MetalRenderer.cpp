@@ -55,8 +55,16 @@ IRenderDevice* MetalRenderer::CreateDevice(HWIN hWindow, RENDER_PARAMETERS* pPre
 // C linkage so the macapp loader can dlsym("forgCreateRenderer") - matches the
 // extern "C" declaration swrenderer exposes through SWRenderer.h.
 extern "C" forg::IRenderer* forgCreateRenderer();
+extern "C" const forg::RendererPluginDescriptor* forgGetRendererPluginDescriptor();
 
 forg::IRenderer* forgCreateRenderer()
 {
     return (new forg::MetalRenderer());
+}
+
+const forg::RendererPluginDescriptor* forgGetRendererPluginDescriptor()
+{
+    static const forg::RendererPluginDescriptor descriptor{
+        sizeof(forg::RendererPluginDescriptor), forg::RendererPluginApiVersion, &forgCreateRenderer};
+    return &descriptor;
 }

@@ -53,6 +53,7 @@
 
 extern "C" {
 GLRENDERER_API forg::IRenderer* forgCreateRenderer();
+GLRENDERER_API const forg::RendererPluginDescriptor* forgGetRendererPluginDescriptor();
 }
 
 #endif  //_GL_RENDERER_H_

@@ -1,6 +1,6 @@
 #include "forg_pch.h"
 
-#include "SWBuffers.h"
+#include "rendering/reference/SWBuffers.h"
 
 namespace forg { namespace rendering { namespace reference {
 

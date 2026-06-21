@@ -474,11 +474,27 @@ static forg::IRenderer* CreateRenderer(const std::string& driver)
         return 0;
     }
 
-    forg::PFCREATERENDERER pfCreateRenderer = (forg::PFCREATERENDERER)dlsym(module, "forgCreateRenderer");
+    auto getDescriptor = reinterpret_cast<forg::PFGETRENDERERPLUGINDESCRIPTOR>(
+        dlsym(module, "forgGetRendererPluginDescriptor"));
+    if (getDescriptor != nullptr)
+    {
+        const forg::RendererPluginDescriptor* descriptor = getDescriptor();
+        if (!forg::IsRendererPluginCompatible(descriptor))
+        {
+            std::cerr << "Incompatible renderer plugin <" << driver << ">!\n";
+            dlclose(module);
+            return nullptr;
+        }
+        return descriptor->CreateRenderer();
+    }
+
+    auto pfCreateRenderer = reinterpret_cast<forg::PFCREATERENDERER>(
+        dlsym(module, "forgCreateRenderer"));
     if (pfCreateRenderer == 0)
     {
         std::cerr << "forgCreateRenderer not found in <" << driver << ">!\n";
-        return 0;
+        dlclose(module);
+        return nullptr;
     }
 
     return pfCreateRenderer();

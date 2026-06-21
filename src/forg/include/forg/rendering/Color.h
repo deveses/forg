@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_COLOR_H_
-#define _FORG_COLOR_H_
+#ifndef FORG_RENDERING_COLOR_H
+#define FORG_RENDERING_COLOR_H
 
 #include "base.h"
 #include "math/Vector4.h"
@@ -29,48 +29,42 @@ struct TColor3
 {
 public:
 
-	ColorComponentType r;
-	ColorComponentType g;
-	ColorComponentType b;
+	ColorComponentType r{};
+	ColorComponentType g{};
+	ColorComponentType b{};
 
-    TColor3()
-    {
-        memset(this, 0, sizeof(TColor3));
-    }
+	constexpr TColor3() = default;
 
-	TColor3(ColorComponentType red, ColorComponentType green, ColorComponentType blue)
-	{
-		r = red;
-		g = green;
-		b = blue;
-	}
+	constexpr TColor3(ColorComponentType red, ColorComponentType green, ColorComponentType blue)
+	    : r(red), g(green), b(blue)
+	{}
 
-    bool operator < (const TColor3& _rhs)
+	    constexpr bool operator < (const TColor3& _rhs) const
     {
         return (r < _rhs.r && g < _rhs.g && b < _rhs.b);
     }
 
-    bool operator > (const TColor3& _rhs)
+	    constexpr bool operator > (const TColor3& _rhs) const
     {
         return (r > _rhs.r && g > _rhs.g && b > _rhs.b);
     }
 
-    TColor3 operator * (const ColorComponentType& _value)
+	    constexpr TColor3 operator * (const ColorComponentType& _value) const
     {
         return TColor3(r*_value, g*_value, b*_value);
     }
 
-    TColor3 operator / (const ColorComponentType& _value)
+	    constexpr TColor3 operator / (const ColorComponentType& _value) const
     {
         return TColor3(r/_value, g/_value, b/_value);
     }
 
-    TColor3 operator + (const TColor3& _rhs)
+	    constexpr TColor3 operator + (const TColor3& _rhs) const
     {
         return TColor3(r+_rhs.r, g+_rhs.g, b+_rhs.b);
     }
 
-    void operator = (const ColorComponentType& _value)
+	    constexpr void operator = (const ColorComponentType& _value)
     {
         r = g = b = _value;
     }
@@ -81,60 +75,53 @@ struct TColor4
 {
 public:
 
-	ColorComponentType r;
-	ColorComponentType g;
-	ColorComponentType b;
-	ColorComponentType a;
+	ColorComponentType r{};
+	ColorComponentType g{};
+	ColorComponentType b{};
+	ColorComponentType a{};
 
-    TColor4()
-    {
-        memset(this, 0, sizeof(TColor4));
-    }
+	constexpr TColor4() = default;
 
-	TColor4(ColorComponentType red, ColorComponentType green, ColorComponentType blue, ColorComponentType alpha)
-	{
-		r = red;
-		g = green;
-		b = blue;
-		a = alpha;
-	}
+	constexpr TColor4(ColorComponentType red, ColorComponentType green, ColorComponentType blue, ColorComponentType alpha)
+	    : r(red), g(green), b(blue), a(alpha)
+	{}
 
-    bool operator < (const TColor4& _rhs)
+	    constexpr bool operator < (const TColor4& _rhs) const
     {
         return (r < _rhs.r && g < _rhs.g && b < _rhs.b && a < _rhs.a);
     }
 
-    bool operator > (const TColor4& _rhs)
+	    constexpr bool operator > (const TColor4& _rhs) const
     {
         return (r > _rhs.r && g > _rhs.g && b > _rhs.b && a > _rhs.a);
     }
 
-    TColor4 operator * (const ColorComponentType& _value)
+	    constexpr TColor4 operator * (const ColorComponentType& _value) const
     {
         return TColor4(r*_value, g*_value, b*_value, a*_value);
     }
 
-    TColor4 operator / (const ColorComponentType& _value)
+	    constexpr TColor4 operator / (const ColorComponentType& _value) const
     {
         return TColor4(r/_value, g/_value, b/_value, a/_value);
     }
 
-    TColor4 operator + (const TColor4& _rhs)
+	    constexpr TColor4 operator + (const TColor4& _rhs) const
     {
         return TColor4(r+_rhs.r, g+_rhs.g, b+_rhs.b, a+_rhs.a);
     }
 
-    void operator = (const ColorComponentType& _value)
+	    constexpr void operator = (const ColorComponentType& _value)
     {
         r = g = b = a = _value;
     }
 };
 
-typedef TColor3<float> Color3f;
-typedef TColor4<float> Color4f;
+	using Color3f = TColor3<float>;
+	using Color4f = TColor4<float>;
 
-typedef TColor3<byte> Color3b;
-typedef TColor4<byte> Color4b;
+	using Color3b = TColor3<byte>;
+	using Color4b = TColor4<byte>;
 
 struct FORG_API Color
 {
@@ -148,20 +135,20 @@ struct FORG_API Color
 	// Construction
 	//////////////////////////////////////////////////////////////////////////
 	Color(uint argb);
-	Color(const Color& c);
-	Color()
+	Color(const Color& c) = default;
+	constexpr Color() noexcept
 	: r(1.0f), g(1.0f), b(1.0f), a(1.0f)
     {}
 
-    Color(float red, float green, float blue, float alpha)
+	    constexpr Color(float red, float green, float blue, float alpha) noexcept
 	: r(red), g(green), b(blue), a(alpha)
     {}
 
-	Color(float red, float green, float blue)
+	constexpr Color(float red, float green, float blue) noexcept
 	: r(red), g(green), b(blue), a(1.0f)
     {}
 
-    Color(const math::Vector4& v)
+	    constexpr Color(const math::Vector4& v) noexcept
     : r(v.X), g(v.Y), b(v.Z), a(v.W)
     {
     }
@@ -181,10 +168,10 @@ struct FORG_API Color
     }
 
 	Color& operator = (uint argb);
-	Color& operator = (const Color& c);
+	Color& operator = (const Color& c) = default;
 
   
-    void BlendTo(const Color& arg)
+	    constexpr void BlendTo(const Color& arg) noexcept
     {
         r = a * r + (1.0f - a) * arg.r;
         g = a * g + (1.0f - a) * arg.g;
@@ -225,4 +212,4 @@ struct FORG_API Color
 
 }
 
-#endif // _FORG_COLOR_H_
+#endif // FORG_RENDERING_COLOR_H

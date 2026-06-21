@@ -127,7 +127,7 @@ void RegularExpression::Set(const core::string& _re)
     m_def = _re;
 }
 
-bool RegularExpression::Match(const core::string& _text)
+bool RegularExpression::Match(const core::string&)
 {
     return false;
 }

@@ -1,7 +1,7 @@
 #include "forg_pch.h"
 
-#include "SWRenderDevice.h"
-#include "SWBuffers.h"
+#include "rendering/reference/SWRenderDevice.h"
+#include "rendering/reference/SWBuffers.h"
 
 namespace forg { namespace rendering { namespace reference {
 

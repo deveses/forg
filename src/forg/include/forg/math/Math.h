@@ -16,8 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_MATH_H_
-#define _FORG_MATH_H_
+#ifndef FORG_MATH_MATH_H
+#define FORG_MATH_MATH_H
+
+#include <algorithm>
+#include <bit>
+#include <cstdint>
+#include <limits>
 
 #include "forg/base.h"
 
@@ -26,10 +31,6 @@
 #include "forg/math/Vector4.h"
 #include "forg/math/Matrix4.h"
 #include "forg/math/Quaternion.h"
-
-#if !defined(FLT_EPSILON)
-#define FLT_EPSILON std::numeric_limits<float>::epsilon() // 1.192092896e-07F
-#endif
 
 namespace forg { namespace math {
 
@@ -62,12 +63,12 @@ namespace forg { namespace math {
 		static FORG_API double Abs(double d);
 		static FORG_API double Log(double d);
 		template <class T>
-			static T Max(T a, T b)
+			static constexpr T Max(T a, T b)
 		{
 			return a > b ? a : b;
 		}
 		template <class T>
-			static T Min(T a, T b)
+			static constexpr T Min(T a, T b)
 		{
 			return a > b ? b : a;
 		}
@@ -91,32 +92,29 @@ namespace forg { namespace math {
 ////////////////////////////////////////////////////////////////////////////////
 
         /// -1, 0, 1
-        static int bit_sign(int _value)
-        {
-            // shifting preserve sign bit
-            return (1 | (_value >> 31));
-        }
+	    static constexpr int bit_sign(int value) noexcept
+	    {
+	        return value < 0 ? -1 : 1;
+	    }
 
-        static int bit_min(int x, int y)
-        {
-            // if x < y, then -(x < y) will be all ones, so r = y + (x - y) & ~0 = y + x - y = x.
-            // Otherwise, if x >= y, then -(x < y) will be all zeros, so r = y + (x - y) & 0 = y
-            return (y + ((x - y) & -(x < y)));
-        }
+	    static constexpr int bit_min(int x, int y) noexcept
+	    {
+	        return std::min(x, y);
+	    }
 
-        static int bit_max(int x, int y)
-        {
-            return (x - ((x - y) & -(x < y)));
-        }
+	    static constexpr int bit_max(int x, int y) noexcept
+	    {
+	        return std::max(x, y);
+	    }
 
-        static int bit_avarage(int x, int y)
-        {
-            return (x&y)+((x^y)/2);
-        }
+	    static constexpr int bit_avarage(int x, int y) noexcept
+	    {
+	        return static_cast<int>((static_cast<std::int64_t>(x) + y) / 2);
+	    }
 
-        static bool is_pow2(int v)
-        {
-            return (!(v & (v - 1)) && v);
+	    static constexpr bool is_pow2(int v) noexcept
+	    {
+	        return v > 0 && std::has_single_bit(static_cast<unsigned int>(v));
         }
 
         /*
@@ -126,140 +124,31 @@ namespace forg { namespace math {
         }*/
 
 
-        static unsigned int count_bits_set(unsigned int v)
-        {
-            unsigned int c;
-            const int S[] = {1, 2, 4, 8, 16};
-            const int B[] = {0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF};
+	    static constexpr unsigned int count_bits_set(unsigned int v) noexcept
+	    {
+	        return std::popcount(v);
+	    }
 
-        //     B[0] = 01010101 01010101 01010101 01010101
-        //     B[1] = 00110011 00110011 00110011 00110011
-        //     B[2] = 00001111 00001111 00001111 00001111
-        //     B[3] = 00000000 11111111 00000000 11111111
-        //     B[4] = 00000000 00000000 11111111 11111111
+	    static constexpr unsigned int bit_log2(unsigned int v) noexcept
+	    {
+	        return v == 0 ? 0U : std::bit_width(v) - 1U;
+	    }
 
-            c = v;
-            c = ((c >> S[0]) & B[0]) + (c & B[0]);
-            c = ((c >> S[1]) & B[1]) + (c & B[1]);
-            c = ((c >> S[2]) & B[2]) + (c & B[2]);
-            c = ((c >> S[3]) & B[3]) + (c & B[3]);
-            c = ((c >> S[4]) & B[4]) + (c & B[4]);
+	    static constexpr int count_zeros_trail(unsigned int v) noexcept
+	    {
+	        return static_cast<int>(std::countr_zero(v));
+	    }
 
-            return c;
-        }
+	    static constexpr int next_pow2(unsigned int v) noexcept
+	    {
+	        if (v == 0 || v > (1U << 31U))
+	            return 0;
+	        return static_cast<int>(std::bit_ceil(v));
+	    }
 
-        static unsigned int bit_log2(unsigned int v)
-        {
-            unsigned int r = 0;
-            unsigned int shift = 0;
-
-            shift = ( ( v & 0xFFFF0000 ) != 0 ) << 4; v >>= shift; r |= shift;
-            shift = ( ( v & 0xFF00     ) != 0 ) << 3; v >>= shift; r |= shift;
-            shift = ( ( v & 0xF0       ) != 0 ) << 2; v >>= shift; r |= shift;
-            shift = ( ( v & 0xC        ) != 0 ) << 1; v >>= shift; r |= shift;
-            shift = ( ( v & 0x2        ) != 0 ) << 0; v >>= shift; r |= shift;
-
-            return r;
-        }
-
-        static int count_zeros_trail(unsigned int v)
-        {
-            unsigned int c = 32;
-            const unsigned int B[] = {0x55555555, 0x33333333, 0x0F0F0F0F, 0x00FF00FF, 0x0000FFFF};
-            const unsigned int S[] = {1, 2, 4, 8, 16};
-
-            if (v & B[4])
-            {
-                v <<= S[4];
-                c -= S[4];
-            }
-            if (v & B[3])
-            {
-                v <<= S[3];
-                c -= S[3];
-            }
-            if (v & B[2])
-            {
-                v <<= S[2];
-                c -= S[2];
-            }
-            if (v & B[1])
-            {
-                v <<= S[1];
-                c -= S[1];
-            }
-            if (v & B[0])
-            {
-                v <<= S[0];
-                c -= S[0];
-            }
-            if (v)
-            {
-                c--;
-            }
-
-            return c;
-        }
-
-        static int next_pow2(unsigned int v)
-        {
-            v--;
-            v |= v >> 1;
-            v |= v >> 2;
-            v |= v >> 4;
-            v |= v >> 8;
-            v |= v >> 16;
-            v++;
-
-            return v;
-        }
-
-        static int first_bit_num(unsigned int _value)
-        {
-            unsigned int r = 32;
-
-            // result is in 0-31, so we need 5 pow2 numbers to write it
-            // 1,2,4,8,16 - with these, we can construct any number from range 0-31
-
-            // we zeroing from right to left by shifting
-
-            // if there is something to zero
-            if (_value & 0x0000FFFF)    // 00000000 00000000 11111111 11111111
-            {
-                _value <<= 16; r -= 16;
-                // value = XXXXXXXX XXXXXXXX 00000000 00000000
-            }
-            // else there are zeros already
-
-            if (_value & 0x00FF00FF)    // 00000000 11111111 00000000 11111111
-            {
-                _value <<= 8; r -= 8;
-                // value = XXXXXXXX 00000000 XXXXXXXX 00000000
-            }
-
-            if (_value & 0x0F0F0F0F)    // 00001111 00001111 00001111 00001111
-            {
-                _value <<= 4; r -= 4;
-                // value = XXXX0000 XXXX0000 XXXX0000 XXXX0000
-            }
-
-            if (_value & 0x33333333)    // 00110011 00110011 00110011 00110011
-            {
-                _value <<= 2; r -= 2;
-                // value = XX00XX00 XX00XX00 XX00XX00 XX00XX00
-            }
-
-            if (_value & 0x55555555)    // 01010101 01010101 01010101 01010101
-            {
-                _value <<= 1; r -= 1;
-                // value = X0X0X0X0 X0X0X0X0 X0X0X0X0 X0X0X0X0
-            }
-
-            if (_value)
-                r--;
-
-
-            return r;
+	    static constexpr int first_bit_num(unsigned int value) noexcept
+	    {
+	        return static_cast<int>(std::countr_zero(value));
         }
 
            // period 2^96-1
@@ -308,4 +197,4 @@ namespace forg { namespace math {
 }
 }
 
-#endif // _FORG_MATH_H_
+#endif // FORG_MATH_MATH_H

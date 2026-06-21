@@ -34,17 +34,17 @@ Mesh::Mesh(
 
     bool use32 = _fget(m_options, MeshFlags::Use32Bit);
 
-    m_vertex_buffer = VertexBufferPtr( pDevice ? pDevice->CreateVertexBuffer(
+	    m_vertex_buffer.reset(pDevice ? pDevice->CreateVertexBuffer(
                                            m_num_vertices * m_stride_size,
                                            Usage::WriteOnly,
                                            Pool_Managed
-                                       ) : 0);
-    m_index_buffer =  IndexBufferPtr( pDevice ? pDevice->CreateIndexBuffer(
+	                                       ) : nullptr);
+	    m_index_buffer.reset(pDevice ? pDevice->CreateIndexBuffer(
                                           m_num_faces * 3 * (use32 ? 4 : 2),
                                           Usage::WriteOnly,
                                           ! use32,
                                           Pool_Managed
-                                      ) : 0);
+	                                      ) : nullptr);
 
 }
 
@@ -959,7 +959,7 @@ int Mesh::LockVertexBuffer(
     void** ppData
 )
 {
-    if (m_vertex_buffer != 0)
+	    if (m_vertex_buffer)
         return m_vertex_buffer->Lock(0, 0, ppData, 0);
 
     return 1;
@@ -971,7 +971,7 @@ int Mesh::LockIndexBuffer(
     void** ppData
 )
 {
-    if (m_index_buffer != 0)
+	    if (m_index_buffer)
         return m_index_buffer->Lock(0, 0, ppData, 0);
 
     return 1;
@@ -980,7 +980,7 @@ int Mesh::LockIndexBuffer(
 /////////////////////////////////////////////////////////////////////////////////////
 int Mesh::UnlockVertexBuffer()
 {
-    if (m_vertex_buffer != 0)
+	    if (m_vertex_buffer)
         return m_vertex_buffer->Unlock();
 
     return 1;
@@ -989,7 +989,7 @@ int Mesh::UnlockVertexBuffer()
 /////////////////////////////////////////////////////////////////////////////////////
 int Mesh::UnlockIndexBuffer()
 {
-    if (m_index_buffer != 0)
+	    if (m_index_buffer)
         return m_index_buffer->Unlock();
 
     return 1;

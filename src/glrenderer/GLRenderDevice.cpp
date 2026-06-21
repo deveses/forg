@@ -14,7 +14,9 @@
 #include "GLFunc.h"
 
 #ifndef WIN32
+#ifndef _WIN32
 #include <GL/glx.h>
+#endif
 
 //#define wglGetCurrentContext glXGetCurrentContext
 //#define wglMakeCurrent glXMakeCurrent

@@ -3,6 +3,9 @@
 #include "audio/AudioOutputWaveOut.h"
 //#include "forg/cpu/vector.h"
 
+#include <algorithm>
+#include <cstddef>
+
 namespace forg { namespace audio {
 
 AudioMixer::AudioMixer()
@@ -79,7 +82,7 @@ void AudioMixer::SetStreamFormat(unsigned int _stream, SAudioFormat& format)
 //#define SHORT_TO_FLOAT 0.000030517578125
 void MixSamples(float* _out, int _out_chan, short* _in, int _in_chan, uint32 _count)
 {
-    for (int i=0; i<_count; i++)
+	    for (uint32 i=0; i<_count; i++)
     {
         for (int j=0; j<_out_chan && j<_in_chan; j++)
         {
@@ -95,7 +98,7 @@ void MixSamples(float* _out, int _out_chan, short* _in, int _in_chan, uint32 _co
 
 void ConvertSamples(float* _out, int _out_chan, short* _in, int _in_chan, uint32 _count)
 {
-    for (int i=0; i<_count; i++)
+	    for (uint32 i=0; i<_count; i++)
     {
         for (int j=0; j<_out_chan && j<_in_chan; j++)
         {
@@ -109,7 +112,7 @@ void ConvertSamples(float* _out, int _out_chan, short* _in, int _in_chan, uint32
 
 void ConvertSamplesToIntegers(short* _out, float* _in, uint32 _count, int _channels)
 {
-    for (int i=0; i<_count; i++)
+	    for (uint32 i=0; i<_count; i++)
     {
         for (int j=0; j<_channels; j++)
         {
@@ -121,21 +124,23 @@ void ConvertSamplesToIntegers(short* _out, float* _in, uint32 _count, int _chann
     }
 }
 
-enum { SAMPLES_BUFFER_SIZE = 1024 };
+constexpr uint32 SAMPLES_BUFFER_SIZE = 1024;
+constexpr std::size_t SAMPLES_BUFFER_CAPACITY =
+    static_cast<std::size_t>(MAX_NUM_CHANNELS) * SAMPLES_BUFFER_SIZE;
 
 unsigned int  AudioMixer::MixStreams(char* _out_buffer, unsigned int _out_size)
 {
     unsigned int mixed_size = 0;
-    float samplesf[MAX_NUM_CHANNELS*SAMPLES_BUFFER_SIZE];
+	    float samplesf[SAMPLES_BUFFER_CAPACITY];
 
     short* obuf = (short*)_out_buffer;
     uint32 sample_stride = (m_format.bps * m_format.chan);
     // output size in samples
     uint32 olength = _out_size / sample_stride; 
 
-    for (int i=0; i<olength/SAMPLES_BUFFER_SIZE; i++)
-    {
-        memset(samplesf, 0, MAX_NUM_CHANNELS*SAMPLES_BUFFER_SIZE*4);
+	    for (uint32 i=0; i<olength/SAMPLES_BUFFER_SIZE; i++)
+	    {
+	        std::fill_n(samplesf, SAMPLES_BUFFER_CAPACITY, 0.0f);
         uint32 mix_samples = MixStreamsFloat(samplesf, SAMPLES_BUFFER_SIZE);
 
         if (mix_samples > 0)

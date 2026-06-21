@@ -50,7 +50,7 @@ namespace forg
         // CGImage reads rows top-down, so copy the rows reversed.
         size_t row_bytes = (size_t)width * 4;
         size_t length = row_bytes * height;
-        CFMutableDataRef data = CFDataCreateMutable(NULL, length);
+	        CFMutableDataRef data = CFDataCreateMutable(nullptr, length);
         CFDataSetLength(data, length);
         UInt8* dst = CFDataGetMutableBytePtr(data);
         for (uint row = 0; row < height; row++)
@@ -61,9 +61,11 @@ namespace forg
         }
         CGDataProviderRef provider = CGDataProviderCreateWithCFData(data);
         CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-        CGImageRef image = CGImageCreate(width, height, 8, 32, width * 4, colorSpace,
-            kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst,
-            provider, NULL, false, kCGRenderingIntentDefault);
+	        const auto bitmapInfo = static_cast<CGBitmapInfo>(
+	            static_cast<std::uint32_t>(kCGBitmapByteOrder32Little) |
+	            static_cast<std::uint32_t>(kCGImageAlphaNoneSkipFirst));
+	        CGImageRef image = CGImageCreate(width, height, 8, 32, width * 4, colorSpace,
+	            bitmapInfo, provider, nullptr, false, kCGRenderingIntentDefault);
 
         [CATransaction begin];
         [CATransaction setDisableActions:YES];

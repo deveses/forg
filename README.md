@@ -1,18 +1,18 @@
 # FORG
 
-FORG is a C++17 rendering-API abstraction library. It defines a common set of rendering interfaces (`IRenderDevice`, `IRenderer`, `ITexture`, `IVertexBuffer`, …) and provides multiple backends behind them — a reference software renderer built into the library, a native Apple Metal backend (macOS), plus OpenGL, software, OpenCL, and C++ AMP renderer plugins. It originated from the old `forg.googlecode.com` project.
+FORG is a C++20 rendering-API abstraction library. It defines a common set of rendering interfaces (`IRenderDevice`, `IRenderer`, `ITexture`, `IVertexBuffer`, …) and provides multiple backends behind them — a reference software renderer built into the library, a native Apple Metal backend (macOS), plus OpenGL, software, OpenCL, and C++ AMP renderer plugins. It originated from the old `forg.googlecode.com` project.
 
 ## Supported platforms
 
 - **macOS** — primary CMake target
-- **Windows** — legacy MSVC/Sharpmake build (renderer plugin DLLs and Win32 sample app)
+- **Windows** — CMake/MSVC build with OpenGL and software renderer plugins plus the Win32 sample app
 - iOS platform macros exist (`FORG_PLATFORM_IOS`) but there is no app target yet
 
 Any other platform fails CMake configuration with a fatal error.
 
 ## Building
 
-Requires CMake ≥ 3.21 (for presets), Ninja, and a C++17 compiler. `CMakePresets.json` defines `debug` and `release` presets with output in `build/debug` and `build/release`:
+Requires CMake >= 3.21, Ninja, and a C++20 compiler. `CMakePresets.json` defines `debug` and `release` presets with output in `build/debug` and `build/release`:
 
 ```sh
 cmake --preset release
@@ -79,9 +79,9 @@ cmake --preset release -DBUILD_TESTING=OFF
 
 Initial coverage lives under `tests/` and focuses on deterministic library behavior: math types, `BitArray`, XML/YAML parsing, color conversion, and vertex declaration helpers. App/plugin tests, OpenCL, Cocoa windowing, and visual renderer validation are intentionally outside the first test layer.
 
-### Legacy Windows build
+### Windows build
 
-The remaining renderer plugins (`glrenderer`, `clrenderer`, `amprenderer`, the GDI side of `swrenderer`) and the Win32 sample apps (`winapp`, `emfc`) are **not** part of the CMake build. They are built with the Sharpmake-generated Visual Studio projects under `tools/msvc/` (regenerate with `tools/generateprojects.bat`, sources in `tools/sharpmake/`).
+Use the `windows-debug` and `windows-release` presets with Visual Studio 2022. CMake builds `forg`, `emfc`, `winapp`, `glrenderer`, the Windows software renderer, and the test suite. OpenCL and C++ AMP remain legacy-only; the checked-in Sharpmake projects are retained temporarily for comparison while CMake parity is validated.
 
 ## Project layout
 
@@ -119,7 +119,7 @@ Beyond rendering, the library includes math types, audio output, XML and YAML pa
 
 ## CI
 
-GitHub Actions runs the canonical CMake workflow (`.github/workflows/cmake.yml`) on macOS for both `debug` and `release` presets. Windows and Linux are intentionally not in CMake CI yet: Windows remains covered by the legacy Sharpmake/MSVC build files, and unsupported platforms still fail configuration.
+GitHub Actions runs canonical debug and release CMake workflows on macOS and Windows. Linux remains unsupported and fails configuration explicitly.
 
 ## License
 

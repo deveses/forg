@@ -9,6 +9,7 @@
 #include "forg/debug/dbg.h"
 
 #include <cstring>
+#include <utility>
 
 namespace forg { namespace core {
 
@@ -73,12 +74,19 @@ namespace forg { namespace core {
 
         basic_string(const basic_string& _str)
         {
-            m_buffer = allocate(_str.m_capacity);
+            m_buffer = _str.m_capacity == 0 ? nullptr : allocate(_str.m_capacity);
             m_length = _str.m_length;
             m_capacity = _str.m_capacity;
 
-            copy(m_buffer, _str.m_buffer, m_length*sizeof(T));
+            if (m_buffer != nullptr)
+                copy(m_buffer, _str.m_buffer, (m_length + 1) * sizeof(T));
         }
+
+        basic_string(basic_string&& other) noexcept
+            : m_buffer(std::exchange(other.m_buffer, nullptr)),
+              m_length(std::exchange(other.m_length, 0)),
+              m_capacity(std::exchange(other.m_capacity, 0))
+        {}
 
         ~basic_string()
         {
@@ -108,6 +116,18 @@ namespace forg { namespace core {
 
             m_buffer[l] = 0;
 
+            return *this;
+        }
+
+        basic_string& operator=(basic_string&& other) noexcept
+        {
+            if (this != &other)
+            {
+                deallocate(m_buffer);
+                m_buffer = std::exchange(other.m_buffer, nullptr);
+                m_length = std::exchange(other.m_length, 0);
+                m_capacity = std::exchange(other.m_capacity, 0);
+            }
             return *this;
         }
 
@@ -148,7 +168,11 @@ namespace forg { namespace core {
             return 0;
         }
 
-        const T* c_str() const { return m_buffer; }
+        const T* c_str() const
+        {
+            static constexpr T empty[1]{};
+            return m_buffer == nullptr ? empty : m_buffer;
+        }
 
         size_type size() const { return m_length; }
 
@@ -157,6 +181,8 @@ namespace forg { namespace core {
         void clear()
         {
             m_length = 0;
+            if (m_buffer != nullptr)
+                m_buffer[0] = 0;
         }
 
         basic_string& append(const basic_string& _str, size_type _pos = 0, size_type _num = npos)
@@ -238,8 +264,9 @@ namespace forg { namespace core {
 
         void resize(size_type _size)
         {
-            reserve(_size);
+            reserve(_size + 1);
             m_length = _size;
+            m_buffer[m_length] = 0;
         }
 
         void reserve(size_type _size)

@@ -21,7 +21,7 @@ void XMLSerializer::Close()
     m_parser.Close();
 }
 
-bool XMLSerializer::Begin(const char* _name)
+bool XMLSerializer::Begin(const char*)
 {
     return false;
 }
@@ -30,23 +30,23 @@ void XMLSerializer::End()
 {
 }
 
-bool XMLSerializer::Read(void* _buffer, uint32 _size)
+bool XMLSerializer::Read(void*, uint32)
 {
     return false;
 
 }
 
-bool XMLSerializer::ReadFloat32(float& _out, const char* _name)
+bool XMLSerializer::ReadFloat32(float&, const char*)
 {
     return false;
 }
 
-bool XMLSerializer::ReadInt32(int& _out, const char* _name)
+bool XMLSerializer::ReadInt32(int&, const char*)
 {
     return false;
 }
 
-bool XMLSerializer::ReadString(core::string& _out, const char* _name)
+bool XMLSerializer::ReadString(core::string&, const char*)
 {
     return false;
 }

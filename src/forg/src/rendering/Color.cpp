@@ -4,13 +4,13 @@
 
 namespace forg {
 
-static uint color_component_to_byte(float value)
+static uint color_component_to_byte(float value) noexcept
 {
     // NaN fails both comparisons inside clamp(), so catch it here with negatives.
     if (!(value > 0.0f))
         return 0;
 
-    return (uint)(clamp(value, 0.0f, 1.0f) * 255.0f);
+	    return static_cast<uint>(clamp(value, 0.0f, 1.0f) * 255.0f);
 }
 
 Color::Color(uint argb)
@@ -18,12 +18,7 @@ Color::Color(uint argb)
 	*this = argb;
 }
 
-Color::Color(const Color& c)
-	: r(c.r), g(c.g), b(c.b), a(c.a)
-{
-}
-
- Color::operator uint() const
+Color::operator uint() const
 {
 	uint _r = color_component_to_byte(r);
 	uint _g = color_component_to_byte(g);
@@ -33,22 +28,12 @@ Color::Color(const Color& c)
 	return ((_a & 0xff)<<24) | ((_r & 0xff)<<16) | ((_g & 0xff)<<8) | ((_b & 0xff));
 }
 
-Color& Color::operator = (const Color& c)
-{
-	a = c.a;
-	r = c.r;
-	g = c.g;
-	b = c.b;
-
-	return *this;
-}
-
 Color& Color::operator = (uint argb)
 {
-	a = (float)((argb >> 24) & 0xff) / 255.0f;;
-	r = (float)((argb >> 16) & 0xff) / 255.0f;
-	g = (float)((argb >> 8) & 0xff) / 255.0f;;
-	b = (float)(argb & 0xff) / 255.0f;;
+		a = static_cast<float>((argb >> 24) & 0xff) / 255.0f;
+		r = static_cast<float>((argb >> 16) & 0xff) / 255.0f;
+		g = static_cast<float>((argb >> 8) & 0xff) / 255.0f;
+		b = static_cast<float>(argb & 0xff) / 255.0f;
 
 	return *this;
 }

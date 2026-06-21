@@ -40,3 +40,10 @@ forg::IRenderer* forgCreateRenderer()
 {
     return (new forg::SWRenderer());
 }
+
+const forg::RendererPluginDescriptor* forgGetRendererPluginDescriptor()
+{
+    static const forg::RendererPluginDescriptor descriptor{
+        sizeof(forg::RendererPluginDescriptor), forg::RendererPluginApiVersion, &forgCreateRenderer};
+    return &descriptor;
+}

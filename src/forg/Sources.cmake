@@ -127,7 +127,7 @@ set(math_sources
     Vector3.cpp
     Vector4.cpp
 )
-list(TRANSFORM math_sources PREPEND "include/forg/math/")
+list(TRANSFORM math_sources PREPEND "src/math/")
 
 ###############################################################################
 # rendering
@@ -147,7 +147,7 @@ set(rendering_sources
     reference/SWBuffers.cpp
     reference/SWRenderDevice.cpp
 )
-list(TRANSFORM rendering_sources PREPEND "include/forg/rendering/")
+list(TRANSFORM rendering_sources PREPEND "src/rendering/")
 
 ###############################################################################
 # mesh
@@ -170,7 +170,7 @@ set(mesh_sources
     xfile/xtexreader.cpp
     xfile/xtmembers.cpp
 )
-list(TRANSFORM mesh_sources PREPEND "include/forg/mesh/")
+list(TRANSFORM mesh_sources PREPEND "src/mesh/")
 
 ###############################################################################
 # image
@@ -180,7 +180,7 @@ set(image_sources
     bmp/bmp.cpp
     dds/dds.cpp
 )
-list(TRANSFORM image_sources PREPEND "include/forg/image/")
+list(TRANSFORM image_sources PREPEND "src/image/")
 
 ###############################################################################
 # root / debug
