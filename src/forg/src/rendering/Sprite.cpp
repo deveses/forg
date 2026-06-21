@@ -123,11 +123,16 @@ int Sprite::Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
         {0.0f, absh, 0.0f, 0xffffffff, u0, v0}  // top-left
     };
     */
+    const uint vertex_color = (static_cast<uint>(color.a) << 24) |
+                              (static_cast<uint>(color.r) << 16) |
+                              (static_cast<uint>(color.g) << 8) |
+                              static_cast<uint>(color.b);
+
     forg::geometry::PositionColoredTextured points[4] = {
-        {0.0f, 0.0f, 0.0f, -1, u0, v0}, // bottom-left
-        {absw, 0.0f, 0.0f, -1, u1, v0}, // bottom-right
-        {absw, absh, 0.0f, -1, u1, v1}, // top-right
-        {0.0f, absh, 0.0f, -1, u0, v1}  // top-left
+        {0.0f, 0.0f, 0.0f, static_cast<int>(vertex_color), u0, v0},
+        {absw, 0.0f, 0.0f, static_cast<int>(vertex_color), u1, v0},
+        {absw, absh, 0.0f, static_cast<int>(vertex_color), u1, v1},
+        {0.0f, absh, 0.0f, static_cast<int>(vertex_color), u0, v1}
     };
 
     const short indices[4] = {3, 2, 0, 1};
@@ -136,15 +141,8 @@ int Sprite::Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
 
     Matrix4 tm = m_transform;
 
-    float screen_x = 0.0f; // left by default
-    float screen_y = 0.0f; //(float)sprite_height;
-    float screen_z = 0.0f;
-
     if (center)
     {
-        float norm_cx = center->X;
-        float norm_cy = center->Y;
-
         Matrix4 trans_tm;
 
         Matrix4::Translation(trans_tm, -center->X, -center->Y, -center->Z);
