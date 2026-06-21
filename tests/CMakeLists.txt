@@ -50,6 +50,11 @@ if(TARGET metalrenderer)
     target_compile_definitions(forg_tests PRIVATE
         FORG_TEST_METALRENDERER_PATH="$<TARGET_FILE:metalrenderer>")
 endif()
+if(TARGET glrenderer)
+    add_dependencies(forg_tests glrenderer)
+    target_compile_definitions(forg_tests PRIVATE
+        FORG_TEST_GLRENDERER_PATH="$<TARGET_FILE:glrenderer>")
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(Catch)

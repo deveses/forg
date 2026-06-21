@@ -23,6 +23,8 @@
 #pragma once
 #endif
 
+#include "forg/debug/dbg.h"
+
 #include <cstdlib>
 
 namespace forg::core {

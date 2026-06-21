@@ -49,7 +49,7 @@ EWnd::~EWnd()
 {
     if (m_hWnd)
     {
-        UnregisterClass((LPCTSTR)(m_aWndClass & 0xffff), m_hInstance);
+        UnregisterClass(MAKEINTATOM(m_aWndClass), m_hInstance);
     }
 }
 

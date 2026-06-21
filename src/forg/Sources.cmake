@@ -52,8 +52,8 @@ set(os_includes
 )
 list(TRANSFORM os_includes PREPEND "include/forg/os/")
 set(os_sources
-    osx/File.cpp
-    win32/File.cpp
+    $<${FORG_PLATFORM_OSX}:osx/File.cpp>
+    $<${FORG_PLATFORM_WINDOWS}:win32/File.cpp>
 )
 list(TRANSFORM os_sources PREPEND "src/os/")
 
@@ -135,12 +135,14 @@ list(TRANSFORM math_sources PREPEND "src/math/")
 set(rendering_sources
     Camera.cpp
     Color.cpp
+    Font.cpp
     IRenderDevice.cpp
     IRenderer.cpp
     ISurface.cpp
     ITexture.cpp
     Mesh.cpp
     Ray.cpp
+    Sprite.cpp
     Vertex.cpp
     VertexDeclaration.cpp
     VertexElement.cpp
@@ -148,6 +150,18 @@ set(rendering_sources
     reference/SWRenderDevice.cpp
 )
 list(TRANSFORM rendering_sources PREPEND "src/rendering/")
+
+###############################################################################
+# ui
+###############################################################################
+set(ui_includes
+    gui.h
+)
+list(TRANSFORM ui_includes PREPEND "include/forg/ui/")
+set(ui_sources
+    gui.cpp
+)
+list(TRANSFORM ui_sources PREPEND "src/ui/")
 
 ###############################################################################
 # mesh
@@ -192,6 +206,7 @@ set(root_sources
 
 ###############################################################################
 list(APPEND all_includes ${audio_includes} ${core_includes} ${fs_includes} ${os_includes} ${script_includes}
-    ${net_includes} ${control_includes})
+    ${net_includes} ${control_includes} ${ui_includes})
 list(APPEND all_sources ${audio_sources} ${core_sources} ${fs_sources} ${os_sources} ${script_sources}
-    ${net_sources} ${control_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources} ${root_sources})
+    ${net_sources} ${control_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources}
+    ${ui_sources} ${root_sources})

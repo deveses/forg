@@ -3,6 +3,7 @@
 #include "forg_pch.h"
 
 #include <windows.h>
+#include <mmsystem.h>
 
 namespace forg::audio {
 
@@ -182,9 +183,10 @@ void AudioOutputWaveOut::Unprepare()
     */
 }
 
-void AudioOutputWaveOut::CallbackProc(HWAVEOUT hwo, UINT uMsg,
-                                      DWORD_PTR dwInstance, DWORD_PTR dwParam1,
-                                      DWORD_PTR dwParam2)
+void AudioOutputWaveOut::CallbackProc(HWAVEOUT /*hwo*/, UINT uMsg,
+                                      DWORD_PTR /*dwInstance*/,
+                                      DWORD_PTR /*dwParam1*/,
+                                      DWORD_PTR /*dwParam2*/)
 {
     if (uMsg == MM_WOM_DONE)
     {

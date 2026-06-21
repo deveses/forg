@@ -13,7 +13,7 @@ landed in `f174416` is recorded separately from remaining work.
 | Phase 3 | In progress | Finish first-party RAII and container migrations |
 | Phase 4 | Mostly complete | Validate headers and installed consumers on MSVC |
 | Phase 5 | In progress | Add descriptor v2 destruction and runtime coverage |
-| Phase 6 | In progress, unverified | Establish a green Windows build and test run |
+| Phase 6 | In progress, partially verified | Complete interactive winapp smoke and Sharpmake retirement gates |
 
 ## Recommended Order
 

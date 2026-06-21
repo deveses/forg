@@ -144,7 +144,7 @@ BOOL EDialog::CreateIndirect(LPCDLGTEMPLATE lpDialogTemplate, HWND pParentWnd,
     m_nFlags |= WF_CONTINUEMODAL;
     if (m_hWnd == NULL)
         return FALSE;
-    SetWindowLongPointer(GWLP_USERDATA, (LONG)this);
+    SetWindowLongPointer(GWLP_USERDATA, (LONG_PTR)this);
     return TRUE;
 }
 

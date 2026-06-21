@@ -87,6 +87,7 @@ TEST_CASE("WaveFile reads format and data chunks", "[audio][wave]")
     REQUIRE(static_cast<unsigned char>(samples[2]) == 0x7f);
     REQUIRE(static_cast<unsigned char>(samples[3]) == 0xff);
 
+    wave.Close();
     std::filesystem::remove(path);
 }
 

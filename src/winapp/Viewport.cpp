@@ -356,7 +356,8 @@ void Viewport::RenderUI()
 
         forg::Viewport vp;
         m_device->GetViewport(&vp);
-        forg::Rectangle r = {0, 0, vp.Width, vp.Height};
+        forg::Rectangle r = {0, 0, static_cast<int>(vp.Width),
+                             static_cast<int>(vp.Height)};
 
         if (m_font)
         {

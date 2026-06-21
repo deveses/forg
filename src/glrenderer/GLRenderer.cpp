@@ -27,8 +27,6 @@ GLRenderDevice*
 GLRenderer::CreateDevice(HWIN hWindow,
                          RENDER_PARAMETERS* pPresentationParameters)
 {
-    RENDER_PARAMETERS params;
-
 #ifdef _WIN32
     PIXELFORMATDESCRIPTOR pfdTarget = {
         sizeof(PIXELFORMATDESCRIPTOR), // size of this pfd

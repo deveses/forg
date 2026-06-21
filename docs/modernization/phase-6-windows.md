@@ -2,9 +2,11 @@
 
 ## Status
 
-In progress and unverified. Visual Studio 2022 presets, Windows CI jobs, and CMake
-targets for `forg`, `emfc`, software/OpenGL renderers, and `winapp` exist, but no
-successful Windows run has yet established parity.
+In progress and partially verified. Visual Studio 2022 presets, Windows CI jobs,
+and CMake targets for `forg`, `emfc`, software/OpenGL renderers, and `winapp`
+build with MSVC x64. Local Windows debug and release CMake builds and CTest runs
+pass, including package consumption and software/OpenGL plugin lifecycle tests.
+Interactive `winapp` smoke validation and Sharpmake retirement remain pending.
 
 ## Objective
 
@@ -48,7 +50,9 @@ transition path are supplied.
 
 ## Acceptance Gates
 
-- Windows debug and release configure, build, test, install, and consume cleanly.
-- Software and OpenGL plugin lifecycle tests pass on Windows.
-- `winapp` completes the documented local smoke checklist.
-- CMake parity is documented and Sharpmake retirement conditions are satisfied.
+- Complete: Windows debug and release configure, build, test, install, and
+  consume cleanly with Visual Studio 2022 MSVC x64.
+- Complete: Software and OpenGL plugin lifecycle tests pass on Windows.
+- Pending: `winapp` completes the documented local smoke checklist.
+- Pending: CMake parity is documented and Sharpmake retirement conditions are
+  satisfied.

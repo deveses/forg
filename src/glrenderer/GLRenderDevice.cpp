@@ -13,6 +13,8 @@
 
 #include "GLFunc.h"
 
+#include <cstdint>
+
 #ifndef WIN32
 #ifndef _WIN32
 #include <GL/glx.h>
@@ -711,7 +713,8 @@ int GLRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     uint realStart = (sixteenBitIndices ? startIndex << 1 : startIndex << 2);
     GLV(glDrawElements(mode, numVertexIndices,
                        sixteenBitIndices ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
-                       (byte*)realStart)); // ogl 1.1
+                       reinterpret_cast<const GLvoid*>(
+                           static_cast<uintptr_t>(realStart)))); // ogl 1.1
 
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);

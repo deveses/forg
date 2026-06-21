@@ -69,3 +69,11 @@ TEST_CASE("Metal renderer plugin has a compatible lifecycle",
     CheckPlugin(FORG_TEST_METALRENDERER_PATH);
 }
 #endif
+
+#ifdef FORG_TEST_GLRENDERER_PATH
+TEST_CASE("OpenGL renderer plugin has a compatible lifecycle",
+          "[rendering][plugin]")
+{
+    CheckPlugin(FORG_TEST_GLRENDERER_PATH);
+}
+#endif

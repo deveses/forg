@@ -9,10 +9,12 @@
 
 #include "forg.h"
 
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+#endif
 // Windows Header Files:
-#include <CommCtrl.h>
 #include <windows.h>
+#include <CommCtrl.h>
 
 // C RunTime Header Files
 #include <malloc.h>

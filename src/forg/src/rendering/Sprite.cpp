@@ -124,10 +124,10 @@ int Sprite::Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
     };
     */
     forg::geometry::PositionColoredTextured points[4] = {
-        {0.0f, 0.0f, 0.0f, 0xffffffff, u0, v0}, // bottom-left
-        {absw, 0.0f, 0.0f, 0xffffffff, u1, v0}, // bottom-right
-        {absw, absh, 0.0f, 0xffffffff, u1, v1}, // top-right
-        {0.0f, absh, 0.0f, 0xffffffff, u0, v1}  // top-left
+        {0.0f, 0.0f, 0.0f, -1, u0, v0}, // bottom-left
+        {absw, 0.0f, 0.0f, -1, u1, v0}, // bottom-right
+        {absw, absh, 0.0f, -1, u1, v1}, // top-right
+        {0.0f, absh, 0.0f, -1, u0, v1}  // top-left
     };
 
     const short indices[4] = {3, 2, 0, 1};

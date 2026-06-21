@@ -26,6 +26,7 @@ target_include_directories(forg
         include/forg/mesh/xfile
         include/forg/image/bmp
         include/forg/image/dds
+        include/forg/ui
 )
 # cgltf (header-only) is used privately by the glTF mesh loader.
 target_include_directories(forg PRIVATE ${PROJECT_SOURCE_DIR}/extern/cgltf)

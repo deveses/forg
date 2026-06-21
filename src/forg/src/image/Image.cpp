@@ -208,7 +208,7 @@ static int detect_file_type(const char* _filename)
 
 //////////////////////////////////////////////////////////////////////////
 
-Image::Image() : m_data(0) { m_num_mipmaps = 1; }
+Image::Image() : m_data(0), m_width(0), m_height(0), m_num_mipmaps(1) {}
 
 Image::~Image() { Clean(); }
 
@@ -227,7 +227,7 @@ void Image::Clean()
 
 bool Image::Load(const char* _filename)
 {
-    ImageDescription img_info;
+    ImageDescription img_info{};
     Color4b* img_data = NULL;
 
     switch (detect_file_type(_filename))

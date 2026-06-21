@@ -27,9 +27,9 @@
 #include <Windows.h>
 #endif
 
+#include <GL/gl.h>
 // #define GL_GLEXT_PROTOTYPES 1
 #include "GL/glext.h"
-#include <GL/gl.h>
 
 #ifdef _WIN32
 #include <gl/wglext.h>

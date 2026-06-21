@@ -2,7 +2,9 @@
 // #include "SWBuffers.h"
 #include "forg.h"
 
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #include <Windows.h>
 
 namespace forg {

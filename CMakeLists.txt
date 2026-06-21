@@ -5,6 +5,8 @@ project(
   VERSION 1.0
   LANGUAGES CXX)
 
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
+
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
@@ -36,7 +38,11 @@ function(forg_configure_target target)
     target_compile_features(${target} PUBLIC cxx_std_20)
     target_compile_options(${target} PRIVATE
         "$<${gcc_like_cxx}:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>"
-        "$<${msvc_cxx}:/W4>"
+        "$<${msvc_cxx}:/W4;/wd4100;/wd4101;/wd4189;/wd4244>"
+        "$<${msvc_cxx}:/wd4245;/wd4267;/wd4456;/wd4702>"
+    )
+    target_compile_definitions(${target} PRIVATE
+        "$<${msvc_cxx}:_CRT_SECURE_NO_WARNINGS>"
     )
 
     if(FORG_WARNINGS_AS_ERRORS)

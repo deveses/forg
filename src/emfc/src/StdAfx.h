@@ -11,15 +11,17 @@
 #endif // _MSC_VER > 1000
 
 // Insert your headers here
+#ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
+#endif
 // #define _WIN32_WINNT 0x0500
 // #define  WINVER 0x0500
 // #define _WIN32_IE 0x0500
 
 #include "base.h"
+#include <Windows.h>
 #include <CommCtrl.h>
 #include <Commdlg.h>
-#include <Windows.h>
 #include <tchar.h>
 #include <winuser.h>
 
