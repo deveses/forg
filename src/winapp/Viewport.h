@@ -44,6 +44,8 @@ class Viewport
     int m_show_gui;
     BOOL m_bLMBDown;
     BOOL m_bMouseCaptured;
+    bool m_hasLastMousePoint;
+    POINTS m_lastMousePoint;
 
     int m_fps;
     int m_frame_counter;

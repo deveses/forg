@@ -9,6 +9,15 @@
 
 forg::Light s_Light = {0};
 
+namespace {
+
+const float kOrbitSpeed = 0.01f;
+const float kTruckSpeed = 0.01f;
+const float kZoomSpeed = 0.30f;
+const float kMinTargetDistance = 0.5f;
+
+} // namespace
+
 namespace forg::scene {
 
 int Model::Load(const char* _name, IRenderDevice* _device)
@@ -105,6 +114,8 @@ Viewport::Viewport()
     m_bLMBDown = FALSE;
     m_fullscreen = false;
     m_show_gui = 1;
+    m_hasLastMousePoint = false;
+    m_lastMousePoint = {0, 0};
 
     m_fps = 0;
     m_frame_counter = 0;
@@ -283,6 +294,7 @@ LRESULT CALLBACK Viewport::StaticWindowProc(HWND hWnd, UINT uMsg,
 LRESULT Viewport::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     POINT pt;
+    POINTS points;
 
     switch (uMsg)
     {
@@ -297,14 +309,38 @@ LRESULT Viewport::WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam)
     case WM_ERASEBKGND:
         return 1;
     case WM_LBUTTONDOWN:
-        pt.x = static_cast<short>(LOWORD(lParam));
-        pt.y = static_cast<short>(HIWORD(lParam));
+        points = MAKEPOINTS(lParam);
+        m_lastMousePoint = points;
+        m_hasLastMousePoint = true;
+        SetCapture(m_hWnd);
+        pt.x = points.x;
+        pt.y = points.y;
         OnLButtonDown(static_cast<UINT>(wParam), pt);
         return 0;
+    case WM_RBUTTONDOWN:
+    case WM_MBUTTONDOWN:
+        m_lastMousePoint = MAKEPOINTS(lParam);
+        m_hasLastMousePoint = true;
+        SetCapture(m_hWnd);
+        return 0;
     case WM_LBUTTONUP:
-        pt.x = static_cast<short>(LOWORD(lParam));
-        pt.y = static_cast<short>(HIWORD(lParam));
+        points = MAKEPOINTS(lParam);
+        pt.x = points.x;
+        pt.y = points.y;
         OnLButtonUp(static_cast<UINT>(wParam), pt);
+        if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON)) == 0)
+        {
+            ReleaseCapture();
+            m_hasLastMousePoint = false;
+        }
+        return 0;
+    case WM_RBUTTONUP:
+    case WM_MBUTTONUP:
+        if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON)) == 0)
+        {
+            ReleaseCapture();
+            m_hasLastMousePoint = false;
+        }
         return 0;
     case WM_MOUSEMOVE:
         OnMouseMove(static_cast<UINT>(wParam), MAKEPOINTS(lParam));
@@ -600,73 +636,49 @@ void Viewport::OnLButtonUp(UINT nFlags, POINT point) { m_bLMBDown = FALSE; }
 
 void Viewport::OnMouseWheel(UINT nFlags, POINTS point, int delta)
 {
-    float d = 0.01f * delta;
+    UNREFERENCED_PARAMETER(nFlags);
+    UNREFERENCED_PARAMETER(point);
 
-    if (MK_RBUTTON & nFlags)
+    float dolly = (static_cast<float>(delta) / WHEEL_DELTA) * kZoomSpeed;
+    float distance = (m_camera.get_Target() - m_camera.get_Position()).Length();
+    if (dolly > distance - kMinTargetDistance)
     {
-        float d = 0.01f * delta;
-
-        forg::Vector3 move_dir = s_Light.Position;
-
-        move_dir.Normalize();
-
-        move_dir *= d;
-
-        s_Light.Position += move_dir;
-    }
-    else
-    {
-        m_camera.Dolly(d, d);
+        dolly = distance - kMinTargetDistance;
     }
 
+    m_camera.Dolly(dolly, 0.0f);
     Invalidate(0);
 }
 
 void Viewport::OnMouseMove(UINT nFlags, POINTS point)
 {
-    char str[30];
-    RECT rect;
-    POINT p = {point.x, point.y};
-    double tmpx, tmpy;
-    HCURSOR hCur = NULL;
-
-    static float last_x = 0.0f;
-    static float last_y = 0.0f;
-
     {
         forg::Point forg_point = {point.x, point.y};
         m_Dialog.HandleMouse(forg::ui::EMouseEvent::Move, forg_point, 0, 0);
     }
 
+    if (!m_hasLastMousePoint)
+    {
+        m_lastMousePoint = point;
+        m_hasLastMousePoint = true;
+        return;
+    }
+
+    float dx = static_cast<float>(point.x - m_lastMousePoint.x);
+    float dy = static_cast<float>(point.y - m_lastMousePoint.y);
+    m_lastMousePoint = point;
+
     if (nFlags & MK_LBUTTON)
     {
-        m_camera.Pan((last_x - point.x) * 0.002, (point.y - last_y) * 0.002);
+        m_camera.Orbit(-dx * kOrbitSpeed, dy * kOrbitSpeed);
     }
-    if (nFlags & MK_MBUTTON)
+    else if (nFlags & MK_RBUTTON)
     {
-        m_camera.Truck((last_x - point.x) * 0.004, (point.y - last_y) * 0.004);
+        m_camera.Truck(-dx * kTruckSpeed, dy * kTruckSpeed);
     }
-    if (nFlags & MK_RBUTTON)
-    {
-        float x = (last_x - point.x) * 0.002;
-        float y = (last_y - point.y) * 0.002;
 
-        forg::Quaternion qx;
-        forg::Quaternion::RotationAxis(qx, forg::Vector3(0.0f, 1.0f, 0.0f), x);
-
-        forg::Vector3 ay;
-        ay.Cross(s_Light.Position, forg::Vector3(0.0f, 1.0f, 0.0f));
-
-        forg::Quaternion qy;
-        forg::Quaternion::RotationAxis(qy, ay, y);
-
-        forg::Vector3::TransformCoordinate(s_Light.Position, s_Light.Position,
-                                           qx * qy);
-    }
     // UpdateWindow();
     Invalidate(0);
-    last_x = point.x;
-    last_y = point.y;
 
     // int action=ACTION_NONE;
     /*
