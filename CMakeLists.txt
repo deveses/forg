@@ -54,7 +54,7 @@ function(forg_configure_target target)
 
     if(FORG_ENABLE_CLANG_TIDY)
         set_property(TARGET ${target} PROPERTY CXX_CLANG_TIDY
-            "${FORG_CLANG_TIDY_EXECUTABLE};--config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy")
+            "${FORG_CLANG_TIDY_EXECUTABLE};--config-file=${PROJECT_SOURCE_DIR}/.clang-tidy")
     endif()
 endfunction()
 

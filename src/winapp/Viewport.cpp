@@ -264,17 +264,20 @@ DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth,
     return 0;
 }
 
-BOOL Viewport::ShowWindow(int nCmdShow) { return ::ShowWindow(m_hWnd, nCmdShow); }
+BOOL Viewport::ShowWindow(int nCmdShow)
+{
+    return ::ShowWindow(m_hWnd, nCmdShow);
+}
 
 HWND Viewport::SetFocus() { return ::SetFocus(m_hWnd); }
 
 void Viewport::Invalidate(BOOL bErase) { InvalidateRect(m_hWnd, NULL, bErase); }
 
-LRESULT CALLBACK Viewport::StaticWindowProc(HWND hWnd, UINT uMsg,
-                                            WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Viewport::StaticWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam,
+                                            LPARAM lParam)
 {
-    Viewport* viewport = reinterpret_cast<Viewport*>(
-        GetWindowLongPtr(hWnd, GWLP_USERDATA));
+    Viewport* viewport =
+        reinterpret_cast<Viewport*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 
     if (uMsg == WM_NCCREATE)
     {

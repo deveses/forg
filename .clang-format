@@ -1,6 +1,7 @@
 ---
 BasedOnStyle: LLVM
 IndentWidth: 4
+SortIncludes: Never
 AlignArrayOfStructures: Right
 BreakBeforeBraces: Custom
 BraceWrapping:

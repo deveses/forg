@@ -95,7 +95,8 @@ AppConfig LoadConfig()
         if (forg::script::yaml::YAMLNode* width = node->FindAttribute("width"))
             config.Width = atoi(width->GetContent().c_str());
 
-        if (forg::script::yaml::YAMLNode* height = node->FindAttribute("height"))
+        if (forg::script::yaml::YAMLNode* height =
+                node->FindAttribute("height"))
             config.Height = atoi(height->GetContent().c_str());
 
         if (forg::script::yaml::YAMLNode* posx = node->FindAttribute("posx"))
@@ -185,7 +186,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     forg::IRenderer* renderer = CreateRenderer(module);
     if (renderer == nullptr)
     {
-        ShowError(_T("The renderer plugin does not expose a compatible renderer."));
+        ShowError(
+            _T("The renderer plugin does not expose a compatible renderer."));
         FreeLibrary(module);
         return 1;
     }

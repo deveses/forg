@@ -114,8 +114,6 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
     Font* font = new Font();
     font->m_size = bwidth * bheight;
     font->m_bitmap = new char[font->m_size];
-    font->m_CharWidth = Width;
-    font->m_CharHeight = Height;
     font->m_device = device;
     font->m_sprite = Sprite::CreateSprite(device);
 
@@ -169,8 +167,6 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
     uint tex_height = 0;
     uint max_height = 0;
     uint max_bearingy = 0;
-    uint tex_pad_x = 0;
-    uint tex_pad_y = 0;
 
     if (count < 0)
         count = (int)strlen(pString);
@@ -195,9 +191,6 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
 
     tex_width = next_pow2(total_width);
     tex_height = next_pow2(max_height);
-
-    tex_pad_x = total_width - tex_width;
-    tex_pad_y = max_height - tex_height;
 
     if (tex_width == 0 || tex_height == 0)
         return FORG_INVALID_CALL;

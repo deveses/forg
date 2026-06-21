@@ -127,9 +127,6 @@ class Font
     char* m_bitmap;
     uint m_size;
 
-    uint m_CharWidth;
-    uint m_CharHeight;
-
     CharMetrics m_metrics[256];
 
   public:
