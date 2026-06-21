@@ -4,8 +4,7 @@
 #include "math/Math.h"
 #include "rendering/Vertex.h"
 
-namespace forg
-{
+namespace forg {
 
 Sprite* Sprite::CreateSprite(IRenderDevice* device)
 {

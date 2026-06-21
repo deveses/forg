@@ -10,12 +10,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace forg
-{
-namespace mesh
-{
-namespace ply
-{
+namespace forg::mesh::ply {
 
 const char* type_names[] = {
     "invalid", "char", "short", "int",    "uchar",
@@ -650,6 +645,4 @@ void plyfile::GetElementBinary(void* elem_ptr)
     }
 }
 
-} // namespace ply
-} // namespace mesh
-} // namespace forg
+} // namespace forg::mesh::ply

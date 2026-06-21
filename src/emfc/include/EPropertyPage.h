@@ -12,8 +12,7 @@
 
 #include "EDialog.h"
 
-namespace emfc
-{
+namespace emfc {
 
 class EMFC_API EPropertyPage : public EDialog
 {

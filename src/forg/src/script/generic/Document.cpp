@@ -4,8 +4,7 @@
 
 #include "forg/script/generic/Document.h"
 
-namespace forg::script::generic
-{
+namespace forg::script::generic {
 
 Node::Node(int _type)
 {

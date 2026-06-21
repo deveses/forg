@@ -25,10 +25,7 @@
 
 #include "forg/base.h"
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 struct FORG_API Vector2
 {
@@ -47,7 +44,6 @@ struct FORG_API Vector2
     float Y;
 };
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math
 
 #endif // _FORG_MATH_VECTOR2_H_

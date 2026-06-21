@@ -2,10 +2,7 @@
 
 #include "forg/script/ParserBase.h"
 
-namespace forg
-{
-namespace script
-{
+namespace forg::script {
 
 bool FileParserBase::Open(const char* _filename)
 {
@@ -123,5 +120,4 @@ TokenBackup::~TokenBackup()
     }
 }
 
-} // namespace script
-} // namespace forg
+} // namespace forg::script

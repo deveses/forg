@@ -26,10 +26,7 @@
 #include "forg/audio/AudioDefs.h"
 #include "forg/base.h"
 
-namespace forg
-{
-namespace audio
-{
+namespace forg::audio {
 
 class FORG_API AudioMixer
 {
@@ -56,7 +53,6 @@ class FORG_API AudioMixer
     unsigned int MixStreamsFloat(float* _out_samples, unsigned int _count);
 };
 
-} // namespace audio
-} // namespace forg
+} // namespace forg::audio
 
 #endif

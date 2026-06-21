@@ -2,8 +2,7 @@
 
 #include "rendering/Color.h"
 
-namespace forg
-{
+namespace forg {
 
 static uint color_component_to_byte(float value) noexcept
 {

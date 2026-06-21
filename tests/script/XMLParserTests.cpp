@@ -4,8 +4,7 @@
 
 #include "forg/script/xml/XMLParser.h"
 
-namespace
-{
+namespace {
 std::string TestDataPath(const char* filename)
 {
     return std::string(FORG_TEST_DATA_DIR) + "/" + filename;

@@ -28,8 +28,7 @@
 #include "math/Matrix4.h"
 #include "math/Vector3.h"
 
-namespace forg
-{
+namespace forg {
 
 using namespace forg::math;
 

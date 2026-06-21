@@ -2,8 +2,7 @@
 #include "GLFunc.h"
 #include "GLRenderDevice.h"
 
-namespace forg
-{
+namespace forg {
 
 GLIndexBuffer::GLIndexBuffer(GLRenderDevice* device, uint sizeOfBufferInBytes,
                              uint usage, uint pool, bool sixteenBitIndices)

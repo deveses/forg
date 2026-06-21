@@ -30,10 +30,7 @@
 
 #include <fstream>
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 typedef struct
 {
@@ -81,7 +78,6 @@ class XFile
     int ReadData(reader::xreader& reader);
 };
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile
 
 #endif //_XFILE_H_

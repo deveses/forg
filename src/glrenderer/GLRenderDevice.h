@@ -28,8 +28,7 @@
 #include "rendering/IRenderDevice.h"
 #include "rendering/VertexDeclaration.h"
 
-namespace forg
-{
+namespace forg {
 
 #ifdef _DEBUG
 extern int GLErrorCheck(int line, LPCSTR file, LPCSTR func);

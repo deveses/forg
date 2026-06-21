@@ -26,13 +26,9 @@
 #include "forg/audio/AudioDefs.h"
 #include "forg/base.h"
 
-namespace forg
-{
-namespace audio
-{
+namespace forg::audio {
 
 IAudioOutput* CreateAudioOutputWaveOut();
 
-}
-} // namespace forg
+} // namespace forg::audio
 #endif

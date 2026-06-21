@@ -29,10 +29,7 @@
 
 #include "forg/base.h"
 
-namespace forg
-{
-namespace audio
-{
+namespace forg::audio {
 
 struct RIFFHDR
 {
@@ -103,7 +100,6 @@ class FORG_API WaveFile
     unsigned int Read(unsigned int offset, char* buf, unsigned int size);
 };
 
-} // namespace audio
-} // namespace forg
+} // namespace forg::audio
 
 #endif //_FORG_AUDIO_WAVEFILE_H_

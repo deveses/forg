@@ -25,12 +25,7 @@
 
 #include "mesh/xfile/xreader.h"
 
-namespace forg
-{
-namespace xfile
-{
-namespace reader
-{
+namespace forg::xfile::reader {
 
 class xbinreader : public xreader
 {
@@ -69,8 +64,6 @@ class xbinreader : public xreader
     }
 };
 
-} // namespace reader
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile::reader
 
 #endif // XFILE_XBINREADER_INCLUDED

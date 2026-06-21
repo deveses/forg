@@ -27,10 +27,7 @@
 
 #include <atomic>
 
-namespace forg
-{
-namespace core
-{
+namespace forg::core {
 
 /// BitArray class
 /**
@@ -66,7 +63,6 @@ class FORG_API RefCounter
     virtual int Release(void);
 };
 
-} // namespace core
-} // namespace forg
+} // namespace forg::core
 
 #endif //  _FORG_CORE_REFCOUNTER_H_

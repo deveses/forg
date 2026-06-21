@@ -25,8 +25,7 @@
 
 #include "core/RefCounter.h"
 
-namespace forg
-{
+namespace forg {
 /// IVertexBuffer interface
 /**
  * IVertexBuffer

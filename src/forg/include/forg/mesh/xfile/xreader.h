@@ -25,12 +25,7 @@
 
 #include "mesh/xfile/xdefs.h"
 
-namespace forg
-{
-namespace xfile
-{
-namespace reader
-{
+namespace forg::xfile::reader {
 
 class xreader
 {
@@ -62,8 +57,6 @@ class xreader
     int ReadFloats(FloatList& float_list, DWORD count);
 };
 
-} // namespace reader
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile::reader
 
 #endif

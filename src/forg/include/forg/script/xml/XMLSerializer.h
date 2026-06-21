@@ -26,10 +26,7 @@
 #include "forg/io/ISerializer.h"
 #include "forg/script/xml/XMLParser.h"
 
-namespace forg
-{
-namespace io
-{
+namespace forg::io {
 
 class XMLSerializer : public ISerializer
 {
@@ -52,7 +49,6 @@ class XMLSerializer : public ISerializer
     virtual bool ReadString(core::string& _out, const char* _name);
 };
 
-} // namespace io
-} // namespace forg
+} // namespace forg::io
 
 #endif

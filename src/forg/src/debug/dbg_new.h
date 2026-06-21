@@ -3,10 +3,7 @@
 
 #include "dbg.h"
 
-namespace forg
-{
-namespace debug
-{
+namespace forg::debug {
 
 inline void* __cdecl operator new(size_t size, char const* file, int line)
 {
@@ -39,7 +36,6 @@ inline void __cdecl operator delete(void* p)
     free(p);
 }
 
-} // namespace debug
-} // namespace forg
+} // namespace forg::debug
 
 #endif // DBG_NEW_H_INCLUDED

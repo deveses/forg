@@ -17,10 +17,7 @@
 #include "rendering/Light.h"
 #include "rendering/Mesh.h"
 
-namespace forg
-{
-namespace control
-{
+namespace forg::control {
 
 /// Pointers to the mutable scene state a command may touch. The application
 /// owns the objects; this struct is just a non-owning view passed per call.
@@ -38,7 +35,6 @@ struct SceneControlContext
 FORG_API std::string DispatchCommand(SceneControlContext& ctx,
                                      const net::Command& cmd);
 
-} // namespace control
-} // namespace forg
+} // namespace forg::control
 
 #endif //_FORG_CONTROL_SCENECONTROL_H_

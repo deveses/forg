@@ -22,10 +22,7 @@
 
 #include <cstdarg>
 
-namespace forg
-{
-namespace debug
-{
+namespace forg::debug {
 
 #if defined(__GNUC__)
 #define FORG_PRINTF_FORMAT(format_index, first_argument)                       \
@@ -119,7 +116,6 @@ FORG_API void DbgOutputString<char>(const char* lpOutputString, ...)
 
 #endif //_DEBUG
 
-} // namespace debug
-} // namespace forg
+} // namespace forg::debug
 
 #undef FORG_PRINTF_FORMAT

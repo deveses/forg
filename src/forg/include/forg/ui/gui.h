@@ -26,18 +26,11 @@
 #include "core/vector.hpp"
 #include "rendering/Sprite.h"
 
-namespace forg
-{
-namespace io
-{
+namespace forg::io {
 class ISerializer;
-}
-} // namespace forg
+} // namespace forg::io
 
-namespace forg
-{
-namespace ui
-{
+namespace forg::ui {
 
 struct SUIElement
 {
@@ -49,8 +42,7 @@ struct SUIElement
 
 class CUIDialog;
 
-namespace EControlType
-{
+namespace EControlType {
 enum
 {
     Custom,
@@ -130,8 +122,7 @@ class FORG_API CUIKnob : public CUIControl
 ///////////////////////////////////////////////////////////////////////////
 // Dialog
 ///////////////////////////////////////////////////////////////////////////
-namespace EMouseEvent
-{
+namespace EMouseEvent {
 enum
 {
     None,
@@ -139,8 +130,7 @@ enum
 };
 }
 
-namespace EMouseButton
-{
+namespace EMouseButton {
 enum
 {
     Button0,
@@ -191,7 +181,6 @@ class FORG_API CUIDialog
   private:
 };
 
-} // namespace ui
-} // namespace forg
+} // namespace forg::ui
 
 #endif

@@ -30,10 +30,7 @@ void DebugBreak() { __builtin_debugtrap(); }
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #endif
 
-namespace forg
-{
-namespace debug
-{
+namespace forg::debug {
 
 void DbgOutputString(LPCTSTR lpOutputString, ...)
 {
@@ -135,5 +132,4 @@ void DbgTrap(LPCTSTR strFile, uint dwLine, LPCTSTR strMsg)
     DebugBreak();
 }
 
-} // namespace debug
-} // namespace forg
+} // namespace forg::debug

@@ -34,8 +34,7 @@
 #include "rendering/Material.h"
 #include "rendering/VertexDeclaration.h"
 
-namespace forg
-{
+namespace forg {
 
 using namespace forg::math;
 

@@ -2,10 +2,7 @@
 
 #include "mesh/xfile/xtmembers.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 xstring XTemplatePrimitive::ToString() const
 {
@@ -66,5 +63,4 @@ xstring XTemplateArray::ToString() const
     return output;
 }
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

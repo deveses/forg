@@ -13,8 +13,7 @@
 #include "EPropertyPage.h"
 #include "StdAfx.h"
 
-namespace emfc
-{
+namespace emfc {
 
 class EMFC_API EPropertySheet : public EWnd
 {

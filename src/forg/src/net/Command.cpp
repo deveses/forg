@@ -5,10 +5,7 @@
 #include <cmath>
 #include <cstdlib>
 
-namespace forg
-{
-namespace net
-{
+namespace forg::net {
 
 bool TryGetString(const Command& cmd, const char* key, std::string& out)
 {
@@ -69,5 +66,4 @@ bool TryGetInt(const Command& cmd, const char* key, int& out)
     return true;
 }
 
-} // namespace net
-} // namespace forg
+} // namespace forg::net

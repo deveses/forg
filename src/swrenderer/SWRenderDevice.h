@@ -29,8 +29,7 @@
 #include "rendering/VertexDeclaration.h"
 #include "rendering/reference/SWRenderDevice.h"
 
-namespace forg
-{
+namespace forg {
 
 class SWRenderDevice : public forg::rendering::reference::SWRenderDevice
 {

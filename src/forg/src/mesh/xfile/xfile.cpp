@@ -8,10 +8,7 @@
 
 #include "debug/dbg.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 #define XOFFILE_FORMAT_MAGIC                                                   \
     ((long)'x' + ((long)'o' << 8) + ((long)'f' << 16) + ((long)' ' << 24))
@@ -156,5 +153,4 @@ int XFile::ReadData(reader::xreader& reader)
     return rval;
 }
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

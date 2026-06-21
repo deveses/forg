@@ -12,15 +12,9 @@
 #include "forg/base.h"
 #include "forg/core/string.hpp"
 
-namespace forg
-{
-namespace script
-{
-namespace generic
-{
+namespace forg::script::generic {
 
-namespace ENodeType
-{
+namespace ENodeType {
 enum TYPE
 {
     Unknown,
@@ -102,8 +96,6 @@ class FORG_API Document
     Node* FindNode(const core::string& _name);
 };
 
-} // namespace generic
-} // namespace script
-} // namespace forg
+} // namespace forg::script::generic
 
 #endif

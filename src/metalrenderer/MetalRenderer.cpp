@@ -22,8 +22,7 @@
 #include "base.h"
 #include "rendering/IRenderer.h"
 
-namespace forg
-{
+namespace forg {
 
 class MetalRenderer : public IRenderer
 {

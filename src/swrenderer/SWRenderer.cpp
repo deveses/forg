@@ -6,8 +6,7 @@
 
 // #include <CL/cl.h>
 
-namespace forg
-{
+namespace forg {
 
 class SWRenderer : public IRenderer
 {

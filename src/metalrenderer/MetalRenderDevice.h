@@ -23,8 +23,7 @@
 #include "rendering/IRenderDevice.h"
 #include "rendering/VertexDeclaration.h"
 
-namespace forg
-{
+namespace forg {
 
 // All Metal/ObjC objects live in this opaque struct (defined in the .mm) so
 // this header is includable from plain C++ (e.g. the factory in

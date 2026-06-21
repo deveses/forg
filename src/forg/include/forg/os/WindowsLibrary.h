@@ -29,10 +29,7 @@
 #ifdef WIN32
 #include <windows.h>
 
-namespace forg
-{
-namespace os
-{
+namespace forg::os {
 
 class WindowsLibrary : public ILibrary
 {
@@ -58,8 +55,7 @@ class WindowsLibrary : public ILibrary
     virtual void* Address(LPCSTR szName);
 };
 
-} // namespace os
-} // namespace forg
+} // namespace forg::os
 
 #endif
 

@@ -3,8 +3,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-namespace
-{
+namespace {
 
 class TestRefCounter : public forg::core::RefCounter
 {

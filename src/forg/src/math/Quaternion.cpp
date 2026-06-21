@@ -3,10 +3,7 @@
 #include "math/Math.h"
 #include "math/Quaternion.h"
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 const Quaternion Quaternion::Empty = Quaternion(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -220,5 +217,4 @@ Quaternion& Quaternion::RotationAxis(Quaternion& out, const Vector3& axis,
     return out;
 }
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math

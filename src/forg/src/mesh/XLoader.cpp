@@ -12,10 +12,7 @@
 
 #include <vector>
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 struct mesh_data
 {
@@ -459,5 +456,4 @@ Mesh::MeshPtr XLoader::Load(const char* filename, uint /*options*/,
     return m;
 }
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

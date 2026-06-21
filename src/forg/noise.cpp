@@ -6,8 +6,7 @@
 
 #define PSIZE 0x100
 
-namespace forg
-{
+namespace forg {
 
 int perm_tab[PSIZE];
 float grad2d_tab[PSIZE][2];

@@ -4,10 +4,7 @@
 
 #include <windows.h>
 
-namespace forg
-{
-namespace audio
-{
+namespace forg::audio {
 
 class AudioOutputWaveOut : public IAudioOutput
 {
@@ -196,5 +193,4 @@ void AudioOutputWaveOut::CallbackProc(HWAVEOUT hwo, UINT uMsg,
     }
 }
 
-} // namespace audio
-} // namespace forg
+} // namespace forg::audio

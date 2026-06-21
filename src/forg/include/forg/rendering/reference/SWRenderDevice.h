@@ -29,12 +29,7 @@
 #include "rendering/IRenderDevice.h"
 #include "rendering/VertexDeclaration.h"
 
-namespace forg
-{
-namespace rendering
-{
-namespace reference
-{
+namespace forg::rendering::reference {
 
 struct VSInput
 {
@@ -260,8 +255,6 @@ class FORG_API SWRenderDevice : public IRenderDevice
     virtual int SetMaterial(const Material* pMaterial);
 };
 
-} // namespace reference
-} // namespace rendering
-} // namespace forg
+} // namespace forg::rendering::reference
 
 #endif // _FORG_REFERENCE_SW_RENDER_DEVICE_H_

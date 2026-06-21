@@ -3,16 +3,12 @@
 
 #include "control/commands/Commands.h"
 
-namespace forg
-{
-namespace control
-{
+namespace forg::control {
 
 using forg::net::Command;
 using forg::net::TryGetFloat;
 
-namespace
-{
+namespace {
 
 std::string buildState(SceneControlContext& ctx)
 {
@@ -84,5 +80,4 @@ std::string DispatchScene(SceneControlContext& ctx, const Command& cmd)
     return fail("unknown");
 }
 
-} // namespace control
-} // namespace forg
+} // namespace forg::control

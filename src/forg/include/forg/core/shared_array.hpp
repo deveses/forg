@@ -25,10 +25,7 @@
 
 #include <cstdlib>
 
-namespace forg
-{
-namespace core
-{
+namespace forg::core {
 
 template <typename T> class shared_array
 {
@@ -146,7 +143,6 @@ template <typename T> class shared_array
     }
 };
 
-} // namespace core
-} // namespace forg
+} // namespace forg::core
 
 #endif // SHARED_ARRAY_HPP_INCLUDED

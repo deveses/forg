@@ -27,8 +27,7 @@
 #include "math/Vector3.h"
 #include "rendering/Color.h"
 
-namespace forg
-{
+namespace forg {
 
 using namespace forg::math;
 

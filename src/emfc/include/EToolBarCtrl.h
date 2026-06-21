@@ -13,8 +13,7 @@
 #include "EWnd.h"
 #include <commctrl.h>
 
-namespace emfc
-{
+namespace emfc {
 
 class EMFC_API EToolBarCtrl : public EWnd
 {

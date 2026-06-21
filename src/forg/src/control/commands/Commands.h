@@ -9,10 +9,7 @@
 
 #include "control/SceneControl.h"
 
-namespace forg
-{
-namespace control
-{
+namespace forg::control {
 
 std::string DispatchCamera(SceneControlContext& ctx, const net::Command& cmd);
 std::string DispatchMesh(SceneControlContext& ctx, const net::Command& cmd);
@@ -26,7 +23,6 @@ inline std::string fail(const char* error)
     return std::string("{\"ok\":false,\"error\":\"") + error + "\"}";
 }
 
-} // namespace control
-} // namespace forg
+} // namespace forg::control
 
 #endif //_FORG_CONTROL_COMMANDS_H_

@@ -21,10 +21,7 @@
 
 #include <atomic>
 
-namespace forg
-{
-namespace cpu
-{
+namespace forg::cpu {
 
 inline int AtomicIncrement(std::atomic<int>* value) noexcept
 {
@@ -35,7 +32,6 @@ inline int AtomicDecrement(std::atomic<int>* value) noexcept
     return --(*value);
 }
 
-} // namespace cpu
-} // namespace forg
+} // namespace forg::cpu
 
 #endif // FORG_CPU_ATOMIC_H

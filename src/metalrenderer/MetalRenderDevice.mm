@@ -30,8 +30,7 @@
 #include "MetalBuffers.h"
 #include "MetalRenderDevice.h"
 
-namespace forg
-{
+namespace forg {
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Shared CPU/GPU layout. float4x4 is read column-major by MSL, so the row-major

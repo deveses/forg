@@ -26,8 +26,7 @@
 #include "base.h"
 #include "rendering/IRenderDevice.h"
 
-namespace forg
-{
+namespace forg {
 
 // TODO: move somewhere
 struct Rectangle

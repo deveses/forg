@@ -6,8 +6,7 @@ using forg::net::Command;
 using forg::net::TryGetFloat;
 using forg::net::TryGetInt;
 
-namespace
-{
+namespace {
 Command withParam(const char* key, const char* value)
 {
     Command cmd;

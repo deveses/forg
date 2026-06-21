@@ -11,8 +11,7 @@
 
 #include "EWnd.h"
 
-namespace emfc
-{
+namespace emfc {
 
 class EMFC_API EButton : public EWnd
 {

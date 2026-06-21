@@ -26,8 +26,7 @@
 #include "image/Image.h"
 #include "rendering/Color.h"
 
-namespace forg
-{
+namespace forg {
 
 /**
  * Bitmap loading

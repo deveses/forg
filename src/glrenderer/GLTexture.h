@@ -25,8 +25,7 @@
 
 #include "forg.h"
 
-namespace forg
-{
+namespace forg {
 
 using namespace forg::core;
 

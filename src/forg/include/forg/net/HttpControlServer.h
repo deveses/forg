@@ -7,10 +7,7 @@
 
 #include "net/CommandQueue.h"
 
-namespace forg
-{
-namespace net
-{
+namespace forg::net {
 
 /// A tiny HTTP/1.1 control server backed by a CommandQueue.
 /**
@@ -49,7 +46,6 @@ class HttpControlServer
     std::thread m_thread;
 };
 
-} // namespace net
-} // namespace forg
+} // namespace forg::net
 
 #endif //_FORG_NET_HTTPCONTROLSERVER_H_

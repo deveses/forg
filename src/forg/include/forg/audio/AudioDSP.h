@@ -27,12 +27,7 @@
 
 #include <cmath>
 
-namespace forg
-{
-namespace audio
-{
-namespace dsp
-{
+namespace forg::audio::dsp {
 
 struct float4
 {
@@ -68,8 +63,6 @@ __inline float RadiansToCutoffFrequency(float Radians, float SampleRate)
 }
 
 void CalcLowpassCoeffs(float Fc, float Q, float4& coeffsA, float4& coeffsB);
-} // namespace dsp
-} // namespace audio
-} // namespace forg
+} // namespace forg::audio::dsp
 
 #endif

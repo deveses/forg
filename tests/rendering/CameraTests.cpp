@@ -12,8 +12,7 @@ using forg::Camera;
 using forg::math::Matrix4;
 using forg::math::Vector3;
 
-namespace
-{
+namespace {
 void RequireMatricesEqual(const Matrix4& a, const Matrix4& b)
 {
     const float* pa = (const float*)a;

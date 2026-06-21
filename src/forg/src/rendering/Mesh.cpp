@@ -10,10 +10,7 @@
 #include "mesh/XLoader.h"
 #include "mesh/ply/plyfile.h"
 
-namespace forg
-{
-namespace geometry
-{
+namespace forg::geometry {
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -1111,5 +1108,4 @@ Mesh::MeshPtr Mesh::FromGltf(const char* filename, uint options,
     return gltf::GltfLoader::Load(filename, options, device, materials);
 }
 
-} // namespace geometry
-} // namespace forg
+} // namespace forg::geometry

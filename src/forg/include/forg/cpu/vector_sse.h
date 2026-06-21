@@ -28,12 +28,7 @@
 #include <emmintrin.h>
 #include <xmmintrin.h>
 
-namespace forg
-{
-namespace cpu
-{
-namespace simd
-{
+namespace forg::cpu::simd {
 
 class vec
 {
@@ -127,9 +122,7 @@ class vec
     void load_a(const float* v) { value = _mm_load_ps(v); }
 };
 
-} // namespace simd
-} // namespace cpu
-} // namespace forg
+} // namespace forg::cpu::simd
 
 #endif
 

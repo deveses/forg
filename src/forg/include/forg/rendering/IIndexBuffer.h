@@ -26,8 +26,7 @@
 #include "base.h"
 #include "core/RefCounter.h"
 
-namespace forg
-{
+namespace forg {
 
 /// IIndexBuffer interface
 /**

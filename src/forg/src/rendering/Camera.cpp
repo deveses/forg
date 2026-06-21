@@ -5,8 +5,7 @@
 #include "rendering/Camera.h"
 // #include <d3dx9math.h>
 
-namespace forg
-{
+namespace forg {
 
 const float Camera::minimal_distance = 0.05f;
 

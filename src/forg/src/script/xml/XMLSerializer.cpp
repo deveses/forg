@@ -1,10 +1,7 @@
 #include "forg/script/xml/XMLSerializer.h"
 #include "forg_pch.h"
 
-namespace forg
-{
-namespace io
-{
+namespace forg::io {
 
 XMLSerializer::XMLSerializer() {}
 
@@ -29,5 +26,4 @@ bool XMLSerializer::ReadInt32(int&, const char*) { return false; }
 
 bool XMLSerializer::ReadString(core::string&, const char*) { return false; }
 
-} // namespace io
-} // namespace forg
+} // namespace forg::io

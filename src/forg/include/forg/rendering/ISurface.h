@@ -26,8 +26,7 @@
 #include "base.h"
 #include "enums.h"
 
-namespace forg
-{
+namespace forg {
 
 struct SurfaceDescription
 {

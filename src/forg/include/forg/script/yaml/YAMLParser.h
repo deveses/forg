@@ -15,12 +15,7 @@
 #include "forg/script/ParserBase.h"
 #include "forg/script/generic/Document.h"
 
-namespace forg
-{
-namespace script
-{
-namespace yaml
-{
+namespace forg::script::yaml {
 
 using YAMLDocument = forg::script::generic::Document;
 using YAMLNode = forg::script::generic::Node;
@@ -48,8 +43,6 @@ class FORG_API YAMLParser : public forg::script::FileParserBase
     void SetErrorCode(int _code) { m_error_code = _code; }
 };
 
-} // namespace yaml
-} // namespace script
-} // namespace forg
+} // namespace forg::script::yaml
 
 #endif

@@ -5,8 +5,7 @@
 #include "EPropertyPage.h"
 #include "stdafx.h"
 
-namespace emfc
-{
+namespace emfc {
 
 INT_PTR CALLBACK EPropertyPage::EPropDialogProc(
     HWND hwndDlg,  // handle to dialog box

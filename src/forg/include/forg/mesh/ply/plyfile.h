@@ -27,12 +27,7 @@
 #include <iostream>
 #include <vector>
 
-namespace forg
-{
-namespace mesh
-{
-namespace ply
-{
+namespace forg::mesh::ply {
 
 #define PLY_ASCII 1     /* ascii PLY file */
 #define PLY_BINARY_BE 2 /* binary PLY file, big endian */
@@ -146,8 +141,6 @@ class plyfile
     void GetElementBinary(void* elem_ptr);
 };
 
-} // namespace ply
-} // namespace mesh
-} // namespace forg
+} // namespace forg::mesh::ply
 
 #endif //_PLYFILE_H_

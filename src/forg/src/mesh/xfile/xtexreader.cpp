@@ -3,12 +3,7 @@
 #include "debug//dbg.h"
 #include "mesh/xfile/xtexreader.h"
 
-namespace forg
-{
-namespace xfile
-{
-namespace reader
-{
+namespace forg::xfile::reader {
 
 xtexreader::xtexreader(std::ifstream& input, bool doubleFloat) : m_input(input)
 {
@@ -320,6 +315,4 @@ int xtexreader::ReadGUID(xguid& tguid)
     return EvalToken(tguid);
 }
 
-} // namespace reader
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile::reader

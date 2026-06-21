@@ -3,12 +3,7 @@
 #include "rendering/reference/SWBuffers.h"
 #include "rendering/reference/SWRenderDevice.h"
 
-namespace forg
-{
-namespace rendering
-{
-namespace reference
-{
+namespace forg::rendering::reference {
 
 int bit_set(int v, int b) { return v | (1 << b); }
 
@@ -1286,6 +1281,4 @@ void SWRenderDevice::DrawTriangle(const VSOutput* vertices, int usage)
     }
 }
 
-} // namespace reference
-} // namespace rendering
-} // namespace forg
+} // namespace forg::rendering::reference

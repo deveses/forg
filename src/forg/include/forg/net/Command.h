@@ -4,10 +4,7 @@
 #include <map>
 #include <string>
 
-namespace forg
-{
-namespace net
-{
+namespace forg::net {
 
 /// A parsed control command: a verb plus raw string parameters.
 /**
@@ -30,7 +27,6 @@ bool TryGetFloat(const Command& cmd, const char* key, float& out);
 /// Reads an int parameter. Returns false if missing or not a number.
 bool TryGetInt(const Command& cmd, const char* key, int& out);
 
-} // namespace net
-} // namespace forg
+} // namespace forg::net
 
 #endif //_FORG_NET_COMMAND_H_

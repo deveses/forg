@@ -27,10 +27,7 @@
 #include "mesh/xfile/xdata.h"
 #include "mesh/xfile/xreader.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 class XTemplatesMgr;
 class XTemplateArray;
@@ -69,7 +66,6 @@ class XDataMgr
     void PrintInfo(const XDataReference* data, int indent) const;
 };
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile
 
 #endif //_XDATAMGR_H_

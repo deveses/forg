@@ -9,8 +9,7 @@
 #include "core/string.hpp"
 #include "rendering/Material.h"
 
-namespace forg
-{
+namespace forg {
 
 using namespace forg::math;
 using namespace forg::core;

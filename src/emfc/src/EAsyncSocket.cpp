@@ -8,8 +8,7 @@
 
 inline LPSTR T2A(LPTSTR lp) { return (LPSTR)lp; }
 
-namespace emfc
-{
+namespace emfc {
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction

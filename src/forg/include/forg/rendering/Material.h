@@ -26,8 +26,7 @@
 #include "base.h"
 #include "rendering/Color.h"
 
-namespace forg
-{
+namespace forg {
 
 using namespace forg::math;
 

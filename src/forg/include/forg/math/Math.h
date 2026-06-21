@@ -32,10 +32,7 @@
 #include "forg/math/Vector3.h"
 #include "forg/math/Vector4.h"
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 class Math
 {
@@ -202,7 +199,6 @@ class Math
     }
 };
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math
 
 #endif // FORG_MATH_MATH_H

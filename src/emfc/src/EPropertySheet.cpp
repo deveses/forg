@@ -4,8 +4,7 @@
 #include "EPropertySheet.h"
 #include "stdafx.h"
 
-namespace emfc
-{
+namespace emfc {
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction

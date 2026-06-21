@@ -12,8 +12,7 @@
 // Windows Header Files:
 #include <windows.h>
 
-namespace OpenCL
-{
+namespace OpenCL {
 
 enum
 {

@@ -27,8 +27,7 @@
 #include "core/RefCounter.h"
 #include "rendering/ISurface.h"
 
-namespace forg
-{
+namespace forg {
 
 class IRenderDevice;
 

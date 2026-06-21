@@ -25,8 +25,7 @@
 
 #include "base.h"
 
-namespace forg
-{
+namespace forg {
 
 // Brief description
 /**

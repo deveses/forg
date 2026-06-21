@@ -7,8 +7,7 @@
 
 #include "forg/audio/WaveFile.h"
 
-namespace
-{
+namespace {
 template <typename T> void WriteValue(std::ofstream& out, T value)
 {
     out.write(reinterpret_cast<const char*>(&value), sizeof(value));

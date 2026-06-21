@@ -27,8 +27,7 @@
 #include "rendering/IRenderDevice.h"
 #include "rendering/Sprite.h"
 
-namespace forg
-{
+namespace forg {
 
 #define MAX_FACENAME 32
 

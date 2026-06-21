@@ -23,10 +23,7 @@
 #pragma once
 #endif
 
-namespace forg
-{
-namespace audio
-{
+namespace forg::audio {
 
 enum
 {
@@ -75,7 +72,6 @@ class IAudioOutput
     virtual void Release() = 0;
 };
 
-} // namespace audio
-} // namespace forg
+} // namespace forg::audio
 
 #endif

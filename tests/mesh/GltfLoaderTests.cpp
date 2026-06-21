@@ -9,8 +9,7 @@
 using Catch::Approx;
 using forg::gltf::GltfLoader;
 
-namespace
-{
+namespace {
 std::string Asset(const char* name)
 {
     return std::string(FORG_TEST_DATA_DIR) + "/gltf/" + name;

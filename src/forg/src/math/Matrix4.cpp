@@ -6,10 +6,7 @@
 #include "math/Vector3.h"
 #include <string.h>
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 const Matrix4 Matrix4::Identity =
     Matrix4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
@@ -631,5 +628,4 @@ Matrix4& Matrix4::Inverse(Matrix4& mOut, const Matrix4& src,
     return mOut;
 }
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math

@@ -8,12 +8,7 @@
 
 #define MSZIP_MAGIC 0x4B43
 
-namespace forg
-{
-namespace xfile
-{
-namespace reader
-{
+namespace forg::xfile::reader {
 
 #ifdef FORG_USE_ZLIB
 voidpf MSZipAlloc(voidpf opaque, uInt items, uInt size)
@@ -191,6 +186,4 @@ bool xbzipreader::read_data(char* buffer, unsigned int count)
 #else
 #endif
 
-} // namespace reader
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile::reader

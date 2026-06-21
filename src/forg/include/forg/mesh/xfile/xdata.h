@@ -27,10 +27,7 @@
 #include "mesh/xfile/xdefs.h"
 #include "mesh/xfile/xreader.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 using namespace xfile::reader;
 
@@ -443,7 +440,6 @@ class XDataObject : public IData
                       const xguid& guid);
 };
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile
 
 #endif //_XDATA_H_

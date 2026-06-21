@@ -26,10 +26,7 @@
 #include "forg/base.h"
 // #include "Matrix4.h"
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 struct Matrix4;
 
@@ -115,7 +112,6 @@ struct FORG_API Vector4
     void Zero() { X = Y = Z = W = 0.0f; }
 };
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math
 
 #endif // _FORG_MATH_VECTOR4_H_

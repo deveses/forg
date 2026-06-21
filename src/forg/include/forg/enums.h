@@ -23,8 +23,7 @@
 #pragma once
 #endif
 
-namespace forg
-{
+namespace forg {
 
 /// View types enum
 /**
@@ -38,8 +37,7 @@ enum CameraView
 };
 
 /// Defines the light type.
-namespace LightType
-{
+namespace LightType {
 enum
 {
     /// Light is a point source. The light has a position in space and radiates
@@ -59,8 +57,7 @@ enum
 };
 
 /// Defines various types of surface formats.
-namespace Format
-{
+namespace Format {
 enum EType
 {
     /// Unknown surface format.
@@ -392,8 +389,7 @@ enum Pool
 };
 
 /// Defines supported usage types for the current resource.
-namespace Usage
-{
+namespace Usage {
 enum
 {
     Usage_None = 0,
@@ -418,8 +414,7 @@ enum
 };
 }
 
-namespace LockFlags
-{
+namespace LockFlags {
 enum
 {
     LockFlags_None = 0,
@@ -432,8 +427,7 @@ enum
 };
 }
 
-namespace MeshFlags
-{
+namespace MeshFlags {
 enum
 {
     Use32Bit = 1,
@@ -471,8 +465,7 @@ enum
 };
 };
 
-namespace TangentOptions
-{
+namespace TangentOptions {
 enum
 {
     WrapU = 1,
@@ -491,8 +484,7 @@ enum
 };
 
 /// The following flags are used to specify sprite rendering options
-namespace SpriteFlags
-{
+namespace SpriteFlags {
 enum
 {
     SpriteFlags_None = 0,

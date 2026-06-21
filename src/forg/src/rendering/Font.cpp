@@ -12,8 +12,7 @@
 
 #include "debug/dbg.h"
 
-namespace forg
-{
+namespace forg {
 
 static unsigned int next_pow2(unsigned int v)
 {

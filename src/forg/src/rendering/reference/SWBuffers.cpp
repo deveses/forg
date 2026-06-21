@@ -2,12 +2,7 @@
 
 #include "rendering/reference/SWBuffers.h"
 
-namespace forg
-{
-namespace rendering
-{
-namespace reference
-{
+namespace forg::rendering::reference {
 
 /////////////////////////////////////////////////////////////////////////////////////
 // SWTexture
@@ -166,6 +161,4 @@ int SWIndexBuffer::Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
 
 int SWIndexBuffer::Unlock() { return FORG_OK; }
 
-} // namespace reference
-} // namespace rendering
-} // namespace forg
+} // namespace forg::rendering::reference

@@ -2,10 +2,7 @@
 
 #include "mesh/xfile/xdefs.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 const xguid xguid::Empty = {
     0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}
@@ -79,5 +76,4 @@ bool operator<(const xguid& left, const xguid& right)
     return false;
 }
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

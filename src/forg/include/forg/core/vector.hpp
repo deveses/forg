@@ -7,10 +7,7 @@
 
 #include "forg/base.h"
 
-namespace forg
-{
-namespace core
-{
+namespace forg::core {
 
 template <class _Type> class vector
 {
@@ -356,7 +353,6 @@ template <class _Type> class vector
     }
 };
 
-} // namespace core
-} // namespace forg
+} // namespace forg::core
 
 #endif // VECTOR_HPP_INCLUDED

@@ -28,10 +28,7 @@
 
 #include <vector>
 
-namespace forg
-{
-namespace core
-{
+namespace forg::core {
 
 /// BitArray class
 /**
@@ -202,7 +199,6 @@ class FORG_API BitArray
   private:
 };
 
-} // namespace core
-} // namespace forg
+} // namespace forg::core
 
 #endif //  _FORG_CORE_BITARRAY_H_

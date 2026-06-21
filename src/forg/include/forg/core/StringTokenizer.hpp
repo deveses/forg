@@ -24,10 +24,7 @@
 #include <string>
 // #include "core/string.hpp"
 
-namespace forg
-{
-namespace core
-{
+namespace forg::core {
 
 /// StringTokenizer template class
 /**
@@ -210,7 +207,6 @@ template <typename T = char> class StringTokenizer
     }
 };
 
-} // namespace core
-} // namespace forg
+} // namespace forg::core
 
 #endif // STRINGTOKENIZER_HPP_INCLUDED

@@ -11,10 +11,7 @@
 #include <cstring>
 #include <utility>
 
-namespace forg
-{
-namespace core
-{
+namespace forg::core {
 
 template <class T> class basic_string
 {
@@ -325,6 +322,5 @@ template <class T> class basic_string
 
 typedef basic_string<char> string;
 
-} // namespace core
-} // namespace forg
+} // namespace forg::core
 #endif // STRING_HPP_INCLUDED

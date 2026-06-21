@@ -3,10 +3,7 @@
 #include "math/Math.h"
 #include "script/xml/XMLSerializer.h"
 
-namespace forg
-{
-namespace ui
-{
+namespace forg::ui {
 
 // #define FORG_UI_BUTTON_RECT {0, 0, 136, 54}
 #define FORG_UI_BUTTON_RECT_BG {128, 0, 128 + 50, 17}
@@ -475,5 +472,4 @@ int CUIDialog::AddComboBox(int _id, int x, int y, int width, int height)
     return FORG_OK;
 }
 
-} // namespace ui
-} // namespace forg
+} // namespace forg::ui

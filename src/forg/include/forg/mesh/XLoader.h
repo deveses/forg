@@ -25,10 +25,7 @@
 
 #include "rendering/Mesh.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 using namespace forg;
 using namespace forg::geometry;
@@ -41,7 +38,6 @@ class XLoader
                               IRenderDevice* device,
                               Mesh::ExtendedMaterialVec& materials);
 };
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile
 
 #endif

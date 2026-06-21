@@ -41,10 +41,7 @@
         static const char* NAME;                                               \
     }
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 DECLARE_XSTDTEMPLATE(Animation);
 DECLARE_XSTDTEMPLATE(AnimationKey);
@@ -96,7 +93,6 @@ DECLARE_XSTDTEMPLATE(VertexDuplicationIndices);
 DECLARE_XSTDTEMPLATE(VertexElement);
 DECLARE_XSTDTEMPLATE(XSkinMeshHeader);
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile
 
 #endif

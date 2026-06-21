@@ -3,10 +3,7 @@
 #include "core/RefCounter.h"
 #include "cpu/atomic.h"
 
-namespace forg
-{
-namespace core
-{
+namespace forg::core {
 
 int RefCounter::AddRef() { return cpu::AtomicIncrement(&m_refCount); }
 
@@ -22,5 +19,4 @@ int RefCounter::Release()
     return c;
 }
 
-} // namespace core
-} // namespace forg
+} // namespace forg::core

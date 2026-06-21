@@ -5,10 +5,7 @@
 #include "math/Vector3.h"
 #include "math/Vector4.h"
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 const Vector3 Vector3::Empty(0.0f, 0.0f, 0.0f);
 const Vector3 Vector3::XAxis(1.0f, 0.0f, 0.0f);
@@ -280,5 +277,4 @@ Vector3& Vector3::CatmullRom(Vector3& vOut, const Vector3& v0,
     return (vOut *= 0.5f);
 }
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math

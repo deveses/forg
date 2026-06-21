@@ -2,8 +2,7 @@
 
 #include "rendering/Ray.h"
 
-namespace forg
-{
+namespace forg {
 
 // Ray-Triangle intersection using barycentric coordinates
 // based on "Tomas Möller and Ben Trumbor - Fast, Minimum Storage Ray-Triangle

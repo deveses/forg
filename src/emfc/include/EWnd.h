@@ -13,8 +13,7 @@
 
 #include "base.h"
 
-namespace emfc
-{
+namespace emfc {
 
 const int MIN_WINDOW_WIDTH = 480;
 const int MIN_WINDOW_HEIGHT = 360;

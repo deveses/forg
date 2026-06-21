@@ -6,10 +6,7 @@
 
 #include "net/Command.h"
 
-namespace forg
-{
-namespace net
-{
+namespace forg::net {
 
 /// Parses an HTTP request line, e.g. "GET /camera/orbit?dx=0.1 HTTP/1.1".
 /**
@@ -27,7 +24,6 @@ std::map<std::string, std::string> ParseQuery(const std::string& query);
 /** "/camera/orbit" becomes verb "camera.orbit"; the query becomes params. */
 Command CommandFromRequest(const std::string& path, const std::string& query);
 
-} // namespace net
-} // namespace forg
+} // namespace forg::net
 
 #endif //_FORG_NET_HTTPREQUEST_H_

@@ -31,13 +31,9 @@
 #define CGLTF_IMPLEMENTATION
 #include "cgltf.h"
 
-namespace forg
-{
-namespace gltf
-{
+namespace forg::gltf {
 
-namespace
-{
+namespace {
 
 // glTF / cgltf node matrices are column-major: element (row, col) is m[col*4 +
 // row].
@@ -368,5 +364,4 @@ Mesh::MeshPtr GltfLoader::Load(const char* filename, uint /*options*/,
     return m;
 }
 
-} // namespace gltf
-} // namespace forg
+} // namespace forg::gltf

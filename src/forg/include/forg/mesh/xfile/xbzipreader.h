@@ -30,12 +30,7 @@
 #define CAB_BLOCKMAX (32768)
 #define CAB_INPUTMAX (CAB_BLOCKMAX + 6144)
 
-namespace forg
-{
-namespace xfile
-{
-namespace reader
-{
+namespace forg::xfile::reader {
 
 class xbzipreader : public xbinreader
 {
@@ -68,9 +63,7 @@ class xbzipreader : public xbinreader
     bool unpack_data();
 };
 
-} // namespace reader
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile::reader
 
 #endif
 

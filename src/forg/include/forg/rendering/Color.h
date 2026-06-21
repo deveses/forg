@@ -22,8 +22,7 @@
 #include "base.h"
 #include "math/Vector4.h"
 
-namespace forg
-{
+namespace forg {
 
 template <typename ColorComponentType> struct TColor3
 {

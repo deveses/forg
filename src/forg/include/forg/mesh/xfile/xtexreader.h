@@ -29,12 +29,7 @@
 #include <iostream>
 #include <list>
 
-namespace forg
-{
-namespace xfile
-{
-namespace reader
-{
+namespace forg::xfile::reader {
 
 class xtexreader : public xreader
 {
@@ -67,8 +62,6 @@ class xtexreader : public xreader
     int ReadGUID(xguid& tguid);
 };
 
-} // namespace reader
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile::reader
 
 #endif // XFILE_XTEXREADER_INCLUDED

@@ -25,8 +25,7 @@
 
 #include "base.h"
 
-namespace forg
-{
+namespace forg {
 
 // #define VertexDeclarationEnd() {0xFF, 0, DeclarationType_Unused, 0, 0}
 

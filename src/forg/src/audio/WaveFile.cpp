@@ -1,8 +1,7 @@
 #include "forg/audio/WaveFile.h"
 #include "forg_pch.h"
 
-namespace forg::audio
-{
+namespace forg::audio {
 
 void WaveFile::FileCloser::operator()(FILE* file) const
 {

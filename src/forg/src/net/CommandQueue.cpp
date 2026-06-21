@@ -1,9 +1,6 @@
 #include "net/CommandQueue.h"
 
-namespace forg
-{
-namespace net
-{
+namespace forg::net {
 
 void CommandQueue::Push(const Command& cmd)
 {
@@ -39,5 +36,4 @@ bool CommandQueue::TryPop(QueueItem& out)
     return true;
 }
 
-} // namespace net
-} // namespace forg
+} // namespace forg::net

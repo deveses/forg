@@ -3,12 +3,7 @@
 #include "debug/dbg.h"
 #include "mesh/xfile/xreader.h"
 
-namespace forg
-{
-namespace xfile
-{
-namespace reader
-{
+namespace forg::xfile::reader {
 
 int xreader::ReadPrimitiveType(ETemplatePrimitiveType::TYPE& primitive_type)
 {
@@ -162,6 +157,4 @@ int xreader::ReadFloats(FloatList& float_list, DWORD count)
 
     return rval;
 }
-} // namespace reader
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile::reader

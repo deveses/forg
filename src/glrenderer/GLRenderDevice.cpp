@@ -23,8 +23,7 @@
 // #define wglDeleteContext glXDestroyContext
 #endif
 
-namespace forg
-{
+namespace forg {
 
 #ifdef _DEBUG
 LPCSTR GLGetErrorString(int err)

@@ -8,10 +8,7 @@
 #define ADD_TO_STD_STRING_MAP(x)                                               \
     m_std_string_map[XTemplate##x::NAME] = new XTemplate##x()
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 XTemplatesMgr::XTemplatesMgr()
 {
@@ -504,5 +501,4 @@ int XTemplatesMgr::ReadTemplateOptionPart(xreader& treader, xstring& out_name,
     return rval;
 }
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

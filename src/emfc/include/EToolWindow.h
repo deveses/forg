@@ -11,8 +11,7 @@
 
 #include "EWnd.h"
 
-namespace emfc
-{
+namespace emfc {
 
 #define DOCK_EXACT 1
 #define DOCK_LEFT 2

@@ -26,8 +26,7 @@
 #include "base.h"
 #include "rendering/VertexElement.h"
 
-namespace forg
-{
+namespace forg {
 
 /// VertexDeclaration class
 /**

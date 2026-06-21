@@ -28,12 +28,7 @@
 #include "rendering/ITexture.h"
 #include "rendering/IVertexBuffer.h"
 
-namespace forg
-{
-namespace rendering
-{
-namespace reference
-{
+namespace forg::rendering::reference {
 
 /////////////////////////////////////////////////////////////////////////////////////
 // SWTexture
@@ -128,8 +123,6 @@ class FORG_API SWIndexBuffer : public IIndexBuffer
 
     virtual int Unlock();
 };
-} // namespace reference
-} // namespace rendering
-} // namespace forg
+} // namespace forg::rendering::reference
 
 #endif //_FORG_REFERENCE_SWBUFFERS_H_

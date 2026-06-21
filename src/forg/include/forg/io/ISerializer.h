@@ -25,10 +25,7 @@
 
 #include "forg/core/string.hpp"
 
-namespace forg
-{
-namespace io
-{
+namespace forg::io {
 
 class ISerializer
 {
@@ -44,7 +41,6 @@ class ISerializer
     virtual bool ReadString(core::string& _out, const char* _name) = 0;
 };
 
-} // namespace io
-} // namespace forg
+} // namespace forg::io
 
 #endif

@@ -4,10 +4,7 @@
 #include "math/Matrix4.h"
 #include "math/Vector4.h"
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 const Vector4 Vector4::Empty(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -218,5 +215,4 @@ Vector4& Vector4::CatmullRom(Vector4& vOut, const Vector4& v0,
     return (vOut *= 0.5f);
 }
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math

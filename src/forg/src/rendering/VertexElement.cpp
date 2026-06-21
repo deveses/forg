@@ -3,8 +3,7 @@
 #include "enums.h"
 #include "rendering/VertexElement.h"
 
-namespace forg
-{
+namespace forg {
 const VertexElement VertexElement::VertexDeclarationEnd = {
     0xff, 0, DeclarationType_Unused, DeclarationUsage_Position, 0};
 

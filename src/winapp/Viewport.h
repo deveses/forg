@@ -4,10 +4,7 @@
 
 #include "EWnd.h"
 
-namespace forg
-{
-namespace scene
-{
+namespace forg::scene {
 
 class Model
 {
@@ -25,8 +22,7 @@ class Model
     void Render(IRenderDevice* _device);
 };
 
-} // namespace scene
-} // namespace forg
+} // namespace forg::scene
 
 class Viewport : public emfc::EWnd
 {

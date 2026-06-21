@@ -7,10 +7,7 @@
 
 forg::Light s_Light = {0};
 
-namespace forg
-{
-namespace scene
-{
+namespace forg::scene {
 
 int Model::Load(const char* _name, IRenderDevice* _device)
 {
@@ -90,8 +87,7 @@ void Model::Render(IRenderDevice* _device)
         m_mesh->DrawSubset(0);
     }
 }
-} // namespace scene
-} // namespace forg
+} // namespace forg::scene
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction

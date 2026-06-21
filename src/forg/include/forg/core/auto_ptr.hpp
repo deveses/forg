@@ -35,10 +35,7 @@
         deleting object if both sides are null),
 */
 
-namespace forg
-{
-namespace core
-{
+namespace forg::core {
 
 template <typename T> struct PointerOwner
 {
@@ -313,7 +310,6 @@ template <class T> inline T* get_pointer(const auto_ptr<T>& p)
     return p.Get();
 }
 
-} // namespace core
-} // namespace forg
+} // namespace forg::core
 
 #endif //_FORG_CORE_AUTOPTR_H_

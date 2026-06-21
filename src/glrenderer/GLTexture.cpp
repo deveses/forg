@@ -3,8 +3,7 @@
 #include "GLFunc.h"
 #include "GLRenderDevice.h"
 
-namespace forg
-{
+namespace forg {
 
 static unsigned int bit_log2(unsigned int v)
 {

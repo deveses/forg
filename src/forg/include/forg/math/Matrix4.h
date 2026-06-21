@@ -26,10 +26,7 @@
 #include "forg/base.h"
 // #include "vector3.h"
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 struct Vector3;
 struct Vector4;
@@ -209,7 +206,6 @@ struct FORG_API Matrix4
                             float* pDeterminant);
 };
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math
 
 #endif //_FORG_MATH_MATRIX4_H_

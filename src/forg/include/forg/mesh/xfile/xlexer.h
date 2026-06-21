@@ -30,10 +30,7 @@
 #include <string>
 #include <vector>
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 struct ScannerToken
 {
@@ -84,7 +81,6 @@ class XLexer
     void Initialize();
 };
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile
 
 #endif

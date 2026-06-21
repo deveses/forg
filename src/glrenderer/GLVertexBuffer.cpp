@@ -2,8 +2,7 @@
 
 #include "GLFunc.h"
 
-namespace forg
-{
+namespace forg {
 
 GLVertexBuffer::GLVertexBuffer(GLRenderDevice* device, uint sizeOfBufferInBytes,
                                uint usage, uint pool)

@@ -28,10 +28,7 @@
 #include "math/Vector3.h"
 #include "rendering/VertexElement.h"
 
-namespace forg
-{
-namespace geometry
-{
+namespace forg::geometry {
 
 using namespace forg::math;
 
@@ -178,7 +175,6 @@ struct FORG_API PositionNormalTextured
     void set_Texel(float u, float v);
 };
 
-} // namespace geometry
-} // namespace forg
+} // namespace forg::geometry
 
 #endif //_FORG_VERTEX_H_

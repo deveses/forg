@@ -7,8 +7,7 @@ using forg::control::DispatchCommand;
 using forg::control::SceneControlContext;
 using forg::net::CommandFromRequest;
 
-namespace
-{
+namespace {
 
 // A device-free scene: enough to exercise every non-mesh-building command.
 // Mesh creation/loading needs a real IRenderDevice and is covered by the

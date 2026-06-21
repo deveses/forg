@@ -4,11 +4,9 @@
 
 #include "forg/script/xml/XMLParser.h"
 
-namespace forg::script::xml
-{
+namespace forg::script::xml {
 
-namespace EToken
-{
+namespace EToken {
 enum TYPE
 {
     Unknown,
@@ -25,8 +23,7 @@ enum TYPE
 };
 }
 
-namespace ESymbol
-{
+namespace ESymbol {
 enum TYPE
 {
     Unknown,
@@ -42,8 +39,7 @@ enum TYPE
 };
 }
 
-namespace ParserError
-{
+namespace ParserError {
 enum TYPE
 {
     NoErrors = 0,

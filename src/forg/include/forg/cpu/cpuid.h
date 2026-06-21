@@ -25,10 +25,7 @@
 
 #include "base.h"
 
-namespace forg
-{
-namespace cpu
-{
+namespace forg::cpu {
 
 union UProcessorSignature
 {
@@ -142,7 +139,6 @@ class cpuid
 
 static cpuid g_cpuid;
 
-} // namespace cpu
-} // namespace forg
+} // namespace forg::cpu
 
 #endif

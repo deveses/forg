@@ -33,13 +33,9 @@ keywords' letters: abcdefghilmnoprstuwy
 
 #define CAST_INT(x) ((int)x)
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
-namespace Symbols
-{
+namespace Symbols {
 enum TYPE
 {
     OTHER = 0,
@@ -441,5 +437,4 @@ int XLexer::GetToken(ScannerToken& stok)
     return stok.token;
 }
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

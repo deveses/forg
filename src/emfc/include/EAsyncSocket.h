@@ -12,8 +12,7 @@
 
 #include <WinSock.h>
 
-namespace emfc
-{
+namespace emfc {
 
 class EMFC_API EAsyncSocket
 {

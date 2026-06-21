@@ -9,8 +9,7 @@
 
 using namespace forg::math;
 
-namespace forg
-{
+namespace forg {
 
 #define MAGIC_BMP 0x4d42
 

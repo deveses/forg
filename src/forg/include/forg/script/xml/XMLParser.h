@@ -27,16 +27,10 @@
 #include "forg/script/ParserBase.h"
 #include "forg/script/generic/Document.h"
 
-namespace forg
-{
-namespace script
-{
-namespace xml
-{
+namespace forg::script::xml {
 
 ///////////////////////////////////////////////////////////////////////////
-namespace EXMLNodeType
-{
+namespace EXMLNodeType {
 enum TYPE
 {
     Unknown = forg::script::generic::ENodeType::Unknown,
@@ -76,8 +70,6 @@ class FORG_API XMLParser : public forg::script::TokenParserBase
     void SetErrorCode(int _code) { m_error_code = _code; }
 };
 
-} // namespace xml
-} // namespace script
-} // namespace forg
+} // namespace forg::script::xml
 
 #endif

@@ -4,10 +4,7 @@
 #include "mesh/xfile/xdata.h"
 #include "mesh/xfile/xtemplatesmgr.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 //////////////////////////////////////////////////////////////////////////
 // XDataObject
@@ -724,5 +721,4 @@ void XDataObjectList::ToByteArray(void* buffer, uint buffer_size) const
     }
 }
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

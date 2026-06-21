@@ -26,10 +26,7 @@
 
 #include <map>
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 using namespace xfile::reader;
 
@@ -87,5 +84,4 @@ class XTemplatesMgr
     int ReadTemplateElipsis(xreader& treader, XTemplate* tmpl);
 };
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

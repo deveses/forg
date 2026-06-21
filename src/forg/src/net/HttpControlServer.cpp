@@ -25,10 +25,7 @@
 #include <future>
 #include <sstream>
 
-namespace forg
-{
-namespace net
-{
+namespace forg::net {
 
 HttpControlServer::HttpControlServer(const std::string& bindAddr, int port,
                                      CommandQueue& queue)
@@ -173,7 +170,6 @@ void HttpControlServer::HandleConnection(int clientFd)
     ::send(clientFd, out.data(), out.size(), 0);
 }
 
-} // namespace net
-} // namespace forg
+} // namespace forg::net
 
 #endif // !FORG_PLATFORM_WINDOWS

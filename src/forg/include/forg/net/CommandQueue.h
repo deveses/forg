@@ -9,10 +9,7 @@
 
 #include "net/Command.h"
 
-namespace forg
-{
-namespace net
-{
+namespace forg::net {
 
 /// A queued command plus an optional channel for its reply.
 /**
@@ -54,7 +51,6 @@ class CommandQueue
     std::deque<QueueItem> m_items;
 };
 
-} // namespace net
-} // namespace forg
+} // namespace forg::net
 
 #endif //_FORG_NET_COMMANDQUEUE_H_

@@ -29,13 +29,9 @@
 #include <string>
 #include <vector>
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
-namespace EToken
-{
+namespace EToken {
 enum TYPE
 {
     TOKEN_UNKNOWN = 0,
@@ -76,8 +72,7 @@ enum TYPE
 };
 };
 
-namespace ETemplatePrimitiveType
-{
+namespace ETemplatePrimitiveType {
 enum TYPE
 {
     Unknown = 0,
@@ -385,7 +380,6 @@ bool operator<(const xguid& left, const xguid& right);
 
 bool operator==(const xguid& left, const xguid& right);
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile
 
 #endif

@@ -35,10 +35,7 @@
 
 #include <vector>
 
-namespace forg
-{
-namespace geometry
-{
+namespace forg::geometry {
 
 using namespace forg::core;
 
@@ -225,7 +222,6 @@ class FORG_API Mesh
                             ExtendedMaterialVec& materials);
 };
 
-} // namespace geometry
-} // namespace forg
+} // namespace forg::geometry
 
 #endif //_FORG_MESH_H_

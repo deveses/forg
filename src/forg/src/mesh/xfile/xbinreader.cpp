@@ -2,12 +2,7 @@
 #include "debug/dbg.h"
 #include "forg_pch.h"
 
-namespace forg
-{
-namespace xfile
-{
-namespace reader
-{
+namespace forg::xfile::reader {
 
 /*
 template <typename T>
@@ -319,6 +314,4 @@ int xbinreader::ReadGUID(xguid& tguid)
     return 0;
 }
 
-} // namespace reader
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile::reader

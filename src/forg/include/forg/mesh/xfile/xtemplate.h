@@ -27,10 +27,7 @@
 #include "mesh/xfile/xreader.h"
 #include "mesh/xfile/xtmembers.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 using namespace xfile::reader;
 
@@ -176,7 +173,6 @@ class XTemplate
     xstring ToString() const;
 };
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile
 
 #endif

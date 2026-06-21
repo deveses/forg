@@ -4,10 +4,7 @@
 #include "math/Vector3.h"
 #include "rendering/Vertex.h"
 
-namespace forg
-{
-namespace geometry
-{
+namespace forg::geometry {
 
 /************************************************************************/
 /* PositionOnly                                                         */
@@ -264,5 +261,4 @@ void PositionNormalTextured::set_Texel(float u, float v)
     this->Tv = v;
 }
 
-} // namespace geometry
-} // namespace forg
+} // namespace forg::geometry

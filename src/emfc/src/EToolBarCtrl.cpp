@@ -5,8 +5,7 @@
 #include "EToolBarCtrl.h"
 #include "stdafx.h"
 
-namespace emfc
-{
+namespace emfc {
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction

@@ -8,8 +8,7 @@
 #include <dlfcn.h>
 #endif
 
-namespace
-{
+namespace {
 
 void CheckPlugin(const char* path)
 {

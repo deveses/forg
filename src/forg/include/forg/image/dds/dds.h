@@ -26,8 +26,7 @@
 #include "image/Image.h"
 #include "rendering/Color.h"
 
-namespace forg
-{
+namespace forg {
 
 FORG_API Color4b* LoadDds(const char* filename, ImageDescription* bmp_info);
 

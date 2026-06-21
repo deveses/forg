@@ -10,8 +10,7 @@
 #include <CL/opencl.h>
 #include <base.h>
 
-namespace OpenCL
-{
+namespace OpenCL {
 
 class CLPlatform;
 class CLDevice;

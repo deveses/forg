@@ -16,10 +16,7 @@
 #include "forg/os/File.h"
 #include "forg/script/lexer.h"
 
-namespace forg
-{
-namespace script
-{
+namespace forg::script {
 
 class FORG_API FileParserBase
 {
@@ -75,7 +72,6 @@ class FORG_API TokenBackup
     void Reset() { m_parser = nullptr; }
 };
 
-} // namespace script
-} // namespace forg
+} // namespace forg::script
 
 #endif

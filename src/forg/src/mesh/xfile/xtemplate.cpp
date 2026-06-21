@@ -2,10 +2,7 @@
 
 #include "mesh/xfile/xtemplate.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 //////////////////////////////////////////////////////////////////////////
 // TEMPLATE
@@ -134,5 +131,4 @@ xstring XTemplate::ToString() const
     return sstream.str();
 }
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

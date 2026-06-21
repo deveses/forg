@@ -20,8 +20,7 @@ static std::optional<uint> getFileSize(FILE* f)
     return pos;
 }
 
-namespace forg::os
-{
+namespace forg::os {
 
 File::File() { m_handle = 0; }
 

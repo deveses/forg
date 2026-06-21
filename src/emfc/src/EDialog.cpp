@@ -5,8 +5,7 @@
 #include "EDialog.h"
 #include "stdafx.h"
 
-namespace emfc
-{
+namespace emfc {
 
 int EOpenFileDialog::ShowDialog()
 {

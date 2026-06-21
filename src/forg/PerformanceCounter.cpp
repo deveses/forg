@@ -38,8 +38,7 @@ static BOOL QueryPerformanceFrequency(LARGE_INTEGER* li)
 
 /******************************************************************************/
 
-namespace forg
-{
+namespace forg {
 
 PerformanceCounter::PerformanceCounter() : m_bStarted(false)
 {

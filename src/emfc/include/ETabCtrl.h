@@ -13,8 +13,7 @@
 
 #include <commctrl.h>
 
-namespace emfc
-{
+namespace emfc {
 
 class EMFC_API ETabCtrl : public EWnd
 {

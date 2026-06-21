@@ -4,10 +4,7 @@
 
 #include <intrin.h>
 
-namespace forg
-{
-namespace cpu
-{
+namespace forg::cpu {
 
 uint32 invoke_cpuid(int param, uint32& _eax, uint32& _ebx, uint32& _ecx,
                     uint32& _edx)
@@ -66,5 +63,4 @@ cpuid::cpuid()
     }
 }
 
-} // namespace cpu
-} // namespace forg
+} // namespace forg::cpu

@@ -2,10 +2,7 @@
 
 #include "forg/script/lexer.h"
 
-namespace forg
-{
-namespace script
-{
+namespace forg::script {
 
 // RegExp
 // 1. boolean or
@@ -207,5 +204,4 @@ int Lexer::ReadToken(int _char, int _symbol, SToken& _token)
     return result;
 }
 
-} // namespace script
-} // namespace forg
+} // namespace forg::script

@@ -25,8 +25,7 @@
 
 #include "base.h"
 
-namespace forg
-{
+namespace forg {
 
 // Ken Perlin noise
 class FORG_API PerlinNoise

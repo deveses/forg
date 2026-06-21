@@ -26,8 +26,7 @@
 #include "base.h"
 #include "math/Vector3.h"
 
-namespace forg
-{
+namespace forg {
 
 using namespace math;
 

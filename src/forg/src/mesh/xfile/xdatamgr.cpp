@@ -5,10 +5,7 @@
 #include "mesh/xfile//xtemplatesmgr.h"
 #include "mesh/xfile/xdatamgr.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 XDataMgr::XDataMgr() {}
 
@@ -172,5 +169,4 @@ int XDataMgr::ReadData(xreader& treader, XTemplatesMgr& tmpl_mgr)
     return rval;
 }
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

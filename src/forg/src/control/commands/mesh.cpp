@@ -2,18 +2,14 @@
 
 #include "control/commands/Commands.h"
 
-namespace forg
-{
-namespace control
-{
+namespace forg::control {
 
 using forg::net::Command;
 using forg::net::TryGetFloat;
 using forg::net::TryGetInt;
 using forg::net::TryGetString;
 
-namespace
-{
+namespace {
 // Keep untrusted request params inside sane bounds so a single request cannot
 // trigger an absurd allocation or degenerate geometry.
 int ClampSegments(int n) { return (n < 3) ? 3 : (n > 512 ? 512 : n); }
@@ -120,5 +116,4 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
     return fail("unknown");
 }
 
-} // namespace control
-} // namespace forg
+} // namespace forg::control

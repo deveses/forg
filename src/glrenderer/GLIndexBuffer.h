@@ -25,8 +25,7 @@
 
 #include "rendering/IIndexBuffer.h"
 
-namespace forg
-{
+namespace forg {
 
 class GLRenderDevice;
 class GLDeviceCaps;

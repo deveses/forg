@@ -2,13 +2,9 @@
 
 #include "forg/core/BitArray.h"
 
-namespace forg
-{
-namespace core
-{
+namespace forg::core {
 
-namespace
-{
+namespace {
 
 uint WordCount(uint length) { return (length + 0x1f) >> 5; }
 
@@ -320,5 +316,4 @@ bool operator==(const BitArray& b1, const BitArray& b2)
 
 bool operator!=(const BitArray& b1, const BitArray& b2) { return !(b1 == b2); }
 
-} // namespace core
-} // namespace forg
+} // namespace forg::core

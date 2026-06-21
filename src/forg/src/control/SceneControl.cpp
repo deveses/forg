@@ -3,10 +3,7 @@
 #include "control/SceneControl.h"
 #include "control/commands/Commands.h"
 
-namespace forg
-{
-namespace control
-{
+namespace forg::control {
 
 // Routes a command to its category handler by verb prefix. The per-category
 // handlers live in commands/{camera,mesh,scene}.cpp.
@@ -24,5 +21,4 @@ std::string DispatchCommand(SceneControlContext& ctx, const net::Command& cmd)
     return fail("unknown");
 }
 
-} // namespace control
-} // namespace forg
+} // namespace forg::control

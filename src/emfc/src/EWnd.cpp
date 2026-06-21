@@ -7,8 +7,7 @@
 #include <stdio.h>
 #include <winbase.h>
 
-namespace emfc
-{
+namespace emfc {
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction

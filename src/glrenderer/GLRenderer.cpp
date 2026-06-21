@@ -8,8 +8,7 @@
 #include <GL/glext.h>
 // #include <GL/GLU.h>
 
-namespace forg
-{
+namespace forg {
 
 class GLRenderer : public IRenderer
 {

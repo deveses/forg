@@ -6,10 +6,7 @@
 #include <algorithm>
 #include <cstddef>
 
-namespace forg
-{
-namespace audio
-{
+namespace forg::audio {
 
 AudioMixer::AudioMixer() : m_output(0) {}
 
@@ -191,5 +188,4 @@ unsigned int AudioMixer::MixStreamsFloat(float* _out_samples,
     return out_length;
 }
 
-} // namespace audio
-} // namespace forg
+} // namespace forg::audio

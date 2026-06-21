@@ -14,10 +14,7 @@
 
 #define IMPLEMENTATION_STDTEMPLATE_END() }
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 /*
 xguid xtemplate_standard_guids[] =
 {
@@ -799,5 +796,4 @@ AddMember(new XTemplatePrimitive(ETemplatePrimitiveType::Word,
 AddMember(new XTemplatePrimitive(ETemplatePrimitiveType::Word, "nBones"));
 IMPLEMENTATION_STDTEMPLATE_END()
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

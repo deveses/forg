@@ -6,8 +6,7 @@
 #include "debug/dbg.h"
 #include "image/Image.h"
 
-namespace forg
-{
+namespace forg {
 
 ITexture* ITexture::FromFile(IRenderDevice* device, const char* srcFile)
 {

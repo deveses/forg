@@ -7,8 +7,7 @@
 
 #define abs(x) (x >= 0 ? x : -x)
 
-namespace emfc
-{
+namespace emfc {
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction

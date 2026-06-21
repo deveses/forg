@@ -9,8 +9,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-namespace emfc
-{
+namespace emfc {
 
 class EMFC_API EImageList
 {

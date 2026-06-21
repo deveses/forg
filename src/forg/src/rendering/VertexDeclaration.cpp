@@ -2,8 +2,7 @@
 
 #include "rendering/VertexDeclaration.h"
 
-namespace forg
-{
+namespace forg {
 
 VertexDeclaration::VertexDeclaration(const VertexElement* pDecl)
 {

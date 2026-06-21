@@ -8,11 +8,9 @@
 
 #include "forg/script/yaml/YAMLParser.h"
 
-namespace forg::script::yaml
-{
+namespace forg::script::yaml {
 
-namespace ParserError
-{
+namespace ParserError {
 enum TYPE
 {
     NoErrors = 0,
@@ -20,8 +18,7 @@ enum TYPE
 };
 }
 
-namespace
-{
+namespace {
 
 std::string Trim(const std::string& text)
 {

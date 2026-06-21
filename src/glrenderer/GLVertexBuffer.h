@@ -26,8 +26,7 @@
 #include "GLRenderDevice.h"
 #include <forg.h>
 
-namespace forg
-{
+namespace forg {
 
 class GLVertexBuffer : public IVertexBuffer
 {

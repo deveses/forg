@@ -30,8 +30,7 @@
 + WIN – Microsoft
 */
 
-namespace forg
-{
+namespace forg {
 
 using namespace forg::core;
 using namespace forg::debug;

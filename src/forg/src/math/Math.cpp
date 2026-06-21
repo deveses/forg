@@ -5,10 +5,7 @@
 #include <cmath>
 #include <numbers>
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 const double Math::PI = std::numbers::pi;
 const double Math::SQRT2_2 = std::numbers::sqrt2 / 2.0;
@@ -43,5 +40,4 @@ double Math::Log10(double d) { return std::log10(d); }
 
 double Math::Pow(double a, double b) { return std::pow(a, b); }
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math

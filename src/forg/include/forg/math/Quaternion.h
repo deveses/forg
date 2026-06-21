@@ -26,10 +26,7 @@
 #include "forg/base.h"
 #include "forg/math/Vector3.h"
 
-namespace forg
-{
-namespace math
-{
+namespace forg::math {
 
 struct FORG_API Quaternion
 {
@@ -136,7 +133,6 @@ inline Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs)
     return r;
 }
 
-} // namespace math
-} // namespace forg
+} // namespace forg::math
 
 #endif // _FORG_MATH_QUATERNION_H_

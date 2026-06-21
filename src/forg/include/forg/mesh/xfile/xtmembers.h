@@ -23,10 +23,7 @@
 #include "base.h"
 #include "mesh/xfile/xdefs.h"
 
-namespace forg
-{
-namespace xfile
-{
+namespace forg::xfile {
 
 enum xtemplate_member_type
 {
@@ -227,5 +224,4 @@ class XTemplateArray : public XTemplateMember
     }
 };
 
-} // namespace xfile
-} // namespace forg
+} // namespace forg::xfile

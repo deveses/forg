@@ -2,10 +2,7 @@
 
 #include <sstream>
 
-namespace forg
-{
-namespace net
-{
+namespace forg::net {
 
 static int hexDigit(char c)
 {
@@ -136,5 +133,4 @@ Command CommandFromRequest(const std::string& path, const std::string& query)
     return cmd;
 }
 
-} // namespace net
-} // namespace forg
+} // namespace forg::net

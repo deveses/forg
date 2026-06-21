@@ -28,10 +28,7 @@
 
 #include <vector>
 
-namespace forg
-{
-namespace gltf
-{
+namespace forg::gltf {
 
 using namespace forg;
 using namespace forg::geometry;
@@ -79,7 +76,6 @@ class GltfLoader
                               IRenderDevice* device,
                               Mesh::ExtendedMaterialVec& materials);
 };
-} // namespace gltf
-} // namespace forg
+} // namespace forg::gltf
 
 #endif //_FORG_GLTFLOADER_H_

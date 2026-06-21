@@ -3,8 +3,7 @@
 
 #include <utility>
 
-namespace forg::core
-{
+namespace forg::core {
 
 // Move-only ownership for resources returned with an initial reference count.
 template <typename T> class RefPtr

@@ -28,10 +28,7 @@
 #include "forg/base.h"
 #include "forg/core/string.hpp"
 
-namespace forg
-{
-namespace script
-{
+namespace forg::script {
 
 // ========================================================================
 // State machine
@@ -171,7 +168,6 @@ class FORG_API Lexer
     int Flush(SToken& _token);
 };
 
-} // namespace script
-} // namespace forg
+} // namespace forg::script
 
 #endif

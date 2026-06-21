@@ -5,12 +5,7 @@
 
 #include <cfloat>
 
-namespace forg
-{
-namespace audio
-{
-namespace dsp
-{
+namespace forg::audio::dsp {
 /*
 void CalcBandpassCoeffs( float Fc, float Q, float gain, vector4_out coeffsA,
 vector4_out coeffsB )
@@ -179,6 +174,4 @@ void CalcLowpassCoeffs(float Fc, float Q, float4& coeffsA, float4& coeffsB)
     coeffsB[3] = 0.0f;
 }
 
-} // namespace dsp
-} // namespace audio
-} // namespace forg
+} // namespace forg::audio::dsp

@@ -23,8 +23,7 @@
 #include "rendering/IIndexBuffer.h"
 #include "rendering/IVertexBuffer.h"
 
-namespace forg
-{
+namespace forg {
 
 // Both buffers wrap a single MTLBuffer (storageModeShared) so the CPU pointer
 // returned by Lock() points straight at GPU-visible memory; Unlock() is a
