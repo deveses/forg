@@ -22,6 +22,7 @@ add_executable(forg_tests
     rendering/MeshFactoryTests.cpp
     rendering/CameraTests.cpp
     rendering/PluginTests.cpp
+    rendering/ReferenceRenderTests.cpp
     mesh/GltfLoaderTests.cpp
     net/HttpRequestTests.cpp
     net/CommandTests.cpp
@@ -66,6 +67,8 @@ add_test(NAME forg-package-consumer
         -DFORG_BINARY_DIR=${PROJECT_BINARY_DIR}
         -DFORG_SOURCE_DIR=${PROJECT_SOURCE_DIR}/tests/package
         -DFORG_TEST_CONFIG=$<CONFIG>
+        -DFORG_TEST_CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+        -DFORG_TEST_CMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}
         -P ${PROJECT_SOURCE_DIR}/tests/package/RunPackageTest.cmake)
 
 file(GLOB_RECURSE forg_public_headers CONFIGURE_DEPENDS

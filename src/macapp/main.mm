@@ -33,6 +33,13 @@ struct AppSettings
     int controlPort = 8080;
 };
 
+struct LoadedRendererPlugin
+{
+    void* module = nullptr;
+    forg::RendererPluginBinding binding;
+    forg::IRenderer* renderer = nullptr;
+};
+
 static forg::Light s_Light = {};
 
 // Camera control sensitivities (tune to taste; flip a sign to invert an axis).
@@ -49,7 +56,7 @@ static const float kMinTargetDistance =
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 {
     AppSettings m_settings;
-    forg::IRenderer* m_renderer;
+    LoadedRendererPlugin m_plugin;
     forg::IRenderDevice* m_device;
     forg::geometry::Mesh::MeshPtr m_mesh;
     forg::Matrix4 m_mesh_tm;
@@ -68,19 +75,19 @@ static const float kMinTargetDistance =
     id m_event_monitor;
 }
 - (instancetype)initWithSettings:(const AppSettings&)settings
-                        renderer:(forg::IRenderer*)renderer;
+                          plugin:(LoadedRendererPlugin)plugin;
 @end
 
 @implementation AppDelegate
 
 - (instancetype)initWithSettings:(const AppSettings&)settings
-                        renderer:(forg::IRenderer*)renderer
+                          plugin:(LoadedRendererPlugin)plugin
 {
     self = [super init];
     if (self)
     {
         m_settings = settings;
-        m_renderer = renderer;
+        m_plugin = plugin;
         m_device = 0;
         m_mesh_tm = forg::Matrix4::Identity;
         m_fps = 0;
@@ -122,7 +129,7 @@ static const float kMinTargetDistance =
     rp.BackBufferWidth = winWidth;
     rp.BackBufferHeight = winHeight;
 
-    m_device = m_renderer->CreateDevice((forg::HWIN)m_view, &rp);
+    m_device = m_plugin.renderer->CreateDevice((forg::HWIN)m_view, &rp);
     if (m_device == 0)
     {
         std::cerr << "Unable to create render device!\n";
@@ -388,8 +395,26 @@ static const float kMinTargetDistance =
         m_device = 0;
     }
 
-    delete m_renderer;
-    m_renderer = 0;
+    if (m_plugin.renderer)
+    {
+        const forg::RendererPluginStatus status =
+            forg::DestroyRendererFromPlugin(m_plugin.binding,
+                                            m_plugin.renderer);
+        if (status != forg::RendererPluginStatus::Ok)
+        {
+            std::cerr << "Unable to destroy renderer: "
+                      << forg::RendererPluginStatusName(status) << "\n";
+        }
+        m_plugin.renderer = nullptr;
+    }
+
+    if (m_plugin.module)
+    {
+        if (dlclose(m_plugin.module) != 0)
+            std::cerr << "Unable to unload renderer plugin: " << dlerror()
+                      << "\n";
+        m_plugin.module = nullptr;
+    }
 }
 
 @end
@@ -483,12 +508,15 @@ static bool LoadSettings(AppSettings& settings)
     return true;
 }
 
-static forg::IRenderer* CreateRenderer(const std::string& driver)
+static bool LoadRendererPlugin(const std::string& driver,
+                               LoadedRendererPlugin& plugin)
 {
+    plugin = {};
+
     if (driver.empty())
     {
         std::cerr << "No renderer driver specified in config.yml!\n";
-        return 0;
+        return false;
     }
 
     // cwd is the resources directory; "./" keeps dlopen from searching dyld
@@ -499,33 +527,37 @@ static forg::IRenderer* CreateRenderer(const std::string& driver)
     {
         std::cerr << "Unable to load renderer <" << driver << ">: " << dlerror()
                   << "\n";
-        return 0;
+        return false;
     }
 
     auto getDescriptor = reinterpret_cast<forg::PFGETRENDERERPLUGINDESCRIPTOR>(
         dlsym(module, "forgGetRendererPluginDescriptor"));
-    if (getDescriptor != nullptr)
-    {
-        const forg::RendererPluginDescriptor* descriptor = getDescriptor();
-        if (!forg::IsRendererPluginCompatible(descriptor))
-        {
-            std::cerr << "Incompatible renderer plugin <" << driver << ">!\n";
-            dlclose(module);
-            return nullptr;
-        }
-        return descriptor->CreateRenderer();
-    }
-
     auto pfCreateRenderer = reinterpret_cast<forg::PFCREATERENDERER>(
         dlsym(module, "forgCreateRenderer"));
-    if (pfCreateRenderer == 0)
+
+    forg::RendererPluginStatus status = forg::ProbeRendererPlugin(
+        getDescriptor, pfCreateRenderer, plugin.binding);
+    if (status != forg::RendererPluginStatus::Ok)
     {
-        std::cerr << "forgCreateRenderer not found in <" << driver << ">!\n";
+        std::cerr << "Incompatible renderer plugin <" << driver
+                  << ">: " << forg::RendererPluginStatusName(status) << "\n";
         dlclose(module);
-        return nullptr;
+        plugin = {};
+        return false;
     }
 
-    return pfCreateRenderer();
+    status = forg::CreateRendererFromPlugin(plugin.binding, plugin.renderer);
+    if (status != forg::RendererPluginStatus::Ok)
+    {
+        std::cerr << "Unable to create renderer <" << driver
+                  << ">: " << forg::RendererPluginStatusName(status) << "\n";
+        dlclose(module);
+        plugin = {};
+        return false;
+    }
+
+    plugin.module = module;
+    return true;
 }
 
 int main(int, char*[])
@@ -538,8 +570,8 @@ int main(int, char*[])
         return 1;
     }
 
-    forg::IRenderer* renderer = CreateRenderer(settings.driver);
-    if (renderer == 0)
+    LoadedRendererPlugin plugin;
+    if (!LoadRendererPlugin(settings.driver, plugin))
     {
         return 1;
     }
@@ -548,7 +580,7 @@ int main(int, char*[])
     [app setActivationPolicy:NSApplicationActivationPolicyRegular];
 
     AppDelegate* delegate = [[AppDelegate alloc] initWithSettings:settings
-                                                         renderer:renderer];
+                                                           plugin:plugin];
     [app setDelegate:delegate];
 
     [app run];
