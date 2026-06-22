@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_MESH_H_
-#define _FORG_MESH_H_
+#ifndef FORG_RENDERING_MESH_H
+#define FORG_RENDERING_MESH_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -33,6 +33,7 @@
 #include "core/auto_ptr.hpp"
 #include "core/vector.hpp"
 
+#include <memory>
 #include <vector>
 
 namespace forg::geometry {
@@ -69,6 +70,7 @@ class FORG_API Mesh
         VertexBufferPtr;
     typedef auto_ptr<IIndexBuffer, RefCountOwner<IIndexBuffer>> IndexBufferPtr;
 
+    using UniqueMeshPtr = std::unique_ptr<Mesh>;
     using ExtendedMaterialVec = std::vector<ExtendedMaterial>;
     using AttributeRangeVec = std::vector<AttributeRange>;
 
@@ -118,36 +120,56 @@ class FORG_API Mesh
      */
     static MeshPtr Box(IRenderDevice* device, float width, float height,
                        float depth);
+    static UniqueMeshPtr MakeBox(IRenderDevice* device, float width,
+                                 float height, float depth);
 
     /// Uses a left-handed coordinate system to create a mesh that contains a
     /// sphere.
     static MeshPtr Sphere(IRenderDevice* device, float radius, int slices,
                           int stacks);
+    static UniqueMeshPtr MakeSphere(IRenderDevice* device, float radius,
+                                    int slices, int stacks);
 
     /// Uses a left-handed coordinate system to create a mesh that contains a
     /// cylinder.
     static MeshPtr Cylinder(IRenderDevice* device, float radius1, float radius2,
                             float length, int slices, int stacks);
+    static UniqueMeshPtr MakeCylinder(IRenderDevice* device, float radius1,
+                                      float radius2, float length, int slices,
+                                      int stacks);
 
     static MeshPtr Torus(IRenderDevice* device, float innerRadius,
                          float outerRadius, int sides, int rings);
 
     static MeshPtr Pyramid(IRenderDevice* device, uint numAngles, float radius,
                            float height);
+    static UniqueMeshPtr MakePyramid(IRenderDevice* device, uint numAngles,
+                                     float radius, float height);
 
     static MeshPtr Grid(IRenderDevice* device, float sizeX, float sizeY,
                         int color, uint subgrid);
+    static UniqueMeshPtr MakeGrid(IRenderDevice* device, float sizeX,
+                                  float sizeY, int color, uint subgrid);
 
     static MeshPtr Landscape(IRenderDevice* _device, const Vector3& _span,
                              const float* _hmap, unsigned int _sizex,
                              unsigned int _sizey);
+    static UniqueMeshPtr MakeLandscape(IRenderDevice* _device,
+                                       const Vector3& _span, const float* _hmap,
+                                       unsigned int _sizex,
+                                       unsigned int _sizey);
 
     static MeshPtr FromFile(const char* filename, uint options,
                             IRenderDevice* device);
+    static UniqueMeshPtr LoadFromFile(const char* filename, uint options,
+                                      IRenderDevice* device);
 
     static MeshPtr FromFile(const char* filename, uint options,
                             IRenderDevice* device,
                             ExtendedMaterialVec& materials);
+    static UniqueMeshPtr LoadFromFile(const char* filename, uint options,
+                                      IRenderDevice* device,
+                                      ExtendedMaterialVec& materials);
 
     LPVERTEXBUFFER GetVertexBuffer() const;
 
@@ -224,4 +246,4 @@ class FORG_API Mesh
 
 } // namespace forg::geometry
 
-#endif //_FORG_MESH_H_
+#endif // FORG_RENDERING_MESH_H

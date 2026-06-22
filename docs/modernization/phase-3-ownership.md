@@ -2,10 +2,11 @@
 
 ## Status
 
-In progress. `RefPtr`, atomic reference counting, parser ownership fixes, standard
-mesh containers, and X-loader temporary-buffer RAII have landed. Custom
-`auto_ptr`, `core::vector`, raw arrays, and manual cleanup remain in several
-rendering, image, audio, UI, OpenCL, and Windows paths.
+In progress. `RefPtr`, atomic reference counting, parser ownership fixes,
+standard mesh containers, mesh `std::unique_ptr` factories, reference software
+buffer RAII, and X-loader temporary-buffer RAII have landed. Custom `auto_ptr`,
+`core::vector`, raw arrays, and manual cleanup remain in several rendering,
+image, audio, UI, OpenCL, and Windows paths.
 
 ## Objective
 
@@ -30,10 +31,13 @@ source API.
 
 3. **Compatibility factories**
    - Add `Mesh::UniqueMeshPtr = std::unique_ptr<Mesh>`.
-   - Add modern `MakeBox`, `MakeSphere`, `MakeCylinder`, `MakeTorus`, `MakePyramid`,
+   - Add modern `MakeBox`, `MakeSphere`, `MakeCylinder`, `MakePyramid`,
      `MakeGrid`, `MakeLandscape`, and `LoadFromFile` entry points.
-   - Implement one unique-owner core path; existing `Box`, `Sphere`, and
-     `FromFile` APIs wrap the released pointer in legacy `MeshPtr`.
+   - Implement one unique-owner core path; existing `Box`, `Sphere`,
+     `Cylinder`, `Pyramid`, `Grid`, `Landscape`, and `FromFile` APIs wrap the
+     released pointer in legacy `MeshPtr`.
+   - Defer `MakeTorus` until the existing declared-only `Torus` factory gets an
+     implementation or is removed from the 1.x surface.
 
 4. **Legacy container retirement**
    - Remove in-tree uses of `core::vector`, `shared_array`, and custom `auto_ptr`.
