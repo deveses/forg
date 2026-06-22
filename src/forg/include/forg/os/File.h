@@ -25,8 +25,7 @@
 
 #include "forg/base.h"
 
-namespace forg::os
-{
+namespace forg::os {
 
 class FORG_API File
 {

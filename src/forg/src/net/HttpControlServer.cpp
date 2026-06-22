@@ -6,18 +6,18 @@
 // base.h (force-included via the PCH) defines IN, OUT and null as macros that
 // clash with the BSD socket headers. Drop them before including system headers.
 #ifdef IN
-#   undef IN
+#undef IN
 #endif
 #ifdef OUT
-#   undef OUT
+#undef OUT
 #endif
 #ifdef null
-#   undef null
+#undef null
 #endif
 
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include <unistd.h>
 
 #include <chrono>
@@ -25,21 +25,16 @@
 #include <future>
 #include <sstream>
 
-namespace forg { namespace net {
+namespace forg::net {
 
-HttpControlServer::HttpControlServer(const std::string& bindAddr, int port, CommandQueue& queue)
-: m_addr(bindAddr)
-, m_port(port)
-, m_queue(queue)
-, m_listenFd(-1)
-, m_running(false)
+HttpControlServer::HttpControlServer(const std::string& bindAddr, int port,
+                                     CommandQueue& queue)
+    : m_addr(bindAddr), m_port(port), m_queue(queue), m_listenFd(-1),
+      m_running(false)
 {
 }
 
-HttpControlServer::~HttpControlServer()
-{
-    Stop();
-}
+HttpControlServer::~HttpControlServer() { Stop(); }
 
 bool HttpControlServer::Start()
 {
@@ -58,7 +53,8 @@ bool HttpControlServer::Start()
     addr.sin_port = htons(static_cast<unsigned short>(m_port));
     addr.sin_addr.s_addr = inet_addr(m_addr.c_str());
 
-    if (::bind(m_listenFd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) < 0 ||
+    if (::bind(m_listenFd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) <
+            0 ||
         ::listen(m_listenFd, 4) < 0)
     {
         ::close(m_listenFd);
@@ -123,7 +119,8 @@ void HttpControlServer::HandleConnection(int clientFd)
     {
         eol = request.find('\n');
     }
-    std::string firstLine = (eol == std::string::npos) ? request : request.substr(0, eol);
+    std::string firstLine =
+        (eol == std::string::npos) ? request : request.substr(0, eol);
 
     int status = 200;
     std::string body;
@@ -139,7 +136,8 @@ void HttpControlServer::HandleConnection(int clientFd)
         // The timeout keeps the socket thread from hanging if it has stopped.
         // The queue owns the promise, so timing out here is safe: the main
         // thread's later set_value just lands in a value no one reads.
-        if (result.wait_for(std::chrono::seconds(1)) == std::future_status::ready)
+        if (result.wait_for(std::chrono::seconds(1)) ==
+            std::future_status::ready)
         {
             body = result.get();
         }
@@ -155,9 +153,9 @@ void HttpControlServer::HandleConnection(int clientFd)
         body = "{\"ok\":false,\"error\":\"badrequest\"}";
     }
 
-    const char* reason = (status == 200) ? "OK"
-                       : (status == 400) ? "Bad Request"
-                                         : "Service Unavailable";
+    const char* reason = (status == 200)   ? "OK"
+                         : (status == 400) ? "Bad Request"
+                                           : "Service Unavailable";
 
     std::ostringstream response;
     response << "HTTP/1.1 " << status << ' ' << reason << "\r\n"
@@ -172,6 +170,6 @@ void HttpControlServer::HandleConnection(int clientFd)
     ::send(clientFd, out.data(), out.size(), 0);
 }
 
-}}
+} // namespace forg::net
 
 #endif // !FORG_PLATFORM_WINDOWS

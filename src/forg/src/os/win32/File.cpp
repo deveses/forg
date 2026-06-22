@@ -5,8 +5,7 @@
 #ifdef FORG_PLATFORM_WINDOWS
 #include <windows.h>
 
-namespace forg::os
-{
+namespace forg::os {
 
 File::File() { m_handle = 0; }
 

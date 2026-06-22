@@ -25,11 +25,11 @@
 
 #include "base.h"
 
-namespace forg { namespace os {
+namespace forg::os {
 
 class ILibrary
 {
-    public:
+  public:
     virtual ~ILibrary() {};
 
     virtual int Open(LPCTSTR szName, int nFlags) = 0;
@@ -38,6 +38,6 @@ class ILibrary
     virtual void* Address(LPCSTR szName) = 0;
 };
 
-}}  //namespace
+} // namespace forg::os
 
 #endif // ILIBRARY_H_INCLUDED

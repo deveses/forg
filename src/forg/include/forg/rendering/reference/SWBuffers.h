@@ -24,104 +24,105 @@
 #endif
 
 #include "base.h"
+#include "rendering/IIndexBuffer.h"
 #include "rendering/ITexture.h"
 #include "rendering/IVertexBuffer.h"
-#include "rendering/IIndexBuffer.h"
 
-namespace forg { namespace rendering { namespace reference {
+namespace forg::rendering::reference {
 
-    /////////////////////////////////////////////////////////////////////////////////////
-    // SWTexture
-    /////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+// SWTexture
+/////////////////////////////////////////////////////////////////////////////////////
 
-    class FORG_API SWTexture : public ITexture
-    {
-        int m_refCount;
-        char* m_data;
-        uint m_Width;
-        uint m_Height;
-        uint m_Levels;
-        uint m_Usage;
-        uint m_Format;
-        uint m_Pool;
-    public:
-        SWTexture();
-        virtual ~SWTexture();
+class FORG_API SWTexture : public ITexture
+{
+    int m_refCount;
+    char* m_data;
+    uint m_Width;
+    uint m_Height;
+    uint m_Levels;
+    uint m_Usage;
+    uint m_Format;
+    uint m_Pool;
 
-        int Create(uint Width, uint Height, uint Levels, uint Usage, uint Format, uint Pool);
+  public:
+    SWTexture();
+    virtual ~SWTexture();
 
-        uint Sample(float u, float v);
+    int Create(uint Width, uint Height, uint Levels, uint Usage, uint Format,
+               uint Pool);
+
+    uint Sample(float u, float v);
 
     // ITexture implementation
-    public:
-        uint GetLevelCount();
+  public:
+    uint GetLevelCount();
 
-        int GetLevelDesc(uint Level, SurfaceDescription* Description) const;
+    int GetLevelDesc(uint Level, SurfaceDescription* Description) const;
 
-        void* LockRect(uint Level, uint Flags);
+    void* LockRect(uint Level, uint Flags);
 
-        int UnlockRect(uint Level);
-    };
+    int UnlockRect(uint Level);
+};
 
+/////////////////////////////////////////////////////////////////////////////////////
+// SWVertexBuffer
+/////////////////////////////////////////////////////////////////////////////////////
+class FORG_API SWVertexBuffer : public IVertexBuffer
+{
+    char* m_data;
 
-    /////////////////////////////////////////////////////////////////////////////////////
-    // SWVertexBuffer
-    /////////////////////////////////////////////////////////////////////////////////////
-    class FORG_API SWVertexBuffer : public IVertexBuffer
-    {
-        char* m_data;
+    uint m_length;
+    uint m_usage;
+    uint m_pool;
 
-        uint m_length;
-        uint m_usage;
-        uint m_pool;
+  public:
+    SWVertexBuffer();
+    virtual ~SWVertexBuffer();
 
-    public:
-        SWVertexBuffer();
-        virtual ~SWVertexBuffer();
+    char* GetData() { return m_data; }
 
-        char* GetData() { return m_data; }
+    int Create(uint length, uint usage, uint pool);
 
-        int Create(uint length, uint usage, uint pool);
+  public:
+    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
+                     uint flags);
 
-    public:
-	    virtual int Lock(uint offsetToLock, uint sizeToLock, void ** ppbData, uint flags);
+    virtual int Unlock();
+};
 
-	    virtual int Unlock();
-    };
+/////////////////////////////////////////////////////////////////////////////////////
+// SWIndexBuffer
+/////////////////////////////////////////////////////////////////////////////////////
+class FORG_API SWIndexBuffer : public IIndexBuffer
+{
+    char* m_data;
 
+    uint m_length;
+    uint m_usage;
+    bool m_short;
+    uint m_pool;
 
+  public:
+    SWIndexBuffer();
+    virtual ~SWIndexBuffer();
 
-    /////////////////////////////////////////////////////////////////////////////////////
-    // SWIndexBuffer
-    /////////////////////////////////////////////////////////////////////////////////////
-    class FORG_API SWIndexBuffer : public IIndexBuffer
-    {
-        char* m_data;
+    char* GetData() { return m_data; }
 
-        uint m_length;
-        uint m_usage;
-        bool m_short;
-        uint m_pool;
+    uint GetLength() const { return m_length; }
 
-	public:
-        SWIndexBuffer();
-		virtual ~SWIndexBuffer();
+    int GetIndexSize() const { return (m_short ? 2 : 4); }
 
-        char* GetData() { return m_data; }
+    bool IsIndexShort() const { return m_short; }
 
-        uint GetLength() const { return m_length; }
+    int Create(uint length, uint usage, bool sixteenBitIndices, uint pool);
 
-        int GetIndexSize() const { return (m_short ? 2 : 4); }
+  public:
+    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
+                     uint flags);
 
-        bool IsIndexShort() const { return m_short; }
+    virtual int Unlock();
+};
+} // namespace forg::rendering::reference
 
-        int Create(uint length, uint usage, bool sixteenBitIndices, uint pool);
-
-	public:
-		virtual int Lock(uint offsetToLock, uint sizeToLock, void ** ppbData, uint flags);
-
-		virtual int Unlock();
-    };
-}}} // forg::rendering::reference
-
-#endif  //_FORG_REFERENCE_SWBUFFERS_H_
+#endif //_FORG_REFERENCE_SWBUFFERS_H_

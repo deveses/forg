@@ -27,100 +27,94 @@
 #include "mesh/xfile/xreader.h"
 #include "mesh/xfile/xtmembers.h"
 
-namespace forg { namespace xfile {
+namespace forg::xfile {
 
 using namespace xfile::reader;
 
-enum ETemplateStandardType {
-	XTEMPLATE_TYPE_UNKNOWN = 0,
-	XTEMPLATE_TYPE_ANIMATION,
-	XTEMPLATE_TYPE_ANIMATIONKEY,
-	XTEMPLATE_TYPE_ANIMATIONOPTIONS,
-	XTEMPLATE_TYPE_ANIMATIONSET,
-	XTEMPLATE_TYPE_ANIMTICKSPERSECOND,
-	XTEMPLATE_TYPE_BOOLEAN,
-	XTEMPLATE_TYPE_BOOLEAN2D,
-	XTEMPLATE_TYPE_COLORRGB,
-	XTEMPLATE_TYPE_COLORRGBA,
-	XTEMPLATE_TYPE_COMPRESSEDANIMATIONSET,
-	XTEMPLATE_TYPE_COORDS2D,
-	XTEMPLATE_TYPE_DECLDATA,
-	XTEMPLATE_TYPE_EFFECTDWORD,
-	XTEMPLATE_TYPE_EFFECTFLOATS,
-	XTEMPLATE_TYPE_EFFECTINSTANCE,
-	XTEMPLATE_TYPE_EFFECTPARAMDWORD,
-	XTEMPLATE_TYPE_EFFECTPARAMFLOATS,
-	XTEMPLATE_TYPE_EFFECTPARAMSTRING,
-	XTEMPLATE_TYPE_EFFECTSTRING,
-	XTEMPLATE_TYPE_FACEADJACENCY,
-	XTEMPLATE_TYPE_FLOATKEYS,
-	XTEMPLATE_TYPE_FRAME,
-	XTEMPLATE_TYPE_FRAMETRANSFORMMATRIX,
-	XTEMPLATE_TYPE_FVFDATA,
-	XTEMPLATE_TYPE_GUID,
-	XTEMPLATE_TYPE_INDEXEDCOLOR,
-	XTEMPLATE_TYPE_MATERIAL,
-	XTEMPLATE_TYPE_MATERIALWRAP,
-	XTEMPLATE_TYPE_MATRIX4X4,
-	XTEMPLATE_TYPE_MESH,
-	XTEMPLATE_TYPE_MESHFACE,
-	XTEMPLATE_TYPE_MESHFACEWRAPS,
-	XTEMPLATE_TYPE_MESHMATERIALLIST,
-	XTEMPLATE_TYPE_MESHNORMALS,
-	XTEMPLATE_TYPE_MESHTEXTURECOORDS,
-	XTEMPLATE_TYPE_MESHVERTEXCOLORS,
-	XTEMPLATE_TYPE_PATCH,
-	XTEMPLATE_TYPE_PATCHMESH,
-	XTEMPLATE_TYPE_PATCHMESH9,
-	XTEMPLATE_TYPE_PMATTRIBUTERANGE,
-	XTEMPLATE_TYPE_PMINFO,
-	XTEMPLATE_TYPE_PMVSPLITRECORD,
-	XTEMPLATE_TYPE_SKINWEIGHTS,
-	XTEMPLATE_TYPE_TEXTUREFILENAME,
-	XTEMPLATE_TYPE_TIMEDFLOATKEYS,
-	XTEMPLATE_TYPE_VECTOR,
-	XTEMPLATE_TYPE_VERTEXDUPLICATIONINDICES,
-	XTEMPLATE_TYPE_VERTEXELEMENT,
-	XTEMPLATE_TYPE_XSKINMESHHEADER,
-	XTEMPLATE_TYPES_COUNT
+enum ETemplateStandardType
+{
+    XTEMPLATE_TYPE_UNKNOWN = 0,
+    XTEMPLATE_TYPE_ANIMATION,
+    XTEMPLATE_TYPE_ANIMATIONKEY,
+    XTEMPLATE_TYPE_ANIMATIONOPTIONS,
+    XTEMPLATE_TYPE_ANIMATIONSET,
+    XTEMPLATE_TYPE_ANIMTICKSPERSECOND,
+    XTEMPLATE_TYPE_BOOLEAN,
+    XTEMPLATE_TYPE_BOOLEAN2D,
+    XTEMPLATE_TYPE_COLORRGB,
+    XTEMPLATE_TYPE_COLORRGBA,
+    XTEMPLATE_TYPE_COMPRESSEDANIMATIONSET,
+    XTEMPLATE_TYPE_COORDS2D,
+    XTEMPLATE_TYPE_DECLDATA,
+    XTEMPLATE_TYPE_EFFECTDWORD,
+    XTEMPLATE_TYPE_EFFECTFLOATS,
+    XTEMPLATE_TYPE_EFFECTINSTANCE,
+    XTEMPLATE_TYPE_EFFECTPARAMDWORD,
+    XTEMPLATE_TYPE_EFFECTPARAMFLOATS,
+    XTEMPLATE_TYPE_EFFECTPARAMSTRING,
+    XTEMPLATE_TYPE_EFFECTSTRING,
+    XTEMPLATE_TYPE_FACEADJACENCY,
+    XTEMPLATE_TYPE_FLOATKEYS,
+    XTEMPLATE_TYPE_FRAME,
+    XTEMPLATE_TYPE_FRAMETRANSFORMMATRIX,
+    XTEMPLATE_TYPE_FVFDATA,
+    XTEMPLATE_TYPE_GUID,
+    XTEMPLATE_TYPE_INDEXEDCOLOR,
+    XTEMPLATE_TYPE_MATERIAL,
+    XTEMPLATE_TYPE_MATERIALWRAP,
+    XTEMPLATE_TYPE_MATRIX4X4,
+    XTEMPLATE_TYPE_MESH,
+    XTEMPLATE_TYPE_MESHFACE,
+    XTEMPLATE_TYPE_MESHFACEWRAPS,
+    XTEMPLATE_TYPE_MESHMATERIALLIST,
+    XTEMPLATE_TYPE_MESHNORMALS,
+    XTEMPLATE_TYPE_MESHTEXTURECOORDS,
+    XTEMPLATE_TYPE_MESHVERTEXCOLORS,
+    XTEMPLATE_TYPE_PATCH,
+    XTEMPLATE_TYPE_PATCHMESH,
+    XTEMPLATE_TYPE_PATCHMESH9,
+    XTEMPLATE_TYPE_PMATTRIBUTERANGE,
+    XTEMPLATE_TYPE_PMINFO,
+    XTEMPLATE_TYPE_PMVSPLITRECORD,
+    XTEMPLATE_TYPE_SKINWEIGHTS,
+    XTEMPLATE_TYPE_TEXTUREFILENAME,
+    XTEMPLATE_TYPE_TIMEDFLOATKEYS,
+    XTEMPLATE_TYPE_VECTOR,
+    XTEMPLATE_TYPE_VERTEXDUPLICATIONINDICES,
+    XTEMPLATE_TYPE_VERTEXELEMENT,
+    XTEMPLATE_TYPE_XSKINMESHHEADER,
+    XTEMPLATE_TYPES_COUNT
 };
 
 class XTemplateOption
 {
     // 'structors
-public:
-    XTemplateOption () {};
+  public:
+    XTemplateOption() {};
 
-    XTemplateOption(const xstring& name)
-        : m_sName(name)
-    {
-    }
+    XTemplateOption(const xstring& name) : m_sName(name) {}
 
-    XTemplateOption(const xstring& name, const xguid& guid)
-        : m_sName(name)
+    XTemplateOption(const xstring& name, const xguid& guid) : m_sName(name)
     {
         m_optional_guid = guid;
     }
 
     // Attributes
-private:
+  private:
     xstring m_sName;
     xguid m_optional_guid;
 
     // Public Methods
-public:
+  public:
     const xstring& GetName() const { return m_sName; }
 
     const xguid& GetGuid() const { return m_optional_guid; }
-
 };
-
-
 
 class XTemplate
 {
     // Nested
-public:
+  public:
     typedef std::vector<XTemplateMember*> XTemplateMemberVector;
     typedef XTemplateMemberVector::iterator XTemplateMemberVectorI;
     typedef XTemplateMemberVector::const_iterator XTemplateMemberVectorCI;
@@ -130,22 +124,22 @@ public:
     typedef XTemplateOptionVector::const_iterator XTemplateOptionVectorCI;
 
     // 'structors
-public:
+  public:
     XTemplate();
     XTemplate(const char* name, xguid guid, bool _open = false);
     virtual ~XTemplate();
 
     // Attributes
-protected:
-    xstring m_sName;    //always valid
-    xguid m_guid;       //always valid
+  protected:
+    xstring m_sName; // always valid
+    xguid m_guid;    // always valid
     bool m_bOpen;
 
     XTemplateMemberVector m_members;
     XTemplateOptionVector m_options;
 
     // Public Methods
-public:
+  public:
     int IsStandardType() const;
 
     bool IsOpen() const { return m_bOpen; }
@@ -155,7 +149,6 @@ public:
     uint GetMembersCount() const { return (uint)m_members.size(); }
 
     uint GetOptionsCount() const { return (uint)m_options.size(); }
-
 
     int Load(xreader& treader);
 
@@ -180,8 +173,6 @@ public:
     xstring ToString() const;
 };
 
-
-}}
+} // namespace forg::xfile
 
 #endif
-

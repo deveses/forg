@@ -28,24 +28,18 @@
 
 namespace forg {
 
-    using namespace math;
+using namespace math;
 
 struct Ray
 {
     Vector3 Origin;
     Vector3 Direction;
 
-    bool TriangleIntersection(
-        const Vector3& vert0,
-        const Vector3& vert1,
-        const Vector3& vert2,
-        float epsilon,
-        bool culling,
-        float& t,
-        float& u,
-        float& v) const;
+    bool TriangleIntersection(const Vector3& vert0, const Vector3& vert1,
+                              const Vector3& vert2, float epsilon, bool culling,
+                              float& t, float& u, float& v) const;
 };
 
-}
+} // namespace forg
 
 #endif //_FORG_RAY_H_

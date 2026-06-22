@@ -24,35 +24,36 @@
 #endif
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #ifdef _WIN32
-  #define FXIMPORT __declspec(dllimport)
-  #define FXEXPORT __declspec(dllexport)
-  #define FXDLLLOCAL
-  #define FXDLLPUBLIC
+#define FXIMPORT __declspec(dllimport)
+#define FXEXPORT __declspec(dllexport)
+#define FXDLLLOCAL
+#define FXDLLPUBLIC
 #else
-  #ifdef GCC_HASCLASSVISIBILITY
-    #define FXIMPORT __attribute__ ((visibility("default")))
-    #define FXEXPORT __attribute__ ((visibility("default")))
-    #define FXDLLLOCAL __attribute__ ((visibility("hidden")))
-    #define FXDLLPUBLIC __attribute__ ((visibility("default")))
-  #else
-    #define FXIMPORT
-    #define FXEXPORT
-    #define FXDLLLOCAL
-    #define FXDLLPUBLIC
-  #endif
+#ifdef GCC_HASCLASSVISIBILITY
+#define FXIMPORT __attribute__((visibility("default")))
+#define FXEXPORT __attribute__((visibility("default")))
+#define FXDLLLOCAL __attribute__((visibility("hidden")))
+#define FXDLLPUBLIC __attribute__((visibility("default")))
+#else
+#define FXIMPORT
+#define FXEXPORT
+#define FXDLLLOCAL
+#define FXDLLPUBLIC
+#endif
 #endif
 
 #ifdef FORG_EXPORTS
-#   define FORG_API FXEXPORT
+#define FORG_API FXEXPORT
 #else
 #ifdef FORG_STATIC
-#   define FORG_API
+#define FORG_API
 #else
-#   define FORG_API FXIMPORT
+#define FORG_API FXIMPORT
 #endif
 #endif
 

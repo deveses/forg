@@ -4,15 +4,15 @@
 
 #include "forg/script/yaml/YAMLParser.h"
 
-namespace
-{
+namespace {
 std::string TestDataPath(const char* filename)
 {
     return std::string(FORG_TEST_DATA_DIR) + "/" + filename;
 }
-}
+} // namespace
 
-TEST_CASE("YAMLParser reads config maps as XML-like nodes and attributes", "[script][yaml]")
+TEST_CASE("YAMLParser reads config maps as XML-like nodes and attributes",
+          "[script][yaml]")
 {
     forg::script::yaml::YAMLParser parser;
     const std::string path = TestDataPath("simple.yaml");
@@ -27,14 +27,16 @@ TEST_CASE("YAMLParser reads config maps as XML-like nodes and attributes", "[scr
     forg::script::yaml::YAMLNode* renderer = document->FindNode("renderer");
     REQUIRE(renderer != nullptr);
     REQUIRE(renderer->FindAttribute("driver") != nullptr);
-    REQUIRE(renderer->FindAttribute("driver")->GetContent() == "libmetalrenderer.dylib");
+    REQUIRE(renderer->FindAttribute("driver")->GetContent() ==
+            "libmetalrenderer.dylib");
 
     forg::script::yaml::YAMLNode* window = document->FindNode("window");
     REQUIRE(window != nullptr);
     REQUIRE(window->FindAttribute("width") != nullptr);
     REQUIRE(window->FindAttribute("width")->GetContent() == "800");
 
-    forg::script::yaml::YAMLNode* controlserver = document->FindNode("controlserver");
+    forg::script::yaml::YAMLNode* controlserver =
+        document->FindNode("controlserver");
     REQUIRE(controlserver != nullptr);
     REQUIRE(controlserver->FindAttribute("enabled") != nullptr);
     REQUIRE(controlserver->FindAttribute("enabled")->GetContent() == "true");
@@ -42,7 +44,8 @@ TEST_CASE("YAMLParser reads config maps as XML-like nodes and attributes", "[scr
     parser.Close();
 }
 
-TEST_CASE("YAMLParser releases its document tree on destruction", "[script][yaml]")
+TEST_CASE("YAMLParser releases its document tree on destruction",
+          "[script][yaml]")
 {
     {
         forg::script::yaml::YAMLParser parser;
@@ -89,7 +92,8 @@ TEST_CASE("YAMLParser finds nested and sibling mappings", "[script][yaml]")
     REQUIRE(device->FindAttribute("name") != nullptr);
     REQUIRE(device->FindAttribute("name")->GetContent() == "builtin");
     REQUIRE(device->FindAttribute("description") != nullptr);
-    REQUIRE(device->FindAttribute("description")->GetContent() == "Built-in output #0");
+    REQUIRE(device->FindAttribute("description")->GetContent() ==
+            "Built-in output #0");
 
     forg::script::yaml::YAMLNode* empty = document->FindNode("empty");
     REQUIRE(empty != nullptr);

@@ -27,63 +27,59 @@
 
 namespace forg {
 
-    // Brief description
-    /**
-    * Detailed description
-    * @author eses
-    * @version 1.0
-    * @date 04-2006
-    * @todo
-    * @bug
-    * @warning
-    */
-    class FORG_API PerformanceCounter
-    {
-    //Nested
-    public:
-
+// Brief description
+/**
+ * Detailed description
+ * @author eses
+ * @version 1.0
+ * @date 04-2006
+ * @todo
+ * @bug
+ * @warning
+ */
+class FORG_API PerformanceCounter
+{
+    // Nested
+  public:
     //'structors
-    public:
-        PerformanceCounter();
-        ~PerformanceCounter();
+  public:
+    PerformanceCounter();
+    ~PerformanceCounter();
 
-    //Attributes
-    protected:
-        uint64 m_iFrequency;    //need to be quadword aligned
+    // Attributes
+  protected:
+    uint64 m_iFrequency; // need to be quadword aligned
 
-        uint64 m_iDuration;
-        uint64 m_iStart;
+    uint64 m_iDuration;
+    uint64 m_iStart;
 
-        bool   m_bStarted;
+    bool m_bStarted;
 
-    //Public Operators
-    public:
+    // Public Operators
+  public:
+    // Public Methods
+  public:
+    int Start();
+    int Stop();
+    int Pause();
+    int Resume();
 
-    //Public Methods
-    public:
-        int Start();
-        int Stop();
-        int Pause();
-        int Resume();
+    int GetDuration(uint64& duration);
+    int GetDuration(double& duration);
+    int GetDurationInMs(uint64& duration);
+    int GetDurationInMs(double& duration);
+    int GetDurationInUs(uint64& duration);
+    int GetDurationInUs(double& duration);
 
-        int GetDuration(uint64& duration);
-        int GetDuration(double& duration);
-        int GetDurationInMs(uint64& duration);
-        int GetDurationInMs(double& duration);
-        int GetDurationInUs(uint64& duration);
-        int GetDurationInUs(double& duration);
+    // Helpers
+  private:
+    uint64 GetTime();
+    uint64 GetFrequency();
+};
 
-    //Helpers
-    private:
-        uint64 GetTime();
-        uint64 GetFrequency();
-    };
+} // namespace forg
 
-
-
-}
-
-#endif  //_FORG_PERFORMANCE_COUNTER_H_
+#endif //_FORG_PERFORMANCE_COUNTER_H_
 
 /*
 class CDuration
@@ -131,7 +127,7 @@ QueryPerformanceCounter(&m_liStop);
 
 inline double CDuration::GetDuration(void) const
 {
-return (double)(m_liStop.QuadPart-m_liStart.QuadPart-m_llCorrection)*1000000.0 / m_llFrequency;
+return (double)(m_liStop.QuadPart-m_liStart.QuadPart-m_llCorrection)*1000000.0 /
+m_llFrequency;
 }
 */
-

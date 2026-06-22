@@ -27,33 +27,33 @@
 #include "rendering/IRenderer.h"
 
 #ifdef _WIN32
-//#   warning(dllexport in MSVC style)
-#   define DLLEXPORT __declspec( dllexport )
-#   define DLLIMPORT __declspec( dllimport )
+// #   warning(dllexport in MSVC style)
+#define DLLEXPORT __declspec(dllexport)
+#define DLLIMPORT __declspec(dllimport)
 #else
-#   define DLLEXPORT
-#   define DLLIMPORT
+#define DLLEXPORT
+#define DLLIMPORT
 #endif
-
 
 #ifdef SWRENDERER_EXPORTS
-//#   warning(exporting symbols)
-#   define SWRENDERER_API DLLEXPORT
+// #   warning(exporting symbols)
+#define SWRENDERER_API DLLEXPORT
 #else
-#   ifdef SWRENDERER_STATIC
-//#       warning(static library)
-#       define SWRENDERER_API
-#   else
-//#       warning(importing symbols)
-#       define SWRENDERER_API DLLIMPORT
-#   endif
+#ifdef SWRENDERER_STATIC
+// #       warning(static library)
+#define SWRENDERER_API
+#else
+// #       warning(importing symbols)
+#define SWRENDERER_API DLLIMPORT
+#endif
 #endif
 
-extern "C" {
+extern "C"
+{
 
-SWRENDERER_API forg::IRenderer* forgCreateRenderer();
-
+    SWRENDERER_API forg::IRenderer* forgCreateRenderer();
+    SWRENDERER_API const forg::RendererPluginDescriptor*
+    forgGetRendererPluginDescriptor();
 }
 
-
-#endif  //_GL_RENDERER_H_
+#endif //_GL_RENDERER_H_

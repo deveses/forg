@@ -6,15 +6,14 @@ using forg::net::Command;
 using forg::net::TryGetFloat;
 using forg::net::TryGetInt;
 
-namespace
-{
+namespace {
 Command withParam(const char* key, const char* value)
 {
     Command cmd;
     cmd.params[key] = value;
     return cmd;
 }
-}
+} // namespace
 
 TEST_CASE("TryGetInt parses a plain integer", "[net][command]")
 {

@@ -24,12 +24,12 @@
 #endif
 
 #include "base.h"
+#include "math/Vector2.h"
+#include "math/Vector4.h"
 #include "rendering/IRenderDevice.h"
 #include "rendering/VertexDeclaration.h"
-#include "math/Vector4.h"
-#include "math/Vector2.h"
 
-namespace forg { namespace rendering { namespace reference {
+namespace forg::rendering::reference {
 
 struct VSInput
 {
@@ -73,10 +73,9 @@ struct SWSampler
     uint Sample(float u, float v);
 };
 
-class FORG_API SWRenderDevice
-	: public IRenderDevice
+class FORG_API SWRenderDevice : public IRenderDevice
 {
-    enum 
+    enum
     {
         TM_VIEW = 0,
         TM_PROJECTION,
@@ -98,9 +97,18 @@ class FORG_API SWRenderDevice
         _TM_COUNT
     };
 
-    enum { NUM_SAMPLERS = 16};
-    enum { NUM_STREAMS = 8};
-    enum { NUM_LIGHTS = 8};
+    enum
+    {
+        NUM_SAMPLERS = 16
+    };
+    enum
+    {
+        NUM_STREAMS = 8
+    };
+    enum
+    {
+        NUM_LIGHTS = 8
+    };
 
     struct SStreamSource
     {
@@ -108,10 +116,7 @@ class FORG_API SWRenderDevice
         int offsetInBytes;
         int stride;
 
-        SStreamSource()
-        {
-            Clear();
-        }
+        SStreamSource() { Clear(); }
 
         void Clear()
         {
@@ -120,7 +125,7 @@ class FORG_API SWRenderDevice
             stride = 0;
         }
 
-        bool IsData() const { return (streamData!=0); }
+        bool IsData() const { return (streamData != 0); }
     };
 
     int m_refCount;
@@ -144,17 +149,17 @@ class FORG_API SWRenderDevice
     Matrix4 m_transforms[_TM_COUNT];
 
     Material m_material;
-    Light    m_lights[NUM_LIGHTS];
+    Light m_lights[NUM_LIGHTS];
 
     // Associations
     IIndexBuffer* m_indices;
     SStreamSource m_streams[NUM_STREAMS];
-    //ITexture* m_textures[NUM_SAMPLERS];
+    // ITexture* m_textures[NUM_SAMPLERS];
     SWSampler m_samplers[NUM_SAMPLERS];
 
-public:
+  public:
     SWRenderDevice(HWIN handle);
-	virtual ~SWRenderDevice();
+    virtual ~SWRenderDevice();
 
     int Initialize(uint _width, uint _height);
     void CreateBuffers();
@@ -169,69 +174,55 @@ public:
     void DrawTriangle(const VSOutput* vertices, int usage);
 
     uint* GetBuffer() { return m_frame_buffer; }
-    void SetBufferSize(uint _width, uint _height) { m_width = _width; m_height = _height; }
+    void SetBufferSize(uint _width, uint _height)
+    {
+        m_width = _width;
+        m_height = _height;
+    }
 
     HWIN GetHWIN() { return m_window; }
     uint GetWidth() { return m_width; }
     uint GetHeight() { return m_height; }
 
     // IRenderDevice implementation
-public:
+  public:
     virtual int BeginScene(void);
     virtual int EndScene(void);
     virtual int Clear(uint flags, Color color, float zdepth, int stencil);
     virtual int Present();
     virtual int Reset();
-    
-    virtual LPVERTEXDECLARATION CreateVertexDeclaration(const VertexElement* /*pVertexElements*/) { return 0; }
-	virtual LPVERTEXBUFFER CreateVertexBuffer(
-		uint length,
-		uint usage,
-		uint pool
-        );
-	virtual	LPINDEXBUFFER CreateIndexBuffer(
-			uint length,
-			uint usage,
-			bool sixteenBitIndices,
-			uint pool
-            );
 
-	virtual LPTEXTURE CreateTexture(
-		uint Width,
-		uint Height,
-		uint Levels,
-		uint Usage,
-		uint Format,
-		uint Pool
-        );
+    virtual LPVERTEXDECLARATION
+    CreateVertexDeclaration(const VertexElement* /*pVertexElements*/)
+    {
+        return 0;
+    }
+    virtual LPVERTEXBUFFER CreateVertexBuffer(uint length, uint usage,
+                                              uint pool);
+    virtual LPINDEXBUFFER CreateIndexBuffer(uint length, uint usage,
+                                            bool sixteenBitIndices, uint pool);
 
-	virtual LPTEXTURE CreateTextureFromFile(
-		const char* /*filename*/,
-		uint /*Width*/,
-		uint /*Height*/,
-		uint /*Levels*/,
-		uint /*Usage*/,
-		uint /*Format*/,
-		uint /*Pool*/
-        ) { return 0; }
+    virtual LPTEXTURE CreateTexture(uint Width, uint Height, uint Levels,
+                                    uint Usage, uint Format, uint Pool);
 
-	virtual int DrawIndexedPrimitive(
-		PrimitiveType primitiveType,
-		int baseVertex,
-		int minVertexIndex,
-		int numVertices,
-		int startIndex,
-        int primCount);
+    virtual LPTEXTURE CreateTextureFromFile(const char* /*filename*/,
+                                            uint /*Width*/, uint /*Height*/,
+                                            uint /*Levels*/, uint /*Usage*/,
+                                            uint /*Format*/, uint /*Pool*/
+    )
+    {
+        return 0;
+    }
 
-	virtual int DrawIndexedUserPrimitives(
-		PrimitiveType primitiveType,
-		uint minVertexIndex,
-		uint numVertexIndices,
-		uint primitiveCount,
-		const void* indexData,
-		bool sixteenBitIndices,
-		const void* vertexStreamZeroData,
-        uint vertexStreamZeroStride);
+    virtual int DrawIndexedPrimitive(PrimitiveType primitiveType,
+                                     int baseVertex, int minVertexIndex,
+                                     int numVertices, int startIndex,
+                                     int primCount);
+
+    virtual int DrawIndexedUserPrimitives(
+        PrimitiveType primitiveType, uint minVertexIndex, uint numVertexIndices,
+        uint primitiveCount, const void* indexData, bool sixteenBitIndices,
+        const void* vertexStreamZeroData, uint vertexStreamZeroStride);
 
     virtual void SetTransform(TransformType state, const Matrix4& matrix);
 
@@ -239,35 +230,31 @@ public:
 
     virtual int SetVertexDeclaration(const VertexDeclaration* pDecl);
 
-	virtual int SetStreamSource(
-		int streamNumber,
-		IVertexBuffer* streamData,
-		int offsetInBytes,
-        int stride);
+    virtual int SetStreamSource(int streamNumber, IVertexBuffer* streamData,
+                                int offsetInBytes, int stride);
 
-	virtual int SetIndices(
-		IIndexBuffer* pIndexData
-        );
+    virtual int SetIndices(IIndexBuffer* pIndexData);
 
-    virtual int SetViewport(uint X, uint Y, uint Width, uint Height, float MinZ = 0.0f, float MaxZ = 1.0f);
+    virtual int SetViewport(uint X, uint Y, uint Width, uint Height,
+                            float MinZ = 0.0f, float MaxZ = 1.0f);
 
     virtual int GetViewport(Viewport* viewport);
 
     virtual int SetRenderState(uint /*state*/, uint /*value*/) { return 0; };
 
-	virtual int SetTexture(uint Sampler, ITexture* pTexture);
+    virtual int SetTexture(uint Sampler, ITexture* pTexture);
 
     virtual int SetLight(uint Index, const Light* pLight);
 
-    virtual int LightEnable(
-        uint /*LightIndex*/,
-        bool /*bEnable*/
-        ) { return 0; };
+    virtual int LightEnable(uint /*LightIndex*/, bool /*bEnable*/
+    )
+    {
+        return 0;
+    };
 
     virtual int SetMaterial(const Material* pMaterial);
-
 };
 
-} } }
+} // namespace forg::rendering::reference
 
-#endif  // _FORG_REFERENCE_SW_RENDER_DEVICE_H_
+#endif // _FORG_REFERENCE_SW_RENDER_DEVICE_H_

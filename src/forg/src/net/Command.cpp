@@ -5,11 +5,12 @@
 #include <cmath>
 #include <cstdlib>
 
-namespace forg { namespace net {
+namespace forg::net {
 
 bool TryGetString(const Command& cmd, const char* key, std::string& out)
 {
-    std::map<std::string, std::string>::const_iterator it = cmd.params.find(key);
+    std::map<std::string, std::string>::const_iterator it =
+        cmd.params.find(key);
     if (it == cmd.params.end())
     {
         return false;
@@ -65,4 +66,4 @@ bool TryGetInt(const Command& cmd, const char* key, int& out)
     return true;
 }
 
-}}
+} // namespace forg::net

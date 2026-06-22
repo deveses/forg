@@ -1,5 +1,5 @@
+#include "ParserBase.h"
 #include "generic/Document.h"
 #include "lexer.h"
-#include "ParserBase.h"
 #include "xml/XMLParser.h"
 #include "yaml/YAMLParser.h"

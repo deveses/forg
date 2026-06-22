@@ -30,25 +30,25 @@ namespace forg {
 // Ken Perlin noise
 class FORG_API PerlinNoise
 {
-    public:
+  public:
     PerlinNoise();
 
     //////////////////////////////////////////////////////////////////////
     // Attributes
     //////////////////////////////////////////////////////////////////////
-    private:
-    bool    m_bInitialized;
-    int     m_nOctavesCount;
-    float   m_fPersistence;
+  private:
+    bool m_bInitialized;
+    int m_nOctavesCount;
+    float m_fPersistence;
 
-    public:
+  public:
     void set_Persistence(float p) { m_fPersistence = p; }
     void set_OctavesCount(int n) { m_nOctavesCount = (n > 0 ? n : 0); }
 
     //////////////////////////////////////////////////////////////////////
     // Public methods
     //////////////////////////////////////////////////////////////////////
-    public:
+  public:
     float int_noise2d(float x, float y);
     float grad_noise2d(float x, float y);
     float simplex_noise2d(float x, float y);
@@ -56,7 +56,7 @@ class FORG_API PerlinNoise
     //////////////////////////////////////////////////////////////////////
     // Helpers
     //////////////////////////////////////////////////////////////////////
-    private:
+  private:
     // perlin / gradient method
     void init();
     void grad2d(float x, float y, float& gx, float& gy);
@@ -75,8 +75,6 @@ class FORG_API PerlinNoise
     float PerlinNoise_2D(float x, float y);
 };
 
+} // namespace forg
 
-}
-
-#endif  // _FORG_NOISE_H_
-
+#endif // _FORG_NOISE_H_

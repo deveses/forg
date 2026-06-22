@@ -25,47 +25,45 @@
 
 #include "mesh/xfile/xreader.h"
 
-namespace forg { namespace xfile { namespace reader {
+namespace forg::xfile::reader {
 
-	class xbinreader : public xreader {
-	public:
-		xbinreader(std::ifstream& input, bool doubleFloat);
+class xbinreader : public xreader
+{
+  public:
+    xbinreader(std::ifstream& input, bool doubleFloat);
 
-	protected:
-		std::list<WORD> m_last_tokens;
-		std::list<WORD> m_next_tokens;
-        bool m_bDoubleFloat;
-        std::ifstream& m_input;
+  protected:
+    std::list<WORD> m_last_tokens;
+    std::list<WORD> m_next_tokens;
+    bool m_bDoubleFloat;
+    std::ifstream& m_input;
 
-	public:
-		WORD ReadToken();
-		int UnreadToken();
-		int ReadInteger(int& value);
-		int ReadIntegerList(IntegerList& int_list);
-		int	ReadFloatList(FloatList& float_list);
-		int ReadStringList(StringList& string_list);
-		int ReadName(xstring& name);
-		int ReadString(xstring& str);
-		int ReadGUID(xguid& tguid);
+  public:
+    WORD ReadToken();
+    int UnreadToken();
+    int ReadInteger(int& value);
+    int ReadIntegerList(IntegerList& int_list);
+    int ReadFloatList(FloatList& float_list);
+    int ReadStringList(StringList& string_list);
+    int ReadName(xstring& name);
+    int ReadString(xstring& str);
+    int ReadGUID(xguid& tguid);
 
-    protected:
-        /// returns true if read failed
-        virtual bool read_data(char* buffer, unsigned int count);
+  protected:
+    /// returns true if read failed
+    virtual bool read_data(char* buffer, unsigned int count);
 
-        template <typename T>
-        int read_value(T& var)
-        {
-            return read_data((char*)&var, sizeof(T));
-        }
+    template <typename T> int read_value(T& var)
+    {
+        return read_data((char*)&var, sizeof(T));
+    }
 
-        template <typename T>
-        int read_value(T* buffer, size_t count)
-        {
-            return read_data((char*)buffer, sizeof(T)*count);
-        }
-	};
+    template <typename T> int read_value(T* buffer, size_t count)
+    {
+        return read_data((char*)buffer, sizeof(T) * count);
+    }
+};
 
-
-}}}
+} // namespace forg::xfile::reader
 
 #endif // XFILE_XBINREADER_INCLUDED

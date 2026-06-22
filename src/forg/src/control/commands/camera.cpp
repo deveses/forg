@@ -2,7 +2,7 @@
 
 #include "control/commands/Commands.h"
 
-namespace forg { namespace control {
+namespace forg::control {
 
 using forg::net::Command;
 using forg::net::TryGetFloat;
@@ -38,7 +38,8 @@ std::string DispatchCamera(SceneControlContext& ctx, const Command& cmd)
     if (v == "camera.zoom")
     {
         float fov = 0.0f;
-        if (!TryGetFloat(cmd, "fov", fov)) return fail("badparam");
+        if (!TryGetFloat(cmd, "fov", fov))
+            return fail("badparam");
         ctx.camera->FieldOfView(fov);
         return ok();
     }
@@ -60,8 +61,9 @@ std::string DispatchCamera(SceneControlContext& ctx, const Command& cmd)
     if (v == "camera.place")
     {
         float px, py, pz, tx, ty, tz;
-        if (!(TryGetFloat(cmd, "px", px) && TryGetFloat(cmd, "py", py) && TryGetFloat(cmd, "pz", pz) &&
-              TryGetFloat(cmd, "tx", tx) && TryGetFloat(cmd, "ty", ty) && TryGetFloat(cmd, "tz", tz)))
+        if (!(TryGetFloat(cmd, "px", px) && TryGetFloat(cmd, "py", py) &&
+              TryGetFloat(cmd, "pz", pz) && TryGetFloat(cmd, "tx", tx) &&
+              TryGetFloat(cmd, "ty", ty) && TryGetFloat(cmd, "tz", tz)))
         {
             return fail("badparam");
         }
@@ -73,4 +75,4 @@ std::string DispatchCamera(SceneControlContext& ctx, const Command& cmd)
     return fail("unknown");
 }
 
-}}
+} // namespace forg::control

@@ -18,30 +18,33 @@
 
 // Plain C++ (no Metal here) so it mirrors swrenderer/SWRenderer.cpp exactly.
 
+#include "MetalRenderDevice.h"
 #include "base.h"
 #include "rendering/IRenderer.h"
-#include "MetalRenderDevice.h"
 
 namespace forg {
 
-class MetalRenderer
-    : public IRenderer
+class MetalRenderer : public IRenderer
 {
-public:
+  public:
     MetalRenderer() {}
     virtual ~MetalRenderer() {}
 
     LPCTSTR get_Name() { return _T("Metal renderer"); }
 
     // Covariant return type is fine; mirror SWRenderer::CreateDevice.
-    IRenderDevice* CreateDevice(HWIN hWindow, RENDER_PARAMETERS* pPresentationParameters);
+    IRenderDevice* CreateDevice(HWIN hWindow,
+                                RENDER_PARAMETERS* pPresentationParameters);
 };
 
-IRenderDevice* MetalRenderer::CreateDevice(HWIN hWindow, RENDER_PARAMETERS* pPresentationParameters)
+IRenderDevice*
+MetalRenderer::CreateDevice(HWIN hWindow,
+                            RENDER_PARAMETERS* pPresentationParameters)
 {
     MetalRenderDevice* dev = new MetalRenderDevice(hWindow);
 
-    if (dev->Initialize(pPresentationParameters->BackBufferWidth, pPresentationParameters->BackBufferHeight) != FORG_OK)
+    if (dev->Initialize(pPresentationParameters->BackBufferWidth,
+                        pPresentationParameters->BackBufferHeight) != FORG_OK)
     {
         dev->Release();
         dev = 0;
@@ -50,13 +53,20 @@ IRenderDevice* MetalRenderer::CreateDevice(HWIN hWindow, RENDER_PARAMETERS* pPre
     return dev;
 }
 
-}
+} // namespace forg
 
 // C linkage so the macapp loader can dlsym("forgCreateRenderer") - matches the
 // extern "C" declaration swrenderer exposes through SWRenderer.h.
 extern "C" forg::IRenderer* forgCreateRenderer();
+extern "C" const forg::RendererPluginDescriptor*
+forgGetRendererPluginDescriptor();
 
-forg::IRenderer* forgCreateRenderer()
+forg::IRenderer* forgCreateRenderer() { return (new forg::MetalRenderer()); }
+
+const forg::RendererPluginDescriptor* forgGetRendererPluginDescriptor()
 {
-    return (new forg::MetalRenderer());
+    static const forg::RendererPluginDescriptor descriptor{
+        sizeof(forg::RendererPluginDescriptor), forg::RendererPluginApiVersion,
+        &forgCreateRenderer};
+    return &descriptor;
 }

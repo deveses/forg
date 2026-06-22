@@ -23,36 +23,37 @@
 #pragma once
 #endif
 
+#include "GLRenderDevice.h"
 #include "base.h"
 #include "rendering/IRenderer.h"
-#include "GLRenderDevice.h"
-
 
 #ifdef _WIN32
-//#   warning(dllexport in MSVC style)
-#   define DLLEXPORT __declspec( dllexport )
-#   define DLLIMPORT __declspec( dllimport )
+// #   warning(dllexport in MSVC style)
+#define DLLEXPORT __declspec(dllexport)
+#define DLLIMPORT __declspec(dllimport)
 #else
-#   define DLLEXPORT
-#   define DLLIMPORT
+#define DLLEXPORT
+#define DLLIMPORT
 #endif
-
 
 #ifdef GLRENDERER_EXPORTS
-//#   warning(exporting symbols)
-#   define GLRENDERER_API DLLEXPORT
+// #   warning(exporting symbols)
+#define GLRENDERER_API DLLEXPORT
 #else
-#   ifdef GLRENDERER_STATIC
-//#       warning(static library)
-#       define GLRENDERER_API
-#   else
-//#       warning(importing symbols)
-#       define GLRENDERER_API DLLIMPORT
-#   endif
+#ifdef GLRENDERER_STATIC
+// #       warning(static library)
+#define GLRENDERER_API
+#else
+// #       warning(importing symbols)
+#define GLRENDERER_API DLLIMPORT
+#endif
 #endif
 
-extern "C" {
-GLRENDERER_API forg::IRenderer* forgCreateRenderer();
+extern "C"
+{
+    GLRENDERER_API forg::IRenderer* forgCreateRenderer();
+    GLRENDERER_API const forg::RendererPluginDescriptor*
+    forgGetRendererPluginDescriptor();
 }
 
-#endif  //_GL_RENDERER_H_
+#endif //_GL_RENDERER_H_

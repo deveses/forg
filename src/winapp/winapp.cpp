@@ -1,140 +1,216 @@
 // winapp.cpp : Defines the entry point for the application.
 //
 
-#include "stdafx.h"
 #include "winapp.h"
 #include "Viewport.h"
+#include "stdafx.h"
 
 #include "forg.h"
+#include "forg/script/yaml/YAMLParser.h"
 
-/////////////////////////////////////////////////////////////////////////////////////////
-// 
-/////////////////////////////////////////////////////////////////////////////////////////
+#include <cstring>
 
-class CWinApp : public emfc::EApplication  
+namespace {
+
+struct AppConfig
 {
-	Viewport* m_winMain;
-    forg::IRenderer* m_renderer;
-
-public:
-	BOOL InitApplication();
-	CWinApp();
-	virtual ~CWinApp();
-    virtual BOOL OnIdle( LONG lCount );
+    const char* DefaultDriver = "glrenderer.dll";
+    char Driver[MAX_PATH] = {};
+    int Width = 100;
+    int Height = 100;
+    int X = 10;
+    int Y = 10;
 };
 
-CWinApp::CWinApp()
+void ShowError(LPCTSTR message)
 {
-    m_winMain = 0;
-    m_renderer = 0;
+    MessageBox(NULL, message, _T("Error"), MB_OK | MB_ICONERROR);
 }
 
-CWinApp::~CWinApp()
+void ShowLastError()
 {
-    delete m_winMain;
-    delete m_renderer;
-    m_winMain = 0;
-    m_renderer = 0;
-}
+    LPVOID message = NULL;
+    DWORD error = GetLastError();
 
-BOOL CWinApp::InitApplication()
-{
-    /*okna glowne*/
-    /*Usually an application should use SW_SHOW for the Y parameter
-      because SW_SHOW allows the proper functioning for WS_MAXIMIZE 
-      and WS_MINIMIZE styles.*/
-
-    HMODULE module = 0;
-    int winWidth = 100;
-    int winHeight = 100;
-	int winX = 10;
-	int winY = 10;
-
-    forg::script::xml::XMLParser config;
-
-    config.Open("config.xml");
-    forg::script::xml::XMLDocument* xml_doc = config.Parse();
-
-    if (xml_doc)
+    if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                          FORMAT_MESSAGE_FROM_SYSTEM |
+                          FORMAT_MESSAGE_IGNORE_INSERTS,
+                      NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                      reinterpret_cast<LPTSTR>(&message), 0, NULL) != 0)
     {
-        if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("renderer"))
+        MessageBox(NULL, static_cast<LPCTSTR>(message), _T("Error"),
+                   MB_OK | MB_ICONERROR);
+        LocalFree(message);
+    }
+    else
+    {
+        ShowError(_T("An unknown Win32 error occurred."));
+    }
+}
+
+bool ChangeToExecutableDirectory()
+{
+    TCHAR path[MAX_PATH] = {};
+    DWORD length = GetModuleFileName(NULL, path, MAX_PATH);
+    if (length == 0)
+        return false;
+
+    if (length >= MAX_PATH)
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        return false;
+    }
+
+    TCHAR* lastSlash = _tcsrchr(path, _T('\\'));
+    if (lastSlash == nullptr)
+        return true;
+
+    *lastSlash = _T('\0');
+    return SetCurrentDirectory(path) != FALSE;
+}
+
+AppConfig LoadConfig()
+{
+    AppConfig config;
+    strncpy_s(config.Driver, config.DefaultDriver, _TRUNCATE);
+
+    forg::script::yaml::YAMLParser parser;
+    parser.Open("config.yml");
+    forg::script::yaml::YAMLDocument* document = parser.Parse();
+
+    if (!document)
+        return config;
+
+    if (forg::script::yaml::YAMLNode* node = document->FindNode("renderer"))
+    {
+        if (forg::script::yaml::YAMLNode* driver =
+                node->FindAttribute("driver"))
         {
-            if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("driver"))
-            {                   
-                module = LoadLibrary(xml_att->GetContent().c_str());
+            strncpy_s(config.Driver, driver->GetContent().c_str(), _TRUNCATE);
+        }
+    }
+
+    if (forg::script::yaml::YAMLNode* node = document->FindNode("window"))
+    {
+        if (forg::script::yaml::YAMLNode* width = node->FindAttribute("width"))
+            config.Width = atoi(width->GetContent().c_str());
+
+        if (forg::script::yaml::YAMLNode* height =
+                node->FindAttribute("height"))
+            config.Height = atoi(height->GetContent().c_str());
+
+        if (forg::script::yaml::YAMLNode* posx = node->FindAttribute("posx"))
+            config.X = atoi(posx->GetContent().c_str());
+
+        if (forg::script::yaml::YAMLNode* posy = node->FindAttribute("posy"))
+            config.Y = atoi(posy->GetContent().c_str());
+    }
+
+    return config;
+}
+
+forg::IRenderer* CreateRenderer(HMODULE module)
+{
+    auto getDescriptor = reinterpret_cast<forg::PFGETRENDERERPLUGINDESCRIPTOR>(
+        GetProcAddress(module, "forgGetRendererPluginDescriptor"));
+    forg::PFCREATERENDERER createRenderer = nullptr;
+
+    if (getDescriptor != nullptr)
+    {
+        const forg::RendererPluginDescriptor* descriptor = getDescriptor();
+        if (forg::IsRendererPluginCompatible(descriptor))
+            createRenderer = descriptor->CreateRenderer;
+    }
+    else
+    {
+        createRenderer = reinterpret_cast<forg::PFCREATERENDERER>(
+            GetProcAddress(module, "forgCreateRenderer"));
+    }
+
+    if (createRenderer == nullptr)
+        return nullptr;
+
+    return createRenderer();
+}
+
+int Run(Viewport& viewport)
+{
+    MSG msg = {};
+    bool running = true;
+
+    while (running)
+    {
+        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            if (msg.message == WM_QUIT)
+            {
+                running = false;
+                break;
             }
+
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
         }
 
-        if (forg::script::xml::XMLNode* xml_node = xml_doc->FindNode("window"))
-        {
-            if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("width"))
-            {
-                winWidth = atoi(xml_att->GetContent().c_str());
-            }
-		
-			if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("height"))
-			{
-				winHeight = atoi(xml_att->GetContent().c_str());
-			}
-
-			if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("posx"))
-			{
-				winX = atoi(xml_att->GetContent().c_str());
-			}
-
-			if (forg::script::xml::XMLNode* xml_att = xml_node->FindAttribute("posy"))
-			{
-				winY = atoi(xml_att->GetContent().c_str());
-			}
-
-		}
+        if (running)
+            viewport.OnPaint();
     }
-    
-    //HMODULE module = LoadLibrary("glrenderer_vc_d.dll");
-    //HMODULE module = LoadLibrary("swrenderer_vc_d.dll");
-    if (module == 0) return FALSE;
 
-    forg::PFCREATERENDERER pfCreateRenderer = (forg::PFCREATERENDERER)GetProcAddress(module, "forgCreateRenderer");
-    if (pfCreateRenderer == 0) return FALSE;
-
-    //m_renderer = forgCreateRenderer();
-    m_renderer = pfCreateRenderer();
-    if (m_renderer == 0) return FALSE;
-
-    m_winMain = new Viewport();
-    //if (m_winMain.Create("EWindow","3Ditor",CW_USEDEFAULT ,SW_MAXIMIZE,480,460,WS_SIZEBOX|WS_MAXIMIZEBOX|WS_MAXIMIZE|WS_TILEDWINDOW|WS_CLIPCHILDREN|WS_CLIPSIBLINGS ))
-    if (m_winMain->Create(m_renderer, winX, winY, winWidth,winHeight, NULL))
-        return FALSE;
-
-    m_winMain->ShowWindow(SW_SHOW);
-    m_winMain->SetFocus();
-    
-    return TRUE;
+    return static_cast<int>(msg.wParam);
 }
 
-BOOL CWinApp::OnIdle( LONG lCount )
+} // namespace
+
+int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                       LPTSTR lpCmdLine, int nCmdShow)
 {
-    m_winMain->OnPaint();
+    INITCOMMONCONTROLSEX commonControls = {};
+    commonControls.dwSize = sizeof(commonControls);
+    commonControls.dwICC = ICC_BAR_CLASSES;
+    InitCommonControlsEx(&commonControls);
 
-    return TRUE;
+    if (!ChangeToExecutableDirectory())
+    {
+        ShowLastError();
+        return 1;
+    }
+
+    AppConfig config = LoadConfig();
+    HMODULE module = LoadLibraryA(config.Driver);
+    if (module == NULL)
+    {
+        ShowLastError();
+        return 1;
+    }
+
+    forg::IRenderer* renderer = CreateRenderer(module);
+    if (renderer == nullptr)
+    {
+        ShowError(
+            _T("The renderer plugin does not expose a compatible renderer."));
+        FreeLibrary(module);
+        return 1;
+    }
+
+    int result = 1;
+    {
+        Viewport viewport;
+        if (viewport.Create(renderer, config.X, config.Y, config.Width,
+                            config.Height, NULL) != 0)
+        {
+            ShowLastError();
+            delete renderer;
+            FreeLibrary(module);
+            return 1;
+        }
+
+        viewport.ShowWindow(nCmdShow);
+        viewport.SetFocus();
+        result = Run(viewport);
+    }
+
+    delete renderer;
+    FreeLibrary(module);
+
+    return result;
 }
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// 
-/////////////////////////////////////////////////////////////////////////////////////////
-
-int APIENTRY _tWinMain(HINSTANCE hInstance,
-                     HINSTANCE hPrevInstance,
-                     LPTSTR    lpCmdLine,
-                     int       nCmdShow)
-{
-
-    CWinApp app;
-
-    app.InitCommonControls();
-    if (! app.InitApplication()) app.ErrorBox();
-    else app.Run();
-
-	return 0;
-}
-

@@ -44,7 +44,7 @@ enum GLCaps
     GLCaps_SeparateSpecularColor,
 
     /// GL_ARB_multitexture
-	GLCaps_Multitexture,
+    GLCaps_Multitexture,
 
     /// GL_ARB_texture_compression
     GLCaps_TextureCompression,
@@ -77,33 +77,33 @@ enum GLCaps
     GLCaps_PixelBufferObject,
 
 #ifdef _WIN32
-	GLCaps_SwapControl,
+    GLCaps_SwapControl,
 #endif
-	GLCaps_Count
+    GLCaps_Count
 };
 
 class GLDeviceCaps
 {
-public:
-	GLDeviceCaps(void);
-	~GLDeviceCaps(void);
+  public:
+    GLDeviceCaps(void);
+    ~GLDeviceCaps(void);
 
-private:
-	BitArray m_capabilities;
+  private:
+    BitArray m_capabilities;
 
-public:
-	int	m_nVersionMajor;
-	int	m_nVersionMinor;
-	int	m_nVersionRelease;
+  public:
+    int m_nVersionMajor;
+    int m_nVersionMinor;
+    int m_nVersionRelease;
 
-public:
-	int ReadExtensions();
-	bool HasCapability(int capability) const;
+  public:
+    int ReadExtensions();
+    bool HasCapability(int capability) const;
 
-private:
-	int GetExtension(int ext_num);
+  private:
+    int GetExtension(int ext_num);
 };
 
-}
+} // namespace forg
 
-#endif  // _GL_DEVICE_CAPS_H_
+#endif // _GL_DEVICE_CAPS_H_

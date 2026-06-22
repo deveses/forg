@@ -5,8 +5,8 @@
 // Cocoa must come first: forg's base.h defines macros (null, IN, OUT)
 // that break the system headers if they are seen earlier.
 #import <Cocoa/Cocoa.h>
-#include <MacTypes.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <MacTypes.h>
 #include <dlfcn.h>
 #include <unistd.h>
 
@@ -36,10 +36,11 @@ struct AppSettings
 static forg::Light s_Light = {};
 
 // Camera control sensitivities (tune to taste; flip a sign to invert an axis).
-static const float kOrbitSpeed        = 0.01f; // radians per pixel of left-drag
-static const float kTruckSpeed        = 0.01f; // world units per pixel of right-drag
-static const float kZoomSpeed         = 0.30f; // world units per scroll line
-static const float kMinTargetDistance = 0.5f;  // keep the camera off the target when zooming
+static const float kOrbitSpeed = 0.01f; // radians per pixel of left-drag
+static const float kTruckSpeed = 0.01f; // world units per pixel of right-drag
+static const float kZoomSpeed = 0.30f;  // world units per scroll line
+static const float kMinTargetDistance =
+    0.5f; // keep the camera off the target when zooming
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -66,12 +67,14 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
     NSTimer* m_timer;
     id m_event_monitor;
 }
-- (instancetype)initWithSettings:(const AppSettings&)settings renderer:(forg::IRenderer*)renderer;
+- (instancetype)initWithSettings:(const AppSettings&)settings
+                        renderer:(forg::IRenderer*)renderer;
 @end
 
 @implementation AppDelegate
 
-- (instancetype)initWithSettings:(const AppSettings&)settings renderer:(forg::IRenderer*)renderer
+- (instancetype)initWithSettings:(const AppSettings&)settings
+                        renderer:(forg::IRenderer*)renderer
 {
     self = [super init];
     if (self)
@@ -97,12 +100,13 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
 
     // config posx/posy are from the top-left corner (Win32 convention)
     CGFloat screenHeight = [NSScreen mainScreen].frame.size.height;
-    NSRect contentRect = NSMakeRect(m_settings.winX,
-                                    screenHeight - m_settings.winY - winHeight,
-                                    winWidth, winHeight);
+    NSRect contentRect =
+        NSMakeRect(m_settings.winX, screenHeight - m_settings.winY - winHeight,
+                   winWidth, winHeight);
 
-    NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
-                              NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
+    NSWindowStyleMask style =
+        NSWindowStyleMaskTitled | NSWindowStyleMaskClosable |
+        NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskResizable;
 
     m_window = [[NSWindow alloc] initWithContentRect:contentRect
                                            styleMask:style
@@ -127,24 +131,28 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
     }
 
     m_device->SetRenderState(forg::RenderStates_CullMode, forg::Cull_Clockwise);
-    m_device->SetRenderState(forg::RenderStates_ShadeMode, forg::ShadeMode_Gouraud);
+    m_device->SetRenderState(forg::RenderStates_ShadeMode,
+                             forg::ShadeMode_Gouraud);
     m_device->SetRenderState(forg::RenderStates_Lighting, true);
     m_device->SetRenderState(forg::RenderStates_FillMode, forg::FillMode_Solid);
 
-    m_device->SetRenderState(forg::RenderStates_SourceBlend, forg::Blend_SourceAlpha);
-    m_device->SetRenderState(forg::RenderStates_DestinationBlend, forg::Blend_InvSourceAlpha);
+    m_device->SetRenderState(forg::RenderStates_SourceBlend,
+                             forg::Blend_SourceAlpha);
+    m_device->SetRenderState(forg::RenderStates_DestinationBlend,
+                             forg::Blend_InvSourceAlpha);
 
     m_mesh = forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40);
-    DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n", m_mesh->GetNumVertices(), m_mesh->GetNumFaces());
+    DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n",
+            m_mesh->GetNumVertices(), m_mesh->GetNumFaces());
 
     // Set up a white point light (same setup as the Win32 sample).
     s_Light.Type = forg::LightType::Point;
-    s_Light.Diffuse.r  = 1.0f;
-    s_Light.Diffuse.g  = 1.0f;
-    s_Light.Diffuse.b  = 0.0f;
-    s_Light.Ambient.r  = 1.0f;
-    s_Light.Ambient.g  = 1.0f;
-    s_Light.Ambient.b  = 1.0f;
+    s_Light.Diffuse.r = 1.0f;
+    s_Light.Diffuse.g = 1.0f;
+    s_Light.Diffuse.b = 0.0f;
+    s_Light.Ambient.r = 1.0f;
+    s_Light.Ambient.g = 1.0f;
+    s_Light.Ambient.b = 1.0f;
     s_Light.Specular.r = 1.0f;
     s_Light.Specular.g = 1.0f;
     s_Light.Specular.b = 1.0f;
@@ -152,7 +160,7 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
     s_Light.Position.Y = 5.0f;
     s_Light.Position.Z = -1.0f;
     s_Light.Attenuation0 = 1.0f;
-    s_Light.Range        = 1000.0f;
+    s_Light.Range = 1000.0f;
 
     m_device->SetLight(0, &s_Light);
     m_device->LightEnable(0, true);
@@ -162,23 +170,27 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
     if (m_settings.controlEnabled)
     {
         m_cmd_queue = new forg::net::CommandQueue();
-        m_control_server = new forg::net::HttpControlServer("127.0.0.1", m_settings.controlPort, *m_cmd_queue);
-        if (! m_control_server->Start())
+        m_control_server = new forg::net::HttpControlServer(
+            "127.0.0.1", m_settings.controlPort, *m_cmd_queue);
+        if (!m_control_server->Start())
         {
-            std::cerr << "Control server failed to start on port " << m_settings.controlPort << "\n";
+            std::cerr << "Control server failed to start on port "
+                      << m_settings.controlPort << "\n";
         }
         else
         {
-            std::cout << "Control server listening on http://127.0.0.1:" << m_settings.controlPort << "\n";
+            std::cout << "Control server listening on http://127.0.0.1:"
+                      << m_settings.controlPort << "\n";
         }
     }
 
     [self onResize];
 
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(viewFrameChanged:)
-                                                 name:NSViewFrameDidChangeNotification
-                                               object:m_view];
+    [[NSNotificationCenter defaultCenter]
+        addObserver:self
+           selector:@selector(viewFrameChanged:)
+               name:NSViewFrameDidChangeNotification
+             object:m_view];
 
     m_timer = [NSTimer scheduledTimerWithTimeInterval:1.0 / 60.0
                                                target:self
@@ -189,19 +201,20 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
     [m_window makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
 
-    // Turntable camera controls: left-drag orbits, right-drag trucks, scroll zooms.
-    // A local monitor sees the deltas without subclassing the renderer's content view.
+    // Turntable camera controls: left-drag orbits, right-drag trucks, scroll
+    // zooms. A local monitor sees the deltas without subclassing the renderer's
+    // content view.
     NSEventMask mask = NSEventMaskLeftMouseDragged |
-                       NSEventMaskRightMouseDragged |
-                       NSEventMaskScrollWheel;
-    // MRC build: __unsafe_unretained avoids a retain cycle; the monitor is removed
-    // in applicationWillTerminate, before the delegate is deallocated.
+                       NSEventMaskRightMouseDragged | NSEventMaskScrollWheel;
+    // MRC build: __unsafe_unretained avoids a retain cycle; the monitor is
+    // removed in applicationWillTerminate, before the delegate is deallocated.
     __unsafe_unretained AppDelegate* unretainedSelf = self;
-    m_event_monitor = [NSEvent addLocalMonitorForEventsMatchingMask:mask
-                                                            handler:^NSEvent*(NSEvent* event) {
-        [unretainedSelf handleCameraEvent:event];
-        return event;
-    }];
+    m_event_monitor = [NSEvent
+        addLocalMonitorForEventsMatchingMask:mask
+                                     handler:^NSEvent*(NSEvent* event) {
+                                       [unretainedSelf handleCameraEvent:event];
+                                       return event;
+                                     }];
 }
 
 // Maps mouse/scroll deltas onto the existing Camera movement primitives.
@@ -209,32 +222,33 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
 {
     switch (event.type)
     {
-        case NSEventTypeLeftMouseDragged:
-            // Orbit around the cylinder. x = yaw, y = pitch.
-            m_camera.Orbit(-event.deltaX * kOrbitSpeed, event.deltaY * kOrbitSpeed);
-            break;
+    case NSEventTypeLeftMouseDragged:
+        // Orbit around the cylinder. x = yaw, y = pitch.
+        m_camera.Orbit(-event.deltaX * kOrbitSpeed, event.deltaY * kOrbitSpeed);
+        break;
 
-        case NSEventTypeRightMouseDragged:
-            // Strafe the camera and its target parallel to the view plane.
-            m_camera.Truck(-event.deltaX * kTruckSpeed, event.deltaY * kTruckSpeed);
-            break;
+    case NSEventTypeRightMouseDragged:
+        // Strafe the camera and its target parallel to the view plane.
+        m_camera.Truck(-event.deltaX * kTruckSpeed, event.deltaY * kTruckSpeed);
+        break;
 
-        case NSEventTypeScrollWheel:
+    case NSEventTypeScrollWheel:
+    {
+        // Dolly the camera toward/away from the target, clamped so it never
+        // crosses the target (Camera::Dolly's own guard is disabled).
+        float dolly = (float)event.scrollingDeltaY * kZoomSpeed;
+        float distance =
+            (m_camera.get_Target() - m_camera.get_Position()).Length();
+        if (dolly > distance - kMinTargetDistance)
         {
-            // Dolly the camera toward/away from the target, clamped so it never
-            // crosses the target (Camera::Dolly's own guard is disabled).
-            float dolly = (float)event.scrollingDeltaY * kZoomSpeed;
-            float distance = (m_camera.get_Target() - m_camera.get_Position()).Length();
-            if (dolly > distance - kMinTargetDistance)
-            {
-                dolly = distance - kMinTargetDistance;
-            }
-            m_camera.Dolly(dolly, 0.0f);
-            break;
+            dolly = distance - kMinTargetDistance;
         }
+        m_camera.Dolly(dolly, 0.0f);
+        break;
+    }
 
-        default:
-            break;
+    default:
+        break;
     }
 }
 
@@ -245,7 +259,8 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
 
     if (m_device != 0)
     {
-        m_device->SetViewport(0, 0, (forg::uint)size.width, (forg::uint)size.height);
+        m_device->SetViewport(0, 0, (forg::uint)size.width,
+                              (forg::uint)size.height);
         m_device->Reset();
     }
 
@@ -260,7 +275,8 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
 // port of Viewport::Render (without the font/UI overlay)
 - (void)render
 {
-    if (m_device == 0) return;
+    if (m_device == 0)
+        return;
 
     forg::Matrix4 mlook;
     m_camera.GetViewMatrix(mlook);
@@ -270,13 +286,14 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
     m_camera.GetProjectionMatrix(mproj);
     m_device->SetTransform(forg::TransformType_Projection, mproj);
 
-    m_device->Clear(forg::ClearFlags_Target | forg::ClearFlags_ZBuffer, m_clear_color, 1.0f, 0);
+    m_device->Clear(forg::ClearFlags_Target | forg::ClearFlags_ZBuffer,
+                    m_clear_color, 1.0f, 0);
     m_device->BeginScene();
 
     m_device->SetLight(0, &s_Light);
     m_device->SetRenderState(forg::RenderStates_Lighting, true);
 
-    if (! m_mesh.is_null())
+    if (!m_mesh.is_null())
     {
         m_device->SetTexture(0, 0);
         m_device->SetTransform(forg::TransformType_World, m_mesh_tm);
@@ -290,19 +307,20 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
 // port of Viewport::OnPaint + CWinApp::OnIdle
 - (void)onIdle:(NSTimer*)timer
 {
-    // Apply any commands queued by the control server thread (main-thread only).
+    // Apply any commands queued by the control server thread (main-thread
+    // only).
     if (m_cmd_queue)
     {
         forg::net::QueueItem item;
         while (m_cmd_queue->TryPop(item))
         {
             forg::control::SceneControlContext ctx;
-            ctx.camera     = &m_camera;
-            ctx.mesh       = &m_mesh;
-            ctx.meshTm     = &m_mesh_tm;
-            ctx.light      = &s_Light;
+            ctx.camera = &m_camera;
+            ctx.mesh = &m_mesh;
+            ctx.meshTm = &m_mesh_tm;
+            ctx.light = &s_Light;
             ctx.clearColor = &m_clear_color;
-            ctx.device     = m_device;
+            ctx.device = m_device;
 
             std::string body = forg::control::DispatchCommand(ctx, item.cmd);
             if (item.reply)
@@ -362,7 +380,7 @@ static const float kMinTargetDistance = 0.5f;  // keep the camera off the target
         m_event_monitor = nil;
     }
 
-    if (! m_mesh.is_null())
+    if (!m_mesh.is_null())
     {
         delete m_mesh.release();
     }
@@ -388,7 +406,8 @@ static void ChangeToResourcesDirectory()
     CFBundleRef mainBundle = CFBundleGetMainBundle();
     CFURLRef resBundle = CFBundleCopyResourcesDirectoryURL(mainBundle);
     char bundlePath[PATH_MAX];
-    if (CFURLGetFileSystemRepresentation(resBundle, TRUE, (UInt8*)bundlePath, PATH_MAX))
+    if (CFURLGetFileSystemRepresentation(resBundle, TRUE, (UInt8*)bundlePath,
+                                         PATH_MAX))
     {
         std::cout << "resource path: " << bundlePath << "\n";
         chdir(bundlePath);
@@ -410,9 +429,11 @@ static bool LoadSettings(AppSettings& settings)
         return false;
     }
 
-    if (forg::script::yaml::YAMLNode* yaml_node = yaml_doc->FindNode("renderer"))
+    if (forg::script::yaml::YAMLNode* yaml_node =
+            yaml_doc->FindNode("renderer"))
     {
-        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("driver"))
+        if (forg::script::yaml::YAMLNode* yaml_att =
+                yaml_node->FindAttribute("driver"))
         {
             settings.driver = yaml_att->GetContent().c_str();
         }
@@ -420,35 +441,43 @@ static bool LoadSettings(AppSettings& settings)
 
     if (forg::script::yaml::YAMLNode* yaml_node = yaml_doc->FindNode("window"))
     {
-        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("width"))
+        if (forg::script::yaml::YAMLNode* yaml_att =
+                yaml_node->FindAttribute("width"))
         {
             settings.winWidth = atoi(yaml_att->GetContent().c_str());
         }
 
-        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("height"))
+        if (forg::script::yaml::YAMLNode* yaml_att =
+                yaml_node->FindAttribute("height"))
         {
             settings.winHeight = atoi(yaml_att->GetContent().c_str());
         }
 
-        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("posx"))
+        if (forg::script::yaml::YAMLNode* yaml_att =
+                yaml_node->FindAttribute("posx"))
         {
             settings.winX = atoi(yaml_att->GetContent().c_str());
         }
 
-        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("posy"))
+        if (forg::script::yaml::YAMLNode* yaml_att =
+                yaml_node->FindAttribute("posy"))
         {
             settings.winY = atoi(yaml_att->GetContent().c_str());
         }
     }
 
-    if (forg::script::yaml::YAMLNode* yaml_node = yaml_doc->FindNode("controlserver"))
+    if (forg::script::yaml::YAMLNode* yaml_node =
+            yaml_doc->FindNode("controlserver"))
     {
-        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("enabled"))
+        if (forg::script::yaml::YAMLNode* yaml_att =
+                yaml_node->FindAttribute("enabled"))
         {
-            settings.controlEnabled = (std::string(yaml_att->GetContent().c_str()) == "true");
+            settings.controlEnabled =
+                (std::string(yaml_att->GetContent().c_str()) == "true");
         }
 
-        if (forg::script::yaml::YAMLNode* yaml_att = yaml_node->FindAttribute("port"))
+        if (forg::script::yaml::YAMLNode* yaml_att =
+                yaml_node->FindAttribute("port"))
         {
             settings.controlPort = atoi(yaml_att->GetContent().c_str());
         }
@@ -465,20 +494,38 @@ static forg::IRenderer* CreateRenderer(const std::string& driver)
         return 0;
     }
 
-    // cwd is the resources directory; "./" keeps dlopen from searching dyld paths
+    // cwd is the resources directory; "./" keeps dlopen from searching dyld
+    // paths
     std::string path = "./" + driver;
     void* module = dlopen(path.c_str(), RTLD_NOW);
     if (module == 0)
     {
-        std::cerr << "Unable to load renderer <" << driver << ">: " << dlerror() << "\n";
+        std::cerr << "Unable to load renderer <" << driver << ">: " << dlerror()
+                  << "\n";
         return 0;
     }
 
-    forg::PFCREATERENDERER pfCreateRenderer = (forg::PFCREATERENDERER)dlsym(module, "forgCreateRenderer");
+    auto getDescriptor = reinterpret_cast<forg::PFGETRENDERERPLUGINDESCRIPTOR>(
+        dlsym(module, "forgGetRendererPluginDescriptor"));
+    if (getDescriptor != nullptr)
+    {
+        const forg::RendererPluginDescriptor* descriptor = getDescriptor();
+        if (!forg::IsRendererPluginCompatible(descriptor))
+        {
+            std::cerr << "Incompatible renderer plugin <" << driver << ">!\n";
+            dlclose(module);
+            return nullptr;
+        }
+        return descriptor->CreateRenderer();
+    }
+
+    auto pfCreateRenderer = reinterpret_cast<forg::PFCREATERENDERER>(
+        dlsym(module, "forgCreateRenderer"));
     if (pfCreateRenderer == 0)
     {
         std::cerr << "forgCreateRenderer not found in <" << driver << ">!\n";
-        return 0;
+        dlclose(module);
+        return nullptr;
     }
 
     return pfCreateRenderer();
@@ -489,7 +536,7 @@ int main(int, char*[])
     ChangeToResourcesDirectory();
 
     AppSettings settings;
-    if (! LoadSettings(settings))
+    if (!LoadSettings(settings))
     {
         return 1;
     }
@@ -503,7 +550,8 @@ int main(int, char*[])
     NSApplication* app = [NSApplication sharedApplication];
     [app setActivationPolicy:NSApplicationActivationPolicyRegular];
 
-    AppDelegate* delegate = [[AppDelegate alloc] initWithSettings:settings renderer:renderer];
+    AppDelegate* delegate = [[AppDelegate alloc] initWithSettings:settings
+                                                         renderer:renderer];
     [app setDelegate:delegate];
 
     [app run];

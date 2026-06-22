@@ -25,29 +25,44 @@
 
 #include "forg/base.h"
 
-namespace forg { namespace audio { namespace dsp {
+#include <cmath>
 
-    struct float4
+namespace forg::audio::dsp {
+
+struct float4
+{
+    float x;
+    float y;
+    float z;
+    float w;
+
+    const float& operator[](uint32 _index) const
     {
-        float x;
-        float y;
-        float z;
-        float w;
-
-        const float& operator [] (uint32 _index) const { return ((float*)this)[_index]; }
-        float& operator [] (uint32 _index) { return ((float*)this)[_index]; }
-
-        void set(float _x, float _y, float _z, float _w) { x = _x; y = _y; z = _z; w = _w; }
-    };
-
-    float dot(const float4& lhs, const float4& rhs) { return lhs.x*rhs.x + lhs.y*rhs.y + lhs.z*rhs.z + lhs.w*rhs.w; }
-
-    __inline float RadiansToCutoffFrequency(float Radians, float SampleRate)
-    {
-        return SampleRate * asinf(Radians / 2.0f) / (float)3.1415926535897932384626433832795;
+        return ((float*)this)[_index];
     }
+    float& operator[](uint32 _index) { return ((float*)this)[_index]; }
 
-    void CalcLowpassCoeffs( float Fc, float Q, float4& coeffsA, float4& coeffsB );
-}}}
+    void set(float _x, float _y, float _z, float _w)
+    {
+        x = _x;
+        y = _y;
+        z = _z;
+        w = _w;
+    }
+};
+
+float dot(const float4& lhs, const float4& rhs)
+{
+    return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z + lhs.w * rhs.w;
+}
+
+__inline float RadiansToCutoffFrequency(float Radians, float SampleRate)
+{
+    return SampleRate * std::asin(Radians / 2.0f) /
+           (float)3.1415926535897932384626433832795;
+}
+
+void CalcLowpassCoeffs(float Fc, float Q, float4& coeffsA, float4& coeffsB);
+} // namespace forg::audio::dsp
 
 #endif

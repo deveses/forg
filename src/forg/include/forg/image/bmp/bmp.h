@@ -23,24 +23,23 @@
 #pragma once
 #endif
 
-#include "rendering/Color.h"
 #include "image/Image.h"
+#include "rendering/Color.h"
 
 namespace forg {
 
 /**
-* Bitmap loading
-* @author eses
-* @version 1.0
-* @date 10-2005
-* @todo compressed bitmaps, 1 and 4 bpp loading, error checks
-* @bug
-* @warning
-*/
+ * Bitmap loading
+ * @author eses
+ * @version 1.0
+ * @date 10-2005
+ * @todo compressed bitmaps, 1 and 4 bpp loading, error checks
+ * @bug
+ * @warning
+ */
 
 FORG_API Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info);
 
-
-}
+} // namespace forg
 
 #endif //_FORG_BMP_H_

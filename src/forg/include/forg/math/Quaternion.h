@@ -26,7 +26,7 @@
 #include "forg/base.h"
 #include "forg/math/Vector3.h"
 
-namespace forg { namespace math {
+namespace forg::math {
 
 struct FORG_API Quaternion
 {
@@ -37,7 +37,8 @@ struct FORG_API Quaternion
     //////////////////////////////////////////////////////////////////////////
     Quaternion(float x = 0.0f, float y = 0.0f, float z = 0.0f, float w = 0.0f)
         : v(x, y, z), s(w)
-    {}
+    {
+    }
 
     ////////////////////////////////////////////////////////////////////////////////
     // Attributes
@@ -57,24 +58,24 @@ struct FORG_API Quaternion
     // Operators
     //////////////////////////////////////////////////////////////////////////
 
-	// casting
-    operator float* () { return (float*)this; };
-    operator const float* () const { return (const float*)this; };
+    // casting
+    operator float*() { return (float*)this; };
+    operator const float*() const { return (const float*)this; };
 
-	// assignment operators
-	Quaternion& operator += ( const Quaternion& value);
-	Quaternion& operator -= ( const Quaternion& value);
-    Quaternion& operator *= ( const Quaternion& value);
-    Quaternion& operator *= ( float value);
+    // assignment operators
+    Quaternion& operator+=(const Quaternion& value);
+    Quaternion& operator-=(const Quaternion& value);
+    Quaternion& operator*=(const Quaternion& value);
+    Quaternion& operator*=(float value);
 
-	// unary operators
+    // unary operators
 
-	// binary operators
-	Quaternion operator + ( const Quaternion& value) const;
-	Quaternion operator - ( const Quaternion& value) const;
+    // binary operators
+    Quaternion operator+(const Quaternion& value) const;
+    Quaternion operator-(const Quaternion& value) const;
 
-	bool operator == ( const Quaternion& value) const;
-	bool operator != ( const Quaternion& value) const;
+    bool operator==(const Quaternion& value) const;
+    bool operator!=(const Quaternion& value) const;
 
     ////////////////////////////////////////////////////////////////////////////////
     // Public Methods
@@ -82,19 +83,25 @@ struct FORG_API Quaternion
 
     void Zero() { v.X = v.Y = v.Z = s = 0.0f; }
 
-    Quaternion& Multiply(Quaternion& q) { return Quaternion::Multiply(*this, *this, q); };
+    Quaternion& Multiply(Quaternion& q)
+    {
+        return Quaternion::Multiply(*this, *this, q);
+    };
 
     Quaternion& Inverse() { return Quaternion::Inverse(*this, *this); }
 
     // Statics
 
-	static void Add(Quaternion& out, const Quaternion& left, const Quaternion& right);
+    static void Add(Quaternion& out, const Quaternion& left,
+                    const Quaternion& right);
 
-	static void Substract(Quaternion& out, const Quaternion& left, const Quaternion& right);
+    static void Substract(Quaternion& out, const Quaternion& left,
+                          const Quaternion& right);
 
     Quaternion& Multiply(float scalar);
 
-    static Quaternion& Multiply(Quaternion& out, const Quaternion& left, const Quaternion& right);
+    static Quaternion& Multiply(Quaternion& out, const Quaternion& left,
+                                const Quaternion& right);
 
     static Quaternion& Conjugate(Quaternion& out, const Quaternion& source);
 
@@ -115,17 +122,17 @@ struct FORG_API Quaternion
     /// Calculates the exponential.
     static Quaternion& Exp(Quaternion& out, const Quaternion& source);
 
-    static Quaternion& RotationAxis(Quaternion& out, const Vector3& axis, float angle);
+    static Quaternion& RotationAxis(Quaternion& out, const Vector3& axis,
+                                    float angle);
 };
 
-inline Quaternion operator *(const Quaternion& lhs, const Quaternion& rhs)
+inline Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs)
 {
     Quaternion r;
     Quaternion::Multiply(r, lhs, rhs);
     return r;
 }
 
-}}
+} // namespace forg::math
 
 #endif // _FORG_MATH_QUATERNION_H_
-

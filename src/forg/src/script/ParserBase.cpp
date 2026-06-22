@@ -2,17 +2,14 @@
 
 #include "forg/script/ParserBase.h"
 
-namespace forg { namespace script {
+namespace forg::script {
 
 bool FileParserBase::Open(const char* _filename)
 {
     return m_file.Open(_filename);
 }
 
-void FileParserBase::Close()
-{
-    m_file.Close();
-}
+void FileParserBase::Close() { m_file.Close(); }
 
 bool FileParserBase::GetChar(int& _char)
 {
@@ -123,4 +120,4 @@ TokenBackup::~TokenBackup()
     }
 }
 
-}}
+} // namespace forg::script

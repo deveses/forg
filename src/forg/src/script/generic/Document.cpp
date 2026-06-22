@@ -4,8 +4,7 @@
 
 #include "forg/script/generic/Document.h"
 
-namespace forg::script::generic
-{
+namespace forg::script::generic {
 
 Node::Node(int _type)
 {
@@ -18,9 +17,9 @@ Node::Node(int _type)
 
 Node::~Node()
 {
-    // A node owns its children and attributes, each a singly-linked list chained
-    // through the next node's m_next. Free them iteratively (a child's own
-    // destructor recurses into its subtree); m_next itself belongs to the
+    // A node owns its children and attributes, each a singly-linked list
+    // chained through the next node's m_next. Free them iteratively (a child's
+    // own destructor recurses into its subtree); m_next itself belongs to the
     // parent's list, so it is not freed here.
     for (Node* child = m_children; child != nullptr;)
     {
@@ -56,10 +55,7 @@ Node* Node::FindAttribute(const core::string& _name)
 
 Document::Document() : m_root(nullptr) {}
 
-Document::~Document()
-{
-    delete m_root;
-}
+Document::~Document() { delete m_root; }
 
 Node* Document::FindNode(const core::string& _name)
 {

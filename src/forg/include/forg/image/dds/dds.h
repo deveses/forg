@@ -23,16 +23,13 @@
 #pragma once
 #endif
 
-#include "rendering/Color.h"
 #include "image/Image.h"
+#include "rendering/Color.h"
 
 namespace forg {
 
-
 FORG_API Color4b* LoadDds(const char* filename, ImageDescription* bmp_info);
-
 
 }
 
-#endif  //_FORG_DDS_H_
-
+#endif //_FORG_DDS_H_

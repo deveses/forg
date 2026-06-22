@@ -2,13 +2,16 @@
 
 #include <sstream>
 
-namespace forg { namespace net {
+namespace forg::net {
 
 static int hexDigit(char c)
 {
-    if (c >= '0' && c <= '9') return c - '0';
-    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'f')
+        return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F')
+        return c - 'A' + 10;
     return -1;
 }
 
@@ -47,10 +50,8 @@ static std::string urlDecode(const std::string& s)
     return out;
 }
 
-bool ParseRequestLine(const std::string& line,
-                      std::string& method,
-                      std::string& path,
-                      std::string& query)
+bool ParseRequestLine(const std::string& line, std::string& method,
+                      std::string& path, std::string& query)
 {
     std::istringstream iss(line);
     std::string target;
@@ -83,8 +84,8 @@ std::map<std::string, std::string> ParseQuery(const std::string& query)
     {
         size_t amp = query.find('&', start);
         std::string pair = (amp == std::string::npos)
-                         ? query.substr(start)
-                         : query.substr(start, amp - start);
+                               ? query.substr(start)
+                               : query.substr(start, amp - start);
 
         if (!pair.empty())
         {
@@ -95,7 +96,8 @@ std::map<std::string, std::string> ParseQuery(const std::string& query)
             }
             else
             {
-                out[urlDecode(pair.substr(0, eq))] = urlDecode(pair.substr(eq + 1));
+                out[urlDecode(pair.substr(0, eq))] =
+                    urlDecode(pair.substr(eq + 1));
             }
         }
 
@@ -131,4 +133,4 @@ Command CommandFromRequest(const std::string& path, const std::string& query)
     return cmd;
 }
 
-}}
+} // namespace forg::net

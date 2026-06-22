@@ -25,22 +25,22 @@
 
 #include "forg/core/string.hpp"
 
-namespace forg { namespace io {
+namespace forg::io {
 
-    class ISerializer
-    {
-    public:
-        virtual ~ISerializer() = default;
+class ISerializer
+{
+  public:
+    virtual ~ISerializer() = default;
 
-        virtual bool Begin(const char* _name) = 0;
-        virtual void End() = 0;
+    virtual bool Begin(const char* _name) = 0;
+    virtual void End() = 0;
 
-        virtual bool Read(void* _buffer, uint32 _size) = 0;
-        virtual bool ReadInt32(int& _out, const char* _name) = 0;
-        virtual bool ReadFloat32(float& _out, const char* _name) = 0;
-        virtual bool ReadString(core::string& _out, const char* _name) = 0;
-    };
+    virtual bool Read(void* _buffer, uint32 _size) = 0;
+    virtual bool ReadInt32(int& _out, const char* _name) = 0;
+    virtual bool ReadFloat32(float& _out, const char* _name) = 0;
+    virtual bool ReadString(core::string& _out, const char* _name) = 0;
+};
 
-}}
+} // namespace forg::io
 
 #endif

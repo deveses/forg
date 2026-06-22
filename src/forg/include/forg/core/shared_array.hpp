@@ -23,156 +23,128 @@
 #pragma once
 #endif
 
+#include "forg/debug/dbg.h"
+
 #include <cstdlib>
 
-namespace forg
+namespace forg::core {
+
+template <typename T> class shared_array
 {
-    namespace core
+    //////////////////////////////////////////////////////////////////////
+    // Nested
+    //////////////////////////////////////////////////////////////////////
+  public:
+    typedef T element_type;
+
+    typedef unsigned int size_type;
+
+  private:
+    typedef shared_array<T> this_type;
+
+    class SharedData
     {
+        T* m_pRawData;
+        long m_nCounter;
 
-        template <typename T>
-        class shared_array
+      public:
+        SharedData(T* pData) : m_pRawData(pData), m_nCounter(1) {}
+
+        ~SharedData() { ASSERT(m_nCounter == 0); }
+
+        T& operator[](unsigned int nIndex) { return m_pRawData[nIndex]; }
+
+        T* get() { return m_pRawData; }
+
+        long addRef()
         {
-            //////////////////////////////////////////////////////////////////////
-            // Nested
-            //////////////////////////////////////////////////////////////////////
-        public:
+            ++m_nCounter;
 
-            typedef T element_type;
+            return m_nCounter;
+        }
 
-            typedef unsigned int size_type;
+        long release()
+        {
+            ASSERT(m_nCounter > 0);
+            --m_nCounter;
 
-        private:
-            typedef shared_array<T> this_type;
-
-
-            class SharedData
+            if (m_nCounter == 0)
             {
-                T* m_pRawData;
-                long m_nCounter;
-
-            public:
-                SharedData(T* pData)
-                        : m_pRawData(pData)
-                        , m_nCounter(1)
-                {}
-
-                ~SharedData()
-                {
-                    ASSERT(m_nCounter == 0);
-                }
-
-                T& operator [](unsigned int nIndex)
-                {
-                    return m_pRawData[nIndex];
-                }
-
-                T* get()
-                {
-                    return m_pRawData;
-                }
-
-                long addRef()
-                {
-                    ++m_nCounter;
-
-                    return m_nCounter;
-                }
-
-                long release()
-                {
-                    ASSERT(m_nCounter > 0);
-                    --m_nCounter;
-
-                    if (m_nCounter == 0)
-                    {
-                        delete [] m_pRawData;
-                        m_pRawData = 0;
-                    }
-
-                    return m_nCounter;
-                }
-            };
-
-            //////////////////////////////////////////////////////////////////////
-            // 'structors
-            //////////////////////////////////////////////////////////////////////
-        public:
-            shared_array(size_type nSize = 0)
-                    : m_pSharedData(new SharedData(new T[nSize]))
-                    , m_nSize(nSize)
-            {}
-
-            shared_array(const shared_array& copy)
-                    : m_pSharedData(copy.m_pSharedData)
-                    , m_nSize(copy.m_nSize)
-            {
-                m_pSharedData->addRef();
+                delete[] m_pRawData;
+                m_pRawData = 0;
             }
 
-            ~shared_array()
-            {
-                _destruct();
-            }
+            return m_nCounter;
+        }
+    };
 
-            //////////////////////////////////////////////////////////////////////
-            // Attributes
-            //////////////////////////////////////////////////////////////////////
-        private:
-            SharedData* m_pSharedData;
-            size_type m_nSize;
-
-            //////////////////////////////////////////////////////////////////////
-            // Operators
-            //////////////////////////////////////////////////////////////////////
-        public:
-            this_type& operator =(const shared_array& copy)
-            {
-                _destruct();
-
-                m_pSharedData = copy.m_pSharedData;
-                m_nSize = copy.m_nSize;
-
-                m_pSharedData->addRef();
-
-                return *this;
-            }
-
-            element_type& operator [](unsigned int nIndex)
-            {
-                return m_pSharedData->operator[](nIndex);
-            }
-
-            //////////////////////////////////////////////////////////////////////
-            // Public methods
-            //////////////////////////////////////////////////////////////////////
-        public:
-            element_type* get()
-            {
-                return m_pSharedData->get();
-            }
-
-            size_type size()
-            {
-                return m_nSize;
-            }
-
-            //////////////////////////////////////////////////////////////////////////
-            // Helpers
-            //////////////////////////////////////////////////////////////////////////
-        private:
-            void _destruct()
-            {
-                if (m_pSharedData->release() == 0)
-                {
-                    delete m_pSharedData;
-                    //m_pSharedData = 0;
-                }
-            }
-
-        };
-
+    //////////////////////////////////////////////////////////////////////
+    // 'structors
+    //////////////////////////////////////////////////////////////////////
+  public:
+    shared_array(size_type nSize = 0)
+        : m_pSharedData(new SharedData(new T[nSize])), m_nSize(nSize)
+    {
     }
-}  // namespace
+
+    shared_array(const shared_array& copy)
+        : m_pSharedData(copy.m_pSharedData), m_nSize(copy.m_nSize)
+    {
+        m_pSharedData->addRef();
+    }
+
+    ~shared_array() { _destruct(); }
+
+    //////////////////////////////////////////////////////////////////////
+    // Attributes
+    //////////////////////////////////////////////////////////////////////
+  private:
+    SharedData* m_pSharedData;
+    size_type m_nSize;
+
+    //////////////////////////////////////////////////////////////////////
+    // Operators
+    //////////////////////////////////////////////////////////////////////
+  public:
+    this_type& operator=(const shared_array& copy)
+    {
+        _destruct();
+
+        m_pSharedData = copy.m_pSharedData;
+        m_nSize = copy.m_nSize;
+
+        m_pSharedData->addRef();
+
+        return *this;
+    }
+
+    element_type& operator[](unsigned int nIndex)
+    {
+        return m_pSharedData->operator[](nIndex);
+    }
+
+    //////////////////////////////////////////////////////////////////////
+    // Public methods
+    //////////////////////////////////////////////////////////////////////
+  public:
+    element_type* get() { return m_pSharedData->get(); }
+
+    size_type size() { return m_nSize; }
+
+    //////////////////////////////////////////////////////////////////////////
+    // Helpers
+    //////////////////////////////////////////////////////////////////////////
+  private:
+    void _destruct()
+    {
+        if (m_pSharedData->release() == 0)
+        {
+            delete m_pSharedData;
+            // m_pSharedData = 0;
+        }
+    }
+};
+
+} // namespace forg::core
 
 #endif // SHARED_ARRAY_HPP_INCLUDED

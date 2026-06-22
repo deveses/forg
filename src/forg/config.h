@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #define FORG_ENABLE_OPENCL
-//#define FORG_USE_FREETYPE
-//#define FORG_USE_ZLIB
+// #define FORG_USE_FREETYPE
+// #define FORG_USE_ZLIB
 
 #endif // _FORG_CONFIG_H_

@@ -4,17 +4,11 @@
 
 #ifdef WIN32
 
-namespace forg { namespace os {
+namespace forg::os {
 
-WindowsLibrary::WindowsLibrary()
- : m_hModule(0)
-{
-}
+WindowsLibrary::WindowsLibrary() : m_hModule(0) {}
 
-WindowsLibrary::~WindowsLibrary()
-{
-    Close();
-}
+WindowsLibrary::~WindowsLibrary() { Close(); }
 
 int WindowsLibrary::Open(LPCTSTR szName, int /*nFlags*/)
 {
@@ -42,8 +36,6 @@ void* WindowsLibrary::Address(LPCSTR szName)
     return (void*)0;
 }
 
-}}
-
+} // namespace forg::os
 
 #endif
-

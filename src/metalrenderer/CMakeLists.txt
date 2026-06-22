@@ -1,4 +1,5 @@
 add_library(metalrenderer SHARED)
+forg_configure_target(metalrenderer)
 target_sources(metalrenderer
     PRIVATE
     MetalRenderer.cpp

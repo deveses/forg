@@ -15,34 +15,34 @@
 #include "forg/script/ParserBase.h"
 #include "forg/script/generic/Document.h"
 
-namespace forg { namespace script { namespace yaml {
+namespace forg::script::yaml {
 
-    using YAMLDocument = forg::script::generic::Document;
-    using YAMLNode = forg::script::generic::Node;
+using YAMLDocument = forg::script::generic::Document;
+using YAMLNode = forg::script::generic::Node;
 
-    class FORG_API YAMLParser : public forg::script::FileParserBase
-    {
-        YAMLDocument* m_doc;
-        int m_error_code;
+class FORG_API YAMLParser : public forg::script::FileParserBase
+{
+    YAMLDocument* m_doc;
+    int m_error_code;
 
-    public:
-        YAMLParser();
-        ~YAMLParser();
+  public:
+    YAMLParser();
+    ~YAMLParser();
 
-        YAMLDocument* Parse();
+    YAMLDocument* Parse();
 
-    private:
-        bool ReadDocument(YAMLDocument* _doc);
-        bool ParseLine(const std::string& _line, int _line_number,
-                       std::vector<std::pair<int, YAMLNode*> >& _stack);
-        bool ParseKeyValue(const std::string& _text, std::string& _key,
-                           std::string& _value, bool& _has_value);
-        bool ValidateKey(const std::string& _key) const;
-        bool NormalizeValue(std::string& _value) const;
-        bool IsUnsupportedValue(const std::string& _value) const;
-        void SetErrorCode(int _code) { m_error_code = _code; }
-    };
+  private:
+    bool ReadDocument(YAMLDocument* _doc);
+    bool ParseLine(const std::string& _line, int _line_number,
+                   std::vector<std::pair<int, YAMLNode*>>& _stack);
+    bool ParseKeyValue(const std::string& _text, std::string& _key,
+                       std::string& _value, bool& _has_value);
+    bool ValidateKey(const std::string& _key) const;
+    bool NormalizeValue(std::string& _value) const;
+    bool IsUnsupportedValue(const std::string& _value) const;
+    void SetErrorCode(int _code) { m_error_code = _code; }
+};
 
-}}}
+} // namespace forg::script::yaml
 
 #endif

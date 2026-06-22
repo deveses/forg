@@ -26,40 +26,37 @@
 #include "base.h"
 #include "enums.h"
 
-namespace forg{
+namespace forg {
 
-	struct SurfaceDescription
-	{
-		uint Width;
-		uint Height;
-        uint Format;
+struct SurfaceDescription
+{
+    uint Width;
+    uint Height;
+    uint Format;
 
-		//Usage Usage;
-		//Pool Pool;
-		//ResourceType Type;
-		//MultiSampleType MultiSampleType;
-		//int MultiSampleQuality;
-	};
+    // Usage Usage;
+    // Pool Pool;
+    // ResourceType Type;
+    // MultiSampleType MultiSampleType;
+    // int MultiSampleQuality;
+};
 
+class ISurface
+{
+    // 'structors
+  public:
+    virtual ~ISurface(void) {};
 
-	class ISurface
-	{
-	// 'structors
-	public:
-		virtual ~ISurface(void){};
+    // Public Methods
+  public:
+    const SurfaceDescription* GetDesc() const { return 0; };
+    int LockRect(
+        // D3DLOCKED_RECT * pLockedRect,
+        // CONST RECT * pRect,
+        uint Flags);
+    int UnlockRect();
+};
 
-	// Public Methods
-	public:
-		const SurfaceDescription* GetDesc() const {return 0;};
-		int LockRect(
-			//D3DLOCKED_RECT * pLockedRect,
-			//CONST RECT * pRect,
-			uint Flags
-			);
-		int UnlockRect();
-
-	};
-
-}
+} // namespace forg
 
 #endif //_FORG_ISURFACE_H_

@@ -3,9 +3,9 @@
 // #include "forgbase.h"
 #include "forg/math/Math.h"
 
-namespace forg {
-namespace audio {
-namespace dsp {
+#include <cfloat>
+
+namespace forg::audio::dsp {
 /*
 void CalcBandpassCoeffs( float Fc, float Q, float gain, vector4_out coeffsA,
 vector4_out coeffsB )
@@ -115,62 +115,63 @@ float native_fsel(float A, float B, float C) { return (A >= 0.0f ? B : C); }
 //      2*sqrt(A)*alpha  =  sin(w0) * sqrt( (A^2 + 1)*(1/S - 1) + 2*A )
 //      is a handy intermediate variable for shelving EQ filters.
 
-void FilterCore(const float4 &input, float4 &output, const float4 &prevInput,
-                const float4 &prevOutput, const float4 &coeffA,
-                const float4 &coeffB, uint32 count = 4) {
-  float4 A = coeffA; //.wzyx();
-  float4 B = coeffB; //.wzyx();
+void FilterCore(const float4& input, float4& output, const float4& prevInput,
+                const float4& prevOutput, const float4& coeffA,
+                const float4& coeffB, uint32 count = 4)
+{
+    float4 A = coeffA; //.wzyx();
+    float4 B = coeffB; //.wzyx();
 
-  // y[n] = (b0/a0)*x[n] + (b1/a0)*x[n-1] + (b2/a0)*x[n-2]
-  //                     - (a1/a0)*y[n-1] - (a2/a0)*y[n-2]            (Eq 4)
+    // y[n] = (b0/a0)*x[n] + (b1/a0)*x[n-1] + (b2/a0)*x[n-2]
+    //                     - (a1/a0)*y[n-1] - (a2/a0)*y[n-2]            (Eq 4)
 
-  // y = B * X - A * Y
+    // y = B * X - A * Y
 
-  // all coefficients are divided by a0 in CalcBandPassCoefficients
+    // all coefficients are divided by a0 in CalcBandPassCoefficients
 
-  float input_all[7] = {prevInput[1], prevInput[2], prevInput[3], input[0],
-                        input[1],     input[2],     input[3]};
-  float output_all[8] = {prevOutput[0], prevOutput[1], prevOutput[2],
-                         prevOutput[3], 0.0f,          0.0f,
-                         0.0f,          0.0f};
+    float input_all[7] = {prevInput[1], prevInput[2], prevInput[3], input[0],
+                          input[1],     input[2],     input[3]};
+    float output_all[8] = {prevOutput[0], prevOutput[1], prevOutput[2],
+                           prevOutput[3], 0.0f,          0.0f,
+                           0.0f,          0.0f};
 
-  float4 xValues;
-  float4 yValues;
+    float4 xValues;
+    float4 yValues;
 
-  for (uint32 i = 0; i < count; i++) {
-    xValues.set(input_all[i], input_all[i + 1], input_all[i + 2],
-                input_all[i + 3]);
-    yValues.set(output_all[i], output_all[i + 1], output_all[i + 2],
-                output_all[i + 3]);
+    for (uint32 i = 0; i < count; i++)
+    {
+        xValues.set(input_all[i], input_all[i + 1], input_all[i + 2],
+                    input_all[i + 3]);
+        yValues.set(output_all[i], output_all[i + 1], output_all[i + 2],
+                    output_all[i + 3]);
 
-    output_all[4 + i] = dot(xValues, B) - dot(yValues, A);
-  }
+        output_all[4 + i] = dot(xValues, B) - dot(yValues, A);
+    }
 
-  output.set(output_all[4], output_all[5], output_all[6], output_all[7]);
+    output.set(output_all[4], output_all[5], output_all[6], output_all[7]);
 }
 
-void CalcLowpassCoeffs(float Fc, float Q, float4 &coeffsA, float4 &coeffsB) {
-  Q = (float)native_fsel(Q, Q, .0001f);
-  Fc = (float)native_fsel(Fc, Fc, FLT_EPSILON * 2.0f);
+void CalcLowpassCoeffs(float Fc, float Q, float4& coeffsA, float4& coeffsB)
+{
+    Q = (float)native_fsel(Q, Q, .0001f);
+    Fc = (float)native_fsel(Fc, Fc, FLT_EPSILON * 2.0f);
 
-  float w0 = (float)forg::math::Math::PI * Fc;
-  float sin0 = sin(w0);
-  float cos0 = cos(w0);
+    float w0 = (float)forg::math::Math::PI * Fc;
+    float sin0 = sin(w0);
+    float cos0 = cos(w0);
 
-  float alpha = sin0 / (2.0f * Q);
+    float alpha = sin0 / (2.0f * Q);
 
-  float a0 = alpha + 1.0f;
-  coeffsA[0] = (-2.0f * cos0) / a0;
-  coeffsA[1] = (1.0f - alpha) / a0;
-  coeffsA[2] = 0.0f;
-  coeffsA[3] = 0.0f;
+    float a0 = alpha + 1.0f;
+    coeffsA[0] = (-2.0f * cos0) / a0;
+    coeffsA[1] = (1.0f - alpha) / a0;
+    coeffsA[2] = 0.0f;
+    coeffsA[3] = 0.0f;
 
-  coeffsB[0] = ((1.0f - cos0) / 2.0f) / a0;
-  coeffsB[1] = (1.0f - cos0) / a0;
-  coeffsB[2] = ((1.0f - cos0) / 2.0f) / a0;
-  coeffsB[3] = 0.0f;
+    coeffsB[0] = ((1.0f - cos0) / 2.0f) / a0;
+    coeffsB[1] = (1.0f - cos0) / a0;
+    coeffsB[2] = ((1.0f - cos0) / 2.0f) / a0;
+    coeffsB[3] = 0.0f;
 }
 
-} // namespace dsp
-} // namespace audio
-} // namespace forg
+} // namespace forg::audio::dsp

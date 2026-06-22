@@ -30,27 +30,46 @@ namespace forg {
 
 struct RENDER_PARAMETERS
 {
-	uint BackBufferWidth;
-	uint BackBufferHeight;
-	uint PresentationInterval;
+    uint BackBufferWidth;
+    uint BackBufferHeight;
+    uint PresentationInterval;
 };
 
 class IRenderer
 {
-public:
+  public:
+    virtual ~IRenderer() {}
 
-	virtual ~IRenderer() {}
+    virtual IRenderDevice*
+    CreateDevice(HWIN hWindow, RENDER_PARAMETERS* pPresentationParameters) = 0;
 
-	virtual IRenderDevice* CreateDevice(HWIN hWindow, RENDER_PARAMETERS* pPresentationParameters) = 0;
-
-	virtual LPCTSTR get_Name() = 0;
+    virtual LPCTSTR get_Name() = 0;
 };
 
 typedef IRenderer* LPRENDERER;
 
 typedef IRenderer* (*PFCREATERENDERER)(void);
 
+inline constexpr uint32 RendererPluginApiVersion = 1;
+
+struct RendererPluginDescriptor
+{
+    uint32 Size;
+    uint32 ApiVersion;
+    PFCREATERENDERER CreateRenderer;
+};
+
+using PFGETRENDERERPLUGINDESCRIPTOR = const RendererPluginDescriptor* (*)(void);
+
+inline bool
+IsRendererPluginCompatible(const RendererPluginDescriptor* descriptor) noexcept
+{
+    return descriptor != nullptr &&
+           descriptor->Size >= sizeof(RendererPluginDescriptor) &&
+           descriptor->ApiVersion == RendererPluginApiVersion &&
+           descriptor->CreateRenderer != nullptr;
 }
 
-#endif //_FORG_IRENDERER_H_
+} // namespace forg
 
+#endif //_FORG_IRENDERER_H_

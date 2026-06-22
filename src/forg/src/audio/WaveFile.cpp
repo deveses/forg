@@ -1,8 +1,7 @@
 #include "forg/audio/WaveFile.h"
 #include "forg_pch.h"
 
-namespace forg::audio
-{
+namespace forg::audio {
 
 void WaveFile::FileCloser::operator()(FILE* file) const
 {
@@ -106,8 +105,8 @@ bool WaveFile::Open(const char* _filename)
         bool riff_found = false;
         size_t cbread = 0;
 
-        while (0 <
-               (cbread = fread(&chunk.header, sizeof(chunk.header), 1, m_file.get())))
+        while (0 < (cbread = fread(&chunk.header, sizeof(chunk.header), 1,
+                                   m_file.get())))
         {
             if (riff_found)
             {

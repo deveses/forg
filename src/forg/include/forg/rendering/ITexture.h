@@ -27,64 +27,64 @@
 #include "core/RefCounter.h"
 #include "rendering/ISurface.h"
 
-namespace forg{
+namespace forg {
 
 class IRenderDevice;
 
 /// ITexture interface
 /**
-* ITexture
-* @author eses
-* @version 1.0
-* @date 07-2005
-* @todo
-* @bug
-* @warning
-*/
+ * ITexture
+ * @author eses
+ * @version 1.0
+ * @date 07-2005
+ * @todo
+ * @bug
+ * @warning
+ */
 class FORG_API ITexture : public core::RefCounter
 {
-// 'structors
-public:
-	virtual ~ITexture(void){};
+    // 'structors
+  public:
+    virtual ~ITexture(void) {};
 
-public:
-// Public methods
-	//static Texture FromFile(
-	//	Device device,
-	//	string srcFile,
-	//	int width,
-	//	int height,
-	//	int mipLevels,
-	//	Usage usage,
-	//	Format format,
-	//	Pool pool,
-	//	Filter filter,
-	//	Filter mipFilter,
-	//	int colorKey,
-	//	ref ImageInformation srcInformation
-	//	);
+  public:
+    // Public methods
+    // static Texture FromFile(
+    //	Device device,
+    //	string srcFile,
+    //	int width,
+    //	int height,
+    //	int mipLevels,
+    //	Usage usage,
+    //	Format format,
+    //	Pool pool,
+    //	Filter filter,
+    //	Filter mipFilter,
+    //	int colorKey,
+    //	ref ImageInformation srcInformation
+    //	);
 
-    static ITexture* FromFile( IRenderDevice* device, const char* srcFile );
+    static ITexture* FromFile(IRenderDevice* device, const char* srcFile);
 
-	virtual int GetLevelDesc(uint Level, SurfaceDescription* Description) const = 0;
+    virtual int GetLevelDesc(uint Level,
+                             SurfaceDescription* Description) const = 0;
 
-	ISurface* GetSurfaceLevel(uint Level);
+    ISurface* GetSurfaceLevel(uint Level);
 
     /// Locks a rectangle on a texture resource.
-	virtual void* LockRect(uint Level, uint Flags) = 0;
+    virtual void* LockRect(uint Level, uint Flags) = 0;
 
     /// Unlocks a rectangle on a texture resource.
-	virtual int UnlockRect(uint Level) = 0;
+    virtual int UnlockRect(uint Level) = 0;
 
     /// Returns the number of texture levels in a multilevel texture.
     virtual uint GetLevelCount() = 0;
 
-private:
-
+  private:
 };
 
 typedef ITexture* LPTEXTURE;
 
-}
+} // namespace forg
 
 #endif //_FORG_ITEXTURE_H_

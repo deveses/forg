@@ -25,22 +25,19 @@
 
 #include "rendering/Mesh.h"
 
-namespace forg { namespace xfile {
+namespace forg::xfile {
 
-    using namespace forg;
-    using namespace forg::geometry;
+using namespace forg;
+using namespace forg::geometry;
 
-    /// Mesh loader from DirectX files
-    class XLoader
-    {
-    public:
-        static Mesh::MeshPtr Load(
-            const char* filename,
-            uint options,
-            IRenderDevice* device,
-            Mesh::ExtendedMaterialVec& materials
-            );
-    };
-}}
+/// Mesh loader from DirectX files
+class XLoader
+{
+  public:
+    static Mesh::MeshPtr Load(const char* filename, uint options,
+                              IRenderDevice* device,
+                              Mesh::ExtendedMaterialVec& materials);
+};
+} // namespace forg::xfile
 
 #endif
