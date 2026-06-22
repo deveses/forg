@@ -273,7 +273,7 @@ bool CUIDialog::Load(const char* _filename)
     return false;
 }
 
-void CUIDialog::Serialize(forg::io::ISerializer* _serializer) {}
+void CUIDialog::Serialize(forg::io::ISerializer*) {}
 
 void CUIDialog::Render()
 {
@@ -393,8 +393,7 @@ CUIControl* CUIDialog::GetControlAtPoint(const Point& _point)
     return 0;
 }
 
-bool CUIDialog::HandleMouse(int _event_id, Point _point, int _buttons,
-                            int _delta)
+bool CUIDialog::HandleMouse(int, Point _point, int, int)
 {
     CUIControl* c = GetControlAtPoint(_point);
 
@@ -405,7 +404,7 @@ bool CUIDialog::HandleMouse(int _event_id, Point _point, int _buttons,
     return false;
 }
 
-int CUIDialog::InitControl(CUIControl* _control) { return FORG_OK; }
+int CUIDialog::InitControl(CUIControl*) { return FORG_OK; }
 
 int CUIDialog::AddControl(CUIControl* _control)
 {

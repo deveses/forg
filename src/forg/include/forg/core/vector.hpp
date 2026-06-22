@@ -7,6 +7,8 @@
 
 #include "forg/base.h"
 
+#include <cstring>
+
 namespace forg::core {
 
 template <class _Type> class vector
@@ -201,7 +203,7 @@ template <class _Type> class vector
             // copy old data
             if (m_size > 0)
             {
-                memcpy(arr, m_data, m_size * sizeof(_Type));
+                std::memcpy(arr, m_data, m_size * sizeof(_Type));
             }
 
             delete[] m_data;
@@ -313,8 +315,8 @@ template <class _Type> class vector
             _right.clear();
             _right.reserve(count + where);
 
-            memcpy(_right.m_data + where, m_data + offset,
-                   count * sizeof(_Type));
+            std::memcpy(_right.m_data + where, m_data + offset,
+                        count * sizeof(_Type));
 
             if (_right.m_size < count + where)
             {
