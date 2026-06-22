@@ -115,7 +115,11 @@ Testing is controlled by CMake's standard `BUILD_TESTING` option. To configure w
 cmake --preset release -DBUILD_TESTING=OFF
 ```
 
-Initial coverage lives under `tests/` and focuses on deterministic library behavior: math types, `BitArray`, XML/YAML parsing, color conversion, and vertex declaration helpers. App/plugin tests, OpenCL, Cocoa windowing, and visual renderer validation are intentionally outside the first test layer.
+Coverage lives under `tests/` and focuses on deterministic library behavior:
+math/value types, ownership helpers, XML/YAML parsing, mesh factories and glTF
+loading, command parsing/queues, package consumption, renderer plugin ABI
+compatibility, and a headless reference-renderer triangle checksum. Cocoa
+windowing and OpenCL remain outside the automated test surface.
 
 ### Windows build
 
@@ -156,6 +160,12 @@ The rendering abstraction lives in `include/forg/rendering/`. Backends implement
 - **Metal renderer plugin** (`src/metalrenderer/`) — native Apple Metal backend hosting a `CAMetalLayer` in the sample's `NSView`; macOS only, the default `config.yml` driver
 - **OpenGL renderer plugin** (`src/glrenderer/`) — loaded at runtime on Windows via `LoadLibrary`
 - **OpenCL / C++ AMP renderers** — unsupported legacy sources, not part of the canonical CMake build
+
+Canonical renderer plugins expose a versioned descriptor. Version 2 adds a
+plugin-local destroy callback so hosts do not delete plugin-owned renderer
+objects across module or CRT boundaries. The loaders still accept version-1
+descriptors and legacy `forgCreateRenderer`-only plugins for 1.x
+compatibility.
 
 Beyond rendering, the library includes math types, audio output, XML and YAML parsers (`script`), image loading, mesh loading (DirectX `.x`, `.ply`, and glTF 2.0 `.gltf`/`.glb` static meshes via `Mesh::FromFile`), a UI layer, filesystem and OS abstractions.
 
