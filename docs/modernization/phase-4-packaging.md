@@ -2,10 +2,11 @@
 
 ## Status
 
-Mostly complete. Implementations live under `src/forg/src`, PCH is optional, and
-install/export rules plus a package-consumer test exist. All 91 installed
-headers compile independently without PCH on AppleClang. MSVC header isolation
-and cross-platform installation still need validation.
+Done. Implementations live under `src/forg/src`, PCH is optional, install/export
+rules exist, and the package-consumer test installs the SDK, validates the
+install tree, configures through `find_package(Forg 1.0 CONFIG REQUIRED)`,
+builds, and runs the consumer. Public-header isolation is part of the default
+test build and runs in the AppleClang and MSVC CI presets.
 
 ## Objective
 
@@ -16,7 +17,7 @@ Provide a conventional, self-contained SDK layout usable through
 
 1. **Header boundary audit**
    - Keep every installed header compiling independently with PCH disabled on
-     AppleClang, and establish the same gate on MSVC.
+     AppleClang, and run the same header target on MSVC.
    - Replace reliance on private headers or accidental transitive includes.
    - Ensure no implementation file or private debug helper is installed.
 

@@ -43,6 +43,44 @@ Notes:
 - The options `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB` default to `OFF`; their vendored dependencies in `extern/` (`freetype`, `zlib`, OpenCL/OpenGL headers) are not currently wired into the build. The header-only `cgltf` parser in `extern/cgltf/` *is* wired in (`extern/CMakeLists.txt`) and linked into `forg` for glTF mesh loading.
 - Source files for the `forg` library are listed explicitly in `src/forg/Sources.cmake` — new files must be added there.
 
+## Using FORG from CMake
+
+The package target is **`Forg::forg`** and public headers are included as
+`<forg/...>`.
+
+Build-tree consumers can add this repository directly:
+
+```cmake
+add_subdirectory(path/to/forg)
+target_link_libraries(my_app PRIVATE Forg::forg)
+```
+
+Installed consumers should point CMake at the install prefix:
+
+```sh
+cmake --install build/release --prefix /path/to/forg-sdk
+cmake -S . -B build -DCMAKE_PREFIX_PATH=/path/to/forg-sdk
+```
+
+Then consume the exported package:
+
+```cmake
+find_package(Forg 1.0 CONFIG REQUIRED)
+target_link_libraries(my_app PRIVATE Forg::forg)
+```
+
+The install tree contains the static library, public headers under
+`include/forg`, and package files under `lib/cmake/Forg`. Private source
+directories are not part of the SDK surface.
+
+Supported compiler configurations are AppleClang through the macOS presets and
+MSVC 2022 through the Windows presets. `FORG_WARNINGS_AS_ERRORS`,
+`FORG_ENABLE_CLANG_TIDY`, and `FORG_ENABLE_PCH` control local quality checks.
+`FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB` are project feature
+switches and default to `OFF`. On Windows, `Forg::forg` publishes the
+`FORG_STATIC`, `NOMINMAX`, and `WIN32_LEAN_AND_MEAN` definitions required by
+consumers of the static library.
+
 ## Testing
 
 The CMake build uses CTest with Catch2 v3. Catch2 is fetched with CMake `FetchContent` and pinned in `tests/CMakeLists.txt`, so the first configure of a fresh build directory needs network access.
