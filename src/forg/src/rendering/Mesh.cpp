@@ -43,7 +43,7 @@ Mesh::~Mesh(void) {}
 Mesh::MeshPtr Mesh::Box(IRenderDevice* device, float width, float height,
                         float depth)
 {
-    return MeshPtr(MakeBox(device, width, height, depth).release());
+    return MakeBox(device, width, height, depth);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -223,7 +223,7 @@ Mesh::UniqueMeshPtr Mesh::MakeBox(IRenderDevice* device, float width,
 Mesh::MeshPtr Mesh::Sphere(IRenderDevice* device, float radius, int slices,
                            int stacks)
 {
-    return MeshPtr(MakeSphere(device, radius, slices, stacks).release());
+    return MakeSphere(device, radius, slices, stacks);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -343,9 +343,7 @@ Mesh::MeshPtr Mesh::Cylinder(IRenderDevice* device, float radius1,
                              float radius2, float length, int slices,
                              int stacks)
 {
-    return MeshPtr(
-        MakeCylinder(device, radius1, radius2, length, slices, stacks)
-            .release());
+    return MakeCylinder(device, radius1, radius2, length, slices, stacks);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -470,8 +468,7 @@ Mesh::MeshPtr Mesh::Landscape(IRenderDevice* _device, const Vector3& _span,
                               const float* _hmap, unsigned int _sizex,
                               unsigned int _sizey)
 {
-    return MeshPtr(
-        MakeLandscape(_device, _span, _hmap, _sizex, _sizey).release());
+    return MakeLandscape(_device, _span, _hmap, _sizex, _sizey);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -634,7 +631,7 @@ Vector3(0, 0, radius); // os z Vector3 axisX = Vector3(radius, 0, 0); // os x
 Mesh::MeshPtr Mesh::Pyramid(IRenderDevice* device, uint numAngles, float radius,
                             float height)
 {
-    return MeshPtr(MakePyramid(device, numAngles, radius, height).release());
+    return MakePyramid(device, numAngles, radius, height);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -717,7 +714,7 @@ Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, uint numAngles,
 
     ushort* ibuffer = 0;
 
-    if (m != 0 && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
+    if (m && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
         // uint indhalf = indices >> 1;
         for (uint i = 0; i < indices; i++)
@@ -735,7 +732,7 @@ Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, uint numAngles,
 Mesh::MeshPtr Mesh::Grid(IRenderDevice* device, float sizeX, float sizeY,
                          int color, uint subgrid)
 {
-    return MeshPtr(MakeGrid(device, sizeX, sizeY, color, subgrid).release());
+    return MakeGrid(device, sizeX, sizeY, color, subgrid);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -809,7 +806,7 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
 
     ushort* ibuffer = 0;
 
-    if (m != 0 && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
+    if (m && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
         // frame
         ibuffer[0] = 0;
@@ -852,7 +849,7 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
 Mesh::MeshPtr Mesh::FromFile(const char* filename, uint options,
                              IRenderDevice* device)
 {
-    return MeshPtr(LoadFromFile(filename, options, device).release());
+    return LoadFromFile(filename, options, device);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -869,8 +866,7 @@ Mesh::MeshPtr Mesh::FromFile(const char* filename, uint options,
                              IRenderDevice* device,
                              ExtendedMaterialVec& materials)
 {
-    return MeshPtr(
-        LoadFromFile(filename, options, device, materials).release());
+    return LoadFromFile(filename, options, device, materials);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -900,7 +896,7 @@ Mesh::UniqueMeshPtr Mesh::LoadFromFile(const char* filename, uint options,
     DBG_MSG("[Mesh::FromFile] took %llu\n",
             static_cast<unsigned long long>(dur));
 
-    return UniqueMeshPtr(m.release());
+    return m;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -1110,7 +1106,7 @@ Mesh::MeshPtr Mesh::FromPly(const char* filename, uint /*options*/,
                        PositionNormal::Declaration, device));
 
     PositionNormal* vbuffer = 0;
-    if (m != 0 && m->LockVertexBuffer(0, (void**)&vbuffer) == FORG_OK)
+    if (m && m->LockVertexBuffer(0, (void**)&vbuffer) == FORG_OK)
     {
         loader.GetProperty("vertex", "x", 0, PLY_FLOAT);
         loader.GetProperty("vertex", "y", 4, PLY_FLOAT);
@@ -1123,7 +1119,7 @@ Mesh::MeshPtr Mesh::FromPly(const char* filename, uint /*options*/,
     }
 
     char* ibuffer = 0;
-    if (m != 0 && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
+    if (m && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
         loader.GetProperty("face", "vertex_indices", 0,
                            use32 ? PLY_UINT : PLY_USHORT);
@@ -1158,11 +1154,7 @@ Mesh::MeshPtr Mesh::FromPly(const char* filename, uint /*options*/,
 Mesh::MeshPtr Mesh::FromX(const char* filename, uint options,
                           IRenderDevice* device, ExtendedMaterialVec& materials)
 {
-    MeshPtr m(0);
-
-    m = xfile::XLoader::Load(filename, options, device, materials);
-
-    return m;
+    return xfile::XLoader::Load(filename, options, device, materials);
 }
 
 Mesh::MeshPtr Mesh::FromGltf(const char* filename, uint options,

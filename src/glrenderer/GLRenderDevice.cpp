@@ -14,6 +14,7 @@
 #include "GLFunc.h"
 
 #include <cstdint>
+#include <memory>
 
 #ifndef WIN32
 #ifndef _WIN32
@@ -147,7 +148,7 @@ class GLConstantTable
     GLConstantTable(GLuint _shader) { m_shader = _shader; }
 };
 
-forg::auto_ptr<GLVertexShader> g_vs;
+std::unique_ptr<GLVertexShader> g_vs;
 
 GLint CheckCompilationStatus(GLuint _shader)
 {
@@ -225,10 +226,10 @@ int CompileShader(const char* srcData, const char* profile)
         return -1;
     }
 
-    if (g_vs.is_null())
+    if (!g_vs)
     {
         GLuint program_obj = glCreateProgramObjectARB();
-        g_vs = forg::auto_ptr<GLVertexShader>(new GLVertexShader(program_obj));
+        g_vs = std::make_unique<GLVertexShader>(program_obj);
     }
 
     GLV(glAttachObjectARB(g_vs->GetProgramObject(), shader));

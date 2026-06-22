@@ -321,7 +321,7 @@ Mesh::MeshPtr GltfLoader::Load(const char* filename, uint /*options*/,
 {
     CpuMesh cpu;
     if (!Flatten(filename, cpu))
-        return Mesh::MeshPtr(0);
+        return nullptr;
 
     const uint numFaces = cpu.indices.size() / 3;
     const uint numVerts = cpu.vertices.size();
@@ -331,7 +331,7 @@ Mesh::MeshPtr GltfLoader::Load(const char* filename, uint /*options*/,
                              PositionNormalTextured::Declaration, device));
 
     PositionNormalTextured* vb = 0;
-    if (m != 0 && m->LockVertexBuffer(0, (void**)&vb) == FORG_OK)
+    if (m && m->LockVertexBuffer(0, (void**)&vb) == FORG_OK)
     {
         std::memcpy(vb, cpu.vertices.data(),
                     numVerts * sizeof(PositionNormalTextured));
@@ -339,7 +339,7 @@ Mesh::MeshPtr GltfLoader::Load(const char* filename, uint /*options*/,
     }
 
     void* ib = 0;
-    if (m != 0 && m->LockIndexBuffer(0, &ib) == FORG_OK)
+    if (m && m->LockIndexBuffer(0, &ib) == FORG_OK)
     {
         if (cpu.use32bit)
         {

@@ -1,4 +1,5 @@
 #include <string>
+#include <utility>
 
 #include "control/commands/Commands.h"
 
@@ -34,10 +35,10 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
             forg::geometry::Mesh::FromFile(path.c_str(), 0, ctx.device);
         // FromFile returns an empty (non-null) mesh on failure; treat a mesh
         // with no geometry as a failed load and keep the current mesh.
-        if (loaded.is_null() || loaded->GetNumVertices() == 0)
+        if (!loaded || loaded->GetNumVertices() == 0)
             return fail("loadfailed");
 
-        *ctx.mesh = loaded; // destructive assign frees the previous mesh
+        *ctx.mesh = std::move(loaded);
         return ok();
     }
     if (v == "mesh.box")

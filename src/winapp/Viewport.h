@@ -22,7 +22,7 @@ class Model
   public:
     int Load(const char* _name, IRenderDevice* _device);
 
-    bool IsLoaded() const { return !m_mesh.is_null(); }
+    bool IsLoaded() const { return static_cast<bool>(m_mesh); }
 
     void Render(IRenderDevice* _device);
 };

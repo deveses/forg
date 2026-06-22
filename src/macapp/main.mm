@@ -293,7 +293,7 @@ static const float kMinTargetDistance =
     m_device->SetLight(0, &s_Light);
     m_device->SetRenderState(forg::RenderStates_Lighting, true);
 
-    if (!m_mesh.is_null())
+    if (m_mesh)
     {
         m_device->SetTexture(0, 0);
         m_device->SetTransform(forg::TransformType_World, m_mesh_tm);
@@ -380,10 +380,7 @@ static const float kMinTargetDistance =
         m_event_monitor = nil;
     }
 
-    if (!m_mesh.is_null())
-    {
-        delete m_mesh.release();
-    }
+    m_mesh.reset();
 
     if (m_device)
     {

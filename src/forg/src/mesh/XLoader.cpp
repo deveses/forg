@@ -212,7 +212,7 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out,
 
 Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
 {
-    Mesh::MeshPtr m(0);
+    Mesh::MeshPtr m;
     std::vector<AttributeRange> attribs;
     uint vert_total = 0;
     uint faces_total = 0;
@@ -225,7 +225,7 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
 
     if (vert_total == 0 || faces_total == 0)
     {
-        return m;
+        return nullptr;
     }
 
     attribs.resize(data.size());
@@ -235,12 +235,12 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
 
     PositionNormalTextured* vbuffer = 0;
     uint* ibuffer = 0;
-    if (m == 0 || m->LockVertexBuffer(0, (void**)&vbuffer) != FORG_OK)
-        return Mesh::MeshPtr(0);
+    if (!m || m->LockVertexBuffer(0, (void**)&vbuffer) != FORG_OK)
+        return nullptr;
     if (m->LockIndexBuffer(0, (void**)&ibuffer) != FORG_OK)
     {
         m->UnlockVertexBuffer();
-        return Mesh::MeshPtr(0);
+        return nullptr;
     }
 
     uint voff = 0;
@@ -328,7 +328,6 @@ Mesh::MeshPtr XLoader::Load(const char* filename, uint /*options*/,
                             Mesh::ExtendedMaterialVec& materials)
 {
     xfile::XFile loader;
-    Mesh::MeshPtr m(0);
 
     mesh_data mdata;
     MeshDataVec mesh_list;
@@ -375,85 +374,6 @@ Mesh::MeshPtr XLoader::Load(const char* filename, uint /*options*/,
     }
 
     return BuildMesh(device, mesh_list);
-
-    /*
-            if (pVertices && pFaces)
-            {
-                Mesh::MeshPtr mtmp(
-                    new Mesh(
-                    nFacesTotal,
-                    nVerticesTotal,
-                    MeshFlags::Use32Bit,
-                    PositionNormal::Declaration,
-                    device
-                    )
-                    );
-
-                PositionNormal *vbuffer = 0;
-                if (mtmp != 0 && mtmp->LockVertexBuffer(0, (void**)&vbuffer) ==
-       FORG_OK)
-                {
-                    for (uint j = 0; j < nVerticesTotal; j++)
-                    {
-                        vbuffer[j].Position = pVerticesAll[j];
-                    }
-                }
-
-
-                char *ibuffer = 0;
-                if (mtmp != 0 && mtmp->LockIndexBuffer(0, (void**)&ibuffer) ==
-       FORG_OK)
-                {
-                    memcpy(ibuffer, pFacesAll, nFacesTotal*3*4);
-                }
-
-                //////////////////////////////////////////////////////////////////////////
-                // Normal computation
-                //////////////////////////////////////////////////////////////////////////
-
-                for (uint j = 0; j < nVerticesTotal; j++)
-                {
-                    vbuffer[j].Normal.Zero();
-                }
-
-                uint *ib32 = (uint*)ibuffer;
-                for (uint j = 0; j < nFacesTotal; j++)
-                {
-                    uint idx0, idx1, idx2;
-
-                    idx0 = ib32[j*3];
-                    idx1 = ib32[j*3+1];
-                    idx2 = ib32[j*3+2];
-
-                    Vector3 e0 = vbuffer[idx1].Position -
-       vbuffer[idx0].Position; Vector3 e1 = vbuffer[idx2].Position -
-       vbuffer[idx0].Position;
-
-                    Vector3 normal;
-                    Vector3::Cross(normal, e0, e1);
-                    //normal.Normalize();
-
-                    vbuffer[idx0].Normal += normal;
-                    vbuffer[idx1].Normal += normal;
-                    vbuffer[idx2].Normal += normal;
-
-                }
-
-                for (uint j = 0; j < nVerticesTotal; j++)
-                {
-                    vbuffer[j].Normal.Normalize();
-                }
-
-                mtmp->UnlockVertexBuffer();
-                mtmp->UnlockIndexBuffer();
-
-                m = mtmp;
-            }
-
-            delete [] pVerticesAll;
-            delete [] pFacesAll;*/
-
-    return m;
 }
 
 } // namespace forg::xfile

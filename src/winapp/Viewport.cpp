@@ -76,7 +76,7 @@ int Model::Load(const char* _name, IRenderDevice* _device)
 
 void Model::Render(IRenderDevice* _device)
 {
-    if (m_mesh.is_null())
+    if (!m_mesh)
         return;
 
     _device->SetTransform(TransformType_World, m_mesh_tm);
@@ -136,10 +136,7 @@ Viewport::~Viewport()
         m_font = 0;
     }
 
-    if (!m_mesh.is_null())
-    {
-        delete m_mesh.release();
-    }
+    m_mesh.reset();
 
     if (m_device)
     {

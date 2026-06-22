@@ -5,15 +5,13 @@
 Done. `RefPtr`, atomic reference counting, parser ownership fixes, standard
 mesh containers, mesh `std::unique_ptr` factories, reference software buffer
 RAII, image/audio/UI/OpenCL ownership cleanup, and X-loader temporary-buffer
-RAII have landed. The custom `auto_ptr`, `core::vector`, and `shared_array`
-headers remain installed for 1.x source compatibility; first-party canonical
-builds no longer use `core::vector` or `shared_array`, and `auto_ptr` use is
-limited to the legacy mesh compatibility typedef/API surface.
+RAII have landed. The custom destructive-copy pointer header has been removed,
+`MeshPtr` is a `std::unique_ptr<Mesh>` alias, and first-party maintained code no
+longer uses `core::vector` or `shared_array`.
 
 ## Objective
 
-Make ownership explicit and exception-safe internally while preserving the 1.x
-source API.
+Make ownership explicit and exception-safe internally.
 
 ## Implementation Slices
 
@@ -31,32 +29,35 @@ source API.
    - Convert one subsystem per pull request and remove its manual cleanup only
      after failure-path tests exist.
 
-3. **Compatibility factories**
+3. **Mesh factories**
    - Add `Mesh::UniqueMeshPtr = std::unique_ptr<Mesh>`.
    - Add modern `MakeBox`, `MakeSphere`, `MakeCylinder`, `MakePyramid`,
      `MakeGrid`, `MakeLandscape`, and `LoadFromFile` entry points.
-   - Implement one unique-owner core path; existing `Box`, `Sphere`,
-     `Cylinder`, `Pyramid`, `Grid`, `Landscape`, and `FromFile` APIs wrap the
-     released pointer in legacy `MeshPtr`.
+   - Implement one unique-owner core path; `Box`, `Sphere`, `Cylinder`,
+     `Pyramid`, `Grid`, `Landscape`, and `FromFile` return the same standard
+     owner type through `MeshPtr`.
    - Defer `MakeTorus` until the existing declared-only `Torus` factory gets an
      implementation or is removed from the 1.x surface.
 
 4. **Legacy container retirement**
-   - In-tree `core::vector` and `shared_array` uses have been removed from the
-     canonical build.
-   - Custom `auto_ptr` remains only where required by legacy `MeshPtr` APIs and
-     compatibility headers.
-   - Compatibility headers stay installed through 1.x; remove them only in v2.
+   - In-tree `core::vector` and `shared_array` uses have been removed from
+     maintained code.
+   - The custom destructive-copy pointer and its installed header have been
+     removed.
+   - `MeshPtr` now has move-only `std::unique_ptr` semantics.
 
 ## Public Interfaces
 
-Modern factories and `UniqueMeshPtr` are additive. Existing raw pointers,
-`MeshPtr`, and intrusive resource interfaces remain supported during 1.x.
+`MeshPtr` and `UniqueMeshPtr` are standard unique-owner mesh pointers. Existing
+raw pointers and intrusive resource interfaces remain supported where they are
+part of renderer/device ownership.
 
 ## Acceptance Gates
 
-- No first-party canonical target uses `core::vector` or `shared_array`.
+- No maintained first-party target uses the custom destructive-copy pointer,
+  `core::vector`, or `shared_array`.
 - ASan/UBSan and ownership failure-path tests report no leaks or invalid access.
-- Legacy and modern mesh factories produce equivalent geometry and materials.
-- Compatibility headers compile; legacy `MeshPtr` remains the only first-party
-  `auto_ptr` bridge retained for 1.x source compatibility.
+- Named mesh factories produce equivalent geometry and materials through the
+  standard unique-owner path.
+- Public headers compile without the removed custom pointer compatibility
+  header.
