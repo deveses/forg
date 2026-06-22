@@ -212,16 +212,12 @@ SWRenderDevice::SWRenderDevice(HWIN handle)
 {
     m_refCount = 1;
     m_window = handle;
-    m_frame_buffer = 0;
     m_width = m_height = 0;
     m_fb_stride = 0;
     m_vp_x = m_vp_y = 0;
     m_vp_width = m_vp_height = 0;
 
     m_indices = 0;
-
-    m_frame_buffer = 0;
-    m_depth_buffer = 0;
 }
 
 SWRenderDevice::~SWRenderDevice()
@@ -231,9 +227,6 @@ SWRenderDevice::~SWRenderDevice()
         SetTexture(i, 0);
     for (int i = 0; i < NUM_STREAMS; i++)
         SetStreamSource(i, 0, 0, 0);
-
-    delete[] m_frame_buffer;
-    delete[] m_depth_buffer;
 }
 
 int SWRenderDevice::Initialize(uint _width, uint _height)
@@ -257,21 +250,9 @@ int SWRenderDevice::Initialize(uint _width, uint _height)
 
 void SWRenderDevice::CreateBuffers()
 {
-    if (m_frame_buffer)
-    {
-        delete[] m_frame_buffer;
-        m_frame_buffer = 0;
-    }
-
-    if (m_depth_buffer)
-    {
-        delete[] m_depth_buffer;
-        m_depth_buffer = 0;
-    }
-
     m_fb_stride = m_width * 4;
-    m_frame_buffer = new uint[m_width * m_height];
-    m_depth_buffer = new float[m_width * m_height];
+    m_frame_buffer = std::make_unique<uint[]>(m_width * m_height);
+    m_depth_buffer = std::make_unique<float[]>(m_width * m_height);
 }
 
 int SWRenderDevice::Reset()
@@ -728,7 +709,7 @@ int SWRenderDevice::Present()
     //for (uint x = 0; x < ulWindowWidth; x++)
     //    ((UINT32 *)pvBits)[x + y * ulWindowWidth] = 0xff0000ff;
 
-    memcpy(pvBits, m_frame_buffer, ulWindowWidth*ulWindowHeight*4);
+    memcpy(pvBits, m_frame_buffer.get(), ulWindowWidth * ulWindowHeight * 4);
 
     if (!BitBlt(hWindowDC, 0, 0, ulWindowWidth, ulWindowHeight, hMemDC, 0, 0,
     SRCCOPY))
@@ -874,7 +855,7 @@ void SWRenderDevice::ProcessPixel(PSInput& _input, PSOutput& _output,
 // points must be in CCW order
 void SWRenderDevice::DrawTriangle(const Vector3* pos)
 {
-    uint* colorBuffer = (uint*)m_frame_buffer;
+    uint* colorBuffer = m_frame_buffer.get();
 
     // 28.4 fixed-point coordinates
 

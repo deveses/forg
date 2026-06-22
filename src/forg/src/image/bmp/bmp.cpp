@@ -2,6 +2,7 @@
 
 #include "image/bmp/bmp.h"
 
+#include <memory>
 #include <stdio.h>
 
 namespace forg {
@@ -272,12 +273,13 @@ Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info)
     }
 
     RGB_QUAD color_table[256];
-    Color4b* aBitmapBits = 0;
+    std::unique_ptr<Color4b[]> aBitmapBits;
 
     if (hdr_read)
     {
-        aBitmapBits = new Color4b[bmpWidth * bmpHeight];
-        BYTE* buff_in = new BYTE[bmpWidth * bmpHeight * (bmpBpp / 8)];
+        aBitmapBits = std::make_unique<Color4b[]>(bmpWidth * bmpHeight);
+        std::unique_ptr<BYTE[]> buff_in =
+            std::make_unique<BYTE[]>(bmpWidth * bmpHeight * (bmpBpp / 8));
 
         int pitch = bmpWidth * (bmpBpp / 8);
 
@@ -298,7 +300,7 @@ Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info)
         // to top
         for (int i = 0; i < bmpHeight; i++)
         {
-            fread(buff_in + (pitch * (bmpHeight - i - 1)), 1, pitch, f);
+            fread(buff_in.get() + (pitch * (bmpHeight - i - 1)), 1, pitch, f);
         }
 
         switch (bmpBpp)
@@ -361,7 +363,7 @@ Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info)
                 for (int w = 0; w < bmpWidth; w++)
                 {
                     uint off = h * bmpHeight + w;
-                    RGB_TRIPLE* p = (RGB_TRIPLE*)buff_in + off;
+                    RGB_TRIPLE* p = (RGB_TRIPLE*)buff_in.get() + off;
 
                     aBitmapBits[off].r = p->rgbtBlue;
                     aBitmapBits[off].g = p->rgbtGreen;
@@ -371,13 +373,11 @@ Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info)
             }
             break;
         }
-
-        delete[] buff_in;
     }
 
     fclose(f);
 
-    return (aBitmapBits);
+    return aBitmapBits.release();
 }
 
 } // namespace forg

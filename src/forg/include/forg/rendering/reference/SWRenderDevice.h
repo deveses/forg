@@ -29,6 +29,8 @@
 #include "rendering/IRenderDevice.h"
 #include "rendering/VertexDeclaration.h"
 
+#include <memory>
+
 namespace forg::rendering::reference {
 
 struct VSInput
@@ -131,8 +133,8 @@ class FORG_API SWRenderDevice : public IRenderDevice
     int m_refCount;
     HWIN m_window;
 
-    uint* m_frame_buffer;
-    float* m_depth_buffer;
+    std::unique_ptr<uint[]> m_frame_buffer;
+    std::unique_ptr<float[]> m_depth_buffer;
     uint m_fb_stride;
     uint m_width;
     uint m_height;
@@ -173,7 +175,7 @@ class FORG_API SWRenderDevice : public IRenderDevice
     void DrawTriangle(const Vector3* pos);
     void DrawTriangle(const VSOutput* vertices, int usage);
 
-    uint* GetBuffer() { return m_frame_buffer; }
+    uint* GetBuffer() { return m_frame_buffer.get(); }
     void SetBufferSize(uint _width, uint _height)
     {
         m_width = _width;

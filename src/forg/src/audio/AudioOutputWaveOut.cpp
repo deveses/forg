@@ -2,6 +2,8 @@
 #include "debug/dbg.h"
 #include "forg_pch.h"
 
+#include <memory>
+
 #include <windows.h>
 #include <mmsystem.h>
 
@@ -14,6 +16,7 @@ class AudioOutputWaveOut : public IAudioOutput
 
     unsigned int m_buffer_size;
     SAudioBuffer m_buffers[2];
+    std::unique_ptr<char[]> m_buffer_storage[2];
     unsigned int m_next_buffer;
 
   public:
@@ -72,9 +75,11 @@ bool AudioOutputWaveOut::Init()
     fmt.wFormatTag = WAVE_FORMAT_PCM;
 
     m_buffer_size = fmt.nAvgBytesPerSec;
-    m_buffers[0].ptr = new char[m_buffer_size];
+    m_buffer_storage[0] = std::make_unique<char[]>(m_buffer_size);
+    m_buffers[0].ptr = m_buffer_storage[0].get();
     m_buffers[0].size = 0;
-    m_buffers[1].ptr = new char[m_buffer_size];
+    m_buffer_storage[1] = std::make_unique<char[]>(m_buffer_size);
+    m_buffers[1].ptr = m_buffer_storage[1].get();
     m_buffers[1].size = 0;
 
     m_next_buffer = 0;
@@ -133,10 +138,13 @@ void AudioOutputWaveOut::Close()
         {
             DBG_MSG("waveOutClose() failed.\n");
         }
+        m_device = NULL;
     }
 
-    delete[] m_buffers[0].ptr;
-    delete[] m_buffers[1].ptr;
+    m_buffer_storage[0].reset();
+    m_buffer_storage[1].reset();
+    m_buffers[0].ptr = 0;
+    m_buffers[1].ptr = 0;
 }
 
 void AudioOutputWaveOut::Release() { delete this; }

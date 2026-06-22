@@ -22,8 +22,6 @@ namespace forg::scene {
 
 int Model::Load(const char* _name, IRenderDevice* _device)
 {
-    // auto_ptr<ITexture> old_tex = m_texture;
-
     m_materials.clear();
     m_textures.clear();
 
@@ -62,11 +60,11 @@ int Model::Load(const char* _name, IRenderDevice* _device)
     {
         string tfn = base_dir + m_materials[i].TextureFilename;
 
-        ITexture* tex = ITexture::FromFile(_device, tfn.c_str());
+        core::RefPtr<ITexture> tex(ITexture::FromFile(_device, tfn.c_str()));
 
-        m_textures.push_back(tex);
+        m_textures.push_back(std::move(tex));
 
-        if (tex == NULL)
+        if (!m_textures.back())
             DBG_MSG(__T("Failed to load texture <%s>!\n"), tfn.c_str());
     }
 
@@ -88,7 +86,7 @@ void Model::Render(IRenderDevice* _device)
         for (uint i = 0; i < m_materials.size(); i++)
         {
             _device->SetMaterial(&m_materials[i].Material3D);
-            _device->SetTexture(0, m_textures[i]);
+            _device->SetTexture(0, m_textures[i].get());
             m_mesh->DrawSubset(i);
         }
     }

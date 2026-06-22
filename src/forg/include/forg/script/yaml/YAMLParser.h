@@ -9,6 +9,7 @@
 #pragma once
 #endif
 
+#include <memory>
 #include <utility>
 
 #include "forg/base.h"
@@ -22,7 +23,7 @@ using YAMLNode = forg::script::generic::Node;
 
 class FORG_API YAMLParser : public forg::script::FileParserBase
 {
-    YAMLDocument* m_doc;
+    std::unique_ptr<YAMLDocument> m_doc;
     int m_error_code;
 
   public:

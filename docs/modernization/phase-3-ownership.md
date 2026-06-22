@@ -2,11 +2,13 @@
 
 ## Status
 
-In progress. `RefPtr`, atomic reference counting, parser ownership fixes,
-standard mesh containers, mesh `std::unique_ptr` factories, reference software
-buffer RAII, and X-loader temporary-buffer RAII have landed. Custom `auto_ptr`,
-`core::vector`, raw arrays, and manual cleanup remain in several rendering,
-image, audio, UI, OpenCL, and Windows paths.
+Done. `RefPtr`, atomic reference counting, parser ownership fixes, standard
+mesh containers, mesh `std::unique_ptr` factories, reference software buffer
+RAII, image/audio/UI/OpenCL ownership cleanup, and X-loader temporary-buffer
+RAII have landed. The custom `auto_ptr`, `core::vector`, and `shared_array`
+headers remain installed for 1.x source compatibility; first-party canonical
+builds no longer use `core::vector` or `shared_array`, and `auto_ptr` use is
+limited to the legacy mesh compatibility typedef/API surface.
 
 ## Objective
 
@@ -40,10 +42,11 @@ source API.
      implementation or is removed from the 1.x surface.
 
 4. **Legacy container retirement**
-   - Remove in-tree uses of `core::vector`, `shared_array`, and custom `auto_ptr`.
-   - Mark compatibility templates deprecated only after the canonical build is
-     warning-clean and no first-party call site uses them.
-   - Keep compatibility headers installed through 1.x; remove them only in v2.
+   - In-tree `core::vector` and `shared_array` uses have been removed from the
+     canonical build.
+   - Custom `auto_ptr` remains only where required by legacy `MeshPtr` APIs and
+     compatibility headers.
+   - Compatibility headers stay installed through 1.x; remove them only in v2.
 
 ## Public Interfaces
 
@@ -52,7 +55,8 @@ Modern factories and `UniqueMeshPtr` are additive. Existing raw pointers,
 
 ## Acceptance Gates
 
-- No first-party canonical target uses custom containers or custom `auto_ptr`.
+- No first-party canonical target uses `core::vector` or `shared_array`.
 - ASan/UBSan and ownership failure-path tests report no leaks or invalid access.
 - Legacy and modern mesh factories produce equivalent geometry and materials.
-- Compatibility headers compile but are not used internally.
+- Compatibility headers compile; legacy `MeshPtr` remains the only first-party
+  `auto_ptr` bridge retained for 1.x source compatibility.

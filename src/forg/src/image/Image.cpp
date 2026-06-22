@@ -7,6 +7,8 @@
 #include "image/dds/dds.h"
 #include "math/Math.h"
 
+#include <memory>
+
 using namespace forg::math;
 
 namespace forg {
@@ -208,39 +210,34 @@ static int detect_file_type(const char* _filename)
 
 //////////////////////////////////////////////////////////////////////////
 
-Image::Image() : m_data(0), m_width(0), m_height(0), m_num_mipmaps(1) {}
+Image::Image() : m_width(0), m_height(0), m_num_mipmaps(1) {}
 
 Image::~Image() { Clean(); }
 
 void Image::Clean()
 {
-    if (m_data)
-    {
-        for (uint i = 0; i < m_num_mipmaps; i++)
-        {
-            delete[] m_data[i];
-        }
-
-        delete[] m_data;
-    }
+    m_data.clear();
+    m_num_mipmaps = 1;
 }
 
 bool Image::Load(const char* _filename)
 {
+    Clean();
+
     ImageDescription img_info{};
-    Color4b* img_data = NULL;
+    std::unique_ptr<Color4b[]> img_data;
 
     switch (detect_file_type(_filename))
     {
     case IMAGE_BMP:
     {
-        img_data = LoadBmp(_filename, &img_info);
+        img_data.reset(LoadBmp(_filename, &img_info));
     }
     break;
 
     case IMAGE_DDS:
     {
-        img_data = LoadDds(_filename, &img_info);
+        img_data.reset(LoadDds(_filename, &img_info));
     }
     break;
 
@@ -257,13 +254,10 @@ bool Image::Load(const char* _filename)
         m_width = img_info.Width;
         m_height = img_info.Height;
 
-        m_data = new char*[m_num_mipmaps];
-
-        m_data[0] = new char[GetWidth() * GetHeight() * sizeof(Color4b)];
-
-        memcpy(m_data[0], img_data, GetWidth() * GetHeight() * sizeof(Color4b));
-
-        delete[] img_data;
+        const uint size = GetWidth() * GetHeight() * sizeof(Color4b);
+        m_data.resize(m_num_mipmaps);
+        m_data[0].resize(size);
+        memcpy(m_data[0].data(), img_data.get(), size);
 
         return true;
     }
@@ -273,8 +267,8 @@ bool Image::Load(const char* _filename)
 
 const char* Image::GetData(uint _level) const
 {
-    if (_level < m_num_mipmaps)
-        return m_data[_level];
+    if (_level < m_data.size())
+        return m_data[_level].data();
 
     return NULL;
 }
@@ -292,6 +286,9 @@ uint Image::GetSize(uint _level) const
 
 uint Image::GenerateMipmaps()
 {
+    if (m_data.empty())
+        return 0;
+
     uint w = m_width;
     uint h = m_height;
 
@@ -300,9 +297,9 @@ uint Image::GenerateMipmaps()
 
     uint levels = Math::bit_max(num_w, num_h) + 1;
 
-    char** new_data = new char*[levels];
+    std::vector<std::vector<char>> new_data(levels);
 
-    new_data[0] = m_data[0];
+    new_data[0] = std::move(m_data[0]);
 
     for (uint l = 1; l < levels; l++)
     {
@@ -312,21 +309,14 @@ uint Image::GenerateMipmaps()
         w |= (-(w == 0)) & 1;
         h |= (-(h == 0)) & 1;
 
-        new_data[l] = new char[w * h * 4];
+        new_data[l].resize(w * h * 4);
 
-        Resize_NearestNeighbor((Color4b*)new_data[0], m_width, m_height,
-                               (Color4b*)new_data[l], w, h);
+        Resize_NearestNeighbor((Color4b*)new_data[0].data(), m_width, m_height,
+                               (Color4b*)new_data[l].data(), w, h);
         // memset(new_data[l], l*10, w*h*4);
     }
 
-    for (uint l = 1; l < m_num_mipmaps; l++)
-    {
-        delete[] m_data[l];
-    }
-
-    delete[] m_data;
-
-    m_data = new_data;
+    m_data = std::move(new_data);
     m_num_mipmaps = levels;
 
     return m_num_mipmaps;

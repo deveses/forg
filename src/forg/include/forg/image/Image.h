@@ -25,6 +25,8 @@
 
 #include "base.h"
 
+#include <vector>
+
 namespace forg {
 
 struct ImageDescription
@@ -44,7 +46,7 @@ class Image
 
     // Attributes
   private:
-    char** m_data; ///< array of mipmaps
+    std::vector<std::vector<char>> m_data; ///< array of mipmaps
     uint m_width;
     uint m_height;
     uint m_num_mipmaps;

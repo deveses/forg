@@ -223,38 +223,24 @@ void CUIKnob::Render()
 
 CUIDialog::CUIDialog()
 {
-    m_Sprite = 0;
-    m_Texture = 0;
+    m_Sprite = nullptr;
 }
 
 CUIDialog::~CUIDialog() { Close(); }
 
 void CUIDialog::Close()
 {
-    for (uint i = 0; i < m_controls.size(); i++)
-    {
-        delete m_controls[i];
-    }
-
     m_controls.clear();
 
-    if (m_Sprite)
-    {
-        delete m_Sprite;
-        m_Sprite = 0;
-    }
+    m_Sprite.reset();
 
-    if (m_Texture)
-    {
-        m_Texture->Release();
-        m_Texture = 0;
-    }
+    m_Texture.reset();
 }
 
 bool CUIDialog::Init(IRenderDevice* _device, const char* _filename)
 {
-    m_Texture = forg::ITexture::FromFile(_device, _filename);
-    m_Sprite = forg::Sprite::CreateSprite(_device);
+    m_Texture.reset(forg::ITexture::FromFile(_device, _filename));
+    m_Sprite.reset(forg::Sprite::CreateSprite(_device));
 
     return true;
 }
@@ -349,7 +335,7 @@ void CUIDialog::DrawSprite(const SUIElement& _element, Rectangle& _rect)
     m_Sprite->SetTransform(&tm);
 
     m_Sprite->Begin(forg::SpriteFlags::AlphaBlend);
-    m_Sprite->Draw(m_Texture, &_element.tex_coords, &center, &translation,
+    m_Sprite->Draw(m_Texture.get(), &_element.tex_coords, &center, &translation,
                    forg::Color4b(0xff, 0xff, 0xff, 0xff));
     m_Sprite->End();
 }
@@ -360,7 +346,7 @@ CUIControl* CUIDialog::GetControl(int _id)
     {
         if (m_controls[i]->GetId() == _id)
         {
-            return m_controls[i];
+            return m_controls[i].get();
         }
     }
 
@@ -373,7 +359,7 @@ CUIControl* CUIDialog::GetControl(int _id, int _type)
     {
         if (m_controls[i]->GetType() == _type && m_controls[i]->GetId() == _id)
         {
-            return m_controls[i];
+            return m_controls[i].get();
         }
     }
 
@@ -386,7 +372,7 @@ CUIControl* CUIDialog::GetControlAtPoint(const Point& _point)
     {
         if (m_controls[i]->ContainsPoint(_point))
         {
-            return m_controls[i];
+            return m_controls[i].get();
         }
     }
 
@@ -408,18 +394,21 @@ int CUIDialog::InitControl(CUIControl*) { return FORG_OK; }
 
 int CUIDialog::AddControl(CUIControl* _control)
 {
+    std::unique_ptr<CUIControl> control(_control);
+
     InitControl(_control);
 
-    m_controls.push_back(_control);
+    m_controls.push_back(std::move(control));
 
     return FORG_OK;
 }
 
 int CUIDialog::AddButton(int _id, int x, int y, int width, int height)
 {
-    CUIButton* c = new CUIButton(this);
+    std::unique_ptr<CUIButton> control(new CUIButton(this));
+    CUIButton* c = control.get();
 
-    AddControl(c);
+    AddControl(control.release());
 
     // TODO: set control's properies
     c->SetId(_id);
@@ -431,9 +420,10 @@ int CUIDialog::AddButton(int _id, int x, int y, int width, int height)
 
 int CUIDialog::AddSlider(int _id, int x, int y, int width, int height)
 {
-    CUISlider* c = new CUISlider(this);
+    std::unique_ptr<CUISlider> control(new CUISlider(this));
+    CUISlider* c = control.get();
 
-    AddControl(c);
+    AddControl(control.release());
 
     // TODO: set control's properies
     c->SetId(_id);
@@ -445,9 +435,10 @@ int CUIDialog::AddSlider(int _id, int x, int y, int width, int height)
 
 int CUIDialog::AddKnob(int _id, int x, int y, int width, int height)
 {
-    CUIKnob* c = new CUIKnob(this);
+    std::unique_ptr<CUIKnob> control(new CUIKnob(this));
+    CUIKnob* c = control.get();
 
-    AddControl(c);
+    AddControl(control.release());
 
     // TODO: set control's properies
     c->SetId(_id);
@@ -459,9 +450,10 @@ int CUIDialog::AddKnob(int _id, int x, int y, int width, int height)
 
 int CUIDialog::AddComboBox(int _id, int x, int y, int width, int height)
 {
-    CUIComboBox* c = new CUIComboBox(this);
+    std::unique_ptr<CUIComboBox> control(new CUIComboBox(this));
+    CUIComboBox* c = control.get();
 
-    AddControl(c);
+    AddControl(control.release());
 
     // TODO: set control's properies
     c->SetId(_id);

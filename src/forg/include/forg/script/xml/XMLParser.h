@@ -27,6 +27,8 @@
 #include "forg/script/ParserBase.h"
 #include "forg/script/generic/Document.h"
 
+#include <memory>
+
 namespace forg::script::xml {
 
 ///////////////////////////////////////////////////////////////////////////
@@ -48,7 +50,7 @@ class FORG_API XMLParser : public forg::script::TokenParserBase
 {
   private:
     int m_error_code;
-    XMLDocument* m_doc;
+    std::unique_ptr<XMLDocument> m_doc;
 
   public:
     XMLParser();

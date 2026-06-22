@@ -142,26 +142,22 @@ YAMLParser::YAMLParser()
     m_error_code = ParserError::NoErrors;
 }
 
-YAMLParser::~YAMLParser() { delete m_doc; }
+YAMLParser::~YAMLParser() = default;
 
 YAMLDocument* YAMLParser::Parse()
 {
-    if (m_doc)
-    {
-        delete m_doc;
-        m_doc = nullptr;
-    }
+    m_doc.reset();
 
     m_error_code = ParserError::NoErrors;
 
-    std::unique_ptr<YAMLDocument> doc(new YAMLDocument());
+    auto doc = std::make_unique<YAMLDocument>();
 
     if (ReadDocument(doc.get()))
     {
-        m_doc = doc.release();
+        m_doc = std::move(doc);
     }
 
-    return m_doc;
+    return m_doc.get();
 }
 
 bool YAMLParser::ReadDocument(YAMLDocument* _doc)

@@ -50,13 +50,7 @@ enum TYPE
 ///////////////////////////////////////////////////////////////////////////
 XMLParser::XMLParser() { m_doc = nullptr; }
 
-XMLParser::~XMLParser()
-{
-    if (m_doc)
-    {
-        delete m_doc;
-    }
-}
+XMLParser::~XMLParser() = default;
 
 int XMLParser::GetSymbol(int _char)
 {
@@ -156,20 +150,16 @@ XMLDocument* XMLParser::Parse()
 
     m_current_token = 0;
     m_error_code = 0;
-    if (m_doc)
-    {
-        delete m_doc;
-        m_doc = nullptr;
-    }
+    m_doc.reset();
 
-    std::unique_ptr<XMLDocument> doc(new XMLDocument());
+    auto doc = std::make_unique<XMLDocument>();
 
     if (ReadDocument(doc.get()))
     {
-        m_doc = doc.release();
+        m_doc = std::move(doc);
     }
 
-    return m_doc;
+    return m_doc.get();
 }
 
 bool XMLParser::ReadDocument(XMLDocument* _doc)

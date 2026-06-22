@@ -31,7 +31,6 @@
 
 #include "core/RefPtr.h"
 #include "core/auto_ptr.hpp"
-#include "core/vector.hpp"
 
 #include <memory>
 #include <vector>
