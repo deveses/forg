@@ -221,10 +221,7 @@ void CUIKnob::Render()
 // CUIDialog
 ///////////////////////////////////////////////////////////////////////////////
 
-CUIDialog::CUIDialog()
-{
-    m_Sprite = nullptr;
-}
+CUIDialog::CUIDialog() { m_Sprite = nullptr; }
 
 CUIDialog::~CUIDialog() { Close(); }
 

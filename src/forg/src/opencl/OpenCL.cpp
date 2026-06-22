@@ -365,14 +365,9 @@ bool LoadOpenCL()
 /////////////////////////////////////////////////////////////////////////////////////
 // CLLibrary
 /////////////////////////////////////////////////////////////////////////////////////
-CLLibrary::CLLibrary()
-{
-    m_num_platforms = 0;
-}
+CLLibrary::CLLibrary() { m_num_platforms = 0; }
 
-CLLibrary::~CLLibrary()
-{
-}
+CLLibrary::~CLLibrary() {}
 
 CLPlatform* CLLibrary::GetPlatform(cl_uint index) const
 {
@@ -424,9 +419,7 @@ CLPlatform::CLPlatform()
     m_num_devices = 0;
 }
 
-CLPlatform::~CLPlatform()
-{
-}
+CLPlatform::~CLPlatform() {}
 
 CLDevice* CLPlatform::GetDevice(cl_uint index) const
 {
