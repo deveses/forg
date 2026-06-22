@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_IRENDERER_H_
-#define _FORG_IRENDERER_H_
+#ifndef FORG_RENDERING_IRENDERER_H
+#define FORG_RENDERING_IRENDERER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -46,9 +46,9 @@ class IRenderer
     virtual LPCTSTR get_Name() = 0;
 };
 
-typedef IRenderer* LPRENDERER;
+using LPRENDERER = IRenderer*;
 
-typedef IRenderer* (*PFCREATERENDERER)(void);
+using PFCREATERENDERER = IRenderer* (*)(void);
 
 inline constexpr uint32 RendererPluginApiVersion = 1;
 
@@ -72,4 +72,4 @@ IsRendererPluginCompatible(const RendererPluginDescriptor* descriptor) noexcept
 
 } // namespace forg
 
-#endif //_FORG_IRENDERER_H_
+#endif // FORG_RENDERING_IRENDERER_H

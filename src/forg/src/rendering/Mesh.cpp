@@ -43,11 +43,18 @@ Mesh::~Mesh(void) {}
 Mesh::MeshPtr Mesh::Box(IRenderDevice* device, float width, float height,
                         float depth)
 {
+    return MeshPtr(MakeBox(device, width, height, depth).release());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+Mesh::UniqueMeshPtr Mesh::MakeBox(IRenderDevice* device, float width,
+                                  float height, float depth)
+{
     PositionNormalTextured* buffer = 0;
     uint vertices = 24, /*indices = 36,*/ primitives = 12;
 
-    MeshPtr m(new Mesh(primitives, vertices, 0,
-                       PositionNormalTextured::Declaration, device));
+    UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
+                             PositionNormalTextured::Declaration, device));
 
     if (m->LockVertexBuffer(0, (void**)&buffer) == FORG_OK)
     {
@@ -216,6 +223,13 @@ Mesh::MeshPtr Mesh::Box(IRenderDevice* device, float width, float height,
 Mesh::MeshPtr Mesh::Sphere(IRenderDevice* device, float radius, int slices,
                            int stacks)
 {
+    return MeshPtr(MakeSphere(device, radius, slices, stacks).release());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+Mesh::UniqueMeshPtr Mesh::MakeSphere(IRenderDevice* device, float radius,
+                                     int slices, int stacks)
+{
     PositionNormalTextured* buffer = 0;
     ushort* ibuffer = 0;
 
@@ -224,8 +238,8 @@ Mesh::MeshPtr Mesh::Sphere(IRenderDevice* device, float radius, int slices,
     // 2 pole slices * stacks + (slices - 2) * stacks * 2
     uint primitives = stacks * (slices - 2) * 2 + stacks * 2;
 
-    MeshPtr m(new Mesh(primitives, vertices, 0,
-                       PositionNormalTextured::Declaration, device));
+    UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
+                             PositionNormalTextured::Declaration, device));
 
     uint vcount = 0;
     uint fcount = 0;
@@ -329,14 +343,24 @@ Mesh::MeshPtr Mesh::Cylinder(IRenderDevice* device, float radius1,
                              float radius2, float length, int slices,
                              int stacks)
 {
+    return MeshPtr(
+        MakeCylinder(device, radius1, radius2, length, slices, stacks)
+            .release());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+Mesh::UniqueMeshPtr Mesh::MakeCylinder(IRenderDevice* device, float radius1,
+                                       float radius2, float length, int slices,
+                                       int stacks)
+{
     PositionNormalTextured* buffer = 0;
     ushort* ibuffer = 0;
 
     uint vertices = (slices + 1) * stacks + 2;
     uint primitives = 2 * stacks + 2 * slices * stacks;
 
-    MeshPtr m(new Mesh(primitives, vertices, 0,
-                       PositionNormalTextured::Declaration, device));
+    UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
+                             PositionNormalTextured::Declaration, device));
 
     uint vcount = 0;
     uint fcount = 0;
@@ -446,14 +470,24 @@ Mesh::MeshPtr Mesh::Landscape(IRenderDevice* _device, const Vector3& _span,
                               const float* _hmap, unsigned int _sizex,
                               unsigned int _sizey)
 {
+    return MeshPtr(
+        MakeLandscape(_device, _span, _hmap, _sizex, _sizey).release());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+Mesh::UniqueMeshPtr Mesh::MakeLandscape(IRenderDevice* _device,
+                                        const Vector3& _span,
+                                        const float* _hmap, unsigned int _sizex,
+                                        unsigned int _sizey)
+{
     PositionNormalTextured* buffer = 0;
     ushort* ibuffer = 0;
 
     uint vertices = _sizex * _sizey;
     uint primitives = 2 * (_sizex - 1) * (_sizey - 1);
 
-    MeshPtr m(new Mesh(primitives, vertices, 0,
-                       PositionNormalTextured::Declaration, _device));
+    UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
+                             PositionNormalTextured::Declaration, _device));
 
     uint vcount = 0;
     uint fcount = 0;
@@ -600,6 +634,13 @@ Vector3(0, 0, radius); // os z Vector3 axisX = Vector3(radius, 0, 0); // os x
 Mesh::MeshPtr Mesh::Pyramid(IRenderDevice* device, uint numAngles, float radius,
                             float height)
 {
+    return MeshPtr(MakePyramid(device, numAngles, radius, height).release());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, uint numAngles,
+                                      float radius, float height)
+{
     if (numAngles < 3)
         numAngles = 3;
 
@@ -609,8 +650,8 @@ Mesh::MeshPtr Mesh::Pyramid(IRenderDevice* device, uint numAngles, float radius,
     uint vertices = indices + 2;
     double angle_step = (Math::PI * 2.0) / numAngles;
 
-    MeshPtr m(new Mesh(primitives, vertices, 0,
-                       PositionNormalTextured::Declaration, device));
+    UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
+                             PositionNormalTextured::Declaration, device));
 
     if (m->LockVertexBuffer(0, (void**)&buffer) == FORG_OK)
     {
@@ -694,6 +735,13 @@ Mesh::MeshPtr Mesh::Pyramid(IRenderDevice* device, uint numAngles, float radius,
 Mesh::MeshPtr Mesh::Grid(IRenderDevice* device, float sizeX, float sizeY,
                          int color, uint subgrid)
 {
+    return MeshPtr(MakeGrid(device, sizeX, sizeY, color, subgrid).release());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
+                                   float sizeY, int color, uint subgrid)
+{
     PositionColored* buffer = 0;
     uint primitives = (subgrid + 2) << 1; // 4 + 2*s = (s+2)*2
     // uint indices = primitives*2;
@@ -704,8 +752,8 @@ Mesh::MeshPtr Mesh::Grid(IRenderDevice* device, float sizeX, float sizeY,
     if (sizeY < 0.0f)
         sizeY = -sizeY;
 
-    MeshPtr m(new Mesh(primitives, vertices, 0, PositionColored::Declaration,
-                       device));
+    UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
+                             PositionColored::Declaration, device));
 
     if (m->LockVertexBuffer(0, (void**)&buffer) == FORG_OK)
     {
@@ -804,15 +852,31 @@ Mesh::MeshPtr Mesh::Grid(IRenderDevice* device, float sizeX, float sizeY,
 Mesh::MeshPtr Mesh::FromFile(const char* filename, uint options,
                              IRenderDevice* device)
 {
+    return MeshPtr(LoadFromFile(filename, options, device).release());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+Mesh::UniqueMeshPtr Mesh::LoadFromFile(const char* filename, uint options,
+                                       IRenderDevice* device)
+{
     ExtendedMaterialVec tmp_mat;
 
-    return FromFile(filename, options, device, tmp_mat);
+    return LoadFromFile(filename, options, device, tmp_mat);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 Mesh::MeshPtr Mesh::FromFile(const char* filename, uint options,
                              IRenderDevice* device,
                              ExtendedMaterialVec& materials)
+{
+    return MeshPtr(
+        LoadFromFile(filename, options, device, materials).release());
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+Mesh::UniqueMeshPtr Mesh::LoadFromFile(const char* filename, uint options,
+                                       IRenderDevice* device,
+                                       ExtendedMaterialVec& materials)
 {
     std::string fname = filename;
     MeshPtr m;
@@ -836,7 +900,7 @@ Mesh::MeshPtr Mesh::FromFile(const char* filename, uint options,
     DBG_MSG("[Mesh::FromFile] took %llu\n",
             static_cast<unsigned long long>(dur));
 
-    return m;
+    return UniqueMeshPtr(m.release());
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

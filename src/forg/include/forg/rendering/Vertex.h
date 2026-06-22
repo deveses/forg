@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_VERTEX_H_
-#define _FORG_VERTEX_H_
+#ifndef FORG_RENDERING_VERTEX_H
+#define FORG_RENDERING_VERTEX_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -177,4 +177,4 @@ struct FORG_API PositionNormalTextured
 
 } // namespace forg::geometry
 
-#endif //_FORG_VERTEX_H_
+#endif // FORG_RENDERING_VERTEX_H

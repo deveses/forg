@@ -12,7 +12,7 @@ ITexture* ITexture::FromFile(IRenderDevice* device, const char* srcFile)
 {
     Image image;
 
-    ITexture* tex = NULL;
+    ITexture* tex = nullptr;
 
     if (image.Load(srcFile))
     {

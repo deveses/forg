@@ -114,7 +114,7 @@ void Vector4::Add(Vector4& vOut, const Vector4& vLeft, const Vector4& vRight)
     vOut.X = vLeft.X + vRight.X;
     vOut.Y = vLeft.Y + vRight.Y;
     vOut.Z = vLeft.Z + vRight.Z;
-    vOut.Z = vLeft.W + vRight.W;
+    vOut.W = vLeft.W + vRight.W;
 }
 
 void Vector4::Substract(Vector4& vOut, const Vector4& vLeft,
@@ -141,7 +141,10 @@ float Vector4::Dot(const Vector4& v) const
 
 float Vector4::LengthSq() const { return Dot(*this); }
 
-float Vector4::Length() const { return (float)Math::Sqrt(LengthSq()); }
+float Vector4::Length() const
+{
+    return static_cast<float>(Math::Sqrt(LengthSq()));
+}
 
 Vector4& Vector4::Normalize()
 {

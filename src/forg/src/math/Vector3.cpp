@@ -171,7 +171,10 @@ void Vector3::Cross(const Vector3& v1, const Vector3& v2)
 
 float Vector3::LengthSq() const { return Dot(*this); }
 
-float Vector3::Length() const { return (float)Math::Sqrt(LengthSq()); }
+float Vector3::Length() const
+{
+    return static_cast<float>(Math::Sqrt(LengthSq()));
+}
 
 Vector3& Vector3::Normalize()
 {

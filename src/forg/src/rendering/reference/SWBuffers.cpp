@@ -8,20 +8,9 @@ namespace forg::rendering::reference {
 // SWTexture
 /////////////////////////////////////////////////////////////////////////////////////
 
-SWTexture::SWTexture()
-{
-    m_refCount = 1;
-    m_data = 0;
-}
+SWTexture::SWTexture() { m_refCount = 1; }
 
-SWTexture::~SWTexture()
-{
-    if (m_data)
-    {
-        delete[] m_data;
-        m_data = 0;
-    }
-}
+SWTexture::~SWTexture() = default;
 
 uint SWTexture::GetLevelCount() { return m_Levels; }
 
@@ -39,7 +28,7 @@ int SWTexture::GetLevelDesc(uint level, SurfaceDescription* description) const
 
 void* SWTexture::LockRect(uint level, uint)
 {
-    return level < m_Levels ? m_data : nullptr;
+    return level < m_Levels ? m_data.get() : nullptr;
 }
 
 int SWTexture::UnlockRect(uint level)
@@ -60,7 +49,7 @@ int SWTexture::Create(uint Width, uint Height, uint, uint Usage, uint Format,
     uint stride = Width * 4;
     uint size = stride * Height;
 
-    m_data = new char[size];
+    m_data = std::make_unique<char[]>(size);
 
     return FORG_OK;
 }
@@ -72,7 +61,7 @@ uint SWTexture::Sample(float u, float v)
 
     if (x < m_Width && y < m_Height)
     {
-        uint* buf_argb = (uint*)m_data;
+        uint* buf_argb = reinterpret_cast<uint*>(m_data.get());
 
         return buf_argb[y * m_Width + x];
     }
@@ -89,10 +78,9 @@ SWVertexBuffer::SWVertexBuffer()
     m_length = 0;
     m_usage = 0;
     m_pool = 0;
-    m_data = 0;
 }
 
-SWVertexBuffer::~SWVertexBuffer() { delete[] m_data; }
+SWVertexBuffer::~SWVertexBuffer() = default;
 
 int SWVertexBuffer::Create(uint length, uint usage, uint pool)
 {
@@ -100,7 +88,7 @@ int SWVertexBuffer::Create(uint length, uint usage, uint pool)
     m_usage = usage;
     m_pool = pool;
 
-    m_data = new char[length];
+    m_data = std::make_unique<char[]>(length);
 
     return FORG_OK;
 }
@@ -112,7 +100,7 @@ int SWVertexBuffer::Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
         (sizeToLock != 0 && sizeToLock > m_length - offsetToLock))
         return FORG_INVALID_CALL;
 
-    *ppbData = m_data + offsetToLock;
+    *ppbData = m_data.get() + offsetToLock;
 
     return FORG_OK;
 }
@@ -129,10 +117,9 @@ SWIndexBuffer::SWIndexBuffer()
     m_usage = 0;
     m_pool = 0;
     m_short = false;
-    m_data = 0;
 }
 
-SWIndexBuffer::~SWIndexBuffer() { delete[] m_data; }
+SWIndexBuffer::~SWIndexBuffer() = default;
 
 int SWIndexBuffer::Create(uint length, uint usage, bool sixteenBitIndices,
                           uint pool)
@@ -142,7 +129,7 @@ int SWIndexBuffer::Create(uint length, uint usage, bool sixteenBitIndices,
     m_pool = pool;
     m_short = sixteenBitIndices;
 
-    m_data = new char[length];
+    m_data = std::make_unique<char[]>(length);
 
     return FORG_OK;
 }
@@ -154,7 +141,7 @@ int SWIndexBuffer::Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
         (sizeToLock != 0 && sizeToLock > m_length - offsetToLock))
         return FORG_INVALID_CALL;
 
-    *ppbData = m_data + offsetToLock;
+    *ppbData = m_data.get() + offsetToLock;
 
     return FORG_OK;
 }

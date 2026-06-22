@@ -2,9 +2,15 @@
 
 ## Status
 
-In progress. `Color` and `Math` use C++20 facilities and have regression tests.
-Vectors, matrices, quaternions, planes, declarations, and many legacy spellings
-remain unchanged.
+Done. `Color`, `Math`, vectors, matrices, quaternions, material/light
+values, and vertex declaration values use C++20 facilities and have layout or
+behavior regression tests. The targeted value-code cleanup has removed live
+C-style numeric casts, reserved guards, `memset`, `NULL`, and local typedefs
+from those files and adjacent maintained rendering interfaces. `Plane` has no
+public type in the current tree, so it is tracked as a stale roadmap item rather
+than a modernization target. Debug, release, sanitizer, public-header, and
+package-consumer gates pass on arm64 macOS, and x64 Windows layout validation
+passes in CI.
 
 ## Objective
 
@@ -15,8 +21,10 @@ conventions, serialized values, or rendering results.
 
 1. **Lock behavior and layout**
    - Add size, alignment, standard-layout, construction, and representative
-     arithmetic tests for `Vector2/3/4`, `Matrix4`, `Quaternion`, `Plane`,
-     `Color`, `VertexElement`, and `VertexDeclaration`.
+     arithmetic tests for `Vector2/3/4`, `Matrix4`, `Quaternion`, `Color`,
+     and `VertexElement`.
+   - Preserve `VertexDeclaration` as a legacy virtual interface and cover its
+     size and behavior without claiming standard-layout.
    - Add compile-time assertions for layouts consumed by vertex buffers or plugin
      interfaces.
 
@@ -37,6 +45,9 @@ conventions, serialized values, or rendering results.
 4. **Legacy spelling cleanup**
    - Replace reserved include guards, `NULL`, and implementation-local `typedef`
      declarations with portable equivalents.
+   - Targeted math/rendering value files and adjacent rendering interfaces are
+     clean; continue the same cleanup pattern opportunistically through broader
+     maintained rendering and loader code.
    - Keep public aliases such as `uint` and LP-style names during 1.x; introduce
      fixed-width or `using` alternatives before deprecating them.
 

@@ -16,12 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_MATH_VECTOR4_H_
-#define _FORG_MATH_VECTOR4_H_
+#ifndef FORG_MATH_VECTOR4_H
+#define FORG_MATH_VECTOR4_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
+
+#include <cstddef>
+#include <type_traits>
 
 #include "forg/base.h"
 // #include "Matrix4.h"
@@ -38,11 +41,15 @@ struct FORG_API Vector4
     //////////////////////////////////////////////////////////////////////////
     // Constructors
     //////////////////////////////////////////////////////////////////////////
-    explicit Vector4(float x = 0.0f, float y = 0.0f, float z = 0.0f,
-                     float w = 0.0f)
+    explicit constexpr Vector4(float x = 0.0f, float y = 0.0f, float z = 0.0f,
+                               float w = 0.0f) noexcept
         : X(x), Y(y), Z(z), W(w)
     {
     }
+
+    constexpr Vector4(const Vector4&) noexcept = default;
+    constexpr Vector4& operator=(const Vector4&) noexcept = default;
+    ~Vector4() = default;
 
     ////////////////////////////////////////////////////////////////////////////////
     // Attributes
@@ -57,8 +64,8 @@ struct FORG_API Vector4
     //////////////////////////////////////////////////////////////////////////
 
     // casting
-    operator float*() { return (float*)this; };
-    operator const float*() const { return (const float*)this; };
+    operator float*() noexcept { return &X; };
+    operator const float*() const noexcept { return &X; };
 
     // assignment operators
     Vector4& operator+=(const Vector4& value);
@@ -67,8 +74,14 @@ struct FORG_API Vector4
     Vector4& operator/=(float value);
 
     // unary operators
-    Vector4 operator+() const { return Vector4(*this); };
-    Vector4 operator-() const { return Vector4(-X, -Y, -Z); };
+    [[nodiscard]] constexpr Vector4 operator+() const noexcept
+    {
+        return Vector4(*this);
+    };
+    [[nodiscard]] constexpr Vector4 operator-() const noexcept
+    {
+        return Vector4(-X, -Y, -Z, -W);
+    };
 
     // binary operators
     Vector4 operator+(const Vector4& value) const;
@@ -109,9 +122,16 @@ struct FORG_API Vector4
     /// into w = 1.
     Vector4& TransformCoordinate(const Matrix4& mTransformation);
 
-    void Zero() { X = Y = Z = W = 0.0f; }
+    constexpr void Zero() noexcept { X = Y = Z = W = 0.0f; }
 };
+
+static_assert(std::is_standard_layout_v<Vector4>);
+static_assert(sizeof(Vector4) == sizeof(float) * 4);
+static_assert(alignof(Vector4) == alignof(float));
+static_assert(offsetof(Vector4, Y) == sizeof(float));
+static_assert(offsetof(Vector4, Z) == sizeof(float) * 2);
+static_assert(offsetof(Vector4, W) == sizeof(float) * 3);
 
 } // namespace forg::math
 
-#endif // _FORG_MATH_VECTOR4_H_
+#endif // FORG_MATH_VECTOR4_H

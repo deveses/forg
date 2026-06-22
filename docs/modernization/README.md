@@ -8,12 +8,12 @@ landed in `f174416` is recorded separately from remaining work.
 
 | Phase | State | Next Gate |
 | --- | --- | --- |
-| Phase 1 | Implemented locally | Confirm MSVC and clang-tidy in CI |
-| Phase 2 | In progress | Complete value-type layout and behavior coverage |
-| Phase 3 | In progress | Finish first-party RAII and container migrations |
+| Phase 1 | Done | None |
+| Phase 2 | Done | None |
+| Phase 3 | In progress | Retire remaining first-party custom pointer/container uses |
 | Phase 4 | Mostly complete | Validate headers and installed consumers on MSVC |
 | Phase 5 | In progress | Add descriptor v2 destruction and runtime coverage |
-| Phase 6 | In progress, partially verified | Complete interactive winapp smoke |
+| Phase 6 | Done | None |
 
 ## Recommended Order
 

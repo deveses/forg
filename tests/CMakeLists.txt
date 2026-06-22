@@ -19,6 +19,7 @@ add_executable(forg_tests
     script/XMLParserTests.cpp
     script/YAMLParserTests.cpp
     rendering/RenderingValueTests.cpp
+    rendering/MeshFactoryTests.cpp
     rendering/CameraTests.cpp
     rendering/PluginTests.cpp
     mesh/GltfLoaderTests.cpp

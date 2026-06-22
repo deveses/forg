@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_IVERTEXBUFFER_H_
-#define _FORG_IVERTEXBUFFER_H_
+#ifndef FORG_RENDERING_IVERTEXBUFFER_H
+#define FORG_RENDERING_IVERTEXBUFFER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -48,8 +48,8 @@ class IVertexBuffer : public core::RefCounter
     virtual int Unlock() = 0;
 };
 
-typedef IVertexBuffer* LPVERTEXBUFFER;
+using LPVERTEXBUFFER = IVertexBuffer*;
 
 } // namespace forg
 
-#endif //_FORG_IVERTEXBUFFER_H_
+#endif // FORG_RENDERING_IVERTEXBUFFER_H

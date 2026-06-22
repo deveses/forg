@@ -16,12 +16,14 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_MATH_VECTOR2_H_
-#define _FORG_MATH_VECTOR2_H_
+#ifndef FORG_MATH_VECTOR2_H
+#define FORG_MATH_VECTOR2_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
+
+#include <type_traits>
 
 #include "forg/base.h"
 
@@ -34,7 +36,11 @@ struct FORG_API Vector2
     //////////////////////////////////////////////////////////////////////////
     // Constructors
     //////////////////////////////////////////////////////////////////////////
-    Vector2(float x = 0.0f, float y = 0.0f) : X(x), Y(y) {}
+    constexpr Vector2(float x = 0.0f, float y = 0.0f) noexcept : X(x), Y(y) {}
+
+    constexpr Vector2(const Vector2&) noexcept = default;
+    constexpr Vector2& operator=(const Vector2&) noexcept = default;
+    ~Vector2() = default;
 
     ////////////////////////////////////////////////////////////////////////////////
     // Attributes
@@ -44,6 +50,10 @@ struct FORG_API Vector2
     float Y;
 };
 
+static_assert(std::is_standard_layout_v<Vector2>);
+static_assert(sizeof(Vector2) == sizeof(float) * 2);
+static_assert(alignof(Vector2) == alignof(float));
+
 } // namespace forg::math
 
-#endif // _FORG_MATH_VECTOR2_H_
+#endif // FORG_MATH_VECTOR2_H

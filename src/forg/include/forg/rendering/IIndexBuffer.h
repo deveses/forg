@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_IINDEXBUFFER_H_
-#define _FORG_IINDEXBUFFER_H_
+#ifndef FORG_RENDERING_IINDEXBUFFER_H
+#define FORG_RENDERING_IINDEXBUFFER_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -50,8 +50,8 @@ class IIndexBuffer : public core::RefCounter
     virtual int Unlock() = 0;
 };
 
-typedef IIndexBuffer* LPINDEXBUFFER;
+using LPINDEXBUFFER = IIndexBuffer*;
 
 } // namespace forg
 
-#endif //_FORG_IINDEXBUFFER_H_
+#endif // FORG_RENDERING_IINDEXBUFFER_H

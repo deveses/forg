@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_REFERENCE_SWBUFFERS_H_
-#define _FORG_REFERENCE_SWBUFFERS_H_
+#ifndef FORG_RENDERING_REFERENCE_SWBUFFERS_H
+#define FORG_RENDERING_REFERENCE_SWBUFFERS_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -28,6 +28,8 @@
 #include "rendering/ITexture.h"
 #include "rendering/IVertexBuffer.h"
 
+#include <memory>
+
 namespace forg::rendering::reference {
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -37,7 +39,7 @@ namespace forg::rendering::reference {
 class FORG_API SWTexture : public ITexture
 {
     int m_refCount;
-    char* m_data;
+    std::unique_ptr<char[]> m_data;
     uint m_Width;
     uint m_Height;
     uint m_Levels;
@@ -70,7 +72,7 @@ class FORG_API SWTexture : public ITexture
 /////////////////////////////////////////////////////////////////////////////////////
 class FORG_API SWVertexBuffer : public IVertexBuffer
 {
-    char* m_data;
+    std::unique_ptr<char[]> m_data;
 
     uint m_length;
     uint m_usage;
@@ -80,7 +82,7 @@ class FORG_API SWVertexBuffer : public IVertexBuffer
     SWVertexBuffer();
     virtual ~SWVertexBuffer();
 
-    char* GetData() { return m_data; }
+    char* GetData() { return m_data.get(); }
 
     int Create(uint length, uint usage, uint pool);
 
@@ -96,7 +98,7 @@ class FORG_API SWVertexBuffer : public IVertexBuffer
 /////////////////////////////////////////////////////////////////////////////////////
 class FORG_API SWIndexBuffer : public IIndexBuffer
 {
-    char* m_data;
+    std::unique_ptr<char[]> m_data;
 
     uint m_length;
     uint m_usage;
@@ -107,7 +109,7 @@ class FORG_API SWIndexBuffer : public IIndexBuffer
     SWIndexBuffer();
     virtual ~SWIndexBuffer();
 
-    char* GetData() { return m_data; }
+    char* GetData() { return m_data.get(); }
 
     uint GetLength() const { return m_length; }
 
@@ -125,4 +127,4 @@ class FORG_API SWIndexBuffer : public IIndexBuffer
 };
 } // namespace forg::rendering::reference
 
-#endif //_FORG_REFERENCE_SWBUFFERS_H_
+#endif // FORG_RENDERING_REFERENCE_SWBUFFERS_H

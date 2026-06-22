@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_REFERENCE_SW_RENDER_DEVICE_H_
-#define _FORG_REFERENCE_SW_RENDER_DEVICE_H_
+#ifndef FORG_RENDERING_REFERENCE_SWRENDERDEVICE_H
+#define FORG_RENDERING_REFERENCE_SWRENDERDEVICE_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -257,4 +257,4 @@ class FORG_API SWRenderDevice : public IRenderDevice
 
 } // namespace forg::rendering::reference
 
-#endif // _FORG_REFERENCE_SW_RENDER_DEVICE_H_
+#endif // FORG_RENDERING_REFERENCE_SWRENDERDEVICE_H

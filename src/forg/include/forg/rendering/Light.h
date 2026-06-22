@@ -16,12 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_LIGHT_H_
-#define _FORG_LIGHT_H_
+#ifndef FORG_RENDERING_LIGHT_H
+#define FORG_RENDERING_LIGHT_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
+
+#include <cstddef>
+#include <type_traits>
 
 #include "base.h"
 #include "math/Vector3.h"
@@ -61,9 +64,18 @@ struct Light
     //////////////////////////////////////////////////////////////////////////
 
     // casting
-    operator float*() { return (float*)this; };
-    operator const float*() const { return (const float*)this; };
+    operator float*() noexcept { return reinterpret_cast<float*>(this); };
+    operator const float*() const noexcept
+    {
+        return reinterpret_cast<const float*>(this);
+    };
 };
+
+static_assert(std::is_standard_layout_v<Light>);
+static_assert(offsetof(Light, Type) == 0);
+static_assert(offsetof(Light, Diffuse) >= sizeof(uint));
+static_assert(offsetof(Light, Direction) > offsetof(Light, Position));
+static_assert(offsetof(Light, Phi) > offsetof(Light, Theta));
 } // namespace forg
 
-#endif //_FORG_LIGHT_H_
+#endif // FORG_RENDERING_LIGHT_H

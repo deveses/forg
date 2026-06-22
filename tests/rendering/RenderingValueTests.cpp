@@ -1,13 +1,56 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <cstddef>
 #include <limits>
+#include <type_traits>
 
 #include "forg/enums.h"
 #include "forg/rendering/Color.h"
+#include "forg/rendering/Light.h"
+#include "forg/rendering/Material.h"
 #include "forg/rendering/VertexDeclaration.h"
 #include "forg/rendering/VertexElement.h"
 
 using Catch::Approx;
+
+TEST_CASE("Rendering value layouts remain stable", "[rendering][layout]")
+{
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::Color3f>);
+    STATIC_REQUIRE(sizeof(forg::Color3f) == sizeof(float) * 3);
+    STATIC_REQUIRE(offsetof(forg::Color3f, r) == 0);
+    STATIC_REQUIRE(offsetof(forg::Color3f, g) == sizeof(float));
+    STATIC_REQUIRE(offsetof(forg::Color3f, b) == sizeof(float) * 2);
+
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::Color>);
+    STATIC_REQUIRE(sizeof(forg::Color) == sizeof(float) * 4);
+    STATIC_REQUIRE(offsetof(forg::Color, r) == 0);
+    STATIC_REQUIRE(offsetof(forg::Color, a) == sizeof(float) * 3);
+
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::VertexElement>);
+    STATIC_REQUIRE(sizeof(forg::VertexElement) == 8);
+    STATIC_REQUIRE(offsetof(forg::VertexElement, Stream) == 0);
+    STATIC_REQUIRE(offsetof(forg::VertexElement, Offset) ==
+                   sizeof(forg::ushort));
+    STATIC_REQUIRE(offsetof(forg::VertexElement, Type) ==
+                   sizeof(forg::ushort) * 2);
+    STATIC_REQUIRE(offsetof(forg::VertexElement, UsageIndex) ==
+                   sizeof(forg::ushort) * 2 + sizeof(forg::byte) * 2);
+
+    STATIC_REQUIRE_FALSE(std::is_standard_layout_v<forg::VertexDeclaration>);
+    STATIC_REQUIRE(sizeof(forg::VertexDeclaration) >=
+                   sizeof(forg::VertexElement) * 256 + sizeof(forg::uint) * 2);
+
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::Material>);
+    STATIC_REQUIRE(offsetof(forg::Material, Diffuse) == 0);
+    STATIC_REQUIRE(offsetof(forg::Material, Ambient) == sizeof(forg::Color));
+    STATIC_REQUIRE(offsetof(forg::Material, Power) == sizeof(forg::Color) * 4);
+
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::Light>);
+    STATIC_REQUIRE(offsetof(forg::Light, Type) == 0);
+    STATIC_REQUIRE(offsetof(forg::Light, Diffuse) >= sizeof(forg::uint));
+    STATIC_REQUIRE(offsetof(forg::Light, Direction) >
+                   offsetof(forg::Light, Position));
+}
 
 TEST_CASE("Color converts between ARGB integers and float channels",
           "[rendering][color]")
