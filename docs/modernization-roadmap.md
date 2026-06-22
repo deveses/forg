@@ -32,7 +32,7 @@ Actions jobs remain the final cross-platform acceptance gates.
 3. **Ownership and containers**
    - Replace remaining internal `core::vector`, raw arrays, and manual cleanup with standard containers and RAII.
    - Introduce an internal RAII wrapper for `AddRef`/`Release` resources.
-   - Keep public raw-pointer factories and `MeshPtr` compatibility initially; mark custom `auto_ptr` APIs deprecated and provide additive modern factories returning `std::unique_ptr`.
+   - Replace custom destructive-copy ownership with standard `std::unique_ptr` mesh ownership and keep raw-pointer renderer/device interfaces where ownership is externally defined.
    - Add ownership-focused tests before converting the X/PLY loaders and rendering resources.
 
 4. **Project structure and packaging**
@@ -59,7 +59,7 @@ Actions jobs remain the final cross-platform acceptance gates.
 - Existing method names, raw-pointer overloads, numeric enums, and renderer factories remain available during the 1.x modernization.
 - Add modern overloads using `std::span`, `std::string_view`, scoped enums, and RAII return types; legacy overloads forward to them and become deprecated gradually.
 - Source compatibility is the target, but binary compatibility is not guaranteed when consumers rebuild against a new 1.x release.
-- A future v2 may remove custom containers, `auto_ptr`, LP-style aliases, and deprecated overloads.
+- A future v2 may remove custom containers, LP-style aliases, and deprecated overloads.
 
 ## Test Plan
 

@@ -7,6 +7,8 @@
 #include "OpenCL.h"
 #include <forg.h>
 
+#include <vector>
+
 #include <CL/opencl.h>
 #define WIN32_LEAN_AND_MEAN // Exclude rarely-used stuff from Windows headers
 // Windows Header Files:
@@ -363,20 +365,9 @@ bool LoadOpenCL()
 /////////////////////////////////////////////////////////////////////////////////////
 // CLLibrary
 /////////////////////////////////////////////////////////////////////////////////////
-CLLibrary::CLLibrary()
-{
-    m_num_platforms = 0;
-    m_platforms = nullptr;
-}
+CLLibrary::CLLibrary() { m_num_platforms = 0; }
 
-CLLibrary::~CLLibrary()
-{
-    if (m_platforms != nullptr)
-    {
-        delete[] m_platforms;
-        m_platforms = nullptr;
-    }
-}
+CLLibrary::~CLLibrary() {}
 
 CLPlatform* CLLibrary::GetPlatform(cl_uint index) const
 {
@@ -408,7 +399,7 @@ bool CLLibrary::Initialize()
     cl_platform_id platformIds[MAX_NUM_PLATFORMS];
     CLV(OpenCL::clGetPlatformIDs(platformIdCount, platformIds, nullptr));
 
-    m_platforms = new CLPlatform[platformIdCount];
+    m_platforms = std::make_unique<CLPlatform[]>(platformIdCount);
     m_num_platforms = platformIdCount;
 
     for (cl_uint i = 0; i < platformIdCount; i++)
@@ -425,19 +416,10 @@ bool CLLibrary::Initialize()
 CLPlatform::CLPlatform()
 {
     m_platform_id = nullptr;
-    m_devices = nullptr;
     m_num_devices = 0;
 }
 
-CLPlatform::~CLPlatform()
-{
-    if (m_devices != nullptr)
-    {
-        delete[] m_devices;
-        m_devices = nullptr;
-        m_num_devices = 0;
-    }
-}
+CLPlatform::~CLPlatform() {}
 
 CLDevice* CLPlatform::GetDevice(cl_uint index) const
 {
@@ -466,8 +448,8 @@ bool CLPlatform::Initialize(cl_platform_id platform_id)
     OpenCL::clGetDeviceIDs(m_platform_id, CL_DEVICE_TYPE_ALL, deviceIdCount,
                            deviceIds, nullptr);
 
+    m_devices = std::make_unique<CLDevice[]>(deviceIdCount);
     m_num_devices = deviceIdCount;
-    m_devices = new CLDevice[deviceIdCount];
 
     for (cl_uint i = 0; i < deviceIdCount; i++)
     {
@@ -480,7 +462,7 @@ bool CLPlatform::Initialize(cl_platform_id platform_id)
 void CLPlatform::PrintInfo()
 {
     size_t string_size = 0;
-    forg::core::vector<char> platform_info;
+    std::vector<char> platform_info;
 
     // platform name
     OpenCL::clGetPlatformInfo(m_platform_id, CL_PLATFORM_NAME, 0, nullptr,
@@ -552,7 +534,7 @@ bool CLDevice::Initialize(cl_device_id device_id)
     // Get device info
     {
         size_t string_size = 0;
-        forg::core::vector<char> device_info;
+        std::vector<char> device_info;
 
         // Device name
         OpenCL::clGetDeviceInfo(m_device_id, CL_DEVICE_NAME, 0, nullptr,
@@ -737,7 +719,7 @@ bool CLProgram::BuildProgram(cl_device_id device_id)
     if (m_error != CL_SUCCESS)
     {
         cl_program_build_info binfo;
-        forg::core::vector<char> blog;
+        std::vector<char> blog;
         size_t log_size = 0;
 
         OpenCL::clGetProgramBuildInfo(m_program, device_id,

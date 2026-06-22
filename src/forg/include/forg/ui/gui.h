@@ -23,8 +23,11 @@
 #pragma once
 #endif
 
-#include "core/vector.hpp"
+#include "core/RefPtr.h"
 #include "rendering/Sprite.h"
+
+#include <memory>
+#include <vector>
 
 namespace forg::io {
 class ISerializer;
@@ -141,10 +144,10 @@ enum
 
 class FORG_API CUIDialog
 {
-    typedef forg::core::vector<CUIControl*> ControlList;
+    typedef std::vector<std::unique_ptr<CUIControl>> ControlList;
 
-    Sprite* m_Sprite;
-    ITexture* m_Texture;
+    std::unique_ptr<Sprite> m_Sprite;
+    core::RefPtr<ITexture> m_Texture;
 
     ControlList m_controls;
 

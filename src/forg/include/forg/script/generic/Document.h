@@ -12,6 +12,8 @@
 #include "forg/base.h"
 #include "forg/core/string.hpp"
 
+#include <memory>
+
 namespace forg::script::generic {
 
 namespace ENodeType {
@@ -81,7 +83,7 @@ class FORG_API Node
 
 class FORG_API Document
 {
-    Node* m_root;
+    std::unique_ptr<Node> m_root;
 
   public:
     Document();
@@ -91,7 +93,7 @@ class FORG_API Document
     Document(const Document&) = delete;
     Document& operator=(const Document&) = delete;
 
-    void SetRootNode(Node* _root) { m_root = _root; }
+    void SetRootNode(Node* _root) { m_root.reset(_root); }
 
     Node* FindNode(const core::string& _name);
 };

@@ -1,5 +1,4 @@
 #include "rendering/Sprite.h"
-#include "core/auto_ptr.hpp"
 #include "forg_pch.h"
 #include "math/Math.h"
 #include "rendering/Vertex.h"

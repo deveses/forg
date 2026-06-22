@@ -10,7 +10,7 @@ landed in `f174416` is recorded separately from remaining work.
 | --- | --- | --- |
 | Phase 1 | Done | None |
 | Phase 2 | Done | None |
-| Phase 3 | In progress | Retire remaining first-party custom pointer/container uses |
+| Phase 3 | Done | None |
 | Phase 4 | Mostly complete | Validate headers and installed consumers on MSVC |
 | Phase 5 | In progress | Add descriptor v2 destruction and runtime coverage |
 | Phase 6 | Done | None |

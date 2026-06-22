@@ -20,10 +20,7 @@ list(TRANSFORM audio_sources PREPEND "src/audio/")
 ###############################################################################
 # core
 ###############################################################################
-set(core_includes
-    auto_ptr.hpp
-)
-list(TRANSFORM core_includes PREPEND "include/forg/core/")
+set(core_includes)
 set(core_sources
     BitArray.cpp
     RefCounter.cpp

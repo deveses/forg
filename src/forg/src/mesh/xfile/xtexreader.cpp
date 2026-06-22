@@ -3,6 +3,8 @@
 #include "debug//dbg.h"
 #include "mesh/xfile/xtexreader.h"
 
+#include <vector>
+
 namespace forg::xfile::reader {
 
 xtexreader::xtexreader(std::ifstream& input, bool doubleFloat) : m_input(input)
@@ -139,12 +141,12 @@ int xtexreader::EvalToken(IntegerList& value)
     if (m_last_tokens.size())
     {
         size_t tlen = m_last_tokens.back().lexem.size();
-        char* text = new char[tlen + 1];
+        std::vector<char> text(tlen + 1);
 
-        m_last_tokens.back().lexem.copy(text, tlen);
+        m_last_tokens.back().lexem.copy(text.data(), tlen);
         text[tlen] = 0;
 
-        char* token = strtok(text, ",;");
+        char* token = strtok(text.data(), ",;");
 
         while (token != NULL)
         {
@@ -155,8 +157,6 @@ int xtexreader::EvalToken(IntegerList& value)
 
             token = strtok(NULL, ",;");
         }
-
-        delete[] text;
 
         return 0;
     }
@@ -169,12 +169,12 @@ int xtexreader::EvalToken(FloatList& value)
     if (m_last_tokens.size())
     {
         size_t tlen = m_last_tokens.back().lexem.size();
-        char* text = new char[tlen + 1];
+        std::vector<char> text(tlen + 1);
 
-        m_last_tokens.back().lexem.copy(text, tlen);
+        m_last_tokens.back().lexem.copy(text.data(), tlen);
         text[tlen] = 0;
 
-        char* token = strtok(text, ",;");
+        char* token = strtok(text.data(), ",;");
 
         while (token != NULL)
         {
@@ -185,8 +185,6 @@ int xtexreader::EvalToken(FloatList& value)
 
             token = strtok(NULL, ",;");
         }
-
-        delete[] text;
 
         return 0;
     }

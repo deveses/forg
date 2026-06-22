@@ -4,6 +4,9 @@
 
 #include "forg.h"
 
+#include <utility>
+#include <vector>
+
 #include <windows.h>
 
 namespace forg::scene {
@@ -11,7 +14,7 @@ namespace forg::scene {
 class Model
 {
     geometry::Mesh::ExtendedMaterialVec m_materials;
-    core::vector<ITexture*> m_textures;
+    std::vector<core::RefPtr<ITexture>> m_textures;
 
     math::Matrix4 m_mesh_tm;
     geometry::Mesh::MeshPtr m_mesh;
@@ -19,7 +22,7 @@ class Model
   public:
     int Load(const char* _name, IRenderDevice* _device);
 
-    bool IsLoaded() const { return !m_mesh.is_null(); }
+    bool IsLoaded() const { return static_cast<bool>(m_mesh); }
 
     void Render(IRenderDevice* _device);
 };

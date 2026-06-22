@@ -46,9 +46,6 @@ struct PixelA8R8G8B8
 Font::Font()
 {
     m_device = 0;
-    m_bitmap = nullptr;
-    m_texture = nullptr;
-    m_sprite = nullptr;
     m_size = (0);
     m_tex_width = (0);
     m_tex_height = (0);
@@ -56,24 +53,6 @@ Font::Font()
 
 Font::~Font()
 {
-    if (m_bitmap)
-    {
-        delete[] m_bitmap;
-        m_bitmap = 0;
-    }
-
-    if (m_texture)
-    {
-        m_texture->Release();
-        m_texture = 0;
-    }
-
-    if (m_sprite)
-    {
-        delete m_sprite;
-        m_sprite = 0;
-    }
-
     if (m_device)
     {
         m_device->Release();
@@ -115,9 +94,9 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
     device->AddRef();
     Font* font = new Font();
     font->m_size = bwidth * bheight;
-    font->m_bitmap = new char[font->m_size];
+    font->m_bitmap.resize(font->m_size);
     font->m_device = device;
-    font->m_sprite = Sprite::CreateSprite(device);
+    font->m_sprite.reset(Sprite::CreateSprite(device));
 
     int cur_off = 0;
     for (int i = 0; i < 256; i++)
@@ -141,7 +120,7 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
             font->m_metrics[i].advance = face->glyph->advance.x >> 6;
             font->m_metrics[i].offset = cur_off;
 
-            memcpy(font->m_bitmap + cur_off, bitmap_glyph->bitmap.buffer,
+            memcpy(font->m_bitmap.data() + cur_off, bitmap_glyph->bitmap.buffer,
                    font->m_metrics[i].width * font->m_metrics[i].rows);
 
             cur_off += font->m_metrics[i].width * font->m_metrics[i].rows;
@@ -205,16 +184,13 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
     //----------------------------------------------------------------------
     if (tex_width != m_tex_width || tex_height != m_tex_height)
     {
-        if (m_texture)
-            m_texture->Release();
-
-        m_texture = m_device->CreateTexture(
-            tex_width, tex_height, 1, 0, forg::Format::A8R8G8B8, Pool_Managed);
+        m_texture.reset(m_device->CreateTexture(
+            tex_width, tex_height, 1, 0, forg::Format::A8R8G8B8, Pool_Managed));
         m_tex_width = tex_width;
         m_tex_height = tex_height;
     }
 
-    if (m_texture == 0)
+    if (!m_texture)
         return FORG_INVALID_CALL;
 
     //----------------------------------------------------------------------
@@ -300,7 +276,7 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
     */
 
     m_sprite->Begin(SpriteFlags::AlphaBlend);
-    m_sprite->Draw(m_texture, nullptr, nullptr, &translation,
+    m_sprite->Draw(m_texture.get(), nullptr, nullptr, &translation,
                    Color4b(0xff, 0xff, 0xff, 0xff));
     m_sprite->End();
 

@@ -30,15 +30,11 @@
 #include "rendering/IRenderer.h"
 
 #include "core/RefPtr.h"
-#include "core/auto_ptr.hpp"
-#include "core/vector.hpp"
 
 #include <memory>
 #include <vector>
 
 namespace forg::geometry {
-
-using namespace forg::core;
 
 struct AttributeRange
 {
@@ -65,12 +61,10 @@ class FORG_API Mesh
     // Nested
     //////////////////////////////////////////////////////////////////////
   public:
-    typedef auto_ptr<Mesh> MeshPtr;
-    typedef auto_ptr<IVertexBuffer, RefCountOwner<IVertexBuffer>>
-        VertexBufferPtr;
-    typedef auto_ptr<IIndexBuffer, RefCountOwner<IIndexBuffer>> IndexBufferPtr;
-
     using UniqueMeshPtr = std::unique_ptr<Mesh>;
+    using MeshPtr = UniqueMeshPtr;
+    using VertexBufferPtr = core::RefPtr<IVertexBuffer>;
+    using IndexBufferPtr = core::RefPtr<IIndexBuffer>;
     using ExtendedMaterialVec = std::vector<ExtendedMaterial>;
     using AttributeRangeVec = std::vector<AttributeRange>;
 

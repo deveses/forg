@@ -2,6 +2,8 @@
 
 #include "image/dds/dds.h"
 
+#include <memory>
+
 namespace forg {
 
 //////////////////////////////////////////////////////////////////////////
@@ -245,26 +247,27 @@ Color4b* LoadDds(const char* filename, ImageDescription* bmp_info)
     fseek(f, 0, SEEK_END);
     uint file_size = ftell(f);
 
-    char* file_data = new char[file_size];
+    std::unique_ptr<char[]> file_data = std::make_unique<char[]>(file_size);
 
     fseek(f, 0, SEEK_SET);
-    fread(file_data, 1, file_size, f);
+    fread(file_data.get(), 1, file_size, f);
     fclose(f);
 
-    DWORD dwMagicNumber = *(DWORD*)(file_data);
+    DWORD dwMagicNumber = *(DWORD*)(file_data.get());
     if (dwMagicNumber != 0x20534444)
         return NULL;
 
     // setup the pointers in the process request
-    DDS_HEADER* pSurfDesc = (DDS_HEADER*)(file_data + sizeof(DWORD));
-    char* pBitData = file_data + sizeof(DWORD) + sizeof(DDS_HEADER);
+    DDS_HEADER* pSurfDesc = (DDS_HEADER*)(file_data.get() + sizeof(DWORD));
+    char* pBitData = file_data.get() + sizeof(DWORD) + sizeof(DDS_HEADER);
     // uint pBitSize   = file_size - sizeof(DWORD) - sizeof(DDS_HEADER);
 
     bmp_info->Width = pSurfDesc->dwWidth;
     bmp_info->Height = pSurfDesc->dwHeight;
 
     uint num_pixels = bmp_info->Width * bmp_info->Height;
-    Color4b* aBitmapBits = new Color4b[num_pixels];
+    std::unique_ptr<Color4b[]> aBitmapBits =
+        std::make_unique<Color4b[]>(num_pixels);
     int dxt = 0;
 
     if (pSurfDesc->ddpf.dwFlags & DDPF_FOURCC)
@@ -325,13 +328,12 @@ Color4b* LoadDds(const char* filename, ImageDescription* bmp_info)
     switch (dxt)
     {
     case 1:
-        DecodeDXT1(aBitmapBits, bmp_info->Width, bmp_info->Height, pBitData);
+        DecodeDXT1(aBitmapBits.get(), bmp_info->Width, bmp_info->Height,
+                   pBitData);
         break;
     }
 
-    delete[] file_data;
-
-    return aBitmapBits;
+    return aBitmapBits.release();
 }
 
 } // namespace forg

@@ -10,6 +10,8 @@
 #include <CL/opencl.h>
 #include <base.h>
 
+#include <memory>
+
 namespace OpenCL {
 
 class CLPlatform;
@@ -20,7 +22,7 @@ class CLMemObject;
 
 class FORG_API CLLibrary
 {
-    CLPlatform* m_platforms;
+    std::unique_ptr<CLPlatform[]> m_platforms;
     cl_uint m_num_platforms;
 
   public:
@@ -37,7 +39,7 @@ class FORG_API CLLibrary
 class FORG_API CLPlatform
 {
     cl_platform_id m_platform_id;
-    CLDevice* m_devices;
+    std::unique_ptr<CLDevice[]> m_devices;
     cl_uint m_num_devices;
 
   public:

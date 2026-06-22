@@ -2,6 +2,8 @@
 #include "debug/dbg.h"
 #include "forg_pch.h"
 
+#include <vector>
+
 namespace forg::xfile::reader {
 
 /*
@@ -245,17 +247,15 @@ int xbinreader::ReadName(xstring& name)
     int rval = 0;
 
     read_value(count);
-    char* charr = new char[count + 1];
+    std::vector<char> charr(count + 1);
 
-    if (read_value(charr, count))
+    if (read_value(charr.data(), count))
         rval = 1;
     else
     {
         charr[count] = 0;
-        name = charr;
+        name = charr.data();
     }
-
-    delete[] charr;
 
     return rval;
 }
@@ -277,9 +277,9 @@ int xbinreader::ReadString(xstring& str)
 
     read_value(count);
 
-    char* char_array = new char[count + 1];
+    std::vector<char> char_array(count + 1);
 
-    if (read_value(char_array, count) || read_value(terminator))
+    if (read_value(char_array.data(), count) || read_value(terminator))
     {
         rval = 1;
     }
@@ -293,10 +293,8 @@ int xbinreader::ReadString(xstring& str)
     else
     {
         char_array[(uint)count] = 0;
-        str = char_array;
+        str = char_array.data();
     }
-
-    delete[] char_array;
 
     return rval;
 }

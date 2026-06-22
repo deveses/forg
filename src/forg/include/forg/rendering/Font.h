@@ -24,8 +24,12 @@
 #endif
 
 #include "base.h"
+#include "core/RefPtr.h"
 #include "rendering/IRenderDevice.h"
 #include "rendering/Sprite.h"
+
+#include <memory>
+#include <vector>
 
 namespace forg {
 
@@ -120,11 +124,11 @@ class Font
     IRenderDevice* m_device;
 
   private:
-    Sprite* m_sprite;
-    LPTEXTURE m_texture;
+    std::unique_ptr<Sprite> m_sprite;
+    core::RefPtr<ITexture> m_texture;
     uint m_tex_width;
     uint m_tex_height;
-    char* m_bitmap;
+    std::vector<char> m_bitmap;
     uint m_size;
 
     CharMetrics m_metrics[256];

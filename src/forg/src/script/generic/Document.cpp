@@ -53,16 +53,16 @@ Node* Node::FindAttribute(const core::string& _name)
     return nullptr;
 }
 
-Document::Document() : m_root(nullptr) {}
+Document::Document() = default;
 
-Document::~Document() { delete m_root; }
+Document::~Document() = default;
 
 Node* Document::FindNode(const core::string& _name)
 {
     std::vector<Node*> stack;
 
     if (m_root)
-        stack.push_back(m_root);
+        stack.push_back(m_root.get());
 
     while (!stack.empty())
     {
