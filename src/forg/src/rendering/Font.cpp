@@ -12,6 +12,8 @@
 
 #include "debug/dbg.h"
 
+#include <algorithm>
+
 namespace forg {
 
 static unsigned int next_pow2(unsigned int v)
@@ -44,9 +46,9 @@ struct PixelA8R8G8B8
 Font::Font()
 {
     m_device = 0;
-    m_bitmap = (NULL);
-    m_texture = (NULL);
-    m_sprite = NULL;
+    m_bitmap = nullptr;
+    m_texture = nullptr;
+    m_sprite = nullptr;
     m_size = (0);
     m_tex_width = (0);
     m_tex_height = (0);
@@ -83,20 +85,20 @@ Font::~Font()
 
 Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
 {
-    if (device == NULL || fontDesc == NULL)
-        return NULL;
+    if (device == nullptr || fontDesc == nullptr)
+        return nullptr;
 
 #ifdef FORG_USE_FREETYPE
     FT_Library library;
     if (FT_Init_FreeType(&library))
-        return NULL;
+        return nullptr;
 
     DBG_MSG("Freetype version: %d.%d.%d\n", FREETYPE_MAJOR, FREETYPE_MINOR,
             FREETYPE_PATCH);
 
     FT_Face face;
     if (FT_New_Face(library, fontDesc->FontPath, 0, &face))
-        return NULL;
+        return nullptr;
 
     uint Width = fontDesc->Width;
     uint Height = fontDesc->Height;
@@ -129,7 +131,8 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
         if (FT_Get_Glyph(face->glyph, &glyph) == 0)
         {
             FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
-            FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)glyph;
+            FT_BitmapGlyph bitmap_glyph =
+                reinterpret_cast<FT_BitmapGlyph>(glyph);
 
             font->m_metrics[i].width = bitmap_glyph->bitmap.width;
             font->m_metrics[i].rows = bitmap_glyph->bitmap.rows;
@@ -169,7 +172,7 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
     uint max_bearingy = 0;
 
     if (count < 0)
-        count = (int)strlen(pString);
+        count = static_cast<int>(strlen(pString));
 
     //----------------------------------------------------------------------
     // compute texture size
@@ -183,7 +186,7 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
         if (max_height < th)
             max_height = th;
 
-        if ((int)max_bearingy < m_metrics[c].top)
+        if (static_cast<int>(max_bearingy) < m_metrics[c].top)
             max_bearingy = m_metrics[c].top;
 
         total_width += m_metrics[c].advance;
@@ -221,10 +224,10 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
     void* bits = m_texture->LockRect(0, 0);
     if (bits != 0)
     {
-        PixelA8R8G8B8* data = (PixelA8R8G8B8*)bits;
+        auto* data = static_cast<PixelA8R8G8B8*>(bits);
 
         // comment to see padding
-        memset(data, 0, sizeof(PixelA8R8G8B8) * tex_width * tex_height);
+        std::fill_n(data, tex_width * tex_height, PixelA8R8G8B8{});
 
         uint offx = 0;
 
@@ -297,7 +300,7 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
     */
 
     m_sprite->Begin(SpriteFlags::AlphaBlend);
-    m_sprite->Draw(m_texture, NULL, NULL, &translation,
+    m_sprite->Draw(m_texture, nullptr, nullptr, &translation,
                    Color4b(0xff, 0xff, 0xff, 0xff));
     m_sprite->End();
 

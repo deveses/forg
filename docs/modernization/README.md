@@ -9,7 +9,7 @@ landed in `f174416` is recorded separately from remaining work.
 | Phase | State | Next Gate |
 | --- | --- | --- |
 | Phase 1 | Done | None |
-| Phase 2 | In progress | Finish broader legacy spelling cleanup |
+| Phase 2 | Done locally | Confirm x64 Windows CI |
 | Phase 3 | In progress | Retire remaining first-party custom pointer/container uses |
 | Phase 4 | Mostly complete | Validate headers and installed consumers on MSVC |
 | Phase 5 | In progress | Add descriptor v2 destruction and runtime coverage |

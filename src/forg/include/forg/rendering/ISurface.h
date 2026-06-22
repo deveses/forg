@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_ISURFACE_H_
-#define _FORG_ISURFACE_H_
+#ifndef FORG_RENDERING_ISURFACE_H
+#define FORG_RENDERING_ISURFACE_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -59,4 +59,4 @@ class ISurface
 
 } // namespace forg
 
-#endif //_FORG_ISURFACE_H_
+#endif // FORG_RENDERING_ISURFACE_H

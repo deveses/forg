@@ -2,12 +2,15 @@
 
 ## Status
 
-In progress. `Color`, `Math`, vectors, matrices, quaternions, and vertex
-declaration values use C++20 facilities and have layout or behavior regression
-tests. The targeted value-code cleanup has removed live C-style numeric casts,
-reserved guards, `memset`, `NULL`, and local typedefs from those files. `Plane`
-has no public type in the current tree, so it is tracked as a stale roadmap item
-rather than a modernization target.
+Done locally. `Color`, `Math`, vectors, matrices, quaternions, material/light
+values, and vertex declaration values use C++20 facilities and have layout or
+behavior regression tests. The targeted value-code cleanup has removed live
+C-style numeric casts, reserved guards, `memset`, `NULL`, and local typedefs
+from those files and adjacent maintained rendering interfaces. `Plane` has no
+public type in the current tree, so it is tracked as a stale roadmap item rather
+than a modernization target. Debug, release, sanitizer, public-header, and
+package-consumer gates pass on arm64 macOS; x64 Windows layout validation should
+be confirmed in CI.
 
 ## Objective
 
@@ -42,8 +45,9 @@ conventions, serialized values, or rendering results.
 4. **Legacy spelling cleanup**
    - Replace reserved include guards, `NULL`, and implementation-local `typedef`
      declarations with portable equivalents.
-   - Targeted math/rendering value files are clean; continue the same cleanup
-     pattern through broader maintained rendering and loader code.
+   - Targeted math/rendering value files and adjacent rendering interfaces are
+     clean; continue the same cleanup pattern opportunistically through broader
+     maintained rendering and loader code.
    - Keep public aliases such as `uint` and LP-style names during 1.x; introduce
      fixed-width or `using` alternatives before deprecating them.
 

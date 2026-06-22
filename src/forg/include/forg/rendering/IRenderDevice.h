@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_IRENDERDEVICE_H_
-#define _FORG_IRENDERDEVICE_H_
+#ifndef FORG_RENDERING_IRENDERDEVICE_H
+#define FORG_RENDERING_IRENDERDEVICE_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -372,8 +372,8 @@ class IRenderDevice : public core::RefCounter
     virtual int SetMaterial(const Material* pMaterial) = 0;
 };
 
-typedef IRenderDevice* LPRENDERDEVICE;
+using LPRENDERDEVICE = IRenderDevice*;
 
 } // namespace forg
 
-#endif //_FORG_IRENDERDEVICE_H_
+#endif // FORG_RENDERING_IRENDERDEVICE_H

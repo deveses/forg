@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_RAY_H_
-#define _FORG_RAY_H_
+#ifndef FORG_RENDERING_RAY_H
+#define FORG_RENDERING_RAY_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -42,4 +42,4 @@ struct Ray
 
 } // namespace forg
 
-#endif //_FORG_RAY_H_
+#endif // FORG_RENDERING_RAY_H

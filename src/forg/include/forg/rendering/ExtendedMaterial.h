@@ -1,5 +1,5 @@
-#ifndef _FORG_EXTENDED_MATERIAL_H_
-#define _FORG_EXTENDED_MATERIAL_H_
+#ifndef FORG_RENDERING_EXTENDED_MATERIAL_H
+#define FORG_RENDERING_EXTENDED_MATERIAL_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -31,4 +31,4 @@ struct ExtendedMaterial
 };
 } // namespace forg
 
-#endif //_FORG_MATERIAL_H_
+#endif // FORG_RENDERING_EXTENDED_MATERIAL_H

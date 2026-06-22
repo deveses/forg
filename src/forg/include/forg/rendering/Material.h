@@ -16,12 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_MATERIAL_H_
-#define _FORG_MATERIAL_H_
+#ifndef FORG_RENDERING_MATERIAL_H
+#define FORG_RENDERING_MATERIAL_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
+
+#include <cstddef>
+#include <type_traits>
 
 #include "base.h"
 #include "rendering/Color.h"
@@ -52,9 +55,16 @@ struct Material
     //////////////////////////////////////////////////////////////////////////
 
     // casting
-    operator float*() { return (float*)this; };
-    operator const float*() const { return (const float*)this; };
+    operator float*() noexcept { return &Diffuse.r; };
+    operator const float*() const noexcept { return &Diffuse.r; };
 };
+
+static_assert(std::is_standard_layout_v<Material>);
+static_assert(offsetof(Material, Diffuse) == 0);
+static_assert(offsetof(Material, Ambient) == sizeof(Color));
+static_assert(offsetof(Material, Specular) == sizeof(Color) * 2);
+static_assert(offsetof(Material, Emissive) == sizeof(Color) * 3);
+static_assert(offsetof(Material, Power) == sizeof(Color) * 4);
 } // namespace forg
 
-#endif //_FORG_MATERIAL_H_
+#endif // FORG_RENDERING_MATERIAL_H

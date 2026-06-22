@@ -16,8 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_RENDERING_H_
-#define _FORG_RENDERING_H_
+#ifndef FORG_RENDERING_H
+#define FORG_RENDERING_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -44,4 +44,4 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "rendering/reference/SWBuffers.h"
 #include "rendering/reference/SWRenderDevice.h"
 
-#endif //_FORG_RENDERING_H_
+#endif // FORG_RENDERING_H

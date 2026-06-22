@@ -684,7 +684,6 @@ int SWRenderDevice::Clear(uint flags, Color color, float zdepth, int)
         }
     }
 
-    // memset(fb, 0, m_width*m_height*4);
     return FORG_OK;
 }
 
@@ -723,7 +722,7 @@ int SWRenderDevice::Present()
     // create our DIB section and select the bitmap into the dc
     VOID *pvBits;          // pointer to DIB section
     HBITMAP hBitmap = CreateDIBSection(hMemDC, &bi, DIB_RGB_COLORS, &pvBits,
-    NULL, 0x0); HGDIOBJ hOldBitmap = SelectObject(hMemDC, hBitmap);
+    nullptr, 0x0); HGDIOBJ hOldBitmap = SelectObject(hMemDC, hBitmap);
 
     //for (uint y = 0; y < ulWindowHeight; y++)
     //for (uint x = 0; x < ulWindowWidth; x++)

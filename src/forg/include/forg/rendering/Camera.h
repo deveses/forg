@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_CAMERA_H_
-#define _FORG_CAMERA_H_
+#ifndef FORG_RENDERING_CAMERA_H
+#define FORG_RENDERING_CAMERA_H
 
 #if _MSC_VER > 1000
 #pragma once
@@ -185,4 +185,4 @@ class Camera
 
 } // namespace forg
 
-#endif //_FORG_CAMERA_H_
+#endif // FORG_RENDERING_CAMERA_H
