@@ -16,12 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_MATH_MATRIX4_H_
-#define _FORG_MATH_MATRIX4_H_
+#ifndef FORG_MATH_MATRIX4_H
+#define FORG_MATH_MATRIX4_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
+
+#include <cstddef>
+#include <type_traits>
 
 #include "forg/base.h"
 // #include "vector3.h"
@@ -44,7 +47,7 @@ struct FORG_API Matrix4
     // Constructors
     //////////////////////////////////////////////////////////////////////////
 
-    Matrix4()
+    constexpr Matrix4() noexcept
         : M11(1.0f), M12(0.0f), M13(0.0f), M14(0.0f), M21(0.0f), M22(1.0f),
           M23(0.0f), M24(0.0f), M31(0.0f), M32(0.0f), M33(1.0f), M34(0.0f),
           M41(0.0f), M42(0.0f), M43(0.0f), M44(1.0f)
@@ -52,14 +55,19 @@ struct FORG_API Matrix4
     }
 
     Matrix4(const float* m);
-    Matrix4(float _11, float _12, float _13, float _14, float _21, float _22,
-            float _23, float _24, float _31, float _32, float _33, float _34,
-            float _41, float _42, float _43, float _44)
+    constexpr Matrix4(float _11, float _12, float _13, float _14, float _21,
+                      float _22, float _23, float _24, float _31, float _32,
+                      float _33, float _34, float _41, float _42, float _43,
+                      float _44) noexcept
         : M11(_11), M12(_12), M13(_13), M14(_14), M21(_21), M22(_22), M23(_23),
           M24(_24), M31(_31), M32(_32), M33(_33), M34(_34), M41(_41), M42(_42),
           M43(_43), M44(_44)
     {
     }
+
+    constexpr Matrix4(const Matrix4&) noexcept = default;
+    constexpr Matrix4& operator=(const Matrix4&) noexcept = default;
+    ~Matrix4() = default;
 
     //////////////////////////////////////////////////////////////////////////
     // Attributes
@@ -90,7 +98,7 @@ struct FORG_API Matrix4
     //////////////////////////////////////////////////////////////////////////
 
     /// casting to float array
-    operator float*() const { return (float*)this; }
+    operator float*() const noexcept { return const_cast<float*>(&M11); }
 
     /// multiply by scalar
     Matrix4& operator*=(float fScalar);
@@ -206,6 +214,14 @@ struct FORG_API Matrix4
                             float* pDeterminant);
 };
 
+static_assert(std::is_standard_layout_v<Matrix4>);
+static_assert(sizeof(Matrix4) == sizeof(float) * 16);
+static_assert(alignof(Matrix4) == alignof(float));
+static_assert(offsetof(Matrix4, M12) == sizeof(float));
+static_assert(offsetof(Matrix4, M21) == sizeof(float) * 4);
+static_assert(offsetof(Matrix4, M41) == sizeof(float) * 12);
+static_assert(offsetof(Matrix4, M44) == sizeof(float) * 15);
+
 } // namespace forg::math
 
-#endif //_FORG_MATH_MATRIX4_H_
+#endif // FORG_MATH_MATRIX4_H

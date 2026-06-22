@@ -16,12 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_VERTEXELEMENT_H_
-#define _FORG_VERTEXELEMENT_H_
+#ifndef FORG_RENDERING_VERTEXELEMENT_H
+#define FORG_RENDERING_VERTEXELEMENT_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
+
+#include <cstddef>
+#include <type_traits>
 
 #include "base.h"
 
@@ -57,6 +60,16 @@ struct FORG_API VertexElement
     static uint GetTypeCount(byte type);
 };
 
+static_assert(std::is_standard_layout_v<VertexElement>);
+static_assert(sizeof(VertexElement) == 8);
+static_assert(alignof(VertexElement) == alignof(ushort));
+static_assert(offsetof(VertexElement, Offset) == sizeof(ushort));
+static_assert(offsetof(VertexElement, Type) == sizeof(ushort) * 2);
+static_assert(offsetof(VertexElement, Usage) ==
+              sizeof(ushort) * 2 + sizeof(byte));
+static_assert(offsetof(VertexElement, UsageIndex) ==
+              sizeof(ushort) * 2 + sizeof(byte) * 2);
+
 } // namespace forg
 
-#endif //_FORG_VERTEXELEMENT_H_
+#endif // FORG_RENDERING_VERTEXELEMENT_H

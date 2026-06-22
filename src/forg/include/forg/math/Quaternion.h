@@ -16,12 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_MATH_QUATERNION_H_
-#define _FORG_MATH_QUATERNION_H_
+#ifndef FORG_MATH_QUATERNION_H
+#define FORG_MATH_QUATERNION_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
+
+#include <cstddef>
+#include <type_traits>
 
 #include "forg/base.h"
 #include "forg/math/Vector3.h"
@@ -35,10 +38,15 @@ struct FORG_API Quaternion
     //////////////////////////////////////////////////////////////////////////
     // Constructors
     //////////////////////////////////////////////////////////////////////////
-    Quaternion(float x = 0.0f, float y = 0.0f, float z = 0.0f, float w = 0.0f)
+    constexpr Quaternion(float x = 0.0f, float y = 0.0f, float z = 0.0f,
+                         float w = 0.0f) noexcept
         : v(x, y, z), s(w)
     {
     }
+
+    constexpr Quaternion(const Quaternion&) noexcept = default;
+    constexpr Quaternion& operator=(const Quaternion&) noexcept = default;
+    ~Quaternion() = default;
 
     ////////////////////////////////////////////////////////////////////////////////
     // Attributes
@@ -49,18 +57,22 @@ struct FORG_API Quaternion
     ////////////////////////////////////////////////////////////////////////////////
     // Properties
     ////////////////////////////////////////////////////////////////////////////////
-    float& X() { return v.X; }
-    float& Y() { return v.Y; }
-    float& Z() { return v.Z; }
-    float& W() { return s; }
+    constexpr float& X() noexcept { return v.X; }
+    constexpr float& Y() noexcept { return v.Y; }
+    constexpr float& Z() noexcept { return v.Z; }
+    constexpr float& W() noexcept { return s; }
+    [[nodiscard]] constexpr const float& X() const noexcept { return v.X; }
+    [[nodiscard]] constexpr const float& Y() const noexcept { return v.Y; }
+    [[nodiscard]] constexpr const float& Z() const noexcept { return v.Z; }
+    [[nodiscard]] constexpr const float& W() const noexcept { return s; }
 
     //////////////////////////////////////////////////////////////////////////
     // Operators
     //////////////////////////////////////////////////////////////////////////
 
     // casting
-    operator float*() { return (float*)this; };
-    operator const float*() const { return (const float*)this; };
+    operator float*() noexcept { return &v.X; };
+    operator const float*() const noexcept { return &v.X; };
 
     // assignment operators
     Quaternion& operator+=(const Quaternion& value);
@@ -81,7 +93,7 @@ struct FORG_API Quaternion
     // Public Methods
     ////////////////////////////////////////////////////////////////////////////////
 
-    void Zero() { v.X = v.Y = v.Z = s = 0.0f; }
+    constexpr void Zero() noexcept { v.X = v.Y = v.Z = s = 0.0f; }
 
     Quaternion& Multiply(Quaternion& q)
     {
@@ -126,6 +138,11 @@ struct FORG_API Quaternion
                                     float angle);
 };
 
+static_assert(std::is_standard_layout_v<Quaternion>);
+static_assert(sizeof(Quaternion) == sizeof(float) * 4);
+static_assert(alignof(Quaternion) == alignof(float));
+static_assert(offsetof(Quaternion, s) == sizeof(float) * 3);
+
 inline Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs)
 {
     Quaternion r;
@@ -135,4 +152,4 @@ inline Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs)
 
 } // namespace forg::math
 
-#endif // _FORG_MATH_QUATERNION_H_
+#endif // FORG_MATH_QUATERNION_H

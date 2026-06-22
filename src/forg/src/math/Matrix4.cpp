@@ -4,7 +4,6 @@
 #include "math/Matrix4.h"
 #include "math/Quaternion.h"
 #include "math/Vector3.h"
-#include <string.h>
 
 namespace forg::math {
 
@@ -16,7 +15,12 @@ const Matrix4 Matrix4::Zero =
     Matrix4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 
-Matrix4::Matrix4(const float* m) { memcpy(this, m, sizeof(Matrix4)); }
+Matrix4::Matrix4(const float* m)
+    : M11(m[0]), M12(m[1]), M13(m[2]), M14(m[3]), M21(m[4]), M22(m[5]),
+      M23(m[6]), M24(m[7]), M31(m[8]), M32(m[9]), M33(m[10]), M34(m[11]),
+      M41(m[12]), M42(m[13]), M43(m[14]), M44(m[15])
+{
+}
 
 Matrix4& Matrix4::operator*=(float fScalar)
 {
@@ -70,7 +74,7 @@ void Matrix4::GetPosition(Vector3& _pos)
 
 Matrix4& Matrix4::SetColumn(const Vector3& _col, int index)
 {
-    float* fl = (float*)this;
+    float* fl = &M11;
 
     fl[index] = _col.X;
     fl[index + 4] = _col.Y;
@@ -81,7 +85,7 @@ Matrix4& Matrix4::SetColumn(const Vector3& _col, int index)
 
 Vector3& Matrix4::GetColumn(Vector3& _col, int index) const
 {
-    float* fl = (float*)this;
+    const float* fl = &M11;
 
     _col.X = fl[index];
     _col.Y = fl[index + 4];
@@ -92,7 +96,7 @@ Vector3& Matrix4::GetColumn(Vector3& _col, int index) const
 
 Matrix4& Matrix4::SetRow(const Vector3& _row, int index)
 {
-    float* fl = (float*)this;
+    float* fl = &M11;
 
     index <<= 2; // multiply by row size in floats
 
@@ -105,7 +109,7 @@ Matrix4& Matrix4::SetRow(const Vector3& _row, int index)
 
 Vector3& Matrix4::GetRow(Vector3& _row, int index) const
 {
-    float* fl = (float*)this;
+    const float* fl = &M11;
 
     index <<= 2; // multiply by row size in floats
 
@@ -337,8 +341,8 @@ Matrix4& Matrix4::RotationAxis(Matrix4& mOut, const Vector3& vAxis,
         mag = 1.0f / mag;
         v.Scale(mag);
 
-        float sinTheta = (float)Math::Sin(fAngle);
-        float cosTheta = (float)Math::Cos(fAngle);
+        float sinTheta = static_cast<float>(Math::Sin(fAngle));
+        float cosTheta = static_cast<float>(Math::Cos(fAngle));
         float t = 1.0f - cosTheta;
 
         float xz = v.X * v.Z;
@@ -442,7 +446,7 @@ Matrix4& Matrix4::PerspectiveFovLH(Matrix4& mOut, float fieldOfViewY,
     //	);
 
     // dx way
-    float yScale = (float)(1.0f / Math::Tan(fieldOfViewY / 2.0f));
+    float yScale = static_cast<float>(1.0f / Math::Tan(fieldOfViewY / 2.0f));
     float xScale = yScale / aspectRatio;
     float range = zfarPlane - znearPlane;
 
@@ -488,7 +492,7 @@ Matrix4& Matrix4::PerspectiveFovRH(Matrix4& mOut, float fieldOfViewY,
     // dx way
     // ======================================================================
 
-    float yScale = (float)(1.0f / Math::Tan(fieldOfViewY / 2.0f));
+    float yScale = static_cast<float>(1.0f / Math::Tan(fieldOfViewY / 2.0f));
     float xScale = yScale / aspectRatio;
     float range = znearPlane - zfarPlane;
 

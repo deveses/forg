@@ -76,10 +76,7 @@ bool Quaternion::operator==(const Quaternion& value) const
 
 bool Quaternion::operator!=(const Quaternion& value) const
 {
-    if (s != value.s || v != value.v)
-        return false;
-
-    return false;
+    return !(*this == value);
 }
 
 Quaternion& Quaternion::Multiply(float scalar)
@@ -125,14 +122,14 @@ Quaternion& Quaternion::Multiply(Quaternion& out, const Quaternion& left,
 Quaternion& Quaternion::Conjugate(Quaternion& out, const Quaternion& source)
 {
     out.s = source.s;
-    out.v = -out.v;
+    out.v = -source.v;
 
     return out;
 }
 
 float Quaternion::Length(const Quaternion& source)
 {
-    return (float)Math::Sqrt(Quaternion::Dot(source, source));
+    return static_cast<float>(Math::Sqrt(Quaternion::Dot(source, source)));
 }
 
 float Quaternion::LengthSq(const Quaternion& source)
@@ -176,8 +173,8 @@ Quaternion& Quaternion::Ln(Quaternion& out, const Quaternion& source)
     // Q == (cos(theta), sin(theta) * v) where |v| = 1
     // The natural logarithm of Q is, ln(Q) = (0, theta * v)
 
-    float theta = (float)Math::Acos(source.s);
-    float sn = (float)Math::Sin(theta);
+    float theta = static_cast<float>(Math::Acos(source.s));
+    float sn = static_cast<float>(Math::Sin(theta));
 
     out.s = 0;
     out.v = source.v;
@@ -195,9 +192,9 @@ Quaternion& Quaternion::Exp(Quaternion& out, const Quaternion& source)
     //   exp(Q) = (cos(theta), sin(theta) * v)
 
     float theta = source.v.Length();
-    float sn = (float)Math::Sin(theta);
+    float sn = static_cast<float>(Math::Sin(theta));
 
-    out.s = (float)Math::Cos(theta);
+    out.s = static_cast<float>(Math::Cos(theta));
     out.v = source.v;
 
     out.v *= sn / theta;
@@ -211,8 +208,8 @@ Quaternion& Quaternion::RotationAxis(Quaternion& out, const Vector3& axis,
     angle *= 0.5f;
     out.v = axis;
     out.v.Normalize();
-    out.v *= (float)Math::Sin(angle);
-    out.s = (float)Math::Cos(angle);
+    out.v *= static_cast<float>(Math::Sin(angle));
+    out.s = static_cast<float>(Math::Cos(angle));
 
     return out;
 }

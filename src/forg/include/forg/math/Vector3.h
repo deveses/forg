@@ -16,12 +16,15 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_MATH_VECTOR3_H_
-#define _FORG_MATH_VECTOR3_H_
+#ifndef FORG_MATH_VECTOR3_H
+#define FORG_MATH_VECTOR3_H
 
 #if _MSC_VER > 1000
 #pragma once
 #endif
+
+#include <cstddef>
+#include <type_traits>
 
 #include "forg/base.h"
 // #include "Matrix4.h"
@@ -43,9 +46,14 @@ struct FORG_API Vector3
     //////////////////////////////////////////////////////////////////////////
     // Constructors
     //////////////////////////////////////////////////////////////////////////
-    Vector3(float x = 0.0f, float y = 0.0f, float z = 0.0f) : X(x), Y(y), Z(z)
+    constexpr Vector3(float x = 0.0f, float y = 0.0f, float z = 0.0f) noexcept
+        : X(x), Y(y), Z(z)
     {
     }
+
+    constexpr Vector3(const Vector3&) noexcept = default;
+    constexpr Vector3& operator=(const Vector3&) noexcept = default;
+    ~Vector3() = default;
 
     ////////////////////////////////////////////////////////////////////////////////
     // Attributes
@@ -59,8 +67,8 @@ struct FORG_API Vector3
     //////////////////////////////////////////////////////////////////////////
 
     // casting
-    operator float*() { return (float*)this; };
-    operator const float*() const { return (const float*)this; };
+    operator float*() noexcept { return &X; };
+    operator const float*() const noexcept { return &X; };
 
     // assignment operators
     Vector3& operator+=(const Vector3& value);
@@ -71,8 +79,14 @@ struct FORG_API Vector3
     Vector3& operator=(const Vector4& value);
 
     // unary operators
-    Vector3 operator+() const { return Vector3(*this); };
-    Vector3 operator-() const { return Vector3(-X, -Y, -Z); };
+    [[nodiscard]] constexpr Vector3 operator+() const noexcept
+    {
+        return Vector3(*this);
+    };
+    [[nodiscard]] constexpr Vector3 operator-() const noexcept
+    {
+        return Vector3(-X, -Y, -Z);
+    };
 
     // binary operators
     Vector3 operator+(const Vector3& value) const;
@@ -125,9 +139,15 @@ struct FORG_API Vector3
     /// Transforms the 3D vector normal by the given matrix.
     Vector3& TransformNormal(const Matrix4& mTransformation);
 
-    void Zero() { X = Y = Z = 0.0f; }
+    constexpr void Zero() noexcept { X = Y = Z = 0.0f; }
 };
+
+static_assert(std::is_standard_layout_v<Vector3>);
+static_assert(sizeof(Vector3) == sizeof(float) * 3);
+static_assert(alignof(Vector3) == alignof(float));
+static_assert(offsetof(Vector3, Y) == sizeof(float));
+static_assert(offsetof(Vector3, Z) == sizeof(float) * 2);
 
 } // namespace forg::math
 
-#endif // _FORG_MATH_VECTOR3_H_
+#endif // FORG_MATH_VECTOR3_H

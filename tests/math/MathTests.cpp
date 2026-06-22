@@ -1,6 +1,8 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <cstddef>
 #include <limits>
+#include <type_traits>
 
 #include "forg/math/Math.h"
 #include "forg/math/Matrix4.h"
@@ -10,6 +12,36 @@
 #include "forg/math/Vector4.h"
 
 using Catch::Approx;
+
+TEST_CASE("Math value layouts remain stable", "[math][layout]")
+{
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::math::Vector2>);
+    STATIC_REQUIRE(sizeof(forg::math::Vector2) == sizeof(float) * 2);
+    STATIC_REQUIRE(alignof(forg::math::Vector2) == alignof(float));
+
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::math::Vector3>);
+    STATIC_REQUIRE(sizeof(forg::math::Vector3) == sizeof(float) * 3);
+    STATIC_REQUIRE(offsetof(forg::math::Vector3, X) == 0);
+    STATIC_REQUIRE(offsetof(forg::math::Vector3, Y) == sizeof(float));
+    STATIC_REQUIRE(offsetof(forg::math::Vector3, Z) == sizeof(float) * 2);
+
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::math::Vector4>);
+    STATIC_REQUIRE(sizeof(forg::math::Vector4) == sizeof(float) * 4);
+    STATIC_REQUIRE(offsetof(forg::math::Vector4, X) == 0);
+    STATIC_REQUIRE(offsetof(forg::math::Vector4, W) == sizeof(float) * 3);
+
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::math::Matrix4>);
+    STATIC_REQUIRE(sizeof(forg::math::Matrix4) == sizeof(float) * 16);
+    STATIC_REQUIRE(offsetof(forg::math::Matrix4, M11) == 0);
+    STATIC_REQUIRE(offsetof(forg::math::Matrix4, M21) == sizeof(float) * 4);
+    STATIC_REQUIRE(offsetof(forg::math::Matrix4, M41) == sizeof(float) * 12);
+    STATIC_REQUIRE(offsetof(forg::math::Matrix4, M44) == sizeof(float) * 15);
+
+    STATIC_REQUIRE(std::is_standard_layout_v<forg::math::Quaternion>);
+    STATIC_REQUIRE(sizeof(forg::math::Quaternion) == sizeof(float) * 4);
+    STATIC_REQUIRE(offsetof(forg::math::Quaternion, v) == 0);
+    STATIC_REQUIRE(offsetof(forg::math::Quaternion, s) == sizeof(float) * 3);
+}
 
 TEST_CASE("Vector constructors initialize components", "[math][vector]")
 {
@@ -27,6 +59,27 @@ TEST_CASE("Vector constructors initialize components", "[math][vector]")
     REQUIRE(v4.Y == Approx(7.0f));
     REQUIRE(v4.Z == Approx(8.0f));
     REQUIRE(v4.W == Approx(9.0f));
+}
+
+TEST_CASE("Vector4 arithmetic preserves all four components", "[math][vector]")
+{
+    const forg::math::Vector4 a(1.0f, 2.0f, 3.0f, 4.0f);
+    const forg::math::Vector4 b(5.0f, 6.0f, 7.0f, 8.0f);
+
+    forg::math::Vector4 added;
+    forg::math::Vector4::Add(added, a, b);
+
+    REQUIRE(added.X == Approx(6.0f));
+    REQUIRE(added.Y == Approx(8.0f));
+    REQUIRE(added.Z == Approx(10.0f));
+    REQUIRE(added.W == Approx(12.0f));
+
+    const forg::math::Vector4 negated = -a;
+    REQUIRE(negated.X == Approx(-1.0f));
+    REQUIRE(negated.Y == Approx(-2.0f));
+    REQUIRE(negated.Z == Approx(-3.0f));
+    REQUIRE(negated.W == Approx(-4.0f));
+    REQUIRE(forg::math::Vector4::Dot(a, b) == Approx(70.0f));
 }
 
 TEST_CASE("Vector3 arithmetic computes dot, cross, and normalization",
@@ -87,6 +140,24 @@ TEST_CASE("Quaternion normalization produces a unit quaternion",
     REQUIRE(normalized.v.Z == Approx(0.0f));
     REQUIRE(normalized.s == Approx(1.0f));
     REQUIRE(forg::math::Quaternion::Length(normalized) == Approx(1.0f));
+}
+
+TEST_CASE("Quaternion inequality and conjugate use all components",
+          "[math][quaternion]")
+{
+    const forg::math::Quaternion q(1.0f, -2.0f, 3.0f, 4.0f);
+    const forg::math::Quaternion same(1.0f, -2.0f, 3.0f, 4.0f);
+    const forg::math::Quaternion different(1.0f, -2.0f, 3.0f, 5.0f);
+
+    REQUIRE_FALSE(q != same);
+    REQUIRE(q != different);
+
+    forg::math::Quaternion conjugated;
+    forg::math::Quaternion::Conjugate(conjugated, q);
+    REQUIRE(conjugated.v.X == Approx(-1.0f));
+    REQUIRE(conjugated.v.Y == Approx(2.0f));
+    REQUIRE(conjugated.v.Z == Approx(-3.0f));
+    REQUIRE(conjugated.s == Approx(4.0f));
 }
 
 TEST_CASE("Math bit helpers preserve boundary behavior", "[math][bit]")
