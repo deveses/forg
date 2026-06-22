@@ -81,7 +81,7 @@ Initial coverage lives under `tests/` and focuses on deterministic library behav
 
 ### Windows build
 
-Use the `windows-debug` and `windows-release` presets with Visual Studio 2022. CMake builds `forg`, the direct Win32 `winapp`, `glrenderer`, the Windows software renderer, and the test suite. OpenCL and C++ AMP remain legacy-only; the checked-in Sharpmake projects are retained temporarily for comparison while CMake parity is validated.
+Use the `windows-debug` and `windows-release` presets with Visual Studio 2022. CMake builds `forg`, the direct Win32 `winapp`, `glrenderer`, the Windows software renderer, and the test suite. OpenCL and C++ AMP remain unsupported legacy targets until they are independently revived or removed.
 
 A post-build step copies `glrenderer.dll`, `swrenderer.dll`, and `src/winapp/config.yml` next to `winapp.exe`. `config.yml` selects which plugin `winapp` loads and controls the initial window geometry.
 
@@ -96,14 +96,15 @@ src/forg/src/            Private implementation, mirroring the module layout;
 src/macapp/              Cocoa sample app (CMake)
 src/winapp/              Direct Win32 sample app (CMake)
 src/swrenderer/          Software-renderer plugin (CMake dylib on macOS,
-                         legacy MSVC DLL on Windows)
+                         CMake DLL on Windows)
 src/metalrenderer/       Native Apple Metal renderer plugin (CMake dylib, macOS)
-src/{gl,cl,amp}renderer/ Renderer plugin DLLs (legacy MSVC build)
+src/glrenderer/          OpenGL renderer plugin (CMake DLL on Windows)
+src/{cl,amp}renderer/    Unsupported legacy renderer sources
 tests/                   Catch2/CTest unit tests for the forg library
 extern/                  Vendored dependencies: cgltf (glTF 2.0 parser, wired
                          into CMake and linked into forg); freetype, zlib,
-                         OpenCL/OpenGL headers, Sharpmake (not wired into CMake)
-tools/                   Sharpmake scripts, MSVC projects, clang-format
+                         OpenCL/OpenGL headers
+tools/                   Repository tooling, including clang-format
 ```
 
 The umbrella headers are `forg/forg.h` and `forg/rendering.h`. Note that some `.cpp` files live alongside their headers in the `include/` tree — it is not header-only.
@@ -115,7 +116,8 @@ The rendering abstraction lives in `include/forg/rendering/`. Backends implement
 - **Reference software renderer** — compiled into the library itself (`include/forg/rendering/reference/`)
 - **Software renderer plugin** (`src/swrenderer/`) — wraps the reference renderer with a platform presentation layer (CoreGraphics/CALayer on macOS, GDI on Windows); loaded at runtime via `dlopen`/`LoadLibrary` from the driver named in the sample app config
 - **Metal renderer plugin** (`src/metalrenderer/`) — native Apple Metal backend hosting a `CAMetalLayer` in the sample's `NSView`; macOS only, the default `config.yml` driver
-- **OpenGL / OpenCL / C++ AMP renderers** — separate plugin DLLs loaded at runtime (Windows only, legacy build)
+- **OpenGL renderer plugin** (`src/glrenderer/`) — loaded at runtime on Windows via `LoadLibrary`
+- **OpenCL / C++ AMP renderers** — unsupported legacy sources, not part of the canonical CMake build
 
 Beyond rendering, the library includes math types, audio output, XML and YAML parsers (`script`), image loading, mesh loading (DirectX `.x`, `.ply`, and glTF 2.0 `.gltf`/`.glb` static meshes via `Mesh::FromFile`), a UI layer, filesystem and OS abstractions.
 

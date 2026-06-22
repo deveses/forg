@@ -7,12 +7,13 @@ and CMake targets for `forg`, software/OpenGL renderers, and `winapp`
 build with MSVC x64. Local Windows debug and release CMake builds and CTest runs
 pass, including package consumption and software/OpenGL plugin lifecycle tests.
 `winapp` now uses a direct Win32 shell. Interactive `winapp` smoke validation
-and Sharpmake retirement remain pending.
+remains pending. Generated Visual Studio projects, old project-generation
+scripts, and the legacy compatibility wrapper library have been removed.
 
 ## Objective
 
-Make CMake and CTest the authoritative Windows build, then retire generated
-Sharpmake projects without losing supported behavior.
+Make CMake and CTest the authoritative Windows build without losing supported
+behavior.
 
 ## Implementation Slices
 
@@ -35,11 +36,8 @@ Sharpmake projects without losing supported behavior.
      and missing/incompatible plugin diagnostics on a Windows machine.
 
 4. **Legacy retirement**
-   - Compare CMake outputs against the Sharpmake project target/source/define/link
-     matrix and record any intentional omissions.
-   - After two consecutive green main-branch Windows CI runs plus one documented
-     local application smoke test, remove generated Visual Studio projects,
-     Sharpmake generation scripts, and obsolete instructions in a dedicated PR.
+   - Remove generated Visual Studio projects, old project-generation scripts,
+     and obsolete instructions.
    - Keep OpenCL and C++ AMP explicitly unsupported or archive them separately;
      they do not block canonical Windows parity.
 
@@ -54,6 +52,6 @@ transition path are supplied.
 - Complete: Windows debug and release configure, build, test, install, and
   consume cleanly with Visual Studio 2022 MSVC x64.
 - Complete: Software and OpenGL plugin lifecycle tests pass on Windows.
+- Complete: Generated Visual Studio projects and old project-generation scripts
+  are removed.
 - Pending: `winapp` completes the documented local smoke checklist.
-- Pending: CMake parity is documented and Sharpmake retirement conditions are
-  satisfied.

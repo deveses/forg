@@ -1,1 +1,0 @@
-.\..\extern\Sharpmake\Sharpmake.Application.exe /sources(@"sharpmake/main.sharpmake.cs")

@@ -51,7 +51,7 @@ Actions jobs remain the final cross-platform acceptance gates.
    - Add CMake targets for the Windows library, `winapp`, OpenGL renderer, and Windows software renderer.
    - Use current MSVC and Windows SDK defaults rather than the pinned legacy SDK.
    - Add Windows debug/release presets and GitHub Actions jobs that build and run the same unit tests as macOS.
-   - Retire Sharpmake and generated Visual Studio projects only after CMake reaches build parity.
+   - Retire generated Visual Studio projects after CMake reaches build parity.
    - Leave C++ AMP and OpenCL as explicitly unsupported legacy targets until independently revived or removed.
 
 ## Public Interfaces
