@@ -13,6 +13,8 @@ namespace {
 
 forg::IRenderer* CreateNoRenderer() { return nullptr; }
 
+int DestroyNoRenderer(forg::IRenderer*) { return FORG_OK; }
+
 } // namespace
 
 int main()
@@ -38,6 +40,7 @@ int main()
         sizeof(forg::RendererPluginDescriptor),
         forg::RendererPluginApiVersion,
         &CreateNoRenderer,
+        &DestroyNoRenderer,
     };
     if (!forg::IsRendererPluginCompatible(&descriptor))
     {

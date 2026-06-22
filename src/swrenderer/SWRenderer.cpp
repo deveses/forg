@@ -41,10 +41,16 @@ SWRenderer::CreateDevice(HWIN hWindow,
 
 forg::IRenderer* forgCreateRenderer() { return (new forg::SWRenderer()); }
 
+int forgDestroyRenderer(forg::IRenderer* renderer)
+{
+    delete renderer;
+    return FORG_OK;
+}
+
 const forg::RendererPluginDescriptor* forgGetRendererPluginDescriptor()
 {
     static const forg::RendererPluginDescriptor descriptor{
         sizeof(forg::RendererPluginDescriptor), forg::RendererPluginApiVersion,
-        &forgCreateRenderer};
+        &forgCreateRenderer, &forgDestroyRenderer};
     return &descriptor;
 }

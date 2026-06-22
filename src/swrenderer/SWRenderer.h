@@ -52,6 +52,7 @@ extern "C"
 {
 
     SWRENDERER_API forg::IRenderer* forgCreateRenderer();
+    SWRENDERER_API int forgDestroyRenderer(forg::IRenderer* renderer);
     SWRENDERER_API const forg::RendererPluginDescriptor*
     forgGetRendererPluginDescriptor();
 }

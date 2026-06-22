@@ -22,9 +22,49 @@ struct AppConfig
     int Y = 10;
 };
 
+struct LoadedRendererPlugin
+{
+    HMODULE Module = NULL;
+    forg::RendererPluginBinding Binding;
+    forg::IRenderer* Renderer = nullptr;
+};
+
 void ShowError(LPCTSTR message)
 {
     MessageBox(NULL, message, _T("Error"), MB_OK | MB_ICONERROR);
+}
+
+void ShowRendererPluginError(forg::RendererPluginStatus status)
+{
+    switch (status)
+    {
+    case forg::RendererPluginStatus::MissingSymbols:
+        ShowError(_T("The renderer plugin does not expose renderer symbols."));
+        break;
+    case forg::RendererPluginStatus::NullDescriptor:
+        ShowError(_T("The renderer plugin returned a null descriptor."));
+        break;
+    case forg::RendererPluginStatus::TruncatedDescriptor:
+        ShowError(_T("The renderer plugin descriptor is truncated."));
+        break;
+    case forg::RendererPluginStatus::UnsupportedVersion:
+        ShowError(_T("The renderer plugin version is unsupported."));
+        break;
+    case forg::RendererPluginStatus::MissingCreate:
+        ShowError(_T("The renderer plugin is missing its create callback."));
+        break;
+    case forg::RendererPluginStatus::MissingDestroy:
+        ShowError(_T("The renderer plugin is missing its destroy callback."));
+        break;
+    case forg::RendererPluginStatus::FactoryFailed:
+        ShowError(_T("The renderer plugin failed to create a renderer."));
+        break;
+    case forg::RendererPluginStatus::DestroyFailed:
+        ShowError(_T("The renderer plugin failed to destroy the renderer."));
+        break;
+    case forg::RendererPluginStatus::Ok:
+        break;
+    }
 }
 
 void ShowLastError()
@@ -109,28 +149,59 @@ AppConfig LoadConfig()
     return config;
 }
 
-forg::IRenderer* CreateRenderer(HMODULE module)
+bool LoadRendererPlugin(const char* driver, LoadedRendererPlugin& plugin)
 {
+    plugin = {};
+    plugin.Module = LoadLibraryA(driver);
+    if (plugin.Module == NULL)
+    {
+        ShowLastError();
+        return false;
+    }
+
     auto getDescriptor = reinterpret_cast<forg::PFGETRENDERERPLUGINDESCRIPTOR>(
-        GetProcAddress(module, "forgGetRendererPluginDescriptor"));
-    forg::PFCREATERENDERER createRenderer = nullptr;
+        GetProcAddress(plugin.Module, "forgGetRendererPluginDescriptor"));
+    auto legacyCreateRenderer = reinterpret_cast<forg::PFCREATERENDERER>(
+        GetProcAddress(plugin.Module, "forgCreateRenderer"));
 
-    if (getDescriptor != nullptr)
+    forg::RendererPluginStatus status = forg::ProbeRendererPlugin(
+        getDescriptor, legacyCreateRenderer, plugin.Binding);
+    if (status != forg::RendererPluginStatus::Ok)
     {
-        const forg::RendererPluginDescriptor* descriptor = getDescriptor();
-        if (forg::IsRendererPluginCompatible(descriptor))
-            createRenderer = descriptor->CreateRenderer;
+        ShowRendererPluginError(status);
+        FreeLibrary(plugin.Module);
+        plugin = {};
+        return false;
     }
-    else
+
+    status = forg::CreateRendererFromPlugin(plugin.Binding, plugin.Renderer);
+    if (status != forg::RendererPluginStatus::Ok)
     {
-        createRenderer = reinterpret_cast<forg::PFCREATERENDERER>(
-            GetProcAddress(module, "forgCreateRenderer"));
+        ShowRendererPluginError(status);
+        FreeLibrary(plugin.Module);
+        plugin = {};
+        return false;
     }
 
-    if (createRenderer == nullptr)
-        return nullptr;
+    return true;
+}
 
-    return createRenderer();
+void UnloadRendererPlugin(LoadedRendererPlugin& plugin)
+{
+    if (plugin.Renderer != nullptr)
+    {
+        const forg::RendererPluginStatus status =
+            forg::DestroyRendererFromPlugin(plugin.Binding, plugin.Renderer);
+        if (status != forg::RendererPluginStatus::Ok)
+            ShowRendererPluginError(status);
+        plugin.Renderer = nullptr;
+    }
+
+    if (plugin.Module != NULL)
+    {
+        FreeLibrary(plugin.Module);
+        plugin.Module = NULL;
+    }
 }
 
 int Run(Viewport& viewport)
@@ -176,31 +247,18 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
 
     AppConfig config = LoadConfig();
-    HMODULE module = LoadLibraryA(config.Driver);
-    if (module == NULL)
-    {
-        ShowLastError();
+    LoadedRendererPlugin plugin;
+    if (!LoadRendererPlugin(config.Driver, plugin))
         return 1;
-    }
-
-    forg::IRenderer* renderer = CreateRenderer(module);
-    if (renderer == nullptr)
-    {
-        ShowError(
-            _T("The renderer plugin does not expose a compatible renderer."));
-        FreeLibrary(module);
-        return 1;
-    }
 
     int result = 1;
     {
         Viewport viewport;
-        if (viewport.Create(renderer, config.X, config.Y, config.Width,
+        if (viewport.Create(plugin.Renderer, config.X, config.Y, config.Width,
                             config.Height, NULL) != 0)
         {
             ShowLastError();
-            delete renderer;
-            FreeLibrary(module);
+            UnloadRendererPlugin(plugin);
             return 1;
         }
 
@@ -209,8 +267,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         result = Run(viewport);
     }
 
-    delete renderer;
-    FreeLibrary(module);
+    UnloadRendererPlugin(plugin);
 
     return result;
 }

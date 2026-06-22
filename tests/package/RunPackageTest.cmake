@@ -58,9 +58,19 @@ foreach(installed_file IN LISTS installed_files)
     endif()
 endforeach()
 
+set(consumer_config_args "-DCMAKE_PREFIX_PATH=${prefix}")
+if(DEFINED FORG_TEST_CMAKE_CXX_FLAGS)
+    list(APPEND consumer_config_args
+        "-DCMAKE_CXX_FLAGS=${FORG_TEST_CMAKE_CXX_FLAGS}")
+endif()
+if(DEFINED FORG_TEST_CMAKE_EXE_LINKER_FLAGS)
+    list(APPEND consumer_config_args
+        "-DCMAKE_EXE_LINKER_FLAGS=${FORG_TEST_CMAKE_EXE_LINKER_FLAGS}")
+endif()
+
 execute_process(
     COMMAND "${CMAKE_COMMAND}" -S "${FORG_SOURCE_DIR}" -B "${consumer_build}"
-            "-DCMAKE_PREFIX_PATH=${prefix}"
+            ${consumer_config_args}
     COMMAND_ERROR_IS_FATAL ANY)
 execute_process(
     COMMAND "${CMAKE_COMMAND}" --build "${consumer_build}" ${config_args}

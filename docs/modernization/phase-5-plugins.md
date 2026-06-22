@@ -2,10 +2,13 @@
 
 ## Status
 
-In progress. Software, Metal, and OpenGL plugins expose a versioned descriptor;
-macOS and Windows loaders fall back to legacy `forgCreateRenderer`; software and
-Metal lifecycle smoke tests pass on macOS. Destruction ABI, headless rendering,
-and Windows/OpenGL runtime validation remain.
+Done. Software, Metal, and OpenGL plugins expose a version-2 descriptor with a
+plugin-local destroy callback; version-1 descriptors and legacy
+`forgCreateRenderer` remain accepted. macOS and Windows loaders share the same
+descriptor probing, diagnostics, create, and destroy helpers, keeping dynamic
+libraries loaded until renderer objects are destroyed. Descriptor rejection,
+legacy fallback, backend lifecycle, and deterministic headless reference output
+are covered by CTest.
 
 ## Objective
 
@@ -33,7 +36,7 @@ before any renderer virtual interface changes.
 3. **Backend coverage**
    - Implement the current descriptor in every canonical CMake backend: software,
      Metal, and OpenGL.
-   - Document OpenCL and C++ AMP as non-canonical legacy plugins; do not claim
+   - OpenCL and C++ AMP remain non-canonical legacy plugin sources; do not claim
      compatibility until they receive build targets and tests.
 
 4. **Rendering tests**
