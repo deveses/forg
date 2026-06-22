@@ -48,7 +48,7 @@ Actions jobs remain the final cross-platform acceptance gates.
    - Add headless reference-renderer tests plus plugin load/create/destroy smoke tests.
 
 6. **Canonical Windows support**
-   - Add CMake targets for the Windows library, `emfc`, `winapp`, OpenGL renderer, and Windows software renderer.
+   - Add CMake targets for the Windows library, `winapp`, OpenGL renderer, and Windows software renderer.
    - Use current MSVC and Windows SDK defaults rather than the pinned legacy SDK.
    - Add Windows debug/release presets and GitHub Actions jobs that build and run the same unit tests as macOS.
    - Retire Sharpmake and generated Visual Studio projects only after CMake reaches build parity.

@@ -18,7 +18,6 @@ class WinAppLibraryProject : BaseLibraryProject
         base.ConfigureAll(conf, target);
 
         conf.Defines.Add("FORG_STATIC");
-        conf.Defines.Add("EMFC_STATIC");
 
         conf.LibraryFiles.Add(@"Comctl32.lib");
 
@@ -27,7 +26,6 @@ class WinAppLibraryProject : BaseLibraryProject
         // This line tells Sharpmake that this project has a dependency on the
         // library project. This will cause all exported include paths and
         // exported defines to be automatically added to this project.
-        conf.AddPrivateDependency<EmfcLibraryProject>(target);
         conf.AddPrivateDependency<ForgLibraryProject>(target);        
 
         conf.TargetPath = ForgBinPath; 
@@ -58,7 +56,6 @@ class ForgSolution : BaseSolution
         //
         // You could, for example, exclude a project that only supports 64-bit
         // from the 32-bit targets.
-        conf.AddProject<EmfcLibraryProject>(target);
         conf.AddProject<ForgLibraryProject>(target);      
         conf.AddProject<GLRendererLibraryProject>(target);      
         conf.AddProject<WinAppLibraryProject>(target);      
