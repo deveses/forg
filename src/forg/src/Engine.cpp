@@ -137,7 +137,7 @@ struct Engine::Impl
 
     void ClearError() { lastError.clear(); }
 
-    bool LoadConfig(const char* filename)
+    bool LoadConfig(std::string_view filename)
     {
         if (IsInitialized())
         {
@@ -145,17 +145,18 @@ struct Engine::Impl
             return false;
         }
 
-        if (filename == nullptr || filename[0] == '\0')
+        if (filename.empty())
         {
             SetError("Config filename is empty");
             return false;
         }
 
+        const std::string filenameText(filename);
         script::yaml::YAMLParser parser;
-        if (!parser.Open(filename))
+        if (!parser.Open(filenameText.c_str()))
         {
             std::ostringstream stream;
-            stream << "Unable to open config <" << filename << ">";
+            stream << "Unable to open config <" << filenameText << ">";
             SetError(stream.str());
             return false;
         }
@@ -164,7 +165,7 @@ struct Engine::Impl
         if (document == nullptr)
         {
             std::ostringstream stream;
-            stream << "Unable to parse config <" << filename << ">";
+            stream << "Unable to parse config <" << filenameText << ">";
             SetError(stream.str());
             parser.Close();
             return false;
@@ -343,14 +344,14 @@ Engine::Engine() : m_impl(new Impl()) {}
 
 Engine::~Engine() { m_impl->Shutdown(); }
 
-bool Engine::LoadConfig(const char* filename)
+bool Engine::LoadConfig(std::string_view filename)
 {
     return m_impl->LoadConfig(filename);
 }
 
 bool Engine::Initialize(HWIN window) { return m_impl->Initialize(window); }
 
-bool Engine::Initialize(HWIN window, const char* configFilename)
+bool Engine::Initialize(HWIN window, std::string_view configFilename)
 {
     if (!LoadConfig(configFilename))
         return false;
@@ -370,6 +371,6 @@ IRenderer* Engine::Renderer() const { return m_impl->renderer; }
 
 const EngineConfig& Engine::Config() const { return m_impl->config; }
 
-const char* Engine::LastError() const { return m_impl->lastError.c_str(); }
+std::string_view Engine::LastError() const { return m_impl->lastError; }
 
 } // namespace forg

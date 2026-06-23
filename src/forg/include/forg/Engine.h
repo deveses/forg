@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 
 namespace forg {
 
@@ -35,9 +36,9 @@ class FORG_API Engine
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
 
-    bool LoadConfig(const char* filename = "config.yml");
+    bool LoadConfig(std::string_view filename = "config.yml");
     bool Initialize(HWIN window);
-    bool Initialize(HWIN window, const char* configFilename);
+    bool Initialize(HWIN window, std::string_view configFilename);
 
     void Shutdown();
 
@@ -48,7 +49,7 @@ class FORG_API Engine
     IRenderer* Renderer() const;
     const EngineConfig& Config() const;
 
-    const char* LastError() const;
+    std::string_view LastError() const;
 
   private:
     struct Impl;
