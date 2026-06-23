@@ -132,7 +132,7 @@ A post-build step copies `glrenderer.dll`, `swrenderer.dll`, and `src/winapp/con
 ```text
 src/forg/include/forg/   Public headers, one directory per module:
                          math, rendering, audio, core, fs, os, script,
-                         image, mesh, ui, cpu, opencl, debug
+                         image, mesh, nn, ui, cpu, opencl, debug
 src/forg/src/            Private implementation, mirroring the module layout;
                          OS-specific code under os/{win32,osx}/
 src/macapp/              Cocoa sample app (CMake)
@@ -143,6 +143,7 @@ src/metalrenderer/       Native Apple Metal renderer plugin (CMake dylib, macOS)
 src/glrenderer/          OpenGL renderer plugin (CMake DLL on Windows)
 src/{cl,amp}renderer/    Unsupported legacy renderer sources
 tests/                   Catch2/CTest unit tests for the forg library
+docs/nn/README.md        Notes and examples for the tiny neural-network module
 extern/                  Vendored dependencies: cgltf (glTF 2.0 parser, wired
                          into CMake and linked into forg); freetype, zlib,
                          OpenCL/OpenGL headers

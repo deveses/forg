@@ -4,6 +4,7 @@
 #include <forg/rendering/Mesh.h>
 #include <forg/rendering/VertexElement.h>
 #include <forg/enums.h>
+#include <forg/nn.h>
 
 #include <memory>
 #include <type_traits>
@@ -53,5 +54,13 @@ int main()
         return 3;
     }
 
-    return color.r == 1.0f ? 0 : 4;
+    const auto input = forg::nn::MakeValue(2.0);
+    const auto output = forg::nn::Relu(input * 3.0);
+    forg::nn::Backward(output);
+    if (input->GetGrad() != 3.0)
+    {
+        return 4;
+    }
+
+    return color.r == 1.0f ? 0 : 5;
 }

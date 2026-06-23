@@ -48,6 +48,21 @@ On Windows, CMake also builds `glrenderer`, the GDI side of `swrenderer`, and `w
 
 `src/forg/Sources.cmake` lists every file of the `forg` library explicitly, grouped per module, with generator expressions for platform-specific files (e.g. `$<${FORG_PLATFORM_WINDOWS}:AudioOutputWaveOut.cpp>`). New files must be added there or they won't compile.
 
+## C++ style conventions
+
+- Class data members use the `m_` prefix.
+- Struct data members do not use a prefix.
+- Classes should not expose public data fields; use accessor methods instead.
+- Do not use C++ exceptions in the `forg` library sources.
+- Prefer existing error conventions: `false`, `nullptr`, empty containers, or `FORG_INVALID_CALL`.
+- Match nearby file style before introducing new APIs or modules.
+
+Run the exception-style guard with:
+
+```sh
+cmake --build --preset debug --target forg-no-exceptions-check
+```
+
 ## Architecture
 
 - **Public headers**: `src/forg/include/forg/` — modules: `math`, `rendering`, `audio`, `core`, `fs`, `os`, `script` (XML parser/lexer), `image`, `mesh`, `ui`, `cpu`, `opencl`, `debug`. Umbrella headers `forg.h`, `rendering.h`.
