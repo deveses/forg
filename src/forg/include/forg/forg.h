@@ -31,6 +31,8 @@
 
 #include "math/Math.h"
 
+#include "nn.h"
+
 #include "audio/Audio.h"
 #include "audio/WaveFile.h"
 

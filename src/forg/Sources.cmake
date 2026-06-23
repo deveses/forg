@@ -28,6 +28,20 @@ set(core_sources
 list(TRANSFORM core_sources PREPEND "src/core/")
 
 ###############################################################################
+# nn
+###############################################################################
+set(nn_includes
+    Module.h
+    Value.h
+)
+list(TRANSFORM nn_includes PREPEND "include/forg/nn/")
+set(nn_sources
+    Module.cpp
+    Value.cpp
+)
+list(TRANSFORM nn_sources PREPEND "src/nn/")
+
+###############################################################################
 # fs
 ###############################################################################
 set(fs_includes
@@ -223,8 +237,8 @@ set(root_sources
 )
 
 ###############################################################################
-list(APPEND all_includes ${audio_includes} ${core_includes} ${fs_includes} ${os_includes} ${script_includes}
+list(APPEND all_includes ${audio_includes} ${core_includes} ${nn_includes} ${fs_includes} ${os_includes} ${script_includes}
     ${net_includes} ${control_includes} ${scene_includes} ${ui_includes})
-list(APPEND all_sources ${audio_sources} ${core_sources} ${fs_sources} ${os_sources} ${script_sources}
+list(APPEND all_sources ${audio_sources} ${core_sources} ${nn_sources} ${fs_sources} ${os_sources} ${script_sources}
     ${net_sources} ${control_sources} ${scene_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources}
     ${ui_sources} ${root_sources})

@@ -27,6 +27,12 @@ if(FORG_CLANG_FORMAT_EXECUTABLE)
         VERBATIM)
 endif()
 
+add_custom_target(forg-no-exceptions-check
+    COMMAND ${CMAKE_COMMAND}
+        -DPROJECT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/CheckNoExceptions.cmake
+    VERBATIM)
+
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 
