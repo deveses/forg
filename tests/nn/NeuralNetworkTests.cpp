@@ -67,6 +67,27 @@ TEST_CASE("Value gradients accumulate and relu gates negative inputs",
     Backward(nullptr);
 }
 
+TEST_CASE("Value data can be updated for simple gradient descent",
+          "[nn][value]")
+{
+    using namespace forg::nn;
+
+    const ValuePtr weight = MakeValue(0.0);
+    const ValuePtr prediction = weight * 2.0;
+    const ValuePtr target = MakeValue(4.0);
+    const ValuePtr loss = Pow(prediction - target, 2.0);
+
+    Backward(loss);
+    REQUIRE(loss->GetData() == Approx(16.0));
+    REQUIRE(weight->GetGrad() == Approx(-16.0));
+
+    weight->SetData(weight->GetData() - 0.1 * weight->GetGrad());
+    weight->SetGrad(0.0);
+
+    REQUIRE(weight->GetData() == Approx(1.6));
+    REQUIRE(weight->GetGrad() == Approx(0.0));
+}
+
 TEST_CASE("Module zeroes parameters and MLP builds deterministic shapes",
           "[nn][module]")
 {

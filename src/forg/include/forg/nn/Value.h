@@ -26,6 +26,7 @@ class Value
   public:
     double GetData() const noexcept { return m_data; }
     double GetGrad() const noexcept { return m_grad; }
+    void SetData(double data) noexcept { m_data = data; }
     void SetGrad(double grad) noexcept { m_grad = grad; }
 
   private:

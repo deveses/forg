@@ -84,13 +84,33 @@ for (const ValuePtr& parameter : model.Parameters())
 
 Gradients accumulate until `ZeroGrad()` or `SetGrad(0.0)` is called.
 
-## Training Status
+## Minimal Training Loop
 
-The current public `Value` API exposes `GetData()`, `GetGrad()`, and
-`SetGrad()`. It does not yet expose a parameter data mutator, so a complete
-training loop cannot update weights through the public API.
+`Value::SetData()` lets callers update parameters directly. A minimal SGD step
+looks like this:
 
-To train classifiers inside FORG, the next small addition should be a
-`Value::SetData(double)` accessor or an optimizer API that can update
-parameters internally.
+```cpp
+const double learning_rate = 0.01;
 
+std::vector<ValuePtr> output = model.Forward(input);
+if (output.empty())
+{
+    return;
+}
+
+ValuePtr target = MakeValue(1.0);
+ValuePtr loss = Pow(output[0] - target, 2.0);
+
+model.ZeroGrad();
+Backward(loss);
+
+for (const ValuePtr& parameter : model.Parameters())
+{
+    parameter->SetData(parameter->GetData() -
+                       learning_rate * parameter->GetGrad());
+}
+```
+
+For classification experiments, start with one output and squared error for a
+binary target. Better classifier training will need additional helpers such as
+sigmoid or softmax plus cross-entropy.
