@@ -25,6 +25,7 @@ class FORG_API Scene : public TreeNode
     bool DestroyNode(SceneNode& node);
     void ClearNodes();
 
+    void Update(double deltaSeconds);
     void Render(IRenderDevice* device);
 };
 

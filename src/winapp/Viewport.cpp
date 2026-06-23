@@ -26,7 +26,9 @@ Viewport::Viewport()
 {
     m_hWnd = 0;
     m_hInstance = 0;
+    m_engine = 0;
     m_device = 0;
+    m_model_node = 0;
     m_font = 0;
     m_bMouseCaptured = FALSE;
     m_bLMBDown = FALSE;
@@ -35,9 +37,6 @@ Viewport::Viewport()
     m_hasLastMousePoint = false;
     m_lastMousePoint = {0, 0};
 
-    m_fps = 0;
-    m_frame_counter = 0;
-    m_perf_count.Start();
 }
 
 Viewport::~Viewport()
@@ -56,18 +55,14 @@ Viewport::~Viewport()
         m_font = 0;
     }
 
-    m_model.Clear();
-
-    if (m_device)
-    {
-        m_device->Release();
-        m_device = 0;
-    }
+    if (m_engine)
+        m_engine->SetRenderCallback(nullptr, nullptr);
 }
 
-DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth,
+DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
                        int nHeight, HWND hParent)
 {
+    m_engine = &engine;
     m_hInstance = GetModuleHandle(NULL);
 
     DWORD style = WS_SIZEBOX | WS_MAXIMIZEBOX |
@@ -105,36 +100,23 @@ DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth,
     if (m_hWnd == NULL)
         return GetLastError();
 
-    forg::RENDER_PARAMETERS rp;
-
-    rp.BackBufferWidth = nWidth;
-    rp.BackBufferHeight = nHeight;
-
-    m_device = renderer->CreateDevice(m_hWnd, &rp);
-    if (m_device == 0)
+    if (!m_engine->Initialize(m_hWnd, "config.yml"))
         return 1;
+
+    m_device = m_engine->Device();
+    m_engine->SetRenderCallback(&Viewport::RenderEngineFrame, this);
 
     RECT clientRect = {};
     GetClientRect(m_hWnd, &clientRect);
     OnSize(SIZE_RESTORED, clientRect.right - clientRect.left,
            clientRect.bottom - clientRect.top);
 
-    m_device->SetRenderState(forg::RenderStates_CullMode, forg::Cull_Clockwise);
-    m_device->SetRenderState(forg::RenderStates_ShadeMode,
-                             forg::ShadeMode_Gouraud);
-    m_device->SetRenderState(forg::RenderStates_Lighting, true);
-    m_device->SetRenderState(forg::RenderStates_FillMode, forg::FillMode_Solid);
-
-    m_device->SetRenderState(forg::RenderStates_SourceBlend,
-                             forg::Blend_SourceAlpha);
-    m_device->SetRenderState(forg::RenderStates_DestinationBlend,
-                             forg::Blend_InvSourceAlpha);
-
-    m_model.SetMesh(
+    m_model_node = &m_engine->Scene().CreateMeshNode();
+    m_model_node->GetModel().SetMesh(
         forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40));
     DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n",
-            m_model.GetMesh()->GetNumVertices(),
-            m_model.GetMesh()->GetNumFaces());
+            m_model_node->GetModel().GetMesh()->GetNumVertices(),
+            m_model_node->GetModel().GetMesh()->GetNumFaces());
 
     forg::FontDescription fd = {12, 0, 0, 1, false, 0, 0, 0, 0, (""),
                                 //"../bin/test.ttf"
@@ -381,11 +363,8 @@ void Viewport::ToggleFullscreen()
 
 void Viewport::OnSize(UINT nType, int cx, int cy)
 {
-    if (m_device != 0)
-    {
-        m_device->SetViewport(0, 0, cx, cy);
-        m_device->Reset();
-    }
+    if (m_engine != 0)
+        m_engine->Resize(cx, cy);
 
     // m_glRenderer.FitViewport(size.GetWidth(), size.GetHeight());
     m_camera.set_ScreenSize(cx, cy);
@@ -393,7 +372,7 @@ void Viewport::OnSize(UINT nType, int cx, int cy)
 
 void Viewport::Render()
 {
-    if (m_device == NULL)
+    if (m_engine == NULL || m_device == NULL)
         return;
 
     forg::Matrix4 mlook;
@@ -404,19 +383,12 @@ void Viewport::Render()
     m_camera.GetProjectionMatrix(mproj);
     m_device->SetTransform(forg::TransformType_Projection, mproj);
 
-    m_device->Clear(forg::ClearFlags_Target | forg::ClearFlags_ZBuffer,
-                    forg::Color(0.75f, 0.75f, 0.75f), 1.0f, 0);
-    m_device->BeginScene();
-
     m_device->SetLight(0, &s_Light);
     m_device->SetRenderState(forg::RenderStates_Lighting, true);
 
-    m_model.Render(m_device);
+    m_engine->Scene().Render(m_device);
 
     RenderUI();
-
-    m_device->EndScene();
-    m_device->Present();
 }
 
 void Viewport::RenderUI()
@@ -435,8 +407,9 @@ void Viewport::RenderUI()
             char str[512];
 
             sprintf(str,
-                    "%d fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
-                    m_fps, m_camera.get_Position().X, m_camera.get_Position().Y,
+                    "%u fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
+                    m_engine->FrameStats().FPS, m_camera.get_Position().X,
+                    m_camera.get_Position().Y,
                     m_camera.get_Position().Z, m_camera.get_Target().X,
                     m_camera.get_Target().Y, m_camera.get_Target().Z);
 
@@ -452,25 +425,7 @@ void Viewport::RenderUI()
 
 void Viewport::OnPaint()
 {
-    forg::PerformanceCounter frame_profiler;
-    frame_profiler.Start();
-    Render();
-    frame_profiler.Stop();
     ValidateRect(m_hWnd, NULL);
-
-    m_frame_counter++;
-
-    forg::uint64 duration = 0;
-    m_perf_count.GetDurationInMs(duration);
-    if (duration >= 1000)
-    {
-        frame_profiler.GetDurationInUs(duration);
-
-        m_fps = m_frame_counter;
-        m_frame_counter = 0;
-        m_perf_count.Start();
-        DBG_MSG("fps %d time: %lld us\n", m_fps, duration);
-    }
 }
 
 void Viewport::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
@@ -502,7 +457,8 @@ void Viewport::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 
         if (GetOpenFileNameA(&ofn))
         {
-            m_model.Load(filename, m_device);
+            if (m_model_node != 0)
+                m_model_node->GetModel().Load(filename, m_device);
         }
     }
     break;
@@ -680,3 +636,15 @@ void Viewport::OnMouseMove(UINT nFlags, POINTS point)
 void Viewport::OnMouseCapture(int nAction, double fPosX, double fPosY) {}
 
 void Viewport::OnMouseRelease(double fPosX, double fPosY) {}
+
+bool Viewport::RenderEngineFrame(forg::Engine& engine, void* userData)
+{
+    UNREFERENCED_PARAMETER(engine);
+
+    Viewport* viewport = static_cast<Viewport*>(userData);
+    if (viewport == 0)
+        return false;
+
+    viewport->Render();
+    return true;
+}

@@ -10,10 +10,11 @@ class Viewport
 {
     HWND m_hWnd;
     HINSTANCE m_hInstance;
+    forg::Engine* m_engine;
     forg::IRenderDevice* m_device;
     forg::Camera m_camera;
 
-    forg::scene::Model m_model;
+    forg::scene::MeshNode* m_model_node;
 
     forg::Font* m_font;
     forg::ui::CUIDialog m_Dialog;
@@ -24,10 +25,6 @@ class Viewport
     BOOL m_bMouseCaptured;
     bool m_hasLastMousePoint;
     POINTS m_lastMousePoint;
-
-    int m_fps;
-    int m_frame_counter;
-    forg::PerformanceCounter m_perf_count;
 
   public:
     Viewport();
@@ -43,8 +40,8 @@ class Viewport
     // LPDIRECT3DDEVICE9 g_pd3dDevice;
     // LPDIRECT3D9 g_pD3D;
 
-    DWORD Create(forg::IRenderer* renderer, int x, int y, int nWidth,
-                 int nHeight, HWND hParent);
+    DWORD Create(forg::Engine& engine, int x, int y, int nWidth, int nHeight,
+                 HWND hParent);
     BOOL ShowWindow(int nCmdShow);
     HWND SetFocus();
     HWND GetHwnd() const { return m_hWnd; }
@@ -65,4 +62,5 @@ class Viewport
     LRESULT WindowProc(UINT uMsg, WPARAM wParam, LPARAM lParam);
     void Invalidate(BOOL bErase = TRUE);
     void RenderUI();
+    static bool RenderEngineFrame(forg::Engine& engine, void* userData);
 };

@@ -7,7 +7,6 @@
 #import <Cocoa/Cocoa.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <MacTypes.h>
-#include <dlfcn.h>
 #include <unistd.h>
 
 #include <iostream>
@@ -24,20 +23,12 @@
 
 struct AppSettings
 {
-    std::string driver;
     int winWidth = 100;
     int winHeight = 100;
     int winX = 10;
     int winY = 10;
     bool controlEnabled = false;
     int controlPort = 8080;
-};
-
-struct LoadedRendererPlugin
-{
-    void* module = nullptr;
-    forg::RendererPluginBinding binding;
-    forg::IRenderer* renderer = nullptr;
 };
 
 static forg::Light s_Light = {};
@@ -56,13 +47,9 @@ static const float kMinTargetDistance =
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 {
     AppSettings m_settings;
-    LoadedRendererPlugin m_plugin;
-    forg::IRenderDevice* m_device;
-    forg::scene::Model m_model;
+    forg::Engine m_engine;
+    forg::scene::Model* m_model;
     forg::Camera m_camera;
-    forg::PerformanceCounter m_perf_count;
-    int m_fps;
-    int m_frame_counter;
 
     forg::Color m_clear_color;
     forg::net::CommandQueue* m_cmd_queue;
@@ -73,27 +60,24 @@ static const float kMinTargetDistance =
     NSTimer* m_timer;
     id m_event_monitor;
 }
-- (instancetype)initWithSettings:(const AppSettings&)settings
-                          plugin:(LoadedRendererPlugin)plugin;
+- (instancetype)initWithSettings:(const AppSettings&)settings;
+- (void)render;
 @end
+
+static bool RenderEngineFrame(forg::Engine& engine, void* userData);
 
 @implementation AppDelegate
 
 - (instancetype)initWithSettings:(const AppSettings&)settings
-                          plugin:(LoadedRendererPlugin)plugin
 {
     self = [super init];
     if (self)
     {
         m_settings = settings;
-        m_plugin = plugin;
-        m_device = 0;
-        m_fps = 0;
-        m_frame_counter = 0;
+        m_model = 0;
         m_clear_color = forg::Color(0.75f, 0.75f, 0.75f);
         m_cmd_queue = 0;
         m_control_server = 0;
-        m_perf_count.Start();
     }
     return self;
 }
@@ -123,34 +107,23 @@ static const float kMinTargetDistance =
     [m_view setWantsLayer:YES];
     [m_view setPostsFrameChangedNotifications:YES];
 
-    forg::RENDER_PARAMETERS rp;
-    rp.BackBufferWidth = winWidth;
-    rp.BackBufferHeight = winHeight;
-
-    m_device = m_plugin.renderer->CreateDevice((forg::HWIN)m_view, &rp);
-    if (m_device == 0)
+    if (!m_engine.Initialize((forg::HWIN)m_view, "config.yml"))
     {
-        std::cerr << "Unable to create render device!\n";
+        std::cerr << m_engine.LastError() << "\n";
         [NSApp terminate:nil];
         return;
     }
 
-    m_device->SetRenderState(forg::RenderStates_CullMode, forg::Cull_Clockwise);
-    m_device->SetRenderState(forg::RenderStates_ShadeMode,
-                             forg::ShadeMode_Gouraud);
-    m_device->SetRenderState(forg::RenderStates_Lighting, true);
-    m_device->SetRenderState(forg::RenderStates_FillMode, forg::FillMode_Solid);
+    m_engine.SetRenderCallback(&RenderEngineFrame, self);
 
-    m_device->SetRenderState(forg::RenderStates_SourceBlend,
-                             forg::Blend_SourceAlpha);
-    m_device->SetRenderState(forg::RenderStates_DestinationBlend,
-                             forg::Blend_InvSourceAlpha);
-
-    m_model.SetMesh(
-        forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40));
+    forg::IRenderDevice* device = m_engine.Device();
+    forg::scene::MeshNode& modelNode = m_engine.Scene().CreateMeshNode();
+    m_model = &modelNode.GetModel();
+    m_model->SetMesh(
+        forg::geometry::Mesh::Cylinder(device, 1.0f, 2.0f, 5.0f, 10, 40));
     DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n",
-            m_model.GetMesh()->GetNumVertices(),
-            m_model.GetMesh()->GetNumFaces());
+            m_model->GetMesh()->GetNumVertices(),
+            m_model->GetMesh()->GetNumFaces());
 
     // Set up a white point light (same setup as the Win32 sample).
     s_Light.Type = forg::LightType::Point;
@@ -169,8 +142,8 @@ static const float kMinTargetDistance =
     s_Light.Attenuation0 = 1.0f;
     s_Light.Range = 1000.0f;
 
-    m_device->SetLight(0, &s_Light);
-    m_device->LightEnable(0, true);
+    device->SetLight(0, &s_Light);
+    device->LightEnable(0, true);
 
     // Optional runtime control server: a background HTTP endpoint queues
     // commands that are applied on this (main) thread in onIdle:.
@@ -264,12 +237,7 @@ static const float kMinTargetDistance =
 {
     NSSize size = m_view.bounds.size;
 
-    if (m_device != 0)
-    {
-        m_device->SetViewport(0, 0, (forg::uint)size.width,
-                              (forg::uint)size.height);
-        m_device->Reset();
-    }
+    m_engine.Resize((forg::uint)size.width, (forg::uint)size.height);
 
     m_camera.set_ScreenSize(size.width, size.height);
 }
@@ -282,28 +250,22 @@ static const float kMinTargetDistance =
 // port of Viewport::Render (without the font/UI overlay)
 - (void)render
 {
-    if (m_device == 0)
+    forg::IRenderDevice* device = m_engine.Device();
+    if (device == 0)
         return;
 
     forg::Matrix4 mlook;
     m_camera.GetViewMatrix(mlook);
-    m_device->SetTransform(forg::TransformType_View, mlook);
+    device->SetTransform(forg::TransformType_View, mlook);
 
     forg::Matrix4 mproj;
     m_camera.GetProjectionMatrix(mproj);
-    m_device->SetTransform(forg::TransformType_Projection, mproj);
+    device->SetTransform(forg::TransformType_Projection, mproj);
 
-    m_device->Clear(forg::ClearFlags_Target | forg::ClearFlags_ZBuffer,
-                    m_clear_color, 1.0f, 0);
-    m_device->BeginScene();
+    device->SetLight(0, &s_Light);
+    device->SetRenderState(forg::RenderStates_Lighting, true);
 
-    m_device->SetLight(0, &s_Light);
-    m_device->SetRenderState(forg::RenderStates_Lighting, true);
-
-    m_model.Render(m_device);
-
-    m_device->EndScene();
-    m_device->Present();
+    m_engine.Scene().Render(device);
 }
 
 // port of Viewport::OnPaint + CWinApp::OnIdle
@@ -318,10 +280,10 @@ static const float kMinTargetDistance =
         {
             forg::control::SceneControlContext ctx;
             ctx.camera = &m_camera;
-            ctx.model = &m_model;
+            ctx.model = m_model;
             ctx.light = &s_Light;
             ctx.clearColor = &m_clear_color;
-            ctx.device = m_device;
+            ctx.device = m_engine.Device();
 
             std::string body = forg::control::DispatchCommand(ctx, item.cmd);
             if (item.reply)
@@ -331,24 +293,8 @@ static const float kMinTargetDistance =
         }
     }
 
-    forg::PerformanceCounter frame_profiler;
-    frame_profiler.Start();
-    [self render];
-    frame_profiler.Stop();
-
-    m_frame_counter++;
-
-    forg::uint64 duration = 0;
-    m_perf_count.GetDurationInMs(duration);
-    if (duration >= 1000)
-    {
-        frame_profiler.GetDurationInUs(duration);
-
-        m_fps = m_frame_counter;
-        m_frame_counter = 0;
-        m_perf_count.Start();
-        DBG_MSG("fps %d time: %lld us\n", m_fps, duration);
-    }
+    m_engine.SetClearColor(m_clear_color);
+    m_engine.Frame();
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender
@@ -381,37 +327,24 @@ static const float kMinTargetDistance =
         m_event_monitor = nil;
     }
 
-    m_model.Clear();
-
-    if (m_device)
-    {
-        m_device->Release();
-        m_device = 0;
-    }
-
-    if (m_plugin.renderer)
-    {
-        const forg::RendererPluginStatus status =
-            forg::DestroyRendererFromPlugin(m_plugin.binding,
-                                            m_plugin.renderer);
-        if (status != forg::RendererPluginStatus::Ok)
-        {
-            std::cerr << "Unable to destroy renderer: "
-                      << forg::RendererPluginStatusName(status) << "\n";
-        }
-        m_plugin.renderer = nullptr;
-    }
-
-    if (m_plugin.module)
-    {
-        if (dlclose(m_plugin.module) != 0)
-            std::cerr << "Unable to unload renderer plugin: " << dlerror()
-                      << "\n";
-        m_plugin.module = nullptr;
-    }
+    m_model = 0;
+    m_engine.SetRenderCallback(nullptr, nullptr);
+    m_engine.Shutdown();
 }
 
 @end
+
+static bool RenderEngineFrame(forg::Engine& engine, void* userData)
+{
+    (void)engine;
+
+    AppDelegate* delegate = (AppDelegate*)userData;
+    if (delegate == nil)
+        return false;
+
+    [delegate render];
+    return true;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -443,16 +376,6 @@ static bool LoadSettings(AppSettings& settings)
     {
         std::cerr << "Unable to load config.yml!\n";
         return false;
-    }
-
-    if (forg::script::yaml::YAMLNode* yaml_node =
-            yaml_doc->FindNode("renderer"))
-    {
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("driver"))
-        {
-            settings.driver = yaml_att->GetContent().c_str();
-        }
     }
 
     if (forg::script::yaml::YAMLNode* yaml_node = yaml_doc->FindNode("window"))
@@ -502,58 +425,6 @@ static bool LoadSettings(AppSettings& settings)
     return true;
 }
 
-static bool LoadRendererPlugin(const std::string& driver,
-                               LoadedRendererPlugin& plugin)
-{
-    plugin = {};
-
-    if (driver.empty())
-    {
-        std::cerr << "No renderer driver specified in config.yml!\n";
-        return false;
-    }
-
-    // cwd is the resources directory; "./" keeps dlopen from searching dyld
-    // paths
-    std::string path = "./" + driver;
-    void* module = dlopen(path.c_str(), RTLD_NOW);
-    if (module == 0)
-    {
-        std::cerr << "Unable to load renderer <" << driver << ">: " << dlerror()
-                  << "\n";
-        return false;
-    }
-
-    auto getDescriptor = reinterpret_cast<forg::PFGETRENDERERPLUGINDESCRIPTOR>(
-        dlsym(module, "forgGetRendererPluginDescriptor"));
-    auto pfCreateRenderer = reinterpret_cast<forg::PFCREATERENDERER>(
-        dlsym(module, "forgCreateRenderer"));
-
-    forg::RendererPluginStatus status = forg::ProbeRendererPlugin(
-        getDescriptor, pfCreateRenderer, plugin.binding);
-    if (status != forg::RendererPluginStatus::Ok)
-    {
-        std::cerr << "Incompatible renderer plugin <" << driver
-                  << ">: " << forg::RendererPluginStatusName(status) << "\n";
-        dlclose(module);
-        plugin = {};
-        return false;
-    }
-
-    status = forg::CreateRendererFromPlugin(plugin.binding, plugin.renderer);
-    if (status != forg::RendererPluginStatus::Ok)
-    {
-        std::cerr << "Unable to create renderer <" << driver
-                  << ">: " << forg::RendererPluginStatusName(status) << "\n";
-        dlclose(module);
-        plugin = {};
-        return false;
-    }
-
-    plugin.module = module;
-    return true;
-}
-
 int main(int, char*[])
 {
     ChangeToResourcesDirectory();
@@ -564,17 +435,10 @@ int main(int, char*[])
         return 1;
     }
 
-    LoadedRendererPlugin plugin;
-    if (!LoadRendererPlugin(settings.driver, plugin))
-    {
-        return 1;
-    }
-
     NSApplication* app = [NSApplication sharedApplication];
     [app setActivationPolicy:NSApplicationActivationPolicyRegular];
 
-    AppDelegate* delegate = [[AppDelegate alloc] initWithSettings:settings
-                                                           plugin:plugin];
+    AppDelegate* delegate = [[AppDelegate alloc] initWithSettings:settings];
     [app setDelegate:delegate];
 
     [app run];

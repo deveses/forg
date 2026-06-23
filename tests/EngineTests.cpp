@@ -2,12 +2,27 @@
 
 #include "forg/Engine.h"
 #include "forg/scene/Scene.h"
+#include "forg/scene/SceneNode.h"
 
 #include <filesystem>
 #include <fstream>
 #include <string>
 
 namespace {
+
+class CountingSceneNode : public forg::scene::SceneNode
+{
+  public:
+    int updates = 0;
+    double lastDelta = 0.0;
+
+    void Update(double deltaSeconds) override
+    {
+        ++updates;
+        lastDelta = deltaSeconds;
+        SceneNode::Update(deltaSeconds);
+    }
+};
 
 std::filesystem::path TestConfigPath(const char* name)
 {
@@ -54,6 +69,55 @@ TEST_CASE("Engine LoadConfig reads renderer driver and window size", "[engine]")
     REQUIRE(std::string(engine.LastError()).empty());
 
     std::filesystem::remove(path);
+}
+
+TEST_CASE("Engine frame methods require initialization", "[engine]")
+{
+    bool callbackCalled = false;
+
+    forg::Engine engine;
+    engine.SetUpdateCallback(
+        [](forg::Engine&, double, void* userData)
+        {
+            *static_cast<bool*>(userData) = true;
+            return true;
+        },
+        &callbackCalled);
+
+    REQUIRE_FALSE(engine.Update(1.0 / 60.0));
+    REQUIRE_FALSE(callbackCalled);
+    REQUIRE(std::string(engine.LastError()).find("initialized") !=
+            std::string::npos);
+
+    REQUIRE_FALSE(engine.Render());
+    REQUIRE(std::string(engine.LastError()).find("initialized") !=
+            std::string::npos);
+
+    REQUIRE_FALSE(engine.Frame());
+    REQUIRE(std::string(engine.LastError()).find("initialized") !=
+            std::string::npos);
+
+    engine.Resize(640, 480);
+    REQUIRE(std::string(engine.LastError()).find("initialized") !=
+            std::string::npos);
+    REQUIRE(engine.FrameStats().FrameIndex == 0);
+}
+
+TEST_CASE("Scene update traverses scene nodes", "[engine][scene]")
+{
+    forg::scene::Scene scene;
+    CountingSceneNode parent;
+    CountingSceneNode child;
+
+    REQUIRE(scene.AddChild(parent));
+    REQUIRE(parent.AddChild(child));
+
+    scene.Update(0.25);
+
+    REQUIRE(parent.updates == 1);
+    REQUIRE(parent.lastDelta == 0.25);
+    REQUIRE(child.updates == 1);
+    REQUIRE(child.lastDelta == 0.25);
 }
 
 TEST_CASE("Engine LoadConfig reports missing and invalid configs", "[engine]")

@@ -4,6 +4,16 @@
 
 namespace forg::scene {
 
+void SceneNode::Update(double deltaSeconds)
+{
+    for (TreeNode* child : Children())
+    {
+        SceneNode* sceneNode = dynamic_cast<SceneNode*>(child);
+        if (sceneNode != nullptr)
+            sceneNode->Update(deltaSeconds);
+    }
+}
+
 void SceneNode::Render(IRenderDevice* device)
 {
     for (TreeNode* child : Children())
