@@ -351,7 +351,8 @@ struct Engine::Impl
         }
 
         std::string error;
-        PluginModule loadedModule = OpenPluginModule(config.RendererDriver, error);
+        PluginModule loadedModule =
+            OpenPluginModule(config.RendererDriver, error);
         if (loadedModule == nullptr)
         {
             SetError(error);

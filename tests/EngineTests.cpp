@@ -35,18 +35,15 @@ TEST_CASE("Engine starts empty and owns an empty scene", "[engine]")
     REQUIRE(std::string(engine.LastError()).empty());
 }
 
-TEST_CASE("Engine LoadConfig reads renderer driver and window size",
-          "[engine]")
+TEST_CASE("Engine LoadConfig reads renderer driver and window size", "[engine]")
 {
-    const std::filesystem::path path =
-        TestConfigPath("forg-engine-valid.yml");
-    WriteText(path,
-              "config:\n"
-              "  renderer:\n"
-              "    driver: libtestrenderer.dylib\n"
-              "  window:\n"
-              "    width: 640\n"
-              "    height: 480\n");
+    const std::filesystem::path path = TestConfigPath("forg-engine-valid.yml");
+    WriteText(path, "config:\n"
+                    "  renderer:\n"
+                    "    driver: libtestrenderer.dylib\n"
+                    "  window:\n"
+                    "    width: 640\n"
+                    "    height: 480\n");
 
     forg::Engine engine;
     REQUIRE(engine.LoadConfig(path.string().c_str()));
@@ -59,8 +56,7 @@ TEST_CASE("Engine LoadConfig reads renderer driver and window size",
     std::filesystem::remove(path);
 }
 
-TEST_CASE("Engine LoadConfig reports missing and invalid configs",
-          "[engine]")
+TEST_CASE("Engine LoadConfig reports missing and invalid configs", "[engine]")
 {
     forg::Engine engine;
 
@@ -69,13 +65,12 @@ TEST_CASE("Engine LoadConfig reports missing and invalid configs",
 
     const std::filesystem::path path =
         TestConfigPath("forg-engine-invalid.yml");
-    WriteText(path,
-              "config:\n"
-              "  renderer:\n"
-              "    driver: libtestrenderer.dylib\n"
-              "  window:\n"
-              "    width: nope\n"
-              "    height: 480\n");
+    WriteText(path, "config:\n"
+                    "  renderer:\n"
+                    "    driver: libtestrenderer.dylib\n"
+                    "  window:\n"
+                    "    width: nope\n"
+                    "    height: 480\n");
 
     REQUIRE_FALSE(engine.LoadConfig(path.string().c_str()));
     REQUIRE(std::string(engine.LastError()).find("window.width") !=
@@ -97,13 +92,12 @@ TEST_CASE("Engine Initialize requires config and cleans up missing plugin",
 
     const std::filesystem::path path =
         TestConfigPath("forg-engine-missing-plugin.yml");
-    WriteText(path,
-              "config:\n"
-              "  renderer:\n"
-              "    driver: missing-renderer-plugin.dylib\n"
-              "  window:\n"
-              "    width: 320\n"
-              "    height: 200\n");
+    WriteText(path, "config:\n"
+                    "  renderer:\n"
+                    "    driver: missing-renderer-plugin.dylib\n"
+                    "  window:\n"
+                    "    width: 320\n"
+                    "    height: 200\n");
 
     REQUIRE(engine.LoadConfig(path.string().c_str()));
     REQUIRE_FALSE(engine.Initialize(nullptr));
