@@ -48,3 +48,5 @@
 #include "scene.h"
 
 #include "script/script.h"
+
+#include "Engine.h"

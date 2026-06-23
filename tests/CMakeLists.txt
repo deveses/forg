@@ -11,6 +11,7 @@ if(NOT Catch2_FOUND)
 endif()
 
 add_executable(forg_tests
+    EngineTests.cpp
     math/MathTests.cpp
     audio/WaveFileTests.cpp
     core/BitArrayTests.cpp

@@ -218,6 +218,7 @@ list(TRANSFORM image_sources PREPEND "src/image/")
 ###############################################################################
 set(root_sources
     PerformanceCounter.cpp
+    src/Engine.cpp
     src/debug/debug.cpp
 )
 

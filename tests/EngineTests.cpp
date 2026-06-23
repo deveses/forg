@@ -1,0 +1,116 @@
+#include <catch2/catch_test_macros.hpp>
+
+#include "forg/Engine.h"
+#include "forg/scene/Scene.h"
+
+#include <filesystem>
+#include <fstream>
+#include <string>
+
+namespace {
+
+std::filesystem::path TestConfigPath(const char* name)
+{
+    return std::filesystem::temp_directory_path() / name;
+}
+
+void WriteText(const std::filesystem::path& path, const char* text)
+{
+    std::ofstream file(path);
+    file << text;
+}
+
+} // namespace
+
+TEST_CASE("Engine starts empty and owns an empty scene", "[engine]")
+{
+    forg::Engine engine;
+
+    REQUIRE(engine.Device() == nullptr);
+    REQUIRE(engine.Renderer() == nullptr);
+    REQUIRE(engine.Scene().NodeCount() == 0);
+    REQUIRE(engine.Config().RendererDriver.empty());
+    REQUIRE(engine.Config().BackBufferWidth == 100);
+    REQUIRE(engine.Config().BackBufferHeight == 100);
+    REQUIRE(std::string(engine.LastError()).empty());
+}
+
+TEST_CASE("Engine LoadConfig reads renderer driver and window size",
+          "[engine]")
+{
+    const std::filesystem::path path =
+        TestConfigPath("forg-engine-valid.yml");
+    WriteText(path,
+              "config:\n"
+              "  renderer:\n"
+              "    driver: libtestrenderer.dylib\n"
+              "  window:\n"
+              "    width: 640\n"
+              "    height: 480\n");
+
+    forg::Engine engine;
+    REQUIRE(engine.LoadConfig(path.string().c_str()));
+
+    REQUIRE(engine.Config().RendererDriver == "libtestrenderer.dylib");
+    REQUIRE(engine.Config().BackBufferWidth == 640);
+    REQUIRE(engine.Config().BackBufferHeight == 480);
+    REQUIRE(std::string(engine.LastError()).empty());
+
+    std::filesystem::remove(path);
+}
+
+TEST_CASE("Engine LoadConfig reports missing and invalid configs",
+          "[engine]")
+{
+    forg::Engine engine;
+
+    REQUIRE_FALSE(engine.LoadConfig("missing-engine-config.yml"));
+    REQUIRE_FALSE(std::string(engine.LastError()).empty());
+
+    const std::filesystem::path path =
+        TestConfigPath("forg-engine-invalid.yml");
+    WriteText(path,
+              "config:\n"
+              "  renderer:\n"
+              "    driver: libtestrenderer.dylib\n"
+              "  window:\n"
+              "    width: nope\n"
+              "    height: 480\n");
+
+    REQUIRE_FALSE(engine.LoadConfig(path.string().c_str()));
+    REQUIRE(std::string(engine.LastError()).find("window.width") !=
+            std::string::npos);
+
+    std::filesystem::remove(path);
+}
+
+TEST_CASE("Engine Initialize requires config and cleans up missing plugin",
+          "[engine]")
+{
+    forg::Engine engine;
+
+    REQUIRE_FALSE(engine.Initialize(nullptr));
+    REQUIRE(engine.Device() == nullptr);
+    REQUIRE(engine.Renderer() == nullptr);
+    REQUIRE(std::string(engine.LastError()).find("config") !=
+            std::string::npos);
+
+    const std::filesystem::path path =
+        TestConfigPath("forg-engine-missing-plugin.yml");
+    WriteText(path,
+              "config:\n"
+              "  renderer:\n"
+              "    driver: missing-renderer-plugin.dylib\n"
+              "  window:\n"
+              "    width: 320\n"
+              "    height: 200\n");
+
+    REQUIRE(engine.LoadConfig(path.string().c_str()));
+    REQUIRE_FALSE(engine.Initialize(nullptr));
+    REQUIRE(engine.Device() == nullptr);
+    REQUIRE(engine.Renderer() == nullptr);
+    REQUIRE(std::string(engine.LastError()).find("Unable to load renderer") !=
+            std::string::npos);
+
+    std::filesystem::remove(path);
+}
