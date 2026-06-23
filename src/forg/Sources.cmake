@@ -113,6 +113,18 @@ set(control_sources
 list(TRANSFORM control_sources PREPEND "src/control/")
 
 ###############################################################################
+# scene
+###############################################################################
+set(scene_includes
+    Model.h
+)
+list(TRANSFORM scene_includes PREPEND "include/forg/scene/")
+set(scene_sources
+    Model.cpp
+)
+list(TRANSFORM scene_sources PREPEND "src/scene/")
+
+###############################################################################
 # math
 ###############################################################################
 set(math_sources
@@ -203,7 +215,7 @@ set(root_sources
 
 ###############################################################################
 list(APPEND all_includes ${audio_includes} ${core_includes} ${fs_includes} ${os_includes} ${script_includes}
-    ${net_includes} ${control_includes} ${ui_includes})
+    ${net_includes} ${control_includes} ${scene_includes} ${ui_includes})
 list(APPEND all_sources ${audio_sources} ${core_sources} ${fs_sources} ${os_sources} ${script_sources}
-    ${net_sources} ${control_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources}
+    ${net_sources} ${control_sources} ${scene_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources}
     ${ui_sources} ${root_sources})

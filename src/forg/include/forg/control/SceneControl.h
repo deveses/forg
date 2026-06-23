@@ -15,7 +15,7 @@
 #include "rendering/Color.h"
 #include "rendering/IRenderDevice.h"
 #include "rendering/Light.h"
-#include "rendering/Mesh.h"
+#include "scene/Model.h"
 
 namespace forg::control {
 
@@ -24,11 +24,10 @@ namespace forg::control {
 struct SceneControlContext
 {
     forg::Camera* camera;
-    forg::geometry::Mesh::MeshPtr* mesh; // the app's current mesh
-    forg::Matrix4* meshTm;               // the app's mesh transform
-    forg::Light* light;                  // the app's light
-    forg::Color* clearColor;             // the app's clear color
-    forg::IRenderDevice* device;         // needed to build/load meshes
+    forg::scene::Model* model;   // the app's current renderable model
+    forg::Light* light;          // the app's light
+    forg::Color* clearColor;     // the app's clear color
+    forg::IRenderDevice* device; // needed to build/load meshes
 };
 
 /// Executes one command against the scene and returns a JSON response body.

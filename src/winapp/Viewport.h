@@ -4,30 +4,7 @@
 
 #include "forg.h"
 
-#include <utility>
-#include <vector>
-
 #include <windows.h>
-
-namespace forg::scene {
-
-class Model
-{
-    geometry::Mesh::ExtendedMaterialVec m_materials;
-    std::vector<core::RefPtr<ITexture>> m_textures;
-
-    math::Matrix4 m_mesh_tm;
-    geometry::Mesh::MeshPtr m_mesh;
-
-  public:
-    int Load(const char* _name, IRenderDevice* _device);
-
-    bool IsLoaded() const { return static_cast<bool>(m_mesh); }
-
-    void Render(IRenderDevice* _device);
-};
-
-} // namespace forg::scene
 
 class Viewport
 {
@@ -36,8 +13,6 @@ class Viewport
     forg::IRenderDevice* m_device;
     forg::Camera m_camera;
 
-    forg::math::Matrix4 m_mesh_tm;
-    forg::geometry::Mesh::MeshPtr m_mesh;
     forg::scene::Model m_model;
 
     forg::Font* m_font;

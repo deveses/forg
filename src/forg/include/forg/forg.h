@@ -45,4 +45,6 @@
 
 #include "rendering.h"
 
+#include "scene.h"
+
 #include "script/script.h"

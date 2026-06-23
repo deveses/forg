@@ -17,20 +17,15 @@ struct Scene
     forg::Camera camera;
     forg::Light light;
     forg::Color clearColor;
-    forg::geometry::Mesh::MeshPtr mesh; // null
-    forg::Matrix4 meshTm;
+    forg::scene::Model model;
 
-    Scene()
-        : light(), clearColor(0.0f, 0.0f, 0.0f), meshTm(forg::Matrix4::Identity)
-    {
-    }
+    Scene() : light(), clearColor(0.0f, 0.0f, 0.0f) {}
 
     SceneControlContext context()
     {
         SceneControlContext ctx;
         ctx.camera = &camera;
-        ctx.mesh = &mesh;
-        ctx.meshTm = &meshTm;
+        ctx.model = &model;
         ctx.light = &light;
         ctx.clearColor = &clearColor;
         ctx.device = 0;

@@ -23,6 +23,7 @@ add_executable(forg_tests
     rendering/CameraTests.cpp
     rendering/PluginTests.cpp
     rendering/ReferenceRenderTests.cpp
+    scene/ModelTests.cpp
     mesh/GltfLoaderTests.cpp
     net/HttpRequestTests.cpp
     net/CommandTests.cpp
