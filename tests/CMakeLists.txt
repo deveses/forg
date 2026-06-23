@@ -11,6 +11,7 @@ if(NOT Catch2_FOUND)
 endif()
 
 add_executable(forg_tests
+    EngineTests.cpp
     math/MathTests.cpp
     audio/WaveFileTests.cpp
     core/BitArrayTests.cpp
@@ -23,6 +24,8 @@ add_executable(forg_tests
     rendering/CameraTests.cpp
     rendering/PluginTests.cpp
     rendering/ReferenceRenderTests.cpp
+    scene/ModelTests.cpp
+    scene/SceneTreeTests.cpp
     mesh/GltfLoaderTests.cpp
     net/HttpRequestTests.cpp
     net/CommandTests.cpp

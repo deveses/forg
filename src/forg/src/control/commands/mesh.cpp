@@ -31,14 +31,9 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         if (!TryGetString(cmd, "path", path))
             return fail("badparam");
 
-        forg::geometry::Mesh::MeshPtr loaded =
-            forg::geometry::Mesh::FromFile(path.c_str(), 0, ctx.device);
-        // FromFile returns an empty (non-null) mesh on failure; treat a mesh
-        // with no geometry as a failed load and keep the current mesh.
-        if (!loaded || loaded->GetNumVertices() == 0)
+        if (!ctx.model->Load(path.c_str(), ctx.device))
             return fail("loadfailed");
 
-        *ctx.mesh = std::move(loaded);
         return ok();
     }
     if (v == "mesh.box")
@@ -50,7 +45,7 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         w = PositiveOr(w, 1.0f);
         h = PositiveOr(h, 1.0f);
         d = PositiveOr(d, 1.0f);
-        *ctx.mesh = forg::geometry::Mesh::Box(ctx.device, w, h, d);
+        ctx.model->SetMesh(forg::geometry::Mesh::Box(ctx.device, w, h, d));
         return ok();
     }
     if (v == "mesh.sphere")
@@ -63,8 +58,8 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         radius = PositiveOr(radius, 1.0f);
         slices = ClampSegments(slices);
         stacks = ClampSegments(stacks);
-        *ctx.mesh =
-            forg::geometry::Mesh::Sphere(ctx.device, radius, slices, stacks);
+        ctx.model->SetMesh(
+            forg::geometry::Mesh::Sphere(ctx.device, radius, slices, stacks));
         return ok();
     }
     if (v == "mesh.cylinder")
@@ -81,8 +76,8 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         length = PositiveOr(length, 2.0f);
         slices = ClampSegments(slices);
         stacks = ClampSegments(stacks);
-        *ctx.mesh = forg::geometry::Mesh::Cylinder(ctx.device, r1, r2, length,
-                                                   slices, stacks);
+        ctx.model->SetMesh(forg::geometry::Mesh::Cylinder(
+            ctx.device, r1, r2, length, slices, stacks));
         return ok();
     }
     if (v == "mesh.transform")
@@ -110,7 +105,7 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         TryGetFloat(cmd, "tz", tz);
         m.SetPosition(tx, ty, tz);
 
-        *ctx.meshTm = m;
+        ctx.model->SetTransform(m);
         return ok();
     }
 

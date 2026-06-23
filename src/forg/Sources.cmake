@@ -113,6 +113,26 @@ set(control_sources
 list(TRANSFORM control_sources PREPEND "src/control/")
 
 ###############################################################################
+# scene
+###############################################################################
+set(scene_includes
+    MeshNode.h
+    Model.h
+    Scene.h
+    SceneNode.h
+    TreeNode.h
+)
+list(TRANSFORM scene_includes PREPEND "include/forg/scene/")
+set(scene_sources
+    MeshNode.cpp
+    Model.cpp
+    Scene.cpp
+    SceneNode.cpp
+    TreeNode.cpp
+)
+list(TRANSFORM scene_sources PREPEND "src/scene/")
+
+###############################################################################
 # math
 ###############################################################################
 set(math_sources
@@ -198,12 +218,13 @@ list(TRANSFORM image_sources PREPEND "src/image/")
 ###############################################################################
 set(root_sources
     PerformanceCounter.cpp
+    src/Engine.cpp
     src/debug/debug.cpp
 )
 
 ###############################################################################
 list(APPEND all_includes ${audio_includes} ${core_includes} ${fs_includes} ${os_includes} ${script_includes}
-    ${net_includes} ${control_includes} ${ui_includes})
+    ${net_includes} ${control_includes} ${scene_includes} ${ui_includes})
 list(APPEND all_sources ${audio_sources} ${core_sources} ${fs_sources} ${os_sources} ${script_sources}
-    ${net_sources} ${control_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources}
+    ${net_sources} ${control_sources} ${scene_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources}
     ${ui_sources} ${root_sources})

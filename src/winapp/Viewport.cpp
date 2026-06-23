@@ -18,86 +18,6 @@ const float kMinTargetDistance = 0.5f;
 
 } // namespace
 
-namespace forg::scene {
-
-int Model::Load(const char* _name, IRenderDevice* _device)
-{
-    m_materials.clear();
-    m_textures.clear();
-
-    m_mesh = geometry::Mesh::FromFile(_name, 0, _device, m_materials);
-
-    if (m_mesh == 0)
-    {
-        return false;
-    }
-
-    m_mesh_tm = Matrix4::Identity;
-
-    // setup textures' dir
-
-    string base_dir = _name;
-
-    string::size_type last_slash = base_dir.find_last_of('/');
-
-    if (last_slash == string::npos)
-    {
-        last_slash = base_dir.find_last_of('\\');
-    }
-
-    if (last_slash != string::npos)
-    {
-        base_dir.erase(last_slash + 1);
-    }
-    else
-    {
-        base_dir.clear();
-    }
-
-    // load textures
-
-    for (uint i = 0; i < m_materials.size(); i++)
-    {
-        string tfn = base_dir + m_materials[i].TextureFilename;
-
-        core::RefPtr<ITexture> tex(ITexture::FromFile(_device, tfn.c_str()));
-
-        m_textures.push_back(std::move(tex));
-
-        if (!m_textures.back())
-            DBG_MSG(__T("Failed to load texture <%s>!\n"), tfn.c_str());
-    }
-
-    DBG_MSG("Mesh %s loaded. Vertices: %d, Faces: %d\n", _name,
-            m_mesh->GetNumVertices(), m_mesh->GetNumFaces());
-
-    return FORG_OK;
-}
-
-void Model::Render(IRenderDevice* _device)
-{
-    if (!m_mesh)
-        return;
-
-    _device->SetTransform(TransformType_World, m_mesh_tm);
-
-    if (m_materials.size() > 0)
-    {
-        for (uint i = 0; i < m_materials.size(); i++)
-        {
-            _device->SetMaterial(&m_materials[i].Material3D);
-            _device->SetTexture(0, m_textures[i].get());
-            m_mesh->DrawSubset(i);
-        }
-    }
-    else
-    {
-        _device->SetTexture(0, 0);
-        m_mesh->DrawSubset(0);
-    }
-}
-} // namespace forg::scene
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -136,7 +56,7 @@ Viewport::~Viewport()
         m_font = 0;
     }
 
-    m_mesh.reset();
+    m_model.Clear();
 
     if (m_device)
     {
@@ -210,9 +130,11 @@ DWORD Viewport::Create(forg::IRenderer* renderer, int x, int y, int nWidth,
     m_device->SetRenderState(forg::RenderStates_DestinationBlend,
                              forg::Blend_InvSourceAlpha);
 
-    m_mesh = forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40);
+    m_model.SetMesh(
+        forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40));
     DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n",
-            m_mesh->GetNumVertices(), m_mesh->GetNumFaces());
+            m_model.GetMesh()->GetNumVertices(),
+            m_model.GetMesh()->GetNumFaces());
 
     forg::FontDescription fd = {12, 0, 0, 1, false, 0, 0, 0, 0, (""),
                                 //"../bin/test.ttf"
@@ -489,20 +411,7 @@ void Viewport::Render()
     m_device->SetLight(0, &s_Light);
     m_device->SetRenderState(forg::RenderStates_Lighting, true);
 
-    if (m_model.IsLoaded())
-    {
-        m_model.Render(m_device);
-    }
-    else if (m_mesh != 0)
-    {
-        // Matrix4 mat;
-        // mat.Scale(0.01f, 0.01f, 0.01f);
-        // mat.Translate(0.0f, 2.0f, 0.0f);
-        // mat.Scale(10.0f, 10.0f, 10.0f);
-        m_device->SetTexture(0, 0);
-        m_device->SetTransform(forg::TransformType_World, m_mesh_tm);
-        m_mesh->DrawSubset(0);
-    }
+    m_model.Render(m_device);
 
     RenderUI();
 

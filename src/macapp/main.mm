@@ -58,8 +58,7 @@ static const float kMinTargetDistance =
     AppSettings m_settings;
     LoadedRendererPlugin m_plugin;
     forg::IRenderDevice* m_device;
-    forg::geometry::Mesh::MeshPtr m_mesh;
-    forg::Matrix4 m_mesh_tm;
+    forg::scene::Model m_model;
     forg::Camera m_camera;
     forg::PerformanceCounter m_perf_count;
     int m_fps;
@@ -89,7 +88,6 @@ static const float kMinTargetDistance =
         m_settings = settings;
         m_plugin = plugin;
         m_device = 0;
-        m_mesh_tm = forg::Matrix4::Identity;
         m_fps = 0;
         m_frame_counter = 0;
         m_clear_color = forg::Color(0.75f, 0.75f, 0.75f);
@@ -148,9 +146,11 @@ static const float kMinTargetDistance =
     m_device->SetRenderState(forg::RenderStates_DestinationBlend,
                              forg::Blend_InvSourceAlpha);
 
-    m_mesh = forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40);
+    m_model.SetMesh(
+        forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40));
     DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n",
-            m_mesh->GetNumVertices(), m_mesh->GetNumFaces());
+            m_model.GetMesh()->GetNumVertices(),
+            m_model.GetMesh()->GetNumFaces());
 
     // Set up a white point light (same setup as the Win32 sample).
     s_Light.Type = forg::LightType::Point;
@@ -300,12 +300,7 @@ static const float kMinTargetDistance =
     m_device->SetLight(0, &s_Light);
     m_device->SetRenderState(forg::RenderStates_Lighting, true);
 
-    if (m_mesh)
-    {
-        m_device->SetTexture(0, 0);
-        m_device->SetTransform(forg::TransformType_World, m_mesh_tm);
-        m_mesh->DrawSubset(0);
-    }
+    m_model.Render(m_device);
 
     m_device->EndScene();
     m_device->Present();
@@ -323,8 +318,7 @@ static const float kMinTargetDistance =
         {
             forg::control::SceneControlContext ctx;
             ctx.camera = &m_camera;
-            ctx.mesh = &m_mesh;
-            ctx.meshTm = &m_mesh_tm;
+            ctx.model = &m_model;
             ctx.light = &s_Light;
             ctx.clearColor = &m_clear_color;
             ctx.device = m_device;
@@ -387,7 +381,7 @@ static const float kMinTargetDistance =
         m_event_monitor = nil;
     }
 
-    m_mesh.reset();
+    m_model.Clear();
 
     if (m_device)
     {
