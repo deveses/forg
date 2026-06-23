@@ -24,6 +24,7 @@ add_executable(forg_tests
     rendering/PluginTests.cpp
     rendering/ReferenceRenderTests.cpp
     scene/ModelTests.cpp
+    scene/SceneTreeTests.cpp
     mesh/GltfLoaderTests.cpp
     net/HttpRequestTests.cpp
     net/CommandTests.cpp

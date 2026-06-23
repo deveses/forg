@@ -116,11 +116,19 @@ list(TRANSFORM control_sources PREPEND "src/control/")
 # scene
 ###############################################################################
 set(scene_includes
+    MeshNode.h
     Model.h
+    Scene.h
+    SceneNode.h
+    TreeNode.h
 )
 list(TRANSFORM scene_includes PREPEND "include/forg/scene/")
 set(scene_sources
+    MeshNode.cpp
     Model.cpp
+    Scene.cpp
+    SceneNode.cpp
+    TreeNode.cpp
 )
 list(TRANSFORM scene_sources PREPEND "src/scene/")
 
