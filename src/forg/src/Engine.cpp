@@ -6,10 +6,11 @@
 #include "forg/scene/Scene.h"
 #include "forg/script/yaml/YAMLParser.h"
 
-#include <cerrno>
-#include <climits>
-#include <cstdlib>
+#include <charconv>
 #include <sstream>
+#include <string_view>
+#include <system_error>
+#include <utility>
 
 #ifdef FORG_PLATFORM_WINDOWS
 #include <windows.h>
@@ -21,35 +22,34 @@ namespace forg {
 
 namespace {
 
-bool ParsePositiveUint(const char* text, uint& value)
+bool ParsePositiveUint(std::string_view text, uint& value)
 {
-    if (text == nullptr || text[0] == '\0')
+    if (text.empty())
         return false;
 
-    errno = 0;
-    char* end = nullptr;
-    const unsigned long parsed = std::strtoul(text, &end, 10);
+    uint parsed = 0;
+    const char* begin = text.data();
+    const char* end = begin + text.size();
+    const auto [ptr, ec] = std::from_chars(begin, end, parsed);
 
-    if (errno != 0 || end == text || *end != '\0' || parsed == 0 ||
-        parsed > UINT_MAX)
-    {
+    if (ec != std::errc() || ptr != end || parsed == 0)
         return false;
-    }
 
-    value = static_cast<uint>(parsed);
+    value = parsed;
     return true;
 }
 
 #ifdef FORG_PLATFORM_WINDOWS
 using PluginModule = HMODULE;
 
-PluginModule OpenPluginModule(const std::string& driver, std::string& error)
+PluginModule OpenPluginModule(std::string_view driver, std::string& error)
 {
-    HMODULE module = LoadLibraryA(driver.c_str());
+    const std::string driverText(driver);
+    HMODULE module = LoadLibraryA(driverText.c_str());
     if (module == nullptr)
     {
         std::ostringstream stream;
-        stream << "Unable to load renderer <" << driver << ">";
+        stream << "Unable to load renderer <" << driverText << ">";
         error = stream.str();
     }
     return module;
@@ -74,22 +74,25 @@ bool ClosePluginModule(PluginModule module, std::string& error)
 #else
 using PluginModule = void*;
 
-std::string PluginPath(const std::string& driver)
+std::string PluginPath(std::string_view driver)
 {
     if (driver.find('/') != std::string::npos)
-        return driver;
+        return std::string(driver);
 
-    return "./" + driver;
+    std::string path = "./";
+    path.append(driver);
+    return path;
 }
 
-PluginModule OpenPluginModule(const std::string& driver, std::string& error)
+PluginModule OpenPluginModule(std::string_view driver, std::string& error)
 {
     const std::string path = PluginPath(driver);
     void* module = dlopen(path.c_str(), RTLD_NOW);
     if (module == nullptr)
     {
         std::ostringstream stream;
-        stream << "Unable to load renderer <" << driver << ">: " << dlerror();
+        stream << "Unable to load renderer <" << std::string(driver)
+               << ">: " << dlerror();
         error = stream.str();
     }
     return module;
@@ -115,6 +118,116 @@ bool ClosePluginModule(PluginModule module, std::string& error)
 }
 #endif
 
+class PluginModuleHandle
+{
+  public:
+    PluginModuleHandle() = default;
+    ~PluginModuleHandle()
+    {
+        std::string ignored;
+        Reset(ignored);
+    }
+
+    PluginModuleHandle(const PluginModuleHandle&) = delete;
+    PluginModuleHandle& operator=(const PluginModuleHandle&) = delete;
+
+    PluginModule Get() const { return m_module; }
+    bool Empty() const { return m_module == nullptr; }
+
+    void Attach(PluginModule module)
+    {
+        std::string ignored;
+        Reset(ignored);
+        m_module = module;
+    }
+
+    bool Reset(std::string& error)
+    {
+        PluginModule module = std::exchange(m_module, nullptr);
+        return ClosePluginModule(module, error);
+    }
+
+  private:
+    PluginModule m_module = nullptr;
+};
+
+class RenderDeviceHandle
+{
+  public:
+    RenderDeviceHandle() = default;
+    ~RenderDeviceHandle() { Reset(); }
+
+    RenderDeviceHandle(const RenderDeviceHandle&) = delete;
+    RenderDeviceHandle& operator=(const RenderDeviceHandle&) = delete;
+
+    IRenderDevice* Get() const { return m_device; }
+
+    void Attach(IRenderDevice* device)
+    {
+        Reset();
+        m_device = device;
+    }
+
+    void Reset()
+    {
+        IRenderDevice* device = std::exchange(m_device, nullptr);
+        if (device != nullptr)
+            device->Release();
+    }
+
+  private:
+    IRenderDevice* m_device = nullptr;
+};
+
+class RendererHandle
+{
+  public:
+    RendererHandle() = default;
+    ~RendererHandle()
+    {
+        std::string ignored;
+        Reset(ignored);
+    }
+
+    RendererHandle(const RendererHandle&) = delete;
+    RendererHandle& operator=(const RendererHandle&) = delete;
+
+    IRenderer* Get() const { return m_renderer; }
+
+    void Attach(IRenderer* renderer, const RendererPluginBinding& binding)
+    {
+        std::string ignored;
+        Reset(ignored);
+        m_renderer = renderer;
+        m_binding = binding;
+    }
+
+    bool Reset(std::string& error)
+    {
+        IRenderer* renderer = std::exchange(m_renderer, nullptr);
+        const RendererPluginBinding binding = m_binding;
+        m_binding = {};
+
+        if (renderer == nullptr)
+            return true;
+
+        const RendererPluginStatus status =
+            DestroyRendererFromPlugin(binding, renderer);
+        if (status == RendererPluginStatus::Ok)
+            return true;
+
+        std::ostringstream stream;
+        stream << "Unable to destroy renderer: "
+               << RendererPluginStatusName(status);
+        error = stream.str();
+        return false;
+    }
+
+  private:
+    IRenderer* m_renderer = nullptr;
+    RendererPluginBinding m_binding;
+};
+
 } // namespace
 
 struct Engine::Impl
@@ -122,18 +235,18 @@ struct Engine::Impl
     EngineConfig config;
     bool configLoaded = false;
     scene::Scene scene;
-    PluginModule module = nullptr;
-    RendererPluginBinding binding;
-    IRenderer* renderer = nullptr;
-    IRenderDevice* device = nullptr;
+    PluginModuleHandle module;
+    RendererHandle renderer;
+    RenderDeviceHandle device;
     std::string lastError;
 
     bool IsInitialized() const
     {
-        return module != nullptr || renderer != nullptr || device != nullptr;
+        return !module.Empty() || renderer.Get() != nullptr ||
+               device.Get() != nullptr;
     }
 
-    void SetError(const std::string& message) { lastError = message; }
+    void SetError(std::string_view message) { lastError.assign(message); }
 
     void ClearError() { lastError.clear(); }
 
@@ -238,18 +351,20 @@ struct Engine::Impl
         }
 
         std::string error;
-        module = OpenPluginModule(config.RendererDriver, error);
-        if (module == nullptr)
+        PluginModule loadedModule = OpenPluginModule(config.RendererDriver, error);
+        if (loadedModule == nullptr)
         {
             SetError(error);
             return false;
         }
+        module.Attach(loadedModule);
 
         auto getDescriptor = PluginSymbol<PFGETRENDERERPLUGINDESCRIPTOR>(
-            module, "forgGetRendererPluginDescriptor");
+            module.Get(), "forgGetRendererPluginDescriptor");
         auto createRenderer =
-            PluginSymbol<PFCREATERENDERER>(module, "forgCreateRenderer");
+            PluginSymbol<PFCREATERENDERER>(module.Get(), "forgCreateRenderer");
 
+        RendererPluginBinding binding;
         RendererPluginStatus status =
             ProbeRendererPlugin(getDescriptor, createRenderer, binding);
         if (status != RendererPluginStatus::Ok)
@@ -262,7 +377,8 @@ struct Engine::Impl
             return false;
         }
 
-        status = CreateRendererFromPlugin(binding, renderer);
+        IRenderer* createdRenderer = nullptr;
+        status = CreateRendererFromPlugin(binding, createdRenderer);
         if (status != RendererPluginStatus::Ok)
         {
             std::ostringstream stream;
@@ -272,19 +388,22 @@ struct Engine::Impl
             CleanupAfterInitializeFailure();
             return false;
         }
+        renderer.Attach(createdRenderer, binding);
 
         RENDER_PARAMETERS parameters = {};
         parameters.BackBufferWidth = config.BackBufferWidth;
         parameters.BackBufferHeight = config.BackBufferHeight;
         parameters.PresentationInterval = 0;
 
-        device = renderer->CreateDevice(window, &parameters);
-        if (device == nullptr)
+        IRenderDevice* createdDevice =
+            renderer.Get()->CreateDevice(window, &parameters);
+        if (createdDevice == nullptr)
         {
             SetError("Unable to create render device");
             CleanupAfterInitializeFailure();
             return false;
         }
+        device.Attach(createdDevice);
 
         ClearError();
         return true;
@@ -303,35 +422,15 @@ struct Engine::Impl
 
         scene.ClearNodes();
 
-        if (device != nullptr)
-        {
-            device->Release();
-            device = nullptr;
-        }
+        device.Reset();
 
-        if (renderer != nullptr)
-        {
-            const RendererPluginStatus status =
-                DestroyRendererFromPlugin(binding, renderer);
-            if (status != RendererPluginStatus::Ok && shutdownError.empty())
-            {
-                std::ostringstream stream;
-                stream << "Unable to destroy renderer: "
-                       << RendererPluginStatusName(status);
-                shutdownError = stream.str();
-            }
-            renderer = nullptr;
-        }
+        std::string rendererError;
+        if (!renderer.Reset(rendererError) && shutdownError.empty())
+            shutdownError = rendererError;
 
-        if (module != nullptr)
-        {
-            std::string unloadError;
-            if (!ClosePluginModule(module, unloadError) && shutdownError.empty())
-                shutdownError = unloadError;
-            module = nullptr;
-        }
-
-        binding = {};
+        std::string unloadError;
+        if (!module.Reset(unloadError) && shutdownError.empty())
+            shutdownError = unloadError;
 
         if (shutdownError.empty())
             ClearError();
@@ -365,9 +464,9 @@ scene::Scene& Engine::Scene() { return m_impl->scene; }
 
 const scene::Scene& Engine::Scene() const { return m_impl->scene; }
 
-IRenderDevice* Engine::Device() const { return m_impl->device; }
+IRenderDevice* Engine::Device() const { return m_impl->device.Get(); }
 
-IRenderer* Engine::Renderer() const { return m_impl->renderer; }
+IRenderer* Engine::Renderer() const { return m_impl->renderer.Get(); }
 
 const EngineConfig& Engine::Config() const { return m_impl->config; }
 
