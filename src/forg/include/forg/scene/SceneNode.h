@@ -16,6 +16,7 @@ namespace forg::scene {
 class FORG_API SceneNode : public TreeNode
 {
   public:
+    virtual void Update(double deltaSeconds);
     virtual void Render(IRenderDevice* device);
 };
 

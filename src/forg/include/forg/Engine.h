@@ -6,6 +6,7 @@
 #endif
 
 #include "forg/base.h"
+#include "forg/rendering/Color.h"
 
 #include <memory>
 #include <string>
@@ -15,6 +16,8 @@ namespace forg {
 
 class IRenderDevice;
 class IRenderer;
+class Engine;
+class Camera;
 
 namespace scene {
 class Scene;
@@ -26,6 +29,19 @@ struct EngineConfig
     uint BackBufferWidth = 100;
     uint BackBufferHeight = 100;
 };
+
+struct EngineFrameStats
+{
+    uint64 FrameIndex = 0;
+    double DeltaSeconds = 0.0;
+    double ElapsedSeconds = 0.0;
+    uint FPS = 0;
+    uint64 LastRenderTimeUs = 0;
+};
+
+using EngineUpdateCallback = bool (*)(Engine& engine, double deltaSeconds,
+                                      void* userData);
+using EngineRenderCallback = bool (*)(Engine& engine, void* userData);
 
 class FORG_API Engine
 {
@@ -40,14 +56,25 @@ class FORG_API Engine
     bool Initialize(HWIN window);
     bool Initialize(HWIN window, std::string_view configFilename);
 
+    bool Update(double deltaSeconds);
+    bool Render();
+    bool Frame();
+    void Resize(uint width, uint height);
+    void SetClearColor(const Color& color);
     void Shutdown();
+
+    void SetUpdateCallback(EngineUpdateCallback callback, void* userData);
+    void SetRenderCallback(EngineRenderCallback callback, void* userData);
 
     scene::Scene& Scene();
     const scene::Scene& Scene() const;
+    forg::Camera& Camera();
+    const forg::Camera& Camera() const;
 
     IRenderDevice* Device() const;
     IRenderer* Renderer() const;
     const EngineConfig& Config() const;
+    const EngineFrameStats& FrameStats() const;
 
     std::string_view LastError() const;
 

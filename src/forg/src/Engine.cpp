@@ -2,7 +2,10 @@
 
 #include "forg/Engine.h"
 
+#include "PerformanceCounter.h"
+#include "forg/rendering/IRenderDevice.h"
 #include "forg/rendering/IRenderer.h"
+#include "forg/rendering/Camera.h"
 #include "forg/scene/Scene.h"
 #include "forg/script/yaml/YAMLParser.h"
 
@@ -238,6 +241,16 @@ struct Engine::Impl
     PluginModuleHandle module;
     RendererHandle renderer;
     RenderDeviceHandle device;
+    EngineFrameStats frameStats;
+    PerformanceCounter frameClock;
+    PerformanceCounter fpsClock;
+    forg::Camera camera;
+    Color clearColor = Color(0.75f, 0.75f, 0.75f);
+    uint fpsFrameCounter = 0;
+    EngineUpdateCallback updateCallback = nullptr;
+    void* updateUserData = nullptr;
+    EngineRenderCallback renderCallback = nullptr;
+    void* renderUserData = nullptr;
     std::string lastError;
 
     bool IsInitialized() const
@@ -249,6 +262,23 @@ struct Engine::Impl
     void SetError(std::string_view message) { lastError.assign(message); }
 
     void ClearError() { lastError.clear(); }
+
+    bool RequireInitialized()
+    {
+        if (device.Get() != nullptr)
+            return true;
+
+        SetError("Engine is not initialized");
+        return false;
+    }
+
+    void ResetFrameState()
+    {
+        frameStats = {};
+        fpsFrameCounter = 0;
+        frameClock.Start();
+        fpsClock.Start();
+    }
 
     bool LoadConfig(std::string_view filename)
     {
@@ -406,9 +436,125 @@ struct Engine::Impl
         }
         device.Attach(createdDevice);
 
+        device.Get()->SetRenderState(RenderStates_CullMode, Cull_Clockwise);
+        device.Get()->SetRenderState(RenderStates_ShadeMode, ShadeMode_Gouraud);
+        device.Get()->SetRenderState(RenderStates_Lighting, true);
+        device.Get()->SetRenderState(RenderStates_FillMode, FillMode_Solid);
+        device.Get()->SetRenderState(RenderStates_SourceBlend,
+                                     Blend_SourceAlpha);
+        device.Get()->SetRenderState(RenderStates_DestinationBlend,
+                                     Blend_InvSourceAlpha);
+
+        ResetFrameState();
         ClearError();
         return true;
     }
+
+    bool Update(double deltaSeconds, Engine& engine)
+    {
+        if (!RequireInitialized())
+            return false;
+
+        scene.Update(deltaSeconds);
+        if (updateCallback != nullptr &&
+            !updateCallback(engine, deltaSeconds, updateUserData))
+        {
+            SetError("Engine update callback failed");
+            return false;
+        }
+
+        ClearError();
+        return true;
+    }
+
+    bool Render(Engine& engine)
+    {
+        if (!RequireInitialized())
+            return false;
+
+        PerformanceCounter renderTimer;
+        renderTimer.Start();
+
+        IRenderDevice* renderDevice = device.Get();
+        Matrix4 view;
+        camera.GetViewMatrix(view);
+        renderDevice->SetTransform(TransformType_View, view);
+
+        Matrix4 projection;
+        camera.GetProjectionMatrix(projection);
+        renderDevice->SetTransform(TransformType_Projection, projection);
+
+        renderDevice->Clear(ClearFlags_Target | ClearFlags_ZBuffer, clearColor,
+                            1.0f, 0);
+        renderDevice->BeginScene();
+
+        bool callbackOk = true;
+        if (renderCallback != nullptr)
+            callbackOk = renderCallback(engine, renderUserData);
+        else
+            scene.Render(renderDevice);
+
+        renderDevice->EndScene();
+        renderDevice->Present();
+
+        renderTimer.Stop();
+        renderTimer.GetDurationInUs(frameStats.LastRenderTimeUs);
+
+        if (!callbackOk)
+        {
+            SetError("Engine render callback failed");
+            return false;
+        }
+
+        ++frameStats.FrameIndex;
+        ++fpsFrameCounter;
+
+        uint64 fpsDurationMs = 0;
+        fpsClock.GetDurationInMs(fpsDurationMs);
+        if (fpsDurationMs >= 1000)
+        {
+            frameStats.FPS = fpsFrameCounter;
+            fpsFrameCounter = 0;
+            fpsClock.Start();
+            DBG_MSG("fps %d time: %lld us\n", frameStats.FPS,
+                    frameStats.LastRenderTimeUs);
+        }
+
+        ClearError();
+        return true;
+    }
+
+    bool Frame(Engine& engine)
+    {
+        if (!RequireInitialized())
+            return false;
+
+        uint64 elapsedUs = 0;
+        frameClock.GetDurationInUs(elapsedUs);
+        frameClock.Start();
+
+        frameStats.DeltaSeconds = static_cast<double>(elapsedUs) / 1000000.0;
+        frameStats.ElapsedSeconds += frameStats.DeltaSeconds;
+
+        return Update(frameStats.DeltaSeconds, engine) && Render(engine);
+    }
+
+    void Resize(uint width, uint height)
+    {
+        if (device.Get() == nullptr)
+        {
+            SetError("Engine is not initialized");
+            return;
+        }
+
+        device.Get()->SetViewport(0, 0, width, height);
+        device.Get()->Reset();
+        camera.set_ScreenSize(static_cast<float>(width),
+                              static_cast<float>(height));
+        ClearError();
+    }
+
+    void SetClearColor(const Color& color) { clearColor = color; }
 
     void CleanupAfterInitializeFailure()
     {
@@ -437,6 +583,8 @@ struct Engine::Impl
             ClearError();
         else
             SetError(shutdownError);
+
+        ResetFrameState();
     }
 };
 
@@ -459,17 +607,51 @@ bool Engine::Initialize(HWIN window, std::string_view configFilename)
     return Initialize(window);
 }
 
+bool Engine::Update(double deltaSeconds)
+{
+    return m_impl->Update(deltaSeconds, *this);
+}
+
+bool Engine::Render() { return m_impl->Render(*this); }
+
+bool Engine::Frame() { return m_impl->Frame(*this); }
+
+void Engine::Resize(uint width, uint height) { m_impl->Resize(width, height); }
+
+void Engine::SetClearColor(const Color& color) { m_impl->SetClearColor(color); }
+
 void Engine::Shutdown() { m_impl->Shutdown(); }
+
+void Engine::SetUpdateCallback(EngineUpdateCallback callback, void* userData)
+{
+    m_impl->updateCallback = callback;
+    m_impl->updateUserData = userData;
+}
+
+void Engine::SetRenderCallback(EngineRenderCallback callback, void* userData)
+{
+    m_impl->renderCallback = callback;
+    m_impl->renderUserData = userData;
+}
 
 scene::Scene& Engine::Scene() { return m_impl->scene; }
 
 const scene::Scene& Engine::Scene() const { return m_impl->scene; }
+
+forg::Camera& Engine::Camera() { return m_impl->camera; }
+
+const forg::Camera& Engine::Camera() const { return m_impl->camera; }
 
 IRenderDevice* Engine::Device() const { return m_impl->device.Get(); }
 
 IRenderer* Engine::Renderer() const { return m_impl->renderer.Get(); }
 
 const EngineConfig& Engine::Config() const { return m_impl->config; }
+
+const EngineFrameStats& Engine::FrameStats() const
+{
+    return m_impl->frameStats;
+}
 
 std::string_view Engine::LastError() const { return m_impl->lastError; }
 

@@ -65,6 +65,16 @@ void Scene::ClearNodes()
     m_nodes.clear();
 }
 
+void Scene::Update(double deltaSeconds)
+{
+    for (TreeNode* child : Children())
+    {
+        SceneNode* sceneNode = dynamic_cast<SceneNode*>(child);
+        if (sceneNode != nullptr)
+            sceneNode->Update(deltaSeconds);
+    }
+}
+
 void Scene::Render(IRenderDevice* device)
 {
     for (TreeNode* child : Children())
