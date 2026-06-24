@@ -404,8 +404,7 @@ bool YAMLSerializer::Parse(std::string_view text)
             return false;
 
         std::string key = trim(std::string_view(stripped).substr(0, colon));
-        std::string value =
-            trim(std::string_view(stripped).substr(colon + 1));
+        std::string value = trim(std::string_view(stripped).substr(colon + 1));
         if (key.empty())
             return false;
 
@@ -485,8 +484,7 @@ void YAMLSerializer::WriteNode(std::string& out, const Node& node, int indent,
     {
         if (child)
         {
-            WriteNode(out, *child, childIndent,
-                      node.isArray ? childIndex : -1);
+            WriteNode(out, *child, childIndent, node.isArray ? childIndex : -1);
             childIndex++;
         }
     }
