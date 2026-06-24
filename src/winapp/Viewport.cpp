@@ -365,23 +365,12 @@ void Viewport::OnSize(UINT nType, int cx, int cy)
 {
     if (m_engine != 0)
         m_engine->Resize(cx, cy);
-
-    // m_glRenderer.FitViewport(size.GetWidth(), size.GetHeight());
-    m_camera.set_ScreenSize(cx, cy);
 }
 
 void Viewport::Render()
 {
     if (m_engine == NULL || m_device == NULL)
         return;
-
-    forg::Matrix4 mlook;
-    m_camera.GetViewMatrix(mlook);
-    m_device->SetTransform(forg::TransformType_View, mlook);
-
-    forg::Matrix4 mproj;
-    m_camera.GetProjectionMatrix(mproj);
-    m_device->SetTransform(forg::TransformType_Projection, mproj);
 
     m_device->SetLight(0, &s_Light);
     m_device->SetRenderState(forg::RenderStates_Lighting, true);
@@ -408,10 +397,13 @@ void Viewport::RenderUI()
 
             sprintf(str,
                     "%u fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
-                    m_engine->FrameStats().FPS, m_camera.get_Position().X,
-                    m_camera.get_Position().Y,
-                    m_camera.get_Position().Z, m_camera.get_Target().X,
-                    m_camera.get_Target().Y, m_camera.get_Target().Z);
+                    m_engine->FrameStats().FPS,
+                    m_engine->Camera().get_Position().X,
+                    m_engine->Camera().get_Position().Y,
+                    m_engine->Camera().get_Position().Z,
+                    m_engine->Camera().get_Target().X,
+                    m_engine->Camera().get_Target().Y,
+                    m_engine->Camera().get_Target().Z);
 
             m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
         }
@@ -503,13 +495,14 @@ void Viewport::OnMouseWheel(UINT nFlags, POINTS point, int delta)
     UNREFERENCED_PARAMETER(point);
 
     float dolly = (static_cast<float>(delta) / WHEEL_DELTA) * kZoomSpeed;
-    float distance = (m_camera.get_Target() - m_camera.get_Position()).Length();
+    forg::Camera& camera = m_engine->Camera();
+    float distance = (camera.get_Target() - camera.get_Position()).Length();
     if (dolly > distance - kMinTargetDistance)
     {
         dolly = distance - kMinTargetDistance;
     }
 
-    m_camera.Dolly(dolly, 0.0f);
+    camera.Dolly(dolly, 0.0f);
     Invalidate(0);
 }
 
@@ -533,11 +526,11 @@ void Viewport::OnMouseMove(UINT nFlags, POINTS point)
 
     if (nFlags & MK_LBUTTON)
     {
-        m_camera.Orbit(-dx * kOrbitSpeed, dy * kOrbitSpeed);
+        m_engine->Camera().Orbit(-dx * kOrbitSpeed, dy * kOrbitSpeed);
     }
     else if (nFlags & MK_RBUTTON)
     {
-        m_camera.Truck(-dx * kTruckSpeed, dy * kTruckSpeed);
+        m_engine->Camera().Truck(-dx * kTruckSpeed, dy * kTruckSpeed);
     }
 
     // UpdateWindow();

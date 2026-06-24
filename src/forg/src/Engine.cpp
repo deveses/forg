@@ -5,6 +5,7 @@
 #include "PerformanceCounter.h"
 #include "forg/rendering/IRenderDevice.h"
 #include "forg/rendering/IRenderer.h"
+#include "forg/rendering/Camera.h"
 #include "forg/scene/Scene.h"
 #include "forg/script/yaml/YAMLParser.h"
 
@@ -243,6 +244,7 @@ struct Engine::Impl
     EngineFrameStats frameStats;
     PerformanceCounter frameClock;
     PerformanceCounter fpsClock;
+    forg::Camera camera;
     Color clearColor = Color(0.75f, 0.75f, 0.75f);
     uint fpsFrameCounter = 0;
     EngineUpdateCallback updateCallback = nullptr;
@@ -475,6 +477,14 @@ struct Engine::Impl
         renderTimer.Start();
 
         IRenderDevice* renderDevice = device.Get();
+        Matrix4 view;
+        camera.GetViewMatrix(view);
+        renderDevice->SetTransform(TransformType_View, view);
+
+        Matrix4 projection;
+        camera.GetProjectionMatrix(projection);
+        renderDevice->SetTransform(TransformType_Projection, projection);
+
         renderDevice->Clear(ClearFlags_Target | ClearFlags_ZBuffer,
                             clearColor, 1.0f, 0);
         renderDevice->BeginScene();
@@ -540,6 +550,8 @@ struct Engine::Impl
 
         device.Get()->SetViewport(0, 0, width, height);
         device.Get()->Reset();
+        camera.set_ScreenSize(static_cast<float>(width),
+                              static_cast<float>(height));
         ClearError();
     }
 
@@ -629,6 +641,10 @@ void Engine::SetRenderCallback(EngineRenderCallback callback, void* userData)
 scene::Scene& Engine::Scene() { return m_impl->scene; }
 
 const scene::Scene& Engine::Scene() const { return m_impl->scene; }
+
+forg::Camera& Engine::Camera() { return m_impl->camera; }
+
+const forg::Camera& Engine::Camera() const { return m_impl->camera; }
 
 IRenderDevice* Engine::Device() const { return m_impl->device.Get(); }
 

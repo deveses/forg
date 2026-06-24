@@ -12,7 +12,6 @@ class Viewport
     HINSTANCE m_hInstance;
     forg::Engine* m_engine;
     forg::IRenderDevice* m_device;
-    forg::Camera m_camera;
 
     forg::scene::MeshNode* m_model_node;
 

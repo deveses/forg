@@ -49,7 +49,6 @@ static const float kMinTargetDistance =
     AppSettings m_settings;
     forg::Engine m_engine;
     forg::scene::Model* m_model;
-    forg::Camera m_camera;
 
     forg::Color m_clear_color;
     forg::net::CommandQueue* m_cmd_queue;
@@ -204,12 +203,14 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
     {
     case NSEventTypeLeftMouseDragged:
         // Orbit around the cylinder. x = yaw, y = pitch.
-        m_camera.Orbit(-event.deltaX * kOrbitSpeed, event.deltaY * kOrbitSpeed);
+        m_engine.Camera().Orbit(-event.deltaX * kOrbitSpeed,
+                                event.deltaY * kOrbitSpeed);
         break;
 
     case NSEventTypeRightMouseDragged:
         // Strafe the camera and its target parallel to the view plane.
-        m_camera.Truck(-event.deltaX * kTruckSpeed, event.deltaY * kTruckSpeed);
+        m_engine.Camera().Truck(-event.deltaX * kTruckSpeed,
+                                event.deltaY * kTruckSpeed);
         break;
 
     case NSEventTypeScrollWheel:
@@ -217,13 +218,13 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
         // Dolly the camera toward/away from the target, clamped so it never
         // crosses the target (Camera::Dolly's own guard is disabled).
         float dolly = (float)event.scrollingDeltaY * kZoomSpeed;
-        float distance =
-            (m_camera.get_Target() - m_camera.get_Position()).Length();
+        forg::Camera& camera = m_engine.Camera();
+        float distance = (camera.get_Target() - camera.get_Position()).Length();
         if (dolly > distance - kMinTargetDistance)
         {
             dolly = distance - kMinTargetDistance;
         }
-        m_camera.Dolly(dolly, 0.0f);
+        camera.Dolly(dolly, 0.0f);
         break;
     }
 
@@ -238,8 +239,6 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
     NSSize size = m_view.bounds.size;
 
     m_engine.Resize((forg::uint)size.width, (forg::uint)size.height);
-
-    m_camera.set_ScreenSize(size.width, size.height);
 }
 
 - (void)viewFrameChanged:(NSNotification*)notification
@@ -253,14 +252,6 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
     forg::IRenderDevice* device = m_engine.Device();
     if (device == 0)
         return;
-
-    forg::Matrix4 mlook;
-    m_camera.GetViewMatrix(mlook);
-    device->SetTransform(forg::TransformType_View, mlook);
-
-    forg::Matrix4 mproj;
-    m_camera.GetProjectionMatrix(mproj);
-    device->SetTransform(forg::TransformType_Projection, mproj);
 
     device->SetLight(0, &s_Light);
     device->SetRenderState(forg::RenderStates_Lighting, true);
@@ -279,7 +270,7 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
         while (m_cmd_queue->TryPop(item))
         {
             forg::control::SceneControlContext ctx;
-            ctx.camera = &m_camera;
+            ctx.camera = &m_engine.Camera();
             ctx.model = m_model;
             ctx.light = &s_Light;
             ctx.clearColor = &m_clear_color;

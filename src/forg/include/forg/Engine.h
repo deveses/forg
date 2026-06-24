@@ -17,6 +17,7 @@ namespace forg {
 class IRenderDevice;
 class IRenderer;
 class Engine;
+class Camera;
 
 namespace scene {
 class Scene;
@@ -67,6 +68,8 @@ class FORG_API Engine
 
     scene::Scene& Scene();
     const scene::Scene& Scene() const;
+    forg::Camera& Camera();
+    const forg::Camera& Camera() const;
 
     IRenderDevice* Device() const;
     IRenderer* Renderer() const;

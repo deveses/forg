@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "forg/Engine.h"
+#include "forg/rendering/Camera.h"
 #include "forg/scene/Scene.h"
 #include "forg/scene/SceneNode.h"
 
@@ -48,6 +49,18 @@ TEST_CASE("Engine starts empty and owns an empty scene", "[engine]")
     REQUIRE(engine.Config().BackBufferWidth == 100);
     REQUIRE(engine.Config().BackBufferHeight == 100);
     REQUIRE(std::string(engine.LastError()).empty());
+}
+
+TEST_CASE("Engine owns a stable active camera", "[engine]")
+{
+    forg::Engine engine;
+
+    forg::Camera& camera = engine.Camera();
+    camera.set_ScreenSize(320.0f, 200.0f);
+
+    REQUIRE(&engine.Camera() == &camera);
+    REQUIRE(engine.Camera().get_ScreenWidth() == 320.0f);
+    REQUIRE(engine.Camera().get_ScreenHeight() == 200.0f);
 }
 
 TEST_CASE("Engine LoadConfig reads renderer driver and window size", "[engine]")
