@@ -36,7 +36,6 @@ Viewport::Viewport()
     m_show_gui = 1;
     m_hasLastMousePoint = false;
     m_lastMousePoint = {0, 0};
-
 }
 
 Viewport::~Viewport()
@@ -395,15 +394,14 @@ void Viewport::RenderUI()
         {
             char str[512];
 
-            sprintf(str,
-                    "%u fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
-                    m_engine->FrameStats().FPS,
-                    m_engine->Camera().get_Position().X,
-                    m_engine->Camera().get_Position().Y,
-                    m_engine->Camera().get_Position().Z,
-                    m_engine->Camera().get_Target().X,
-                    m_engine->Camera().get_Target().Y,
-                    m_engine->Camera().get_Target().Z);
+            sprintf(
+                str, "%u fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
+                m_engine->FrameStats().FPS, m_engine->Camera().get_Position().X,
+                m_engine->Camera().get_Position().Y,
+                m_engine->Camera().get_Position().Z,
+                m_engine->Camera().get_Target().X,
+                m_engine->Camera().get_Target().Y,
+                m_engine->Camera().get_Target().Z);
 
             m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
         }
@@ -415,10 +413,7 @@ void Viewport::RenderUI()
     }
 }
 
-void Viewport::OnPaint()
-{
-    ValidateRect(m_hWnd, NULL);
-}
+void Viewport::OnPaint() { ValidateRect(m_hWnd, NULL); }
 
 void Viewport::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 {

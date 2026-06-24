@@ -437,8 +437,7 @@ struct Engine::Impl
         device.Attach(createdDevice);
 
         device.Get()->SetRenderState(RenderStates_CullMode, Cull_Clockwise);
-        device.Get()->SetRenderState(RenderStates_ShadeMode,
-                                     ShadeMode_Gouraud);
+        device.Get()->SetRenderState(RenderStates_ShadeMode, ShadeMode_Gouraud);
         device.Get()->SetRenderState(RenderStates_Lighting, true);
         device.Get()->SetRenderState(RenderStates_FillMode, FillMode_Solid);
         device.Get()->SetRenderState(RenderStates_SourceBlend,
@@ -485,8 +484,8 @@ struct Engine::Impl
         camera.GetProjectionMatrix(projection);
         renderDevice->SetTransform(TransformType_Projection, projection);
 
-        renderDevice->Clear(ClearFlags_Target | ClearFlags_ZBuffer,
-                            clearColor, 1.0f, 0);
+        renderDevice->Clear(ClearFlags_Target | ClearFlags_ZBuffer, clearColor,
+                            1.0f, 0);
         renderDevice->BeginScene();
 
         bool callbackOk = true;
@@ -619,10 +618,7 @@ bool Engine::Frame() { return m_impl->Frame(*this); }
 
 void Engine::Resize(uint width, uint height) { m_impl->Resize(width, height); }
 
-void Engine::SetClearColor(const Color& color)
-{
-    m_impl->SetClearColor(color);
-}
+void Engine::SetClearColor(const Color& color) { m_impl->SetClearColor(color); }
 
 void Engine::Shutdown() { m_impl->Shutdown(); }
 
