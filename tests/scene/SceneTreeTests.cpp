@@ -1,8 +1,55 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <filesystem>
+#include <string>
+
+#include "forg/io/MemorySerializer.h"
 #include "forg/scene/Scene.h"
 #include "forg/scene/MeshNode.h"
 #include "forg/scene/TreeNode.h"
+#include "forg/script/yaml/YAMLSerializer.h"
+
+namespace {
+
+void RequireSerializedMixedScene(const forg::scene::Scene& target)
+{
+    REQUIRE(target.NodeCount() == 3);
+    REQUIRE(target.Node(0)->Parent() == &target);
+    REQUIRE(target.Node(1)->Parent() == target.Node(0));
+    REQUIRE(target.Node(2)->Parent() == target.Node(1));
+    REQUIRE(dynamic_cast<const forg::scene::MeshNode*>(target.Node(0)) ==
+            nullptr);
+    const forg::scene::MeshNode* loadedMesh =
+        dynamic_cast<const forg::scene::MeshNode*>(target.Node(1));
+    REQUIRE(loadedMesh != nullptr);
+    REQUIRE(dynamic_cast<const forg::scene::MeshNode*>(target.Node(2)) ==
+            nullptr);
+
+    REQUIRE(loadedMesh->GetModel().SourcePath() == "assets/triangle.gltf");
+    REQUIRE(loadedMesh->GetModel().LoadOptions() == 17);
+    REQUIRE_FALSE(loadedMesh->GetModel().IsLoaded());
+    REQUIRE(loadedMesh->GetModel().GetTransform().M41 == 2.0f);
+    REQUIRE(loadedMesh->GetModel().GetTransform().M42 == 3.0f);
+    REQUIRE(loadedMesh->GetModel().GetTransform().M43 == 4.0f);
+}
+
+void PopulateSerializedMixedScene(forg::scene::Scene& source)
+{
+    forg::scene::SceneNode& root = source.CreateNode();
+    forg::scene::MeshNode& mesh = source.CreateMeshNode();
+    forg::scene::SceneNode& child = source.CreateNode();
+    REQUIRE(root.AddChild(mesh));
+    REQUIRE(mesh.AddChild(child));
+
+    forg::Matrix4 transform = forg::Matrix4::Identity;
+    transform.M41 = 2.0f;
+    transform.M42 = 3.0f;
+    transform.M43 = 4.0f;
+    mesh.GetModel().SetSource("assets/triangle.gltf", 17);
+    mesh.GetModel().SetTransform(transform);
+}
+
+} // namespace
 
 TEST_CASE("TreeNode tracks parent and children", "[scene][tree]")
 {
@@ -140,4 +187,121 @@ TEST_CASE("MeshNode exposes its embedded Model", "[scene][tree]")
 
     REQUIRE(&node.GetModel() == &constNode.GetModel());
     REQUIRE_FALSE(node.GetModel().IsLoaded());
+}
+
+TEST_CASE("Scene round-trips empty scenes through a memory serializer",
+          "[scene][serialization]")
+{
+    forg::scene::Scene source;
+    forg::io::MemorySerializer serializer;
+
+    REQUIRE(source.Save(serializer));
+    REQUIRE(serializer.ResetReading());
+
+    forg::scene::Scene target;
+    REQUIRE(target.Load(serializer));
+    REQUIRE(target.NodeCount() == 0);
+    REQUIRE(target.ChildCount() == 0);
+}
+
+TEST_CASE("Scene round-trips mixed node hierarchies through memory",
+          "[scene][serialization]")
+{
+    forg::scene::Scene source;
+    PopulateSerializedMixedScene(source);
+
+    forg::io::MemorySerializer serializer;
+    REQUIRE(source.Save(serializer));
+    REQUIRE(serializer.ResetReading());
+
+    forg::scene::Scene target;
+    REQUIRE(target.Load(serializer));
+    RequireSerializedMixedScene(target);
+}
+
+TEST_CASE("Scene round-trips mixed node hierarchies through YAML text",
+          "[scene][serialization][yaml]")
+{
+    forg::scene::Scene source;
+    PopulateSerializedMixedScene(source);
+
+    forg::io::YAMLSerializer writer;
+    REQUIRE(source.Save(writer));
+
+    std::string text;
+    REQUIRE(writer.SaveToString(text));
+    REQUIRE(text.find("scene:") != std::string::npos);
+    REQUIRE(text.find("nodes:") != std::string::npos);
+    REQUIRE(text.find("source_path: \"assets/triangle.gltf\"") !=
+            std::string::npos);
+
+    forg::io::YAMLSerializer reader;
+    REQUIRE(reader.LoadFromString(text));
+
+    forg::scene::Scene target;
+    REQUIRE(target.Load(reader));
+    RequireSerializedMixedScene(target);
+}
+
+TEST_CASE("Scene round-trips through a file-backed YAML serializer",
+          "[scene][serialization][yaml]")
+{
+    const std::filesystem::path path =
+        std::filesystem::temp_directory_path() / "forg-scene-test.yaml";
+    forg::scene::Scene source;
+    PopulateSerializedMixedScene(source);
+
+    forg::io::YAMLSerializer writer;
+    REQUIRE(writer.OpenWrite(path.string()));
+    REQUIRE(source.Save(writer));
+    REQUIRE(writer.Flush());
+
+    forg::io::YAMLSerializer reader;
+    REQUIRE(reader.OpenRead(path.string()));
+
+    forg::scene::Scene target;
+    REQUIRE(target.Load(reader));
+    RequireSerializedMixedScene(target);
+
+    std::filesystem::remove(path);
+}
+
+TEST_CASE("Scene Save rejects unowned scene node children",
+          "[scene][serialization]")
+{
+    forg::scene::Scene scene;
+    forg::scene::SceneNode& owned = scene.CreateNode();
+    forg::scene::SceneNode unowned;
+    REQUIRE(owned.AddChild(unowned));
+
+    forg::io::MemorySerializer serializer;
+    REQUIRE_FALSE(scene.Save(serializer));
+}
+
+TEST_CASE("Scene Load failure leaves existing scene unchanged",
+          "[scene][serialization]")
+{
+    forg::io::MemorySerializer serializer;
+    REQUIRE(serializer.BeginObject("scene"));
+    int version = 1;
+    REQUIRE(serializer.Value("version", version));
+    forg::uint count = 1;
+    REQUIRE(serializer.BeginArray("nodes", count));
+    REQUIRE(serializer.BeginObject("node"));
+    forg::core::string type("SceneNode");
+    int invalidParent = 7;
+    REQUIRE(serializer.Value("type", type));
+    REQUIRE(serializer.Value("parent", invalidParent));
+    REQUIRE(serializer.EndObject());
+    REQUIRE(serializer.EndArray());
+    REQUIRE(serializer.EndObject());
+    REQUIRE(serializer.ResetReading());
+
+    forg::scene::Scene scene;
+    forg::scene::SceneNode& existing = scene.CreateNode();
+
+    REQUIRE_FALSE(scene.Load(serializer));
+    REQUIRE(scene.NodeCount() == 1);
+    REQUIRE(scene.Node(0) == &existing);
+    REQUIRE(existing.Parent() == &scene);
 }

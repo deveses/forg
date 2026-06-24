@@ -3,3 +3,4 @@
 #include "lexer.h"
 #include "xml/XMLParser.h"
 #include "yaml/YAMLParser.h"
+#include "yaml/YAMLSerializer.h"

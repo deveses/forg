@@ -18,6 +18,10 @@ class FORG_API MeshNode : public SceneNode
     Model& GetModel();
     const Model& GetModel() const;
 
+    const char* TypeName() const override;
+    bool Save(io::ISerializer& serializer) const override;
+    bool Load(io::ISerializer& serializer) override;
+
     void Render(IRenderDevice* device) override;
 };
 

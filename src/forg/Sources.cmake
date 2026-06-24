@@ -69,6 +69,19 @@ set(os_sources
 list(TRANSFORM os_sources PREPEND "src/os/")
 
 ###############################################################################
+# io
+###############################################################################
+set(io_includes
+    ISerializer.h
+    MemorySerializer.h
+)
+list(TRANSFORM io_includes PREPEND "include/forg/io/")
+set(io_sources
+    MemorySerializer.cpp
+)
+list(TRANSFORM io_sources PREPEND "src/io/")
+
+###############################################################################
 # script
 ###############################################################################
 set(script_includes
@@ -79,6 +92,7 @@ set(script_includes
     xml/XMLParser.h
     xml/XMLSerializer.h
     yaml/YAMLParser.h
+    yaml/YAMLSerializer.h
 )
 list(TRANSFORM script_includes PREPEND "include/forg/script/")
 set(script_sources
@@ -88,6 +102,7 @@ set(script_sources
     xml/XMLParser.cpp
     xml/XMLSerializer.cpp
     yaml/YAMLParser.cpp
+    yaml/YAMLSerializer.cpp
 )
 list(TRANSFORM script_sources PREPEND "src/script/")
 
@@ -237,8 +252,8 @@ set(root_sources
 )
 
 ###############################################################################
-list(APPEND all_includes ${audio_includes} ${core_includes} ${nn_includes} ${fs_includes} ${os_includes} ${script_includes}
+list(APPEND all_includes ${audio_includes} ${core_includes} ${nn_includes} ${fs_includes} ${os_includes} ${io_includes} ${script_includes}
     ${net_includes} ${control_includes} ${scene_includes} ${ui_includes})
-list(APPEND all_sources ${audio_sources} ${core_sources} ${nn_sources} ${fs_sources} ${os_sources} ${script_sources}
+list(APPEND all_sources ${audio_sources} ${core_sources} ${nn_sources} ${fs_sources} ${os_sources} ${io_sources} ${script_sources}
     ${net_sources} ${control_sources} ${scene_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources}
     ${ui_sources} ${root_sources})

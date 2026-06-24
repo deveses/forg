@@ -2,7 +2,15 @@
 
 #include "scene/SceneNode.h"
 
+#include "forg/io/ISerializer.h"
+
 namespace forg::scene {
+
+const char* SceneNode::TypeName() const { return "SceneNode"; }
+
+bool SceneNode::Save(io::ISerializer&) const { return true; }
+
+bool SceneNode::Load(io::ISerializer&) { return true; }
 
 void SceneNode::Update(double deltaSeconds)
 {
