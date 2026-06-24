@@ -38,6 +38,9 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
     }
     if (v == "mesh.box")
     {
+        if (ctx.device == 0)
+            return fail("loadfailed");
+
         float w = 1.0f, h = 1.0f, d = 1.0f;
         TryGetFloat(cmd, "w", w);
         TryGetFloat(cmd, "h", h);
@@ -45,11 +48,16 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         w = PositiveOr(w, 1.0f);
         h = PositiveOr(h, 1.0f);
         d = PositiveOr(d, 1.0f);
-        ctx.model->SetMesh(forg::geometry::Mesh::Box(ctx.device, w, h, d));
+        ctx.model->SetBox(w, h, d);
+        if (!ctx.model->LoadResources(ctx.device))
+            return fail("loadfailed");
         return ok();
     }
     if (v == "mesh.sphere")
     {
+        if (ctx.device == 0)
+            return fail("loadfailed");
+
         float radius = 1.0f;
         int slices = 16, stacks = 16;
         TryGetFloat(cmd, "radius", radius);
@@ -58,12 +66,16 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         radius = PositiveOr(radius, 1.0f);
         slices = ClampSegments(slices);
         stacks = ClampSegments(stacks);
-        ctx.model->SetMesh(
-            forg::geometry::Mesh::Sphere(ctx.device, radius, slices, stacks));
+        ctx.model->SetSphere(radius, slices, stacks);
+        if (!ctx.model->LoadResources(ctx.device))
+            return fail("loadfailed");
         return ok();
     }
     if (v == "mesh.cylinder")
     {
+        if (ctx.device == 0)
+            return fail("loadfailed");
+
         float r1 = 1.0f, r2 = 1.0f, length = 2.0f;
         int slices = 16, stacks = 16;
         TryGetFloat(cmd, "r1", r1);
@@ -76,8 +88,9 @@ std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
         length = PositiveOr(length, 2.0f);
         slices = ClampSegments(slices);
         stacks = ClampSegments(stacks);
-        ctx.model->SetMesh(forg::geometry::Mesh::Cylinder(
-            ctx.device, r1, r2, length, slices, stacks));
+        ctx.model->SetCylinder(r1, r2, length, slices, stacks);
+        if (!ctx.model->LoadResources(ctx.device))
+            return fail("loadfailed");
         return ok();
     }
     if (v == "mesh.transform")

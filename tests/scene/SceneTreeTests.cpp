@@ -8,6 +8,7 @@
 #include "forg/scene/MeshNode.h"
 #include "forg/scene/TreeNode.h"
 #include "forg/script/yaml/YAMLSerializer.h"
+#include "forg/rendering/reference/SWRenderDevice.h"
 
 namespace {
 
@@ -264,6 +265,34 @@ TEST_CASE("Scene round-trips through a file-backed YAML serializer",
     RequireSerializedMixedScene(target);
 
     std::filesystem::remove(path);
+}
+
+TEST_CASE("Scene loads primitive mesh resources from serialized metadata",
+          "[scene][serialization]")
+{
+    forg::scene::Scene source;
+    forg::scene::MeshNode& mesh = source.CreateMeshNode();
+    mesh.SetCylinder(1.0f, 2.0f, 5.0f, 10, 40);
+
+    forg::io::MemorySerializer serializer;
+    REQUIRE(source.Save(serializer));
+    REQUIRE(serializer.ResetReading());
+
+    forg::scene::Scene target;
+    REQUIRE(target.Load(serializer));
+
+    forg::rendering::reference::SWRenderDevice device(nullptr);
+    REQUIRE(target.LoadResources(&device));
+
+    forg::scene::MeshNode* loadedMesh =
+        dynamic_cast<forg::scene::MeshNode*>(target.Node(0));
+    REQUIRE(loadedMesh != nullptr);
+    REQUIRE(loadedMesh->GetModel().IsLoaded());
+    REQUIRE(loadedMesh->GetModel().GetMesh() != nullptr);
+    REQUIRE(loadedMesh->GetModel().MeshType() ==
+            forg::scene::ModelMeshType::Cylinder);
+    REQUIRE(loadedMesh->GetModel().GetMesh()->GetNumVertices() > 0);
+    REQUIRE(loadedMesh->GetModel().GetMesh()->GetNumFaces() > 0);
 }
 
 TEST_CASE("Scene Save rejects unowned scene node children",

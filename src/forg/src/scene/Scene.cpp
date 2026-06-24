@@ -242,7 +242,8 @@ bool Scene::LoadResources(IRenderDevice* device)
     {
         MeshNode* meshNode = dynamic_cast<MeshNode*>(node.get());
         if (meshNode != nullptr &&
-            meshNode->GetModel().SourcePath().length() != 0)
+            (meshNode->GetModel().MeshType() != ModelMeshType::None ||
+             meshNode->GetModel().SourcePath().length() != 0))
         {
             loaded = meshNode->GetModel().LoadResources(device) && loaded;
         }
