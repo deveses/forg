@@ -25,20 +25,36 @@
 
 #include "forg/core/string.hpp"
 
+#include <string_view>
+
 namespace forg::io {
 
 class ISerializer
 {
   public:
+    enum class Mode
+    {
+        Read,
+        Write
+    };
+
     virtual ~ISerializer() = default;
 
-    virtual bool Begin(const char* _name) = 0;
-    virtual void End() = 0;
+    virtual Mode GetMode() const = 0;
 
-    virtual bool Read(void* _buffer, uint32 _size) = 0;
-    virtual bool ReadInt32(int& _out, const char* _name) = 0;
-    virtual bool ReadFloat32(float& _out, const char* _name) = 0;
-    virtual bool ReadString(core::string& _out, const char* _name) = 0;
+    bool IsReading() const { return GetMode() == Mode::Read; }
+    bool IsWriting() const { return GetMode() == Mode::Write; }
+
+    virtual bool BeginObject(std::string_view _name) = 0;
+    virtual bool EndObject() = 0;
+
+    virtual bool BeginArray(std::string_view _name, uint& _count) = 0;
+    virtual bool EndArray() = 0;
+
+    virtual bool Value(std::string_view _name, int& _value) = 0;
+    virtual bool Value(std::string_view _name, uint& _value) = 0;
+    virtual bool Value(std::string_view _name, float& _value) = 0;
+    virtual bool Value(std::string_view _name, core::string& _value) = 0;
 };
 
 } // namespace forg::io

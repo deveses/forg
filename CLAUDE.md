@@ -55,6 +55,7 @@ On Windows, CMake also builds `glrenderer`, the GDI side of `swrenderer`, and `w
 - Classes should not expose public data fields; use accessor methods instead.
 - Do not use C++ exceptions in the `forg` library sources.
 - Prefer existing error conventions: `false`, `nullptr`, empty containers, or `FORG_INVALID_CALL`.
+- Prefer `std::string_view` over `const char*` for non-owning string parameters in new or changed C++ APIs.
 - Match nearby file style before introducing new APIs or modules.
 
 Run the exception-style guard with:

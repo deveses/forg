@@ -1,6 +1,6 @@
 // main.mm : macOS port of the Win32 sample app (src/winapp).
-// Reads config.yml to pick the renderer plugin and window geometry,
-// then renders the demo scene (lit cylinder) in a continuous loop.
+// Reads config.yml to pick the renderer plugin and window geometry, loads the
+// scene from scene.yml, then renders it in a continuous loop.
 
 // Cocoa must come first: forg's base.h defines macros (null, IN, OUT)
 // that break the system headers if they are seen earlier.
@@ -20,6 +20,7 @@
 #include "forg.h"
 #include "forg/control/SceneControl.h"
 #include "forg/script/yaml/YAMLParser.h"
+#include "forg/script/yaml/YAMLSerializer.h"
 
 struct AppSettings
 {
@@ -39,6 +40,19 @@ static const float kTruckSpeed = 0.01f; // world units per pixel of right-drag
 static const float kZoomSpeed = 0.30f;  // world units per scroll line
 static const float kMinTargetDistance =
     0.5f; // keep the camera off the target when zooming
+
+static forg::scene::Model* FindFirstModel(forg::scene::Scene& scene)
+{
+    for (forg::uint i = 0; i < scene.NodeCount(); ++i)
+    {
+        forg::scene::MeshNode* meshNode =
+            dynamic_cast<forg::scene::MeshNode*>(scene.Node(i));
+        if (meshNode != 0)
+            return &meshNode->GetModel();
+    }
+
+    return 0;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -116,11 +130,31 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
     m_engine.SetRenderCallback(&RenderEngineFrame, self);
 
     forg::IRenderDevice* device = m_engine.Device();
-    forg::scene::MeshNode& modelNode = m_engine.Scene().CreateMeshNode();
-    m_model = &modelNode.GetModel();
-    m_model->SetMesh(
-        forg::geometry::Mesh::Cylinder(device, 1.0f, 2.0f, 5.0f, 10, 40));
-    DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n",
+    forg::io::YAMLSerializer sceneSerializer;
+    if (!sceneSerializer.OpenRead("scene.yml") ||
+        !m_engine.Scene().Load(sceneSerializer))
+    {
+        std::cerr << "Unable to load scene.yml!\n";
+        [NSApp terminate:nil];
+        return;
+    }
+
+    if (!m_engine.Scene().LoadResources(device))
+    {
+        std::cerr << "Unable to load scene resources from scene.yml!\n";
+        [NSApp terminate:nil];
+        return;
+    }
+
+    m_model = FindFirstModel(m_engine.Scene());
+    if (m_model == 0 || !m_model->IsLoaded())
+    {
+        std::cerr << "scene.yml must contain at least one loadable MeshNode!\n";
+        [NSApp terminate:nil];
+        return;
+    }
+
+    DBG_MSG("Scene loaded. Mesh vertices: %d, Faces: %d\n",
             m_model->GetMesh()->GetNumVertices(),
             m_model->GetMesh()->GetNumFaces());
 
@@ -202,7 +236,7 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
     switch (event.type)
     {
     case NSEventTypeLeftMouseDragged:
-        // Orbit around the cylinder. x = yaw, y = pitch.
+        // Orbit around the scene. x = yaw, y = pitch.
         m_engine.Camera().Orbit(-event.deltaX * kOrbitSpeed,
                                 event.deltaY * kOrbitSpeed);
         break;

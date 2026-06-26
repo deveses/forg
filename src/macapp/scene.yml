@@ -1,0 +1,34 @@
+scene:
+  version: "1"
+  nodes:
+    count: "1"
+    item_0:
+      type: "MeshNode"
+      parent: "-1"
+      model:
+        mesh_type: "cylinder"
+        source_path: ""
+        load_options: "0"
+        mesh_params:
+          radius1: "1.000000"
+          radius2: "2.000000"
+          length: "5.000000"
+          slices: "10"
+          stacks: "40"
+        transform:
+          m11: "1.000000"
+          m12: "0.000000"
+          m13: "0.000000"
+          m14: "0.000000"
+          m21: "0.000000"
+          m22: "1.000000"
+          m23: "0.000000"
+          m24: "0.000000"
+          m31: "0.000000"
+          m32: "0.000000"
+          m33: "1.000000"
+          m34: "0.000000"
+          m41: "0.000000"
+          m42: "0.000000"
+          m43: "0.000000"
+          m44: "1.000000"

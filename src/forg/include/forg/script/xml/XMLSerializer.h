@@ -40,13 +40,18 @@ class XMLSerializer : public ISerializer
     void Close();
 
     // ISerializer
-    virtual bool Begin(const char* _name);
-    virtual void End();
+    Mode GetMode() const override;
 
-    virtual bool Read(void* _buffer, uint32 _size);
-    virtual bool ReadInt32(int& _out, const char* _name);
-    virtual bool ReadFloat32(float& _out, const char* _name);
-    virtual bool ReadString(core::string& _out, const char* _name);
+    bool BeginObject(std::string_view _name) override;
+    bool EndObject() override;
+
+    bool BeginArray(std::string_view _name, uint& _count) override;
+    bool EndArray() override;
+
+    bool Value(std::string_view _name, int& _value) override;
+    bool Value(std::string_view _name, uint& _value) override;
+    bool Value(std::string_view _name, float& _value) override;
+    bool Value(std::string_view _name, core::string& _value) override;
 };
 
 } // namespace forg::io

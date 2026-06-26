@@ -10,6 +10,10 @@
 #include <memory>
 #include <vector>
 
+namespace forg::io {
+class ISerializer;
+}
+
 namespace forg::scene {
 
 class FORG_API Scene : public TreeNode
@@ -24,6 +28,10 @@ class FORG_API Scene : public TreeNode
     const SceneNode* Node(uint index) const;
     bool DestroyNode(SceneNode& node);
     void ClearNodes();
+
+    bool Save(forg::io::ISerializer& serializer) const;
+    bool Load(forg::io::ISerializer& serializer);
+    bool LoadResources(IRenderDevice* device);
 
     void Update(double deltaSeconds);
     void Render(IRenderDevice* device);

@@ -14,16 +14,22 @@ bool XMLSerializer::Open(const char* _filename)
 
 void XMLSerializer::Close() { m_parser.Close(); }
 
-bool XMLSerializer::Begin(const char*) { return false; }
+ISerializer::Mode XMLSerializer::GetMode() const { return Mode::Read; }
 
-void XMLSerializer::End() {}
+bool XMLSerializer::BeginObject(std::string_view) { return false; }
 
-bool XMLSerializer::Read(void*, uint32) { return false; }
+bool XMLSerializer::EndObject() { return false; }
 
-bool XMLSerializer::ReadFloat32(float&, const char*) { return false; }
+bool XMLSerializer::BeginArray(std::string_view, uint&) { return false; }
 
-bool XMLSerializer::ReadInt32(int&, const char*) { return false; }
+bool XMLSerializer::EndArray() { return false; }
 
-bool XMLSerializer::ReadString(core::string&, const char*) { return false; }
+bool XMLSerializer::Value(std::string_view, int&) { return false; }
+
+bool XMLSerializer::Value(std::string_view, uint&) { return false; }
+
+bool XMLSerializer::Value(std::string_view, float&) { return false; }
+
+bool XMLSerializer::Value(std::string_view, core::string&) { return false; }
 
 } // namespace forg::io
