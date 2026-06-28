@@ -16,6 +16,8 @@ Implemented in this pass:
   can be overlay-only.
 - Engine owns clear color for control commands.
 - `Engine::DispatchCommand(...)` builds the control context internally.
+- Engine owns the HTTP control server and command queue; apps only start the
+  server from config.
 - macapp and winapp both load `scene.yml`.
 - Neither app auto-selects a model; mesh commands return `nomodel` until an app
   selects one.
@@ -128,16 +130,14 @@ Suggested API:
 std::string Engine::DispatchCommand(const net::Command& cmd);
 ```
 
-The HTTP server and `CommandQueue` can remain app/platform-level. They handle
-transport and threading. The actual command execution should use engine-owned
-camera, scene, active model if one is selected, light, clear color, and render
-device state. This should be
-usable from both macapp and winapp, even if only one app enables the HTTP
-transport at first.
+The HTTP server and `CommandQueue` are Engine-owned. They handle transport and
+threading while command execution uses engine-owned camera, scene, active model
+if one is selected, light, clear color, and render device state. This is usable
+from both macapp and winapp.
 
 Verification:
 
-- `main.mm` only pops queue items and calls `m_engine.DispatchCommand(item.cmd)`;
+- app code only starts the server from config;
 - any winapp command/control entrypoint uses the same engine dispatch API;
 - control commands still operate on camera, mesh/model, light, and clear color;
 - command execution remains on the main thread.

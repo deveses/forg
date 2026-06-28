@@ -116,13 +116,11 @@ set(net_includes
     HttpControlServer.h
 )
 list(TRANSFORM net_includes PREPEND "include/forg/net/")
-# The command/parser/queue pieces are portable; only the BSD-socket server is
-# excluded on Windows (no Winsock implementation yet).
 set(net_sources
     Command.cpp
     HttpRequest.cpp
     CommandQueue.cpp
-    $<$<NOT:$<BOOL:${FORG_PLATFORM_WINDOWS}>>:HttpControlServer.cpp>
+    HttpControlServer.cpp
 )
 list(TRANSFORM net_sources PREPEND "src/net/")
 

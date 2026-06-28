@@ -8,6 +8,8 @@
 #include "forg/rendering/Camera.h"
 #include "forg/scene/Scene.h"
 #include "forg/control/SceneControl.h"
+#include "forg/net/CommandQueue.h"
+#include "forg/net/HttpControlServer.h"
 #include "forg/scene/Model.h"
 #include "forg/script/yaml/YAMLParser.h"
 #include "forg/script/yaml/YAMLSerializer.h"
@@ -257,6 +259,8 @@ struct Engine::Impl
     void* updateUserData = nullptr;
     EngineRenderCallback renderCallback = nullptr;
     void* renderUserData = nullptr;
+    std::unique_ptr<net::CommandQueue> controlQueue;
+    std::unique_ptr<net::HttpControlServer> controlServer;
     std::string lastError;
 
     bool IsInitialized() const
@@ -498,11 +502,72 @@ struct Engine::Impl
         return true;
     }
 
+    bool StartControlServer(std::string_view bindAddr, int port)
+    {
+        if (bindAddr.empty())
+        {
+            SetError("Control server bind address is empty");
+            return false;
+        }
+
+        if (port <= 0 || port > 65535)
+        {
+            SetError("Control server port is invalid");
+            return false;
+        }
+
+        StopControlServer();
+
+        controlQueue.reset(new net::CommandQueue());
+        controlServer.reset(new net::HttpControlServer(std::string(bindAddr),
+                                                       port, *controlQueue));
+        if (!controlServer->Start())
+        {
+            controlServer.reset();
+            controlQueue.reset();
+            SetError("Control server failed to start");
+            return false;
+        }
+
+        ClearError();
+        return true;
+    }
+
+    void StopControlServer()
+    {
+        if (controlServer)
+        {
+            controlServer->Stop();
+            controlServer.reset();
+        }
+        controlQueue.reset();
+    }
+
+    bool ControlServerRunning() const { return controlServer != nullptr; }
+
+    uint PumpControlCommands()
+    {
+        if (!controlQueue)
+            return 0;
+
+        uint count = 0;
+        net::QueueItem item;
+        while (controlQueue->TryPop(item))
+        {
+            std::string body = DispatchCommand(item.cmd);
+            if (item.reply)
+                item.reply->set_value(body);
+            ++count;
+        }
+        return count;
+    }
+
     bool Update(double deltaSeconds, Engine& engine)
     {
         if (!RequireInitialized())
             return false;
 
+        PumpControlCommands();
         scene.Update(deltaSeconds);
         if (updateCallback != nullptr &&
             !updateCallback(engine, deltaSeconds, updateUserData))
@@ -680,6 +745,7 @@ struct Engine::Impl
     {
         std::string shutdownError;
 
+        StopControlServer();
         scene.ClearNodes();
         activeModel = nullptr;
 
@@ -725,6 +791,20 @@ bool Engine::LoadScene(std::string_view filename)
 {
     return m_impl->LoadScene(filename);
 }
+
+bool Engine::StartControlServer(std::string_view bindAddr, int port)
+{
+    return m_impl->StartControlServer(bindAddr, port);
+}
+
+void Engine::StopControlServer() { m_impl->StopControlServer(); }
+
+bool Engine::ControlServerRunning() const
+{
+    return m_impl->ControlServerRunning();
+}
+
+uint Engine::PumpControlCommands() { return m_impl->PumpControlCommands(); }
 
 bool Engine::Update(double deltaSeconds)
 {

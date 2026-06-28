@@ -18,6 +18,8 @@ struct AppConfig
     int Height = 100;
     int X = 10;
     int Y = 10;
+    bool ControlEnabled = false;
+    int ControlPort = 8080;
 };
 
 void ShowError(LPCTSTR message)
@@ -104,6 +106,20 @@ AppConfig LoadConfig()
             config.Y = atoi(posy->GetContent().c_str());
     }
 
+    if (forg::script::yaml::YAMLNode* node =
+            document->FindNode("controlserver"))
+    {
+        if (forg::script::yaml::YAMLNode* enabled =
+                node->FindAttribute("enabled"))
+        {
+            config.ControlEnabled =
+                std::string(enabled->GetContent().c_str()) == "true";
+        }
+
+        if (forg::script::yaml::YAMLNode* port = node->FindAttribute("port"))
+            config.ControlPort = atoi(port->GetContent().c_str());
+    }
+
     return config;
 }
 
@@ -163,6 +179,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             else
                 ShowEngineError(engine);
             return 1;
+        }
+
+        if (config.ControlEnabled &&
+            !engine.StartControlServer("127.0.0.1", config.ControlPort))
+        {
+            ShowEngineError(engine);
         }
 
         viewport.ShowWindow(nCmdShow);

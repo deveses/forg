@@ -62,6 +62,10 @@ class FORG_API Engine
     bool Initialize(HWIN window);
     bool Initialize(HWIN window, std::string_view configFilename);
     bool LoadScene(std::string_view filename);
+    bool StartControlServer(std::string_view bindAddr, int port);
+    void StopControlServer();
+    bool ControlServerRunning() const;
+    uint PumpControlCommands();
 
     bool Update(double deltaSeconds);
     bool Render();

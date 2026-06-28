@@ -12,11 +12,6 @@
 #include <iostream>
 #include <string>
 
-// Pulled in before forg.h so the C++ threading headers are parsed before
-// base.h defines its null/IN/OUT macros.
-#include "forg/net/CommandQueue.h"
-#include "forg/net/HttpControlServer.h"
-
 #include "forg.h"
 #include "forg/script/yaml/YAMLParser.h"
 
@@ -40,9 +35,6 @@ struct AppSettings
     forg::Engine m_engine;
     forg::CameraOrbitController m_camera_controller;
 
-    forg::net::CommandQueue* m_cmd_queue;
-    forg::net::HttpControlServer* m_control_server;
-
     NSWindow* m_window;
     NSView* m_view;
     NSTimer* m_timer;
@@ -59,8 +51,6 @@ struct AppSettings
     if (self)
     {
         m_settings = settings;
-        m_cmd_queue = 0;
-        m_control_server = 0;
     }
     return self;
 }
@@ -105,16 +95,14 @@ struct AppSettings
     }
 
     // Optional runtime control server: a background HTTP endpoint queues
-    // commands that are applied on this (main) thread in onIdle:.
+    // commands that are applied on this (main) thread by Engine::Frame().
     if (m_settings.controlEnabled)
     {
-        m_cmd_queue = new forg::net::CommandQueue();
-        m_control_server = new forg::net::HttpControlServer(
-            "127.0.0.1", m_settings.controlPort, *m_cmd_queue);
-        if (!m_control_server->Start())
+        if (!m_engine.StartControlServer("127.0.0.1", m_settings.controlPort))
         {
             std::cerr << "Control server failed to start on port "
-                      << m_settings.controlPort << "\n";
+                      << m_settings.controlPort << ": " << m_engine.LastError()
+                      << "\n";
         }
         else
         {
@@ -199,21 +187,6 @@ struct AppSettings
 // port of Viewport::OnPaint + CWinApp::OnIdle
 - (void)onIdle:(NSTimer*)timer
 {
-    // Apply any commands queued by the control server thread (main-thread
-    // only).
-    if (m_cmd_queue)
-    {
-        forg::net::QueueItem item;
-        while (m_cmd_queue->TryPop(item))
-        {
-            std::string body = m_engine.DispatchCommand(item.cmd);
-            if (item.reply)
-            {
-                item.reply->set_value(body);
-            }
-        }
-    }
-
     m_engine.Frame();
 }
 
@@ -224,20 +197,6 @@ struct AppSettings
 
 - (void)applicationWillTerminate:(NSNotification*)notification
 {
-    // Stop the server (joins its thread) before tearing down the scene it
-    // touches, then free the queue it pushed to.
-    if (m_control_server)
-    {
-        m_control_server->Stop();
-        delete m_control_server;
-        m_control_server = 0;
-    }
-    if (m_cmd_queue)
-    {
-        delete m_cmd_queue;
-        m_cmd_queue = 0;
-    }
-
     [m_timer invalidate];
     m_timer = nil;
 
