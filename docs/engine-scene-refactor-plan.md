@@ -16,9 +16,9 @@ Implemented in this pass:
   can be overlay-only.
 - Engine owns clear color for control commands.
 - `Engine::DispatchCommand(...)` builds the control context internally.
-- Win32 explicitly selects its generated cylinder as the active model.
-- macapp does not auto-select a model; mesh commands return `nomodel` until an
-  app selects one.
+- macapp and winapp both load `scene.yml`.
+- Neither app auto-selects a model; mesh commands return `nomodel` until an app
+  selects one.
 - macapp and winapp share `CameraOrbitController` for orbit/truck/zoom input
   math.
 
@@ -40,15 +40,13 @@ Add an `Engine::LoadScene(std::string_view filename)` helper that wraps:
 - useful `LastError()` messages.
 
 Then replace the manual `scene.yml` load/resource block in `src/macapp/main.mm`.
-For `src/winapp`, either keep the generated cylinder as sample-specific content
-or move that setup behind an engine/scene helper too. If winapp should also load
-`scene.yml`, make it use the same `Engine::LoadScene(...)` path.
+Make `src/winapp` use the same `Engine::LoadScene(...)` path so both app
+targets load `scene.yml`.
 
 Verification:
 
 - mac app still launches from `scene.yml`;
-- winapp either still creates its sample cylinder or launches from `scene.yml`,
-  depending on the chosen sample behavior;
+- winapp launches from `scene.yml`;
 - failure paths report through `Engine::LastError()`;
 - existing tests/build still pass.
 

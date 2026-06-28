@@ -13,7 +13,6 @@ class Viewport
     forg::Engine* m_engine;
     forg::IRenderDevice* m_device;
 
-    forg::scene::MeshNode* m_model_node;
     forg::CameraOrbitController m_camera_controller;
 
     forg::Font* m_font;

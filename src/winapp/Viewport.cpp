@@ -17,7 +17,6 @@ Viewport::Viewport()
     m_hInstance = 0;
     m_engine = 0;
     m_device = 0;
-    m_model_node = 0;
     m_font = 0;
     m_bMouseCaptured = FALSE;
     m_bLMBDown = FALSE;
@@ -46,7 +45,6 @@ Viewport::~Viewport()
     if (m_engine)
     {
         m_engine->SetRenderCallback(nullptr, nullptr);
-        m_engine->SetActiveModel(nullptr);
     }
 }
 
@@ -102,13 +100,8 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
     OnSize(SIZE_RESTORED, clientRect.right - clientRect.left,
            clientRect.bottom - clientRect.top);
 
-    m_model_node = &m_engine->Scene().CreateMeshNode();
-    m_model_node->GetModel().SetMesh(
-        forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40));
-    m_engine->SetActiveModel(&m_model_node->GetModel());
-    DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n",
-            m_model_node->GetModel().GetMesh()->GetNumVertices(),
-            m_model_node->GetModel().GetMesh()->GetNumFaces());
+    if (!m_engine->LoadScene("scene.yml"))
+        return 1;
 
     forg::FontDescription fd = {12, 0, 0, 1, false, 0, 0, 0, 0, (""),
                                 //"../bin/test.ttf"
@@ -389,26 +382,6 @@ void Viewport::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
         break;
     case VK_RIGHT:
         break;
-    case 'O':
-    case 'o':
-    {
-        char filename[MAX_PATH] = {};
-        OPENFILENAMEA ofn = {};
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = m_hWnd;
-        ofn.lpstrFile = filename;
-        ofn.nMaxFile = sizeof(filename);
-        ofn.lpstrFilter = "All\0*.*\0Text\0*.TXT\0";
-        ofn.nFilterIndex = 1;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-
-        if (GetOpenFileNameA(&ofn))
-        {
-            if (m_model_node != 0)
-                m_model_node->GetModel().Load(filename, m_device);
-        }
-    }
-    break;
     }
 
     Invalidate(0);
