@@ -23,6 +23,9 @@ float NonNegativeOr(float v, float fallback)
 
 std::string DispatchMesh(SceneControlContext& ctx, const Command& cmd)
 {
+    if (ctx.model == nullptr)
+        return fail("nomodel");
+
     const std::string& v = cmd.verb;
 
     if (v == "mesh.load")

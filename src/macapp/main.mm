@@ -12,15 +12,8 @@
 #include <iostream>
 #include <string>
 
-// Pulled in before forg.h so the C++ threading headers are parsed before
-// base.h defines its null/IN/OUT macros.
-#include "forg/net/CommandQueue.h"
-#include "forg/net/HttpControlServer.h"
-
 #include "forg.h"
-#include "forg/control/SceneControl.h"
 #include "forg/script/yaml/YAMLParser.h"
-#include "forg/script/yaml/YAMLSerializer.h"
 
 struct AppSettings
 {
@@ -32,28 +25,6 @@ struct AppSettings
     int controlPort = 8080;
 };
 
-static forg::Light s_Light = {};
-
-// Camera control sensitivities (tune to taste; flip a sign to invert an axis).
-static const float kOrbitSpeed = 0.01f; // radians per pixel of left-drag
-static const float kTruckSpeed = 0.01f; // world units per pixel of right-drag
-static const float kZoomSpeed = 0.30f;  // world units per scroll line
-static const float kMinTargetDistance =
-    0.5f; // keep the camera off the target when zooming
-
-static forg::scene::Model* FindFirstModel(forg::scene::Scene& scene)
-{
-    for (forg::uint i = 0; i < scene.NodeCount(); ++i)
-    {
-        forg::scene::MeshNode* meshNode =
-            dynamic_cast<forg::scene::MeshNode*>(scene.Node(i));
-        if (meshNode != 0)
-            return &meshNode->GetModel();
-    }
-
-    return 0;
-}
-
 /////////////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -62,11 +33,6 @@ static forg::scene::Model* FindFirstModel(forg::scene::Scene& scene)
 {
     AppSettings m_settings;
     forg::Engine m_engine;
-    forg::scene::Model* m_model;
-
-    forg::Color m_clear_color;
-    forg::net::CommandQueue* m_cmd_queue;
-    forg::net::HttpControlServer* m_control_server;
 
     NSWindow* m_window;
     NSView* m_view;
@@ -74,10 +40,7 @@ static forg::scene::Model* FindFirstModel(forg::scene::Scene& scene)
     id m_event_monitor;
 }
 - (instancetype)initWithSettings:(const AppSettings&)settings;
-- (void)render;
 @end
-
-static bool RenderEngineFrame(forg::Engine& engine, void* userData);
 
 @implementation AppDelegate
 
@@ -87,10 +50,6 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
     if (self)
     {
         m_settings = settings;
-        m_model = 0;
-        m_clear_color = forg::Color(0.75f, 0.75f, 0.75f);
-        m_cmd_queue = 0;
-        m_control_server = 0;
     }
     return self;
 }
@@ -127,68 +86,22 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
         return;
     }
 
-    m_engine.SetRenderCallback(&RenderEngineFrame, self);
-
-    forg::IRenderDevice* device = m_engine.Device();
-    forg::io::YAMLSerializer sceneSerializer;
-    if (!sceneSerializer.OpenRead("scene.yml") ||
-        !m_engine.Scene().Load(sceneSerializer))
+    if (!m_engine.LoadScene("scene.yml"))
     {
-        std::cerr << "Unable to load scene.yml!\n";
+        std::cerr << m_engine.LastError() << "\n";
         [NSApp terminate:nil];
         return;
     }
-
-    if (!m_engine.Scene().LoadResources(device))
-    {
-        std::cerr << "Unable to load scene resources from scene.yml!\n";
-        [NSApp terminate:nil];
-        return;
-    }
-
-    m_model = FindFirstModel(m_engine.Scene());
-    if (m_model == 0 || !m_model->IsLoaded())
-    {
-        std::cerr << "scene.yml must contain at least one loadable MeshNode!\n";
-        [NSApp terminate:nil];
-        return;
-    }
-
-    DBG_MSG("Scene loaded. Mesh vertices: %d, Faces: %d\n",
-            m_model->GetMesh()->GetNumVertices(),
-            m_model->GetMesh()->GetNumFaces());
-
-    // Set up a white point light (same setup as the Win32 sample).
-    s_Light.Type = forg::LightType::Point;
-    s_Light.Diffuse.r = 1.0f;
-    s_Light.Diffuse.g = 1.0f;
-    s_Light.Diffuse.b = 0.0f;
-    s_Light.Ambient.r = 1.0f;
-    s_Light.Ambient.g = 1.0f;
-    s_Light.Ambient.b = 1.0f;
-    s_Light.Specular.r = 1.0f;
-    s_Light.Specular.g = 1.0f;
-    s_Light.Specular.b = 1.0f;
-    s_Light.Position.X = 5.0f;
-    s_Light.Position.Y = 5.0f;
-    s_Light.Position.Z = -1.0f;
-    s_Light.Attenuation0 = 1.0f;
-    s_Light.Range = 1000.0f;
-
-    device->SetLight(0, &s_Light);
-    device->LightEnable(0, true);
 
     // Optional runtime control server: a background HTTP endpoint queues
-    // commands that are applied on this (main) thread in onIdle:.
+    // commands that are applied on this (main) thread by Engine::Frame().
     if (m_settings.controlEnabled)
     {
-        m_cmd_queue = new forg::net::CommandQueue();
-        m_control_server = new forg::net::HttpControlServer(
-            "127.0.0.1", m_settings.controlPort, *m_cmd_queue);
-        if (!m_control_server->Start())
+        if (!m_engine.StartControlServer("127.0.0.1", m_settings.controlPort))
         {
             std::cerr << "Control server failed to start on port "
-                      << m_settings.controlPort << "\n";
+                      << m_settings.controlPort << ": " << m_engine.LastError()
+                      << "\n";
         }
         else
         {
@@ -230,37 +143,28 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
                                      }];
 }
 
-// Maps mouse/scroll deltas onto the existing Camera movement primitives.
+// Maps mouse/scroll deltas onto the engine's normalized input API.
 - (void)handleCameraEvent:(NSEvent*)event
 {
     switch (event.type)
     {
     case NSEventTypeLeftMouseDragged:
-        // Orbit around the scene. x = yaw, y = pitch.
-        m_engine.Camera().Orbit(-event.deltaX * kOrbitSpeed,
-                                event.deltaY * kOrbitSpeed);
+        m_engine.HandleInput({forg::InputEventType::PointerDrag,
+                              forg::InputButton::Left, (float)event.deltaX,
+                              (float)event.deltaY, 0.0f});
         break;
 
     case NSEventTypeRightMouseDragged:
-        // Strafe the camera and its target parallel to the view plane.
-        m_engine.Camera().Truck(-event.deltaX * kTruckSpeed,
-                                event.deltaY * kTruckSpeed);
+        m_engine.HandleInput({forg::InputEventType::PointerDrag,
+                              forg::InputButton::Right, (float)event.deltaX,
+                              (float)event.deltaY, 0.0f});
         break;
 
     case NSEventTypeScrollWheel:
-    {
-        // Dolly the camera toward/away from the target, clamped so it never
-        // crosses the target (Camera::Dolly's own guard is disabled).
-        float dolly = (float)event.scrollingDeltaY * kZoomSpeed;
-        forg::Camera& camera = m_engine.Camera();
-        float distance = (camera.get_Target() - camera.get_Position()).Length();
-        if (dolly > distance - kMinTargetDistance)
-        {
-            dolly = distance - kMinTargetDistance;
-        }
-        camera.Dolly(dolly, 0.0f);
+        m_engine.HandleInput({forg::InputEventType::Scroll,
+                              forg::InputButton::None, 0.0f, 0.0f,
+                              (float)event.scrollingDeltaY});
         break;
-    }
 
     default:
         break;
@@ -280,45 +184,9 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
     [self onResize];
 }
 
-// port of Viewport::Render (without the font/UI overlay)
-- (void)render
-{
-    forg::IRenderDevice* device = m_engine.Device();
-    if (device == 0)
-        return;
-
-    device->SetLight(0, &s_Light);
-    device->SetRenderState(forg::RenderStates_Lighting, true);
-
-    m_engine.Scene().Render(device);
-}
-
 // port of Viewport::OnPaint + CWinApp::OnIdle
 - (void)onIdle:(NSTimer*)timer
 {
-    // Apply any commands queued by the control server thread (main-thread
-    // only).
-    if (m_cmd_queue)
-    {
-        forg::net::QueueItem item;
-        while (m_cmd_queue->TryPop(item))
-        {
-            forg::control::SceneControlContext ctx;
-            ctx.camera = &m_engine.Camera();
-            ctx.model = m_model;
-            ctx.light = &s_Light;
-            ctx.clearColor = &m_clear_color;
-            ctx.device = m_engine.Device();
-
-            std::string body = forg::control::DispatchCommand(ctx, item.cmd);
-            if (item.reply)
-            {
-                item.reply->set_value(body);
-            }
-        }
-    }
-
-    m_engine.SetClearColor(m_clear_color);
     m_engine.Frame();
 }
 
@@ -329,20 +197,6 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
 
 - (void)applicationWillTerminate:(NSNotification*)notification
 {
-    // Stop the server (joins its thread) before tearing down the scene it
-    // touches, then free the queue it pushed to.
-    if (m_control_server)
-    {
-        m_control_server->Stop();
-        delete m_control_server;
-        m_control_server = 0;
-    }
-    if (m_cmd_queue)
-    {
-        delete m_cmd_queue;
-        m_cmd_queue = 0;
-    }
-
     [m_timer invalidate];
     m_timer = nil;
 
@@ -352,24 +206,10 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData);
         m_event_monitor = nil;
     }
 
-    m_model = 0;
-    m_engine.SetRenderCallback(nullptr, nullptr);
     m_engine.Shutdown();
 }
 
 @end
-
-static bool RenderEngineFrame(forg::Engine& engine, void* userData)
-{
-    (void)engine;
-
-    AppDelegate* delegate = (AppDelegate*)userData;
-    if (delegate == nil)
-        return false;
-
-    [delegate render];
-    return true;
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -403,49 +243,31 @@ static bool LoadSettings(AppSettings& settings)
         return false;
     }
 
-    if (forg::script::yaml::YAMLNode* yaml_node = yaml_doc->FindNode("window"))
+    if (const char* width = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "window", "width"))
+        settings.winWidth = atoi(width);
+
+    if (const char* height = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "window", "height"))
+        settings.winHeight = atoi(height);
+
+    if (const char* posx = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "window", "posx"))
+        settings.winX = atoi(posx);
+
+    if (const char* posy = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "window", "posy"))
+        settings.winY = atoi(posy);
+
+    if (const char* enabled = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "controlserver", "enabled"))
     {
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("width"))
-        {
-            settings.winWidth = atoi(yaml_att->GetContent().c_str());
-        }
-
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("height"))
-        {
-            settings.winHeight = atoi(yaml_att->GetContent().c_str());
-        }
-
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("posx"))
-        {
-            settings.winX = atoi(yaml_att->GetContent().c_str());
-        }
-
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("posy"))
-        {
-            settings.winY = atoi(yaml_att->GetContent().c_str());
-        }
+        settings.controlEnabled = std::string(enabled) == "true";
     }
 
-    if (forg::script::yaml::YAMLNode* yaml_node =
-            yaml_doc->FindNode("controlserver"))
-    {
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("enabled"))
-        {
-            settings.controlEnabled =
-                (std::string(yaml_att->GetContent().c_str()) == "true");
-        }
-
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("port"))
-        {
-            settings.controlPort = atoi(yaml_att->GetContent().c_str());
-        }
-    }
+    if (const char* port = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "controlserver", "port"))
+        settings.controlPort = atoi(port);
 
     return true;
 }

@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <string>
+#include <vector>
 
 #include "forg/script/yaml/YAMLParser.h"
 
@@ -34,6 +35,17 @@ TEST_CASE("YAMLParser reads config maps as XML-like nodes and attributes",
     REQUIRE(window != nullptr);
     REQUIRE(window->FindAttribute("width") != nullptr);
     REQUIRE(window->FindAttribute("width")->GetContent() == "800");
+
+    std::vector<std::string> windowAttributeNames;
+    forg::script::yaml::ForEachAttribute(
+        window, [&](const forg::script::yaml::YAMLNode& attribute)
+        { windowAttributeNames.emplace_back(attribute.GetName().c_str()); });
+    REQUIRE(windowAttributeNames.size() == 4);
+
+    const char* windowWidth =
+        forg::script::yaml::FindNodeAttributeValue(document, "window", "width");
+    REQUIRE(windowWidth != nullptr);
+    REQUIRE(std::string(windowWidth) == "800");
 
     forg::script::yaml::YAMLNode* controlserver =
         document->FindNode("controlserver");
@@ -78,6 +90,15 @@ TEST_CASE("YAMLParser finds nested and sibling mappings", "[script][yaml]")
 
     forg::script::yaml::YAMLNode* graphics = document->FindNode("graphics");
     REQUIRE(graphics != nullptr);
+
+    std::vector<std::string> nodeNames;
+    forg::script::yaml::ForEachNode(
+        document, [&](const forg::script::yaml::YAMLNode& node)
+        { nodeNames.emplace_back(node.GetName().c_str()); });
+    REQUIRE(nodeNames.size() == 7);
+    REQUIRE(nodeNames[0] == "config");
+    REQUIRE(nodeNames[1] == "graphics");
+    REQUIRE(nodeNames[2] == "renderer");
 
     forg::script::yaml::YAMLNode* renderer = document->FindNode("renderer");
     REQUIRE(renderer != nullptr);

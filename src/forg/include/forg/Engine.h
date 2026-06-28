@@ -6,7 +6,9 @@
 #endif
 
 #include "forg/base.h"
+#include "forg/Input.h"
 #include "forg/rendering/Color.h"
+#include "forg/rendering/Light.h"
 
 #include <memory>
 #include <string>
@@ -20,7 +22,12 @@ class Engine;
 class Camera;
 
 namespace scene {
+class Model;
 class Scene;
+} // namespace scene
+
+namespace net {
+struct Command;
 }
 
 struct EngineConfig
@@ -55,16 +62,33 @@ class FORG_API Engine
     bool LoadConfig(std::string_view filename = "config.yml");
     bool Initialize(HWIN window);
     bool Initialize(HWIN window, std::string_view configFilename);
+    bool LoadScene(std::string_view filename);
+    bool StartControlServer(std::string_view bindAddr, int port);
+    void StopControlServer();
+    bool ControlServerRunning() const;
+    uint PumpControlCommands();
 
     bool Update(double deltaSeconds);
     bool Render();
     bool Frame();
     void Resize(uint width, uint height);
+    bool HandleInput(const InputEvent& event);
     void SetClearColor(const Color& color);
+    const Color& ClearColor() const;
     void Shutdown();
 
     void SetUpdateCallback(EngineUpdateCallback callback, void* userData);
     void SetRenderCallback(EngineRenderCallback callback, void* userData);
+
+    static Light DefaultLight();
+    bool SetLight(uint index, const Light& light);
+    bool EnableLight(uint index, bool enabled);
+    Light* GetLight(uint index);
+    const Light* GetLight(uint index) const;
+
+    void SetActiveModel(scene::Model* model);
+    scene::Model* ActiveModel() const;
+    std::string DispatchCommand(const net::Command& cmd);
 
     scene::Scene& Scene();
     const scene::Scene& Scene() const;

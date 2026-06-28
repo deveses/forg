@@ -116,13 +116,13 @@ set(net_includes
     HttpControlServer.h
 )
 list(TRANSFORM net_includes PREPEND "include/forg/net/")
-# The command/parser/queue pieces are portable; only the BSD-socket server is
-# excluded on Windows (no Winsock implementation yet).
 set(net_sources
     Command.cpp
     HttpRequest.cpp
     CommandQueue.cpp
-    $<$<NOT:$<BOOL:${FORG_PLATFORM_WINDOWS}>>:HttpControlServer.cpp>
+    HttpControlServer.cpp
+    $<${FORG_PLATFORM_WINDOWS}:HttpControlSocketServer_win32.cpp>
+    $<$<NOT:$<BOOL:${FORG_PLATFORM_WINDOWS}>>:HttpControlSocketServer_posix.cpp>
 )
 list(TRANSFORM net_sources PREPEND "src/net/")
 
@@ -136,6 +136,7 @@ list(TRANSFORM control_includes PREPEND "include/forg/control/")
 set(control_sources
     SceneControl.cpp
     commands/camera.cpp
+    commands/input.cpp
     commands/mesh.cpp
     commands/scene.cpp
 )
@@ -180,6 +181,7 @@ list(TRANSFORM math_sources PREPEND "src/math/")
 ###############################################################################
 set(rendering_sources
     Camera.cpp
+    CameraOrbitController.cpp
     Color.cpp
     Font.cpp
     IRenderDevice.cpp
@@ -245,6 +247,9 @@ list(TRANSFORM image_sources PREPEND "src/image/")
 ###############################################################################
 # root / debug
 ###############################################################################
+set(root_includes
+    include/forg/Input.h
+)
 set(root_sources
     PerformanceCounter.cpp
     src/Engine.cpp
@@ -254,6 +259,7 @@ set(root_sources
 ###############################################################################
 list(APPEND all_includes ${audio_includes} ${core_includes} ${nn_includes} ${fs_includes} ${os_includes} ${io_includes} ${script_includes}
     ${net_includes} ${control_includes} ${scene_includes} ${ui_includes})
+list(APPEND all_includes ${root_includes})
 list(APPEND all_sources ${audio_sources} ${core_sources} ${nn_sources} ${fs_sources} ${os_sources} ${io_sources} ${script_sources}
     ${net_sources} ${control_sources} ${scene_sources} ${math_sources} ${rendering_sources} ${mesh_sources} ${image_sources}
     ${ui_sources} ${root_sources})

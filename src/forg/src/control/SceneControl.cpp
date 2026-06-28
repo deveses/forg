@@ -13,6 +13,8 @@ std::string DispatchCommand(SceneControlContext& ctx, const net::Command& cmd)
 
     if (v.rfind("camera.", 0) == 0)
         return DispatchCamera(ctx, cmd);
+    if (v.rfind("input.", 0) == 0)
+        return DispatchInput(ctx, cmd);
     if (v.rfind("mesh.", 0) == 0)
         return DispatchMesh(ctx, cmd);
     if (v.rfind("light.", 0) == 0 || v.rfind("clear.", 0) == 0 || v == "state")

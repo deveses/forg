@@ -3,11 +3,18 @@
 #include "forg/Engine.h"
 
 #include "PerformanceCounter.h"
+#include "forg/Input.h"
 #include "forg/rendering/IRenderDevice.h"
 #include "forg/rendering/IRenderer.h"
 #include "forg/rendering/Camera.h"
+#include "forg/rendering/CameraOrbitController.h"
 #include "forg/scene/Scene.h"
+#include "forg/control/SceneControl.h"
+#include "forg/net/CommandQueue.h"
+#include "forg/net/HttpControlServer.h"
+#include "forg/scene/Model.h"
 #include "forg/script/yaml/YAMLParser.h"
+#include "forg/script/yaml/YAMLSerializer.h"
 
 #include <charconv>
 #include <sstream>
@@ -245,12 +252,18 @@ struct Engine::Impl
     PerformanceCounter frameClock;
     PerformanceCounter fpsClock;
     forg::Camera camera;
+    forg::CameraOrbitController cameraController;
     Color clearColor = Color(0.75f, 0.75f, 0.75f);
+    Light light = Engine::DefaultLight();
+    bool lightEnabled = true;
+    scene::Model* activeModel = nullptr;
     uint fpsFrameCounter = 0;
     EngineUpdateCallback updateCallback = nullptr;
     void* updateUserData = nullptr;
     EngineRenderCallback renderCallback = nullptr;
     void* renderUserData = nullptr;
+    std::unique_ptr<net::CommandQueue> controlQueue;
+    std::unique_ptr<net::HttpControlServer> controlServer;
     std::string lastError;
 
     bool IsInitialized() const
@@ -316,40 +329,29 @@ struct Engine::Impl
 
         EngineConfig nextConfig;
 
-        if (script::yaml::YAMLNode* rendererNode =
-                document->FindNode("renderer"))
+        if (const char* driver = script::yaml::FindNodeAttributeValue(
+                document, "renderer", "driver"))
+            nextConfig.RendererDriver = driver;
+
+        if (const char* width = script::yaml::FindNodeAttributeValue(
+                document, "window", "width"))
         {
-            if (script::yaml::YAMLNode* driver =
-                    rendererNode->FindAttribute("driver"))
+            if (!ParsePositiveUint(width, nextConfig.BackBufferWidth))
             {
-                nextConfig.RendererDriver = driver->GetContent().c_str();
+                SetError("Invalid window.width in config");
+                parser.Close();
+                return false;
             }
         }
 
-        if (script::yaml::YAMLNode* windowNode = document->FindNode("window"))
+        if (const char* height = script::yaml::FindNodeAttributeValue(
+                document, "window", "height"))
         {
-            if (script::yaml::YAMLNode* width =
-                    windowNode->FindAttribute("width"))
+            if (!ParsePositiveUint(height, nextConfig.BackBufferHeight))
             {
-                if (!ParsePositiveUint(width->GetContent().c_str(),
-                                       nextConfig.BackBufferWidth))
-                {
-                    SetError("Invalid window.width in config");
-                    parser.Close();
-                    return false;
-                }
-            }
-
-            if (script::yaml::YAMLNode* height =
-                    windowNode->FindAttribute("height"))
-            {
-                if (!ParsePositiveUint(height->GetContent().c_str(),
-                                       nextConfig.BackBufferHeight))
-                {
-                    SetError("Invalid window.height in config");
-                    parser.Close();
-                    return false;
-                }
+                SetError("Invalid window.height in config");
+                parser.Close();
+                return false;
             }
         }
 
@@ -450,11 +452,114 @@ struct Engine::Impl
         return true;
     }
 
+    bool LoadScene(std::string_view filename)
+    {
+        if (!RequireInitialized())
+            return false;
+
+        if (filename.empty())
+        {
+            SetError("Scene filename is empty");
+            return false;
+        }
+
+        io::YAMLSerializer serializer;
+        if (!serializer.OpenRead(filename))
+        {
+            std::ostringstream stream;
+            stream << "Unable to open scene <" << std::string(filename) << ">";
+            SetError(stream.str());
+            return false;
+        }
+
+        if (!scene.Load(serializer))
+        {
+            std::ostringstream stream;
+            stream << "Unable to load scene <" << std::string(filename) << ">";
+            SetError(stream.str());
+            return false;
+        }
+
+        if (!scene.LoadResources(device.Get()))
+        {
+            std::ostringstream stream;
+            stream << "Unable to load scene resources <"
+                   << std::string(filename) << ">";
+            SetError(stream.str());
+            return false;
+        }
+
+        activeModel = nullptr;
+        ClearError();
+        return true;
+    }
+
+    bool StartControlServer(std::string_view bindAddr, int port)
+    {
+        if (bindAddr.empty())
+        {
+            SetError("Control server bind address is empty");
+            return false;
+        }
+
+        if (port <= 0 || port > 65535)
+        {
+            SetError("Control server port is invalid");
+            return false;
+        }
+
+        StopControlServer();
+
+        controlQueue.reset(new net::CommandQueue());
+        controlServer.reset(new net::HttpControlServer(std::string(bindAddr),
+                                                       port, *controlQueue));
+        if (!controlServer->Start())
+        {
+            controlServer.reset();
+            controlQueue.reset();
+            SetError("Control server failed to start");
+            return false;
+        }
+
+        ClearError();
+        return true;
+    }
+
+    void StopControlServer()
+    {
+        if (controlServer)
+        {
+            controlServer->Stop();
+            controlServer.reset();
+        }
+        controlQueue.reset();
+    }
+
+    bool ControlServerRunning() const { return controlServer != nullptr; }
+
+    uint PumpControlCommands()
+    {
+        if (!controlQueue)
+            return 0;
+
+        uint count = 0;
+        net::QueueItem item;
+        while (controlQueue->TryPop(item))
+        {
+            std::string body = DispatchCommand(item.cmd);
+            if (item.reply)
+                item.reply->set_value(body);
+            ++count;
+        }
+        return count;
+    }
+
     bool Update(double deltaSeconds, Engine& engine)
     {
         if (!RequireInitialized())
             return false;
 
+        PumpControlCommands();
         scene.Update(deltaSeconds);
         if (updateCallback != nullptr &&
             !updateCallback(engine, deltaSeconds, updateUserData))
@@ -488,11 +593,16 @@ struct Engine::Impl
                             1.0f, 0);
         renderDevice->BeginScene();
 
+        if (lightEnabled)
+            renderDevice->SetLight(0, &light);
+        renderDevice->LightEnable(0, lightEnabled);
+        renderDevice->SetRenderState(RenderStates_Lighting, lightEnabled);
+
+        scene.Render(renderDevice);
+
         bool callbackOk = true;
         if (renderCallback != nullptr)
             callbackOk = renderCallback(engine, renderUserData);
-        else
-            scene.Render(renderDevice);
 
         renderDevice->EndScene();
         renderDevice->Present();
@@ -554,7 +664,100 @@ struct Engine::Impl
         ClearError();
     }
 
+    bool HandleInput(const InputEvent& event)
+    {
+        if (event.Type == InputEventType::PointerDrag)
+        {
+            if (event.Button == InputButton::Left)
+            {
+                cameraController.OrbitPixels(camera, event.DeltaX,
+                                             event.DeltaY);
+                ClearError();
+                return true;
+            }
+            if (event.Button == InputButton::Right)
+            {
+                cameraController.TruckPixels(camera, event.DeltaX,
+                                             event.DeltaY);
+                ClearError();
+                return true;
+            }
+        }
+        else if (event.Type == InputEventType::Scroll)
+        {
+            cameraController.ZoomLines(camera, event.ScrollDelta);
+            ClearError();
+            return true;
+        }
+
+        SetError("Unsupported input event");
+        return false;
+    }
+
     void SetClearColor(const Color& color) { clearColor = color; }
+
+    bool SetLight(uint index, const Light& nextLight)
+    {
+        if (index != 0)
+        {
+            SetError("Only light 0 is supported");
+            return false;
+        }
+
+        light = nextLight;
+        if (device.Get() != nullptr)
+        {
+            device.Get()->SetLight(index, &light);
+            device.Get()->LightEnable(index, lightEnabled);
+        }
+
+        ClearError();
+        return true;
+    }
+
+    bool EnableLight(uint index, bool enabled)
+    {
+        if (index != 0)
+        {
+            SetError("Only light 0 is supported");
+            return false;
+        }
+
+        lightEnabled = enabled;
+        if (device.Get() != nullptr)
+            device.Get()->LightEnable(index, lightEnabled);
+
+        ClearError();
+        return true;
+    }
+
+    Light* GetLight(uint index)
+    {
+        if (index != 0)
+            return nullptr;
+        return &light;
+    }
+
+    const Light* GetLight(uint index) const
+    {
+        if (index != 0)
+            return nullptr;
+        return &light;
+    }
+
+    std::string DispatchCommand(const net::Command& cmd)
+    {
+        control::SceneControlContext ctx;
+        ctx.camera = &camera;
+        ctx.model = activeModel;
+        ctx.light = &light;
+        ctx.clearColor = &clearColor;
+        ctx.device = device.Get();
+        ctx.inputHandler = [](const InputEvent& event, void* userData)
+        { return static_cast<Impl*>(userData)->HandleInput(event); };
+        ctx.inputUserData = this;
+        return control::DispatchCommand(ctx, cmd);
+    }
 
     void CleanupAfterInitializeFailure()
     {
@@ -567,7 +770,9 @@ struct Engine::Impl
     {
         std::string shutdownError;
 
+        StopControlServer();
         scene.ClearNodes();
+        activeModel = nullptr;
 
         device.Reset();
 
@@ -607,6 +812,25 @@ bool Engine::Initialize(HWIN window, std::string_view configFilename)
     return Initialize(window);
 }
 
+bool Engine::LoadScene(std::string_view filename)
+{
+    return m_impl->LoadScene(filename);
+}
+
+bool Engine::StartControlServer(std::string_view bindAddr, int port)
+{
+    return m_impl->StartControlServer(bindAddr, port);
+}
+
+void Engine::StopControlServer() { m_impl->StopControlServer(); }
+
+bool Engine::ControlServerRunning() const
+{
+    return m_impl->ControlServerRunning();
+}
+
+uint Engine::PumpControlCommands() { return m_impl->PumpControlCommands(); }
+
 bool Engine::Update(double deltaSeconds)
 {
     return m_impl->Update(deltaSeconds, *this);
@@ -618,7 +842,14 @@ bool Engine::Frame() { return m_impl->Frame(*this); }
 
 void Engine::Resize(uint width, uint height) { m_impl->Resize(width, height); }
 
+bool Engine::HandleInput(const InputEvent& event)
+{
+    return m_impl->HandleInput(event);
+}
+
 void Engine::SetClearColor(const Color& color) { m_impl->SetClearColor(color); }
+
+const Color& Engine::ClearColor() const { return m_impl->clearColor; }
 
 void Engine::Shutdown() { m_impl->Shutdown(); }
 
@@ -632,6 +863,56 @@ void Engine::SetRenderCallback(EngineRenderCallback callback, void* userData)
 {
     m_impl->renderCallback = callback;
     m_impl->renderUserData = userData;
+}
+
+Light Engine::DefaultLight()
+{
+    Light light = {};
+    light.Type = LightType::Point;
+    light.Diffuse.r = 1.0f;
+    light.Diffuse.g = 1.0f;
+    light.Diffuse.b = 0.0f;
+    light.Ambient.r = 1.0f;
+    light.Ambient.g = 1.0f;
+    light.Ambient.b = 1.0f;
+    light.Specular.r = 1.0f;
+    light.Specular.g = 1.0f;
+    light.Specular.b = 1.0f;
+    light.Position.X = 5.0f;
+    light.Position.Y = 5.0f;
+    light.Position.Z = -1.0f;
+    light.Attenuation0 = 1.0f;
+    light.Range = 1000.0f;
+    return light;
+}
+
+bool Engine::SetLight(uint index, const Light& light)
+{
+    return m_impl->SetLight(index, light);
+}
+
+bool Engine::EnableLight(uint index, bool enabled)
+{
+    return m_impl->EnableLight(index, enabled);
+}
+
+Light* Engine::GetLight(uint index) { return m_impl->GetLight(index); }
+
+const Light* Engine::GetLight(uint index) const
+{
+    return m_impl->GetLight(index);
+}
+
+void Engine::SetActiveModel(scene::Model* model)
+{
+    m_impl->activeModel = model;
+}
+
+scene::Model* Engine::ActiveModel() const { return m_impl->activeModel; }
+
+std::string Engine::DispatchCommand(const net::Command& cmd)
+{
+    return m_impl->DispatchCommand(cmd);
 }
 
 scene::Scene& Engine::Scene() { return m_impl->scene; }

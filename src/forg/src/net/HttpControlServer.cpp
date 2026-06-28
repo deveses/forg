@@ -1,175 +1,162 @@
 #include "net/HttpControlServer.h"
 #include "net/HttpRequest.h"
+#include "net/HttpControlSocketServer.h"
 
-#if !defined(FORG_PLATFORM_WINDOWS)
-
-// base.h (force-included via the PCH) defines IN, OUT and null as macros that
-// clash with the BSD socket headers. Drop them before including system headers.
-#ifdef IN
-#undef IN
-#endif
-#ifdef OUT
-#undef OUT
-#endif
-#ifdef null
-#undef null
-#endif
-
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
+#include <atomic>
 #include <chrono>
-#include <cstring>
 #include <future>
+#include <memory>
 #include <sstream>
+#include <thread>
 
 namespace forg::net {
+namespace {
 
-HttpControlServer::HttpControlServer(const std::string& bindAddr, int port,
-                                     CommandQueue& queue)
-    : m_addr(bindAddr), m_port(port), m_queue(queue), m_listenFd(-1),
-      m_running(false)
+bool SendAll(PlatformSocketServer& sockets, SocketHandle client,
+             const std::string& out)
 {
-}
-
-HttpControlServer::~HttpControlServer() { Stop(); }
-
-bool HttpControlServer::Start()
-{
-    m_listenFd = ::socket(AF_INET, SOCK_STREAM, 0);
-    if (m_listenFd < 0)
+    size_t sent = 0;
+    while (sent < out.size())
     {
-        return false;
+        int n = sockets.Send(client, out.data() + sent, out.size() - sent);
+        if (n <= 0)
+            return false;
+        sent += static_cast<size_t>(n);
     }
-
-    int yes = 1;
-    ::setsockopt(m_listenFd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-
-    sockaddr_in addr;
-    std::memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(static_cast<unsigned short>(m_port));
-    addr.sin_addr.s_addr = inet_addr(m_addr.c_str());
-
-    if (::bind(m_listenFd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) <
-            0 ||
-        ::listen(m_listenFd, 4) < 0)
-    {
-        ::close(m_listenFd);
-        m_listenFd = -1;
-        return false;
-    }
-
-    m_running = true;
-    m_thread = std::thread(&HttpControlServer::Run, this);
     return true;
 }
 
-void HttpControlServer::Stop()
-{
-    m_running = false;
+} // namespace
 
-    if (m_listenFd >= 0)
+struct HttpControlServer::Impl
+{
+    Impl(const std::string& bindAddr, int port, CommandQueue& queue)
+        : addr(bindAddr), port(port), queue(queue),
+          sockets(CreatePlatformSocketServer())
     {
-        // shutdown + close unblocks a thread parked in accept().
-        ::shutdown(m_listenFd, SHUT_RDWR);
-        ::close(m_listenFd);
-        m_listenFd = -1;
     }
 
-    if (m_thread.joinable())
-    {
-        m_thread.join();
-    }
-}
+    ~Impl() { Stop(); }
 
-void HttpControlServer::Run()
-{
-    while (m_running)
+    bool Start()
     {
-        int client = ::accept(m_listenFd, 0, 0);
-        if (client < 0)
+        if (running.load())
+            return true;
+
+        if (!sockets->Start(addr, port))
+            return false;
+
+        running = true;
+        thread = std::thread(&Impl::Run, this);
+        return true;
+    }
+
+    void Stop()
+    {
+        running = false;
+        sockets->Stop();
+
+        if (thread.joinable())
+            thread.join();
+    }
+
+    void Run()
+    {
+        while (running.load())
         {
-            if (!m_running)
+            SocketHandle client = sockets->Accept();
+            if (client == kInvalidSocket)
             {
-                break; // socket closed by Stop()
+                if (!running.load())
+                    break; // socket closed by Stop()
+                continue;
             }
-            continue;
+
+            HandleConnection(client);
+            sockets->Close(client);
         }
-
-        HandleConnection(client);
-        ::close(client);
-    }
-}
-
-void HttpControlServer::HandleConnection(int clientFd)
-{
-    char buf[8192];
-    ssize_t n = ::recv(clientFd, buf, sizeof(buf) - 1, 0);
-    if (n <= 0)
-    {
-        return;
     }
 
-    std::string request(buf, static_cast<size_t>(n));
-    size_t eol = request.find("\r\n");
-    if (eol == std::string::npos)
+    void HandleConnection(SocketHandle client)
     {
-        eol = request.find('\n');
-    }
-    std::string firstLine =
-        (eol == std::string::npos) ? request : request.substr(0, eol);
+        char buf[8192];
+        int n = sockets->Receive(client, buf, sizeof(buf) - 1);
+        if (n <= 0)
+            return;
 
-    int status = 200;
-    std::string body;
+        std::string request(buf, static_cast<size_t>(n));
+        size_t eol = request.find("\r\n");
+        if (eol == std::string::npos)
+            eol = request.find('\n');
+        std::string firstLine =
+            (eol == std::string::npos) ? request : request.substr(0, eol);
 
-    std::string method, path, query;
-    if (ParseRequestLine(firstLine, method, path, query))
-    {
-        Command cmd = CommandFromRequest(path, query);
+        int status = 200;
+        std::string body;
 
-        std::future<std::string> result = m_queue.PushWithReply(cmd);
-
-        // The main thread drains the queue and fulfils the promise each frame.
-        // The timeout keeps the socket thread from hanging if it has stopped.
-        // The queue owns the promise, so timing out here is safe: the main
-        // thread's later set_value just lands in a value no one reads.
-        if (result.wait_for(std::chrono::seconds(1)) ==
-            std::future_status::ready)
+        std::string method, path, query;
+        if (ParseRequestLine(firstLine, method, path, query))
         {
-            body = result.get();
+            Command cmd = CommandFromRequest(path, query);
+
+            std::future<std::string> result = queue.PushWithReply(cmd);
+
+            // The main thread drains the queue and fulfils the promise each
+            // frame. The timeout keeps the socket thread from hanging if the
+            // engine has stopped. The queue owns the promise, so timing out
+            // here is safe: a later set_value just lands in a value no one
+            // reads.
+            if (result.wait_for(std::chrono::seconds(1)) ==
+                std::future_status::ready)
+            {
+                body = result.get();
+            }
+            else
+            {
+                status = 503;
+                body = "{\"ok\":false,\"error\":\"timeout\"}";
+            }
         }
         else
         {
-            status = 503;
-            body = "{\"ok\":false,\"error\":\"timeout\"}";
+            status = 400;
+            body = "{\"ok\":false,\"error\":\"badrequest\"}";
         }
+
+        const char* reason = (status == 200)   ? "OK"
+                             : (status == 400) ? "Bad Request"
+                                               : "Service Unavailable";
+
+        std::ostringstream response;
+        response << "HTTP/1.1 " << status << ' ' << reason << "\r\n"
+                 << "Content-Type: application/json\r\n"
+                 << "Content-Length: " << body.size() << "\r\n"
+                 << "Access-Control-Allow-Origin: *\r\n"
+                 << "Connection: close\r\n"
+                 << "\r\n"
+                 << body;
+
+        SendAll(*sockets, client, response.str());
     }
-    else
-    {
-        status = 400;
-        body = "{\"ok\":false,\"error\":\"badrequest\"}";
-    }
 
-    const char* reason = (status == 200)   ? "OK"
-                         : (status == 400) ? "Bad Request"
-                                           : "Service Unavailable";
+    std::string addr;
+    int port;
+    CommandQueue& queue;
+    std::unique_ptr<PlatformSocketServer> sockets;
+    std::atomic<bool> running{false};
+    std::thread thread;
+};
 
-    std::ostringstream response;
-    response << "HTTP/1.1 " << status << ' ' << reason << "\r\n"
-             << "Content-Type: application/json\r\n"
-             << "Content-Length: " << body.size() << "\r\n"
-             << "Access-Control-Allow-Origin: *\r\n"
-             << "Connection: close\r\n"
-             << "\r\n"
-             << body;
-
-    std::string out = response.str();
-    ::send(clientFd, out.data(), out.size(), 0);
+HttpControlServer::HttpControlServer(const std::string& bindAddr, int port,
+                                     CommandQueue& queue)
+    : m_impl(new Impl(bindAddr, port, queue))
+{
 }
 
-} // namespace forg::net
+HttpControlServer::~HttpControlServer() = default;
 
-#endif // !FORG_PLATFORM_WINDOWS
+bool HttpControlServer::Start() { return m_impl->Start(); }
+
+void HttpControlServer::Stop() { m_impl->Stop(); }
+
+} // namespace forg::net

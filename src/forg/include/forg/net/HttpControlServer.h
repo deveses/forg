@@ -1,9 +1,8 @@
 #ifndef _FORG_NET_HTTPCONTROLSERVER_H_
 #define _FORG_NET_HTTPCONTROLSERVER_H_
 
-#include <atomic>
+#include <memory>
 #include <string>
-#include <thread>
 
 #include "net/CommandQueue.h"
 
@@ -17,7 +16,8 @@ namespace forg::net {
  * The server never touches application state directly — it only speaks to the
  * queue, so it knows nothing about cameras, meshes, or rendering.
  *
- * POSIX sockets only (macOS/Linux); the source is excluded from Windows builds.
+ * Uses a small platform socket backend internally (POSIX sockets on
+ * macOS/Linux, Winsock on Windows).
  */
 class HttpControlServer
 {
@@ -35,15 +35,9 @@ class HttpControlServer
     void Stop();
 
   private:
-    void Run();
-    void HandleConnection(int clientFd);
+    struct Impl;
 
-    std::string m_addr;
-    int m_port;
-    CommandQueue& m_queue;
-    int m_listenFd;
-    std::atomic<bool> m_running;
-    std::thread m_thread;
+    std::unique_ptr<Impl> m_impl;
 };
 
 } // namespace forg::net

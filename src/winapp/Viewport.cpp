@@ -7,17 +7,6 @@
 
 #include <commdlg.h>
 
-forg::Light s_Light = {0};
-
-namespace {
-
-const float kOrbitSpeed = 0.01f;
-const float kTruckSpeed = 0.01f;
-const float kZoomSpeed = 0.30f;
-const float kMinTargetDistance = 0.5f;
-
-} // namespace
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -28,7 +17,6 @@ Viewport::Viewport()
     m_hInstance = 0;
     m_engine = 0;
     m_device = 0;
-    m_model_node = 0;
     m_font = 0;
     m_bMouseCaptured = FALSE;
     m_bLMBDown = FALSE;
@@ -55,7 +43,9 @@ Viewport::~Viewport()
     }
 
     if (m_engine)
+    {
         m_engine->SetRenderCallback(nullptr, nullptr);
+    }
 }
 
 DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
@@ -110,12 +100,8 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
     OnSize(SIZE_RESTORED, clientRect.right - clientRect.left,
            clientRect.bottom - clientRect.top);
 
-    m_model_node = &m_engine->Scene().CreateMeshNode();
-    m_model_node->GetModel().SetMesh(
-        forg::geometry::Mesh::Cylinder(m_device, 1.0f, 2.0f, 5.0f, 10, 40));
-    DBG_MSG("Cylinder created. Vertices: %d, Faces: %d\n",
-            m_model_node->GetModel().GetMesh()->GetNumVertices(),
-            m_model_node->GetModel().GetMesh()->GetNumFaces());
+    if (!m_engine->LoadScene("scene.yml"))
+        return 1;
 
     forg::FontDescription fd = {12, 0, 0, 1, false, 0, 0, 0, 0, (""),
                                 //"../bin/test.ttf"
@@ -129,34 +115,6 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
     m_Dialog.AddSlider(1, 180, 15, 80, 30);
     m_Dialog.AddKnob(2, 0, 15, 30, 30);
     m_Dialog.AddComboBox(3, 300, 15, 100, 30);
-
-    // Set up a white point light.
-    s_Light.Type = forg::LightType::Point;
-    s_Light.Diffuse.r = 1.0f;
-    s_Light.Diffuse.g = 1.0f;
-    s_Light.Diffuse.b = 0.0f;
-    s_Light.Ambient.r = 1.0f;
-    s_Light.Ambient.g = 1.0f;
-    s_Light.Ambient.b = 1.0f;
-    s_Light.Specular.r = 1.0f;
-    s_Light.Specular.g = 1.0f;
-    s_Light.Specular.b = 1.0f;
-
-    // Position it high in the scene and behind the user.
-    // Remember, these coordinates are in world space, so
-    // the user could be anywhere in world space, too.
-    // For the purposes of this example, assume the user
-    // is at the origin of world space.
-    s_Light.Position.X = 5.0f;
-    s_Light.Position.Y = 5.0f;
-    s_Light.Position.Z = -1.0f;
-
-    // Don't attenuate.
-    s_Light.Attenuation0 = 1.0f;
-    s_Light.Range = 1000.0f;
-
-    m_device->SetLight(0, &s_Light);
-    m_device->LightEnable(0, true);
 
     UpdateWindow(m_hWnd);
     return 0;
@@ -371,11 +329,6 @@ void Viewport::Render()
     if (m_engine == NULL || m_device == NULL)
         return;
 
-    m_device->SetLight(0, &s_Light);
-    m_device->SetRenderState(forg::RenderStates_Lighting, true);
-
-    m_engine->Scene().Render(m_device);
-
     RenderUI();
 }
 
@@ -429,26 +382,6 @@ void Viewport::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
         break;
     case VK_RIGHT:
         break;
-    case 'O':
-    case 'o':
-    {
-        char filename[MAX_PATH] = {};
-        OPENFILENAMEA ofn = {};
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = m_hWnd;
-        ofn.lpstrFile = filename;
-        ofn.nMaxFile = sizeof(filename);
-        ofn.lpstrFilter = "All\0*.*\0Text\0*.TXT\0";
-        ofn.nFilterIndex = 1;
-        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_EXPLORER;
-
-        if (GetOpenFileNameA(&ofn))
-        {
-            if (m_model_node != 0)
-                m_model_node->GetModel().Load(filename, m_device);
-        }
-    }
-    break;
     }
 
     Invalidate(0);
@@ -489,15 +422,9 @@ void Viewport::OnMouseWheel(UINT nFlags, POINTS point, int delta)
     UNREFERENCED_PARAMETER(nFlags);
     UNREFERENCED_PARAMETER(point);
 
-    float dolly = (static_cast<float>(delta) / WHEEL_DELTA) * kZoomSpeed;
-    forg::Camera& camera = m_engine->Camera();
-    float distance = (camera.get_Target() - camera.get_Position()).Length();
-    if (dolly > distance - kMinTargetDistance)
-    {
-        dolly = distance - kMinTargetDistance;
-    }
-
-    camera.Dolly(dolly, 0.0f);
+    m_engine->HandleInput({forg::InputEventType::Scroll,
+                           forg::InputButton::None, 0.0f, 0.0f,
+                           static_cast<float>(delta) / WHEEL_DELTA});
     Invalidate(0);
 }
 
@@ -521,11 +448,13 @@ void Viewport::OnMouseMove(UINT nFlags, POINTS point)
 
     if (nFlags & MK_LBUTTON)
     {
-        m_engine->Camera().Orbit(-dx * kOrbitSpeed, dy * kOrbitSpeed);
+        m_engine->HandleInput({forg::InputEventType::PointerDrag,
+                               forg::InputButton::Left, dx, dy, 0.0f});
     }
     else if (nFlags & MK_RBUTTON)
     {
-        m_engine->Camera().Truck(-dx * kTruckSpeed, dy * kTruckSpeed);
+        m_engine->HandleInput({forg::InputEventType::PointerDrag,
+                               forg::InputButton::Right, dx, dy, 0.0f});
     }
 
     // UpdateWindow();

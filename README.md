@@ -37,6 +37,13 @@ Run the sample with:
 
 A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`, and `src/macapp/config.yml` next to the binary. `config.yml` selects which plugin `macapp` loads (default: `libmetalrenderer.dylib`; switch to `libswrenderer.dylib` to compare).
 
+If `controlserver.enabled` is `true` in `config.yml`, the sample starts a
+local HTTP control endpoint. It accepts scene/camera commands plus normalized
+input events such as `/input/drag?button=left&dx=12&dy=-4` for orbit,
+`/input/drag?button=right&dx=12&dy=-4` for truck, and
+`/input/scroll?delta=1` for zoom. Native macOS and Win32 mouse handling uses
+the same `forg::InputEvent` path through `Engine::HandleInput`.
+
 Notes:
 
 - CMake uses the host default macOS architecture. Pass `-DCMAKE_OSX_ARCHITECTURES=x86_64` or `-DCMAKE_OSX_ARCHITECTURES=arm64` at configure time when you need a specific architecture.
@@ -130,7 +137,8 @@ A post-build step copies `glrenderer.dll`, `swrenderer.dll`, and `src/winapp/con
 ## Project layout
 
 ```text
-src/forg/include/forg/   Public headers, one directory per module:
+src/forg/include/forg/   Public headers and root APIs such as Engine.h/Input.h,
+                         plus one directory per module:
                          math, rendering, audio, core, fs, os, script,
                          image, mesh, nn, ui, cpu, opencl, debug
 src/forg/src/            Private implementation, mirroring the module layout;
@@ -169,6 +177,10 @@ descriptors and legacy `forgCreateRenderer`-only plugins for 1.x
 compatibility.
 
 Beyond rendering, the library includes math types, audio output, XML and YAML parsers (`script`), image loading, mesh loading (DirectX `.x`, `.ply`, and glTF 2.0 `.gltf`/`.glb` static meshes via `Mesh::FromFile`), a UI layer, filesystem and OS abstractions.
+
+`Engine` owns the active camera and handles normalized input events from
+`forg/Input.h`; sample apps only translate native events before calling
+`Engine::HandleInput`.
 
 ## CI
 

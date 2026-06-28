@@ -55,7 +55,11 @@ class FORG_API Node
 
     Node* GetChildren() { return m_children; }
 
+    const Node* GetChildren() const { return m_children; }
+
     Node* GetNext() { return m_next; }
+
+    const Node* GetNext() const { return m_next; }
 
     void AddAttribute(Node* _attr)
     {
@@ -64,7 +68,13 @@ class FORG_API Node
         m_attributes = _attr;
     }
 
+    Node* GetAttributes() { return m_attributes; }
+
+    const Node* GetAttributes() const { return m_attributes; }
+
     Node* FindAttribute(const core::string& _name);
+
+    const Node* FindAttribute(const core::string& _name) const;
 
     void SetParent(Node* _parent) { m_parent = _parent; }
 
@@ -95,7 +105,13 @@ class FORG_API Document
 
     void SetRootNode(Node* _root) { m_root.reset(_root); }
 
+    Node* GetRootNode() { return m_root.get(); }
+
+    const Node* GetRootNode() const { return m_root.get(); }
+
     Node* FindNode(const core::string& _name);
+
+    const Node* FindNode(const core::string& _name) const;
 };
 
 } // namespace forg::script::generic

@@ -13,8 +13,6 @@ class Viewport
     forg::Engine* m_engine;
     forg::IRenderDevice* m_device;
 
-    forg::scene::MeshNode* m_model_node;
-
     forg::Font* m_font;
     forg::ui::CUIDialog m_Dialog;
 

@@ -17,7 +17,7 @@ std::string buildState(SceneControlContext& ctx)
     const forg::Light& l = *ctx.light;
     const forg::Color& c = *ctx.clearColor;
 
-    forg::geometry::Mesh* mesh = ctx.model->GetMesh();
+    forg::geometry::Mesh* mesh = ctx.model ? ctx.model->GetMesh() : nullptr;
     forg::uint vertices = mesh ? mesh->GetNumVertices() : 0;
     forg::uint faces = mesh ? mesh->GetNumFaces() : 0;
 

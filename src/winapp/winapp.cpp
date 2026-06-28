@@ -18,6 +18,8 @@ struct AppConfig
     int Height = 100;
     int X = 10;
     int Y = 10;
+    bool ControlEnabled = false;
+    int ControlPort = 8080;
 };
 
 void ShowError(LPCTSTR message)
@@ -88,21 +90,29 @@ AppConfig LoadConfig()
     if (!document)
         return config;
 
-    if (forg::script::yaml::YAMLNode* node = document->FindNode("window"))
-    {
-        if (forg::script::yaml::YAMLNode* width = node->FindAttribute("width"))
-            config.Width = atoi(width->GetContent().c_str());
+    if (const char* width = forg::script::yaml::FindNodeAttributeValue(
+            document, "window", "width"))
+        config.Width = atoi(width);
 
-        if (forg::script::yaml::YAMLNode* height =
-                node->FindAttribute("height"))
-            config.Height = atoi(height->GetContent().c_str());
+    if (const char* height = forg::script::yaml::FindNodeAttributeValue(
+            document, "window", "height"))
+        config.Height = atoi(height);
 
-        if (forg::script::yaml::YAMLNode* posx = node->FindAttribute("posx"))
-            config.X = atoi(posx->GetContent().c_str());
+    if (const char* posx = forg::script::yaml::FindNodeAttributeValue(
+            document, "window", "posx"))
+        config.X = atoi(posx);
 
-        if (forg::script::yaml::YAMLNode* posy = node->FindAttribute("posy"))
-            config.Y = atoi(posy->GetContent().c_str());
-    }
+    if (const char* posy = forg::script::yaml::FindNodeAttributeValue(
+            document, "window", "posy"))
+        config.Y = atoi(posy);
+
+    if (const char* enabled = forg::script::yaml::FindNodeAttributeValue(
+            document, "controlserver", "enabled"))
+        config.ControlEnabled = std::string(enabled) == "true";
+
+    if (const char* port = forg::script::yaml::FindNodeAttributeValue(
+            document, "controlserver", "port"))
+        config.ControlPort = atoi(port);
 
     return config;
 }
@@ -163,6 +173,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
             else
                 ShowEngineError(engine);
             return 1;
+        }
+
+        if (config.ControlEnabled &&
+            !engine.StartControlServer("127.0.0.1", config.ControlPort))
+        {
+            ShowEngineError(engine);
         }
 
         viewport.ShowWindow(nCmdShow);
