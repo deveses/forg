@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "forg/control/SceneControl.h"
+#include "forg/Input.h"
 #include "forg/net/HttpRequest.h"
 #include "forg/rendering/reference/SWRenderDevice.h"
 
@@ -18,8 +19,19 @@ struct Scene
     forg::Light light;
     forg::Color clearColor;
     forg::scene::Model model;
+    forg::InputEvent lastInput = {forg::InputEventType::Scroll,
+                                  forg::InputButton::None, 0.0f, 0.0f, 0.0f};
+    int inputCount = 0;
 
     Scene() : light(), clearColor(0.0f, 0.0f, 0.0f) {}
+
+    static bool RecordInput(const forg::InputEvent& event, void* userData)
+    {
+        Scene* scene = static_cast<Scene*>(userData);
+        scene->lastInput = event;
+        ++scene->inputCount;
+        return true;
+    }
 
     SceneControlContext context(forg::IRenderDevice* device = 0)
     {
@@ -29,6 +41,8 @@ struct Scene
         ctx.light = &light;
         ctx.clearColor = &clearColor;
         ctx.device = device;
+        ctx.inputHandler = &RecordInput;
+        ctx.inputUserData = this;
         return ctx;
     }
 };
@@ -63,6 +77,57 @@ TEST_CASE("clear.color updates the clear color", "[control]")
     REQUIRE(scene.clearColor.r == 0.25f);
     REQUIRE(scene.clearColor.g == 0.5f);
     REQUIRE(scene.clearColor.b == 0.75f);
+}
+
+TEST_CASE("input.drag dispatches a pointer drag input event", "[control][input]")
+{
+    Scene scene;
+    SceneControlContext ctx = scene.context();
+
+    std::string r = DispatchCommand(
+        ctx, CommandFromRequest("/input/drag", "button=left&dx=3&dy=-4"));
+
+    REQUIRE(r == "{\"ok\":true}");
+    REQUIRE(scene.inputCount == 1);
+    REQUIRE(scene.lastInput.Type == forg::InputEventType::PointerDrag);
+    REQUIRE(scene.lastInput.Button == forg::InputButton::Left);
+    REQUIRE(scene.lastInput.DeltaX == 3.0f);
+    REQUIRE(scene.lastInput.DeltaY == -4.0f);
+    REQUIRE(scene.lastInput.ScrollDelta == 0.0f);
+}
+
+TEST_CASE("input.scroll dispatches a scroll input event", "[control][input]")
+{
+    Scene scene;
+    SceneControlContext ctx = scene.context();
+
+    std::string r =
+        DispatchCommand(ctx, CommandFromRequest("/input/scroll", "delta=2"));
+
+    REQUIRE(r == "{\"ok\":true}");
+    REQUIRE(scene.inputCount == 1);
+    REQUIRE(scene.lastInput.Type == forg::InputEventType::Scroll);
+    REQUIRE(scene.lastInput.Button == forg::InputButton::None);
+    REQUIRE(scene.lastInput.DeltaX == 0.0f);
+    REQUIRE(scene.lastInput.DeltaY == 0.0f);
+    REQUIRE(scene.lastInput.ScrollDelta == 2.0f);
+}
+
+TEST_CASE("input commands reject missing or invalid parameters",
+          "[control][input]")
+{
+    Scene scene;
+    SceneControlContext ctx = scene.context();
+
+    REQUIRE(DispatchCommand(ctx, CommandFromRequest("/input/drag",
+                                                   "button=left&dx=3")) ==
+            "{\"ok\":false,\"error\":\"badparam\"}");
+    REQUIRE(DispatchCommand(ctx, CommandFromRequest("/input/drag",
+                                                   "button=nope&dx=3&dy=4")) ==
+            "{\"ok\":false,\"error\":\"badparam\"}");
+    REQUIRE(DispatchCommand(ctx, CommandFromRequest("/input/scroll", "")) ==
+            "{\"ok\":false,\"error\":\"badparam\"}");
+    REQUIRE(scene.inputCount == 0);
 }
 
 TEST_CASE("light.set updates only the supplied fields", "[control]")

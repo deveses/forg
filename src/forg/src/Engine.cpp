@@ -3,9 +3,11 @@
 #include "forg/Engine.h"
 
 #include "PerformanceCounter.h"
+#include "forg/Input.h"
 #include "forg/rendering/IRenderDevice.h"
 #include "forg/rendering/IRenderer.h"
 #include "forg/rendering/Camera.h"
+#include "forg/rendering/CameraOrbitController.h"
 #include "forg/scene/Scene.h"
 #include "forg/control/SceneControl.h"
 #include "forg/net/CommandQueue.h"
@@ -250,6 +252,7 @@ struct Engine::Impl
     PerformanceCounter frameClock;
     PerformanceCounter fpsClock;
     forg::Camera camera;
+    forg::CameraOrbitController cameraController;
     Color clearColor = Color(0.75f, 0.75f, 0.75f);
     Light light = Engine::DefaultLight();
     bool lightEnabled = true;
@@ -661,6 +664,36 @@ struct Engine::Impl
         ClearError();
     }
 
+    bool HandleInput(const InputEvent& event)
+    {
+        if (event.Type == InputEventType::PointerDrag)
+        {
+            if (event.Button == InputButton::Left)
+            {
+                cameraController.OrbitPixels(camera, event.DeltaX,
+                                             event.DeltaY);
+                ClearError();
+                return true;
+            }
+            if (event.Button == InputButton::Right)
+            {
+                cameraController.TruckPixels(camera, event.DeltaX,
+                                             event.DeltaY);
+                ClearError();
+                return true;
+            }
+        }
+        else if (event.Type == InputEventType::Scroll)
+        {
+            cameraController.ZoomLines(camera, event.ScrollDelta);
+            ClearError();
+            return true;
+        }
+
+        SetError("Unsupported input event");
+        return false;
+    }
+
     void SetClearColor(const Color& color) { clearColor = color; }
 
     bool SetLight(uint index, const Light& nextLight)
@@ -720,6 +753,11 @@ struct Engine::Impl
         ctx.light = &light;
         ctx.clearColor = &clearColor;
         ctx.device = device.Get();
+        ctx.inputHandler = [](const InputEvent& event, void* userData)
+        {
+            return static_cast<Impl*>(userData)->HandleInput(event);
+        };
+        ctx.inputUserData = this;
         return control::DispatchCommand(ctx, cmd);
     }
 
@@ -805,6 +843,11 @@ bool Engine::Render() { return m_impl->Render(*this); }
 bool Engine::Frame() { return m_impl->Frame(*this); }
 
 void Engine::Resize(uint width, uint height) { m_impl->Resize(width, height); }
+
+bool Engine::HandleInput(const InputEvent& event)
+{
+    return m_impl->HandleInput(event);
+}
 
 void Engine::SetClearColor(const Color& color) { m_impl->SetClearColor(color); }
 

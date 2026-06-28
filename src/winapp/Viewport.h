@@ -13,8 +13,6 @@ class Viewport
     forg::Engine* m_engine;
     forg::IRenderDevice* m_device;
 
-    forg::CameraOrbitController m_camera_controller;
-
     forg::Font* m_font;
     forg::ui::CUIDialog m_Dialog;
 

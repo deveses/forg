@@ -422,8 +422,9 @@ void Viewport::OnMouseWheel(UINT nFlags, POINTS point, int delta)
     UNREFERENCED_PARAMETER(nFlags);
     UNREFERENCED_PARAMETER(point);
 
-    m_camera_controller.ZoomLines(m_engine->Camera(),
-                                  static_cast<float>(delta) / WHEEL_DELTA);
+    m_engine->HandleInput({forg::InputEventType::Scroll,
+                           forg::InputButton::None, 0.0f, 0.0f,
+                           static_cast<float>(delta) / WHEEL_DELTA});
     Invalidate(0);
 }
 
@@ -447,11 +448,13 @@ void Viewport::OnMouseMove(UINT nFlags, POINTS point)
 
     if (nFlags & MK_LBUTTON)
     {
-        m_camera_controller.OrbitPixels(m_engine->Camera(), dx, dy);
+        m_engine->HandleInput({forg::InputEventType::PointerDrag,
+                               forg::InputButton::Left, dx, dy, 0.0f});
     }
     else if (nFlags & MK_RBUTTON)
     {
-        m_camera_controller.TruckPixels(m_engine->Camera(), dx, dy);
+        m_engine->HandleInput({forg::InputEventType::PointerDrag,
+                               forg::InputButton::Right, dx, dy, 0.0f});
     }
 
     // UpdateWindow();

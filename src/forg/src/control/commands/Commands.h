@@ -12,6 +12,7 @@
 namespace forg::control {
 
 std::string DispatchCamera(SceneControlContext& ctx, const net::Command& cmd);
+std::string DispatchInput(SceneControlContext& ctx, const net::Command& cmd);
 std::string DispatchMesh(SceneControlContext& ctx, const net::Command& cmd);
 std::string DispatchScene(SceneControlContext& ctx, const net::Command& cmd);
 

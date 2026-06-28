@@ -9,6 +9,7 @@
 #include <string>
 
 #include "base.h"
+#include "Input.h"
 #include "math/Matrix4.h"
 #include "net/Command.h"
 #include "rendering/Camera.h"
@@ -19,15 +20,19 @@
 
 namespace forg::control {
 
+using InputHandler = bool (*)(const forg::InputEvent& event, void* userData);
+
 /// Pointers to the mutable scene state a command may touch. The application
 /// owns the objects; this struct is just a non-owning view passed per call.
 struct SceneControlContext
 {
-    forg::Camera* camera;
-    forg::scene::Model* model;   // optional active renderable model
-    forg::Light* light;          // the app's light
-    forg::Color* clearColor;     // the app's clear color
-    forg::IRenderDevice* device; // needed to build/load meshes
+    forg::Camera* camera = nullptr;
+    forg::scene::Model* model = nullptr;       // optional active renderable model
+    forg::Light* light = nullptr;              // the app's light
+    forg::Color* clearColor = nullptr;         // the app's clear color
+    forg::IRenderDevice* device = nullptr;     // needed to build/load meshes
+    InputHandler inputHandler = nullptr;       // optional input event sink
+    void* inputUserData = nullptr;
 };
 
 /// Executes one command against the scene and returns a JSON response body.

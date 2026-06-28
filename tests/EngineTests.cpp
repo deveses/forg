@@ -1,6 +1,9 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include "forg/Engine.h"
+#include "forg/Input.h"
+#include "forg/math/Vector3.h"
 #include "forg/rendering/Camera.h"
 #include "forg/scene/Scene.h"
 #include "forg/scene/SceneNode.h"
@@ -8,6 +11,8 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+
+using Catch::Approx;
 
 namespace {
 
@@ -61,6 +66,60 @@ TEST_CASE("Engine owns a stable active camera", "[engine]")
     REQUIRE(&engine.Camera() == &camera);
     REQUIRE(engine.Camera().get_ScreenWidth() == 320.0f);
     REQUIRE(engine.Camera().get_ScreenHeight() == 200.0f);
+}
+
+TEST_CASE("Engine handles left-drag input as camera orbit", "[engine][input]")
+{
+    forg::Engine engine;
+
+    const forg::math::Vector3 before = engine.Camera().get_Position();
+
+    REQUIRE(engine.HandleInput({forg::InputEventType::PointerDrag,
+                                forg::InputButton::Left, 10.0f, 0.0f,
+                                0.0f}));
+
+    REQUIRE(engine.Camera().get_Position().X != Approx(before.X));
+    REQUIRE(engine.Camera().get_Target().X == Approx(0.0f));
+    REQUIRE(std::string(engine.LastError()).empty());
+}
+
+TEST_CASE("Engine handles right-drag input as camera truck", "[engine][input]")
+{
+    forg::Engine engine;
+
+    REQUIRE(engine.HandleInput({forg::InputEventType::PointerDrag,
+                                forg::InputButton::Right, 10.0f, 20.0f,
+                                0.0f}));
+
+    REQUIRE(engine.Camera().get_Position().X == Approx(-0.1f));
+    REQUIRE(engine.Camera().get_Position().Y == Approx(0.2f));
+    REQUIRE(engine.Camera().get_Target().X == Approx(-0.1f));
+    REQUIRE(engine.Camera().get_Target().Y == Approx(0.2f));
+    REQUIRE(std::string(engine.LastError()).empty());
+}
+
+TEST_CASE("Engine handles scroll input as camera zoom", "[engine][input]")
+{
+    forg::Engine engine;
+
+    REQUIRE(engine.HandleInput({forg::InputEventType::Scroll,
+                                forg::InputButton::None, 0.0f, 0.0f, 1.0f}));
+
+    REQUIRE(engine.Camera().get_Position().Z == Approx(4.7f));
+    REQUIRE(engine.Camera().get_Target().Z == Approx(0.0f));
+    REQUIRE(std::string(engine.LastError()).empty());
+}
+
+TEST_CASE("Engine rejects unsupported input combinations", "[engine][input]")
+{
+    forg::Engine engine;
+
+    REQUIRE_FALSE(engine.HandleInput({forg::InputEventType::PointerDrag,
+                                      forg::InputButton::Middle, 1.0f, 1.0f,
+                                      0.0f}));
+
+    REQUIRE(std::string(engine.LastError()).find("Unsupported input") !=
+            std::string::npos);
 }
 
 TEST_CASE("Engine LoadConfig reads renderer driver and window size", "[engine]")

@@ -6,6 +6,7 @@
 #endif
 
 #include "forg/base.h"
+#include "forg/Input.h"
 #include "forg/rendering/Color.h"
 #include "forg/rendering/Light.h"
 
@@ -71,6 +72,7 @@ class FORG_API Engine
     bool Render();
     bool Frame();
     void Resize(uint width, uint height);
+    bool HandleInput(const InputEvent& event);
     void SetClearColor(const Color& color);
     const Color& ClearColor() const;
     void Shutdown();

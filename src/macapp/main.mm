@@ -33,7 +33,6 @@ struct AppSettings
 {
     AppSettings m_settings;
     forg::Engine m_engine;
-    forg::CameraOrbitController m_camera_controller;
 
     NSWindow* m_window;
     NSView* m_view;
@@ -144,26 +143,27 @@ struct AppSettings
                                      }];
 }
 
-// Maps mouse/scroll deltas onto the existing Camera movement primitives.
+// Maps mouse/scroll deltas onto the engine's normalized input API.
 - (void)handleCameraEvent:(NSEvent*)event
 {
     switch (event.type)
     {
     case NSEventTypeLeftMouseDragged:
-        m_camera_controller.OrbitPixels(m_engine.Camera(),
-                                        (float)event.deltaX,
-                                        (float)event.deltaY);
+        m_engine.HandleInput({forg::InputEventType::PointerDrag,
+                              forg::InputButton::Left, (float)event.deltaX,
+                              (float)event.deltaY, 0.0f});
         break;
 
     case NSEventTypeRightMouseDragged:
-        m_camera_controller.TruckPixels(m_engine.Camera(),
-                                        (float)event.deltaX,
-                                        (float)event.deltaY);
+        m_engine.HandleInput({forg::InputEventType::PointerDrag,
+                              forg::InputButton::Right, (float)event.deltaX,
+                              (float)event.deltaY, 0.0f});
         break;
 
     case NSEventTypeScrollWheel:
-        m_camera_controller.ZoomLines(m_engine.Camera(),
-                                      (float)event.scrollingDeltaY);
+        m_engine.HandleInput({forg::InputEventType::Scroll,
+                              forg::InputButton::None, 0.0f, 0.0f,
+                              (float)event.scrollingDeltaY});
         break;
 
     default:
