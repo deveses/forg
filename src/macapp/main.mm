@@ -243,49 +243,31 @@ static bool LoadSettings(AppSettings& settings)
         return false;
     }
 
-    if (forg::script::yaml::YAMLNode* yaml_node = yaml_doc->FindNode("window"))
+    if (const char* width = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "window", "width"))
+        settings.winWidth = atoi(width);
+
+    if (const char* height = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "window", "height"))
+        settings.winHeight = atoi(height);
+
+    if (const char* posx = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "window", "posx"))
+        settings.winX = atoi(posx);
+
+    if (const char* posy = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "window", "posy"))
+        settings.winY = atoi(posy);
+
+    if (const char* enabled = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "controlserver", "enabled"))
     {
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("width"))
-        {
-            settings.winWidth = atoi(yaml_att->GetContent().c_str());
-        }
-
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("height"))
-        {
-            settings.winHeight = atoi(yaml_att->GetContent().c_str());
-        }
-
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("posx"))
-        {
-            settings.winX = atoi(yaml_att->GetContent().c_str());
-        }
-
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("posy"))
-        {
-            settings.winY = atoi(yaml_att->GetContent().c_str());
-        }
+        settings.controlEnabled = std::string(enabled) == "true";
     }
 
-    if (forg::script::yaml::YAMLNode* yaml_node =
-            yaml_doc->FindNode("controlserver"))
-    {
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("enabled"))
-        {
-            settings.controlEnabled =
-                (std::string(yaml_att->GetContent().c_str()) == "true");
-        }
-
-        if (forg::script::yaml::YAMLNode* yaml_att =
-                yaml_node->FindAttribute("port"))
-        {
-            settings.controlPort = atoi(yaml_att->GetContent().c_str());
-        }
-    }
+    if (const char* port = forg::script::yaml::FindNodeAttributeValue(
+            yaml_doc, "controlserver", "port"))
+        settings.controlPort = atoi(port);
 
     return true;
 }

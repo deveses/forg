@@ -136,6 +136,47 @@ bool HasBalancedQuotes(const std::string& text)
 
 } // namespace
 
+const char* FindAttributeValue(const YAMLNode* _node, const char* _name)
+{
+    if (_node == nullptr || _name == nullptr)
+        return nullptr;
+
+    const forg::core::string name(_name);
+    const char* value = nullptr;
+
+    ForEachAttribute(_node,
+                     [&](const YAMLNode& attribute)
+                     {
+                         if (value == nullptr && attribute.GetName() == name)
+                             value = attribute.GetContent().c_str();
+                     });
+
+    return value;
+}
+
+const char* FindNodeAttributeValue(const YAMLDocument* _document,
+                                   const char* _node_name,
+                                   const char* _attribute_name)
+{
+    if (_document == nullptr || _node_name == nullptr ||
+        _attribute_name == nullptr)
+    {
+        return nullptr;
+    }
+
+    const forg::core::string node_name(_node_name);
+    const char* value = nullptr;
+
+    ForEachNode(_document,
+                [&](const YAMLNode& node)
+                {
+                    if (value == nullptr && node.GetName() == node_name)
+                        value = FindAttributeValue(&node, _attribute_name);
+                });
+
+    return value;
+}
+
 YAMLParser::YAMLParser()
 {
     m_doc = nullptr;

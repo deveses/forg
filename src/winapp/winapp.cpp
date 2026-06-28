@@ -90,35 +90,29 @@ AppConfig LoadConfig()
     if (!document)
         return config;
 
-    if (forg::script::yaml::YAMLNode* node = document->FindNode("window"))
-    {
-        if (forg::script::yaml::YAMLNode* width = node->FindAttribute("width"))
-            config.Width = atoi(width->GetContent().c_str());
+    if (const char* width = forg::script::yaml::FindNodeAttributeValue(
+            document, "window", "width"))
+        config.Width = atoi(width);
 
-        if (forg::script::yaml::YAMLNode* height =
-                node->FindAttribute("height"))
-            config.Height = atoi(height->GetContent().c_str());
+    if (const char* height = forg::script::yaml::FindNodeAttributeValue(
+            document, "window", "height"))
+        config.Height = atoi(height);
 
-        if (forg::script::yaml::YAMLNode* posx = node->FindAttribute("posx"))
-            config.X = atoi(posx->GetContent().c_str());
+    if (const char* posx = forg::script::yaml::FindNodeAttributeValue(
+            document, "window", "posx"))
+        config.X = atoi(posx);
 
-        if (forg::script::yaml::YAMLNode* posy = node->FindAttribute("posy"))
-            config.Y = atoi(posy->GetContent().c_str());
-    }
+    if (const char* posy = forg::script::yaml::FindNodeAttributeValue(
+            document, "window", "posy"))
+        config.Y = atoi(posy);
 
-    if (forg::script::yaml::YAMLNode* node =
-            document->FindNode("controlserver"))
-    {
-        if (forg::script::yaml::YAMLNode* enabled =
-                node->FindAttribute("enabled"))
-        {
-            config.ControlEnabled =
-                std::string(enabled->GetContent().c_str()) == "true";
-        }
+    if (const char* enabled = forg::script::yaml::FindNodeAttributeValue(
+            document, "controlserver", "enabled"))
+        config.ControlEnabled = std::string(enabled) == "true";
 
-        if (forg::script::yaml::YAMLNode* port = node->FindAttribute("port"))
-            config.ControlPort = atoi(port->GetContent().c_str());
-    }
+    if (const char* port = forg::script::yaml::FindNodeAttributeValue(
+            document, "controlserver", "port"))
+        config.ControlPort = atoi(port);
 
     return config;
 }

@@ -326,40 +326,29 @@ struct Engine::Impl
 
         EngineConfig nextConfig;
 
-        if (script::yaml::YAMLNode* rendererNode =
-                document->FindNode("renderer"))
+        if (const char* driver = script::yaml::FindNodeAttributeValue(
+                document, "renderer", "driver"))
+            nextConfig.RendererDriver = driver;
+
+        if (const char* width = script::yaml::FindNodeAttributeValue(
+                document, "window", "width"))
         {
-            if (script::yaml::YAMLNode* driver =
-                    rendererNode->FindAttribute("driver"))
+            if (!ParsePositiveUint(width, nextConfig.BackBufferWidth))
             {
-                nextConfig.RendererDriver = driver->GetContent().c_str();
+                SetError("Invalid window.width in config");
+                parser.Close();
+                return false;
             }
         }
 
-        if (script::yaml::YAMLNode* windowNode = document->FindNode("window"))
+        if (const char* height = script::yaml::FindNodeAttributeValue(
+                document, "window", "height"))
         {
-            if (script::yaml::YAMLNode* width =
-                    windowNode->FindAttribute("width"))
+            if (!ParsePositiveUint(height, nextConfig.BackBufferHeight))
             {
-                if (!ParsePositiveUint(width->GetContent().c_str(),
-                                       nextConfig.BackBufferWidth))
-                {
-                    SetError("Invalid window.width in config");
-                    parser.Close();
-                    return false;
-                }
-            }
-
-            if (script::yaml::YAMLNode* height =
-                    windowNode->FindAttribute("height"))
-            {
-                if (!ParsePositiveUint(height->GetContent().c_str(),
-                                       nextConfig.BackBufferHeight))
-                {
-                    SetError("Invalid window.height in config");
-                    parser.Close();
-                    return false;
-                }
+                SetError("Invalid window.height in config");
+                parser.Close();
+                return false;
             }
         }
 

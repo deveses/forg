@@ -53,6 +53,23 @@ Node* Node::FindAttribute(const core::string& _name)
     return nullptr;
 }
 
+const Node* Node::FindAttribute(const core::string& _name) const
+{
+    const Node* n = m_attributes;
+
+    while (n)
+    {
+        if (n->GetName() == _name)
+        {
+            return n;
+        }
+
+        n = n->GetNext();
+    }
+
+    return nullptr;
+}
+
 Document::Document() = default;
 
 Document::~Document() = default;
@@ -67,6 +84,34 @@ Node* Document::FindNode(const core::string& _name)
     while (!stack.empty())
     {
         Node* n = stack.back();
+        stack.pop_back();
+
+        if (n->GetName() == _name)
+        {
+            return n;
+        }
+
+        n = n->GetChildren();
+        while (n)
+        {
+            stack.push_back(n);
+            n = n->GetNext();
+        }
+    }
+
+    return nullptr;
+}
+
+const Node* Document::FindNode(const core::string& _name) const
+{
+    std::vector<const Node*> stack;
+
+    if (m_root)
+        stack.push_back(m_root.get());
+
+    while (!stack.empty())
+    {
+        const Node* n = stack.back();
         stack.pop_back();
 
         if (n->GetName() == _name)
