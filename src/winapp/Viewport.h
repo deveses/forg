@@ -14,6 +14,7 @@ class Viewport
     forg::IRenderDevice* m_device;
 
     forg::scene::MeshNode* m_model_node;
+    forg::CameraOrbitController m_camera_controller;
 
     forg::Font* m_font;
     forg::ui::CUIDialog m_Dialog;

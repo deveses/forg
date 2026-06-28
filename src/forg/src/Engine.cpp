@@ -7,7 +7,10 @@
 #include "forg/rendering/IRenderer.h"
 #include "forg/rendering/Camera.h"
 #include "forg/scene/Scene.h"
+#include "forg/control/SceneControl.h"
+#include "forg/scene/Model.h"
 #include "forg/script/yaml/YAMLParser.h"
+#include "forg/script/yaml/YAMLSerializer.h"
 
 #include <charconv>
 #include <sstream>
@@ -246,6 +249,9 @@ struct Engine::Impl
     PerformanceCounter fpsClock;
     forg::Camera camera;
     Color clearColor = Color(0.75f, 0.75f, 0.75f);
+    Light light = Engine::DefaultLight();
+    bool lightEnabled = true;
+    scene::Model* activeModel = nullptr;
     uint fpsFrameCounter = 0;
     EngineUpdateCallback updateCallback = nullptr;
     void* updateUserData = nullptr;
@@ -450,6 +456,48 @@ struct Engine::Impl
         return true;
     }
 
+    bool LoadScene(std::string_view filename)
+    {
+        if (!RequireInitialized())
+            return false;
+
+        if (filename.empty())
+        {
+            SetError("Scene filename is empty");
+            return false;
+        }
+
+        io::YAMLSerializer serializer;
+        if (!serializer.OpenRead(filename))
+        {
+            std::ostringstream stream;
+            stream << "Unable to open scene <" << std::string(filename) << ">";
+            SetError(stream.str());
+            return false;
+        }
+
+        if (!scene.Load(serializer))
+        {
+            std::ostringstream stream;
+            stream << "Unable to load scene <" << std::string(filename) << ">";
+            SetError(stream.str());
+            return false;
+        }
+
+        if (!scene.LoadResources(device.Get()))
+        {
+            std::ostringstream stream;
+            stream << "Unable to load scene resources <"
+                   << std::string(filename) << ">";
+            SetError(stream.str());
+            return false;
+        }
+
+        activeModel = nullptr;
+        ClearError();
+        return true;
+    }
+
     bool Update(double deltaSeconds, Engine& engine)
     {
         if (!RequireInitialized())
@@ -488,11 +536,16 @@ struct Engine::Impl
                             1.0f, 0);
         renderDevice->BeginScene();
 
+        if (lightEnabled)
+            renderDevice->SetLight(0, &light);
+        renderDevice->LightEnable(0, lightEnabled);
+        renderDevice->SetRenderState(RenderStates_Lighting, lightEnabled);
+
+        scene.Render(renderDevice);
+
         bool callbackOk = true;
         if (renderCallback != nullptr)
             callbackOk = renderCallback(engine, renderUserData);
-        else
-            scene.Render(renderDevice);
 
         renderDevice->EndScene();
         renderDevice->Present();
@@ -556,6 +609,66 @@ struct Engine::Impl
 
     void SetClearColor(const Color& color) { clearColor = color; }
 
+    bool SetLight(uint index, const Light& nextLight)
+    {
+        if (index != 0)
+        {
+            SetError("Only light 0 is supported");
+            return false;
+        }
+
+        light = nextLight;
+        if (device.Get() != nullptr)
+        {
+            device.Get()->SetLight(index, &light);
+            device.Get()->LightEnable(index, lightEnabled);
+        }
+
+        ClearError();
+        return true;
+    }
+
+    bool EnableLight(uint index, bool enabled)
+    {
+        if (index != 0)
+        {
+            SetError("Only light 0 is supported");
+            return false;
+        }
+
+        lightEnabled = enabled;
+        if (device.Get() != nullptr)
+            device.Get()->LightEnable(index, lightEnabled);
+
+        ClearError();
+        return true;
+    }
+
+    Light* GetLight(uint index)
+    {
+        if (index != 0)
+            return nullptr;
+        return &light;
+    }
+
+    const Light* GetLight(uint index) const
+    {
+        if (index != 0)
+            return nullptr;
+        return &light;
+    }
+
+    std::string DispatchCommand(const net::Command& cmd)
+    {
+        control::SceneControlContext ctx;
+        ctx.camera = &camera;
+        ctx.model = activeModel;
+        ctx.light = &light;
+        ctx.clearColor = &clearColor;
+        ctx.device = device.Get();
+        return control::DispatchCommand(ctx, cmd);
+    }
+
     void CleanupAfterInitializeFailure()
     {
         const std::string primaryError = lastError;
@@ -568,6 +681,7 @@ struct Engine::Impl
         std::string shutdownError;
 
         scene.ClearNodes();
+        activeModel = nullptr;
 
         device.Reset();
 
@@ -607,6 +721,11 @@ bool Engine::Initialize(HWIN window, std::string_view configFilename)
     return Initialize(window);
 }
 
+bool Engine::LoadScene(std::string_view filename)
+{
+    return m_impl->LoadScene(filename);
+}
+
 bool Engine::Update(double deltaSeconds)
 {
     return m_impl->Update(deltaSeconds, *this);
@@ -620,6 +739,8 @@ void Engine::Resize(uint width, uint height) { m_impl->Resize(width, height); }
 
 void Engine::SetClearColor(const Color& color) { m_impl->SetClearColor(color); }
 
+const Color& Engine::ClearColor() const { return m_impl->clearColor; }
+
 void Engine::Shutdown() { m_impl->Shutdown(); }
 
 void Engine::SetUpdateCallback(EngineUpdateCallback callback, void* userData)
@@ -632,6 +753,53 @@ void Engine::SetRenderCallback(EngineRenderCallback callback, void* userData)
 {
     m_impl->renderCallback = callback;
     m_impl->renderUserData = userData;
+}
+
+Light Engine::DefaultLight()
+{
+    Light light = {};
+    light.Type = LightType::Point;
+    light.Diffuse.r = 1.0f;
+    light.Diffuse.g = 1.0f;
+    light.Diffuse.b = 0.0f;
+    light.Ambient.r = 1.0f;
+    light.Ambient.g = 1.0f;
+    light.Ambient.b = 1.0f;
+    light.Specular.r = 1.0f;
+    light.Specular.g = 1.0f;
+    light.Specular.b = 1.0f;
+    light.Position.X = 5.0f;
+    light.Position.Y = 5.0f;
+    light.Position.Z = -1.0f;
+    light.Attenuation0 = 1.0f;
+    light.Range = 1000.0f;
+    return light;
+}
+
+bool Engine::SetLight(uint index, const Light& light)
+{
+    return m_impl->SetLight(index, light);
+}
+
+bool Engine::EnableLight(uint index, bool enabled)
+{
+    return m_impl->EnableLight(index, enabled);
+}
+
+Light* Engine::GetLight(uint index) { return m_impl->GetLight(index); }
+
+const Light* Engine::GetLight(uint index) const
+{
+    return m_impl->GetLight(index);
+}
+
+void Engine::SetActiveModel(scene::Model* model) { m_impl->activeModel = model; }
+
+scene::Model* Engine::ActiveModel() const { return m_impl->activeModel; }
+
+std::string Engine::DispatchCommand(const net::Command& cmd)
+{
+    return m_impl->DispatchCommand(cmd);
 }
 
 scene::Scene& Engine::Scene() { return m_impl->scene; }

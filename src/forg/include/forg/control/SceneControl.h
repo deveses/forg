@@ -24,7 +24,7 @@ namespace forg::control {
 struct SceneControlContext
 {
     forg::Camera* camera;
-    forg::scene::Model* model;   // the app's current renderable model
+    forg::scene::Model* model;   // optional active renderable model
     forg::Light* light;          // the app's light
     forg::Color* clearColor;     // the app's clear color
     forg::IRenderDevice* device; // needed to build/load meshes

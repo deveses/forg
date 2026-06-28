@@ -180,6 +180,7 @@ list(TRANSFORM math_sources PREPEND "src/math/")
 ###############################################################################
 set(rendering_sources
     Camera.cpp
+    CameraOrbitController.cpp
     Color.cpp
     Font.cpp
     IRenderDevice.cpp

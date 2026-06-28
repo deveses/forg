@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #include "rendering/Camera.h"
+#include "rendering/CameraOrbitController.h"
 #include "rendering/Color.h"
 #include "rendering/IIndexBuffer.h"
 #include "rendering/IRenderDevice.h"
