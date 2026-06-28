@@ -27,11 +27,11 @@ using InputHandler = bool (*)(const forg::InputEvent& event, void* userData);
 struct SceneControlContext
 {
     forg::Camera* camera = nullptr;
-    forg::scene::Model* model = nullptr;       // optional active renderable model
-    forg::Light* light = nullptr;              // the app's light
-    forg::Color* clearColor = nullptr;         // the app's clear color
-    forg::IRenderDevice* device = nullptr;     // needed to build/load meshes
-    InputHandler inputHandler = nullptr;       // optional input event sink
+    forg::scene::Model* model = nullptr;   // optional active renderable model
+    forg::Light* light = nullptr;          // the app's light
+    forg::Color* clearColor = nullptr;     // the app's clear color
+    forg::IRenderDevice* device = nullptr; // needed to build/load meshes
+    InputHandler inputHandler = nullptr;   // optional input event sink
     void* inputUserData = nullptr;
 };
 

@@ -754,9 +754,7 @@ struct Engine::Impl
         ctx.clearColor = &clearColor;
         ctx.device = device.Get();
         ctx.inputHandler = [](const InputEvent& event, void* userData)
-        {
-            return static_cast<Impl*>(userData)->HandleInput(event);
-        };
+        { return static_cast<Impl*>(userData)->HandleInput(event); };
         ctx.inputUserData = this;
         return control::DispatchCommand(ctx, cmd);
     }
@@ -905,7 +903,10 @@ const Light* Engine::GetLight(uint index) const
     return m_impl->GetLight(index);
 }
 
-void Engine::SetActiveModel(scene::Model* model) { m_impl->activeModel = model; }
+void Engine::SetActiveModel(scene::Model* model)
+{
+    m_impl->activeModel = model;
+}
 
 scene::Model* Engine::ActiveModel() const { return m_impl->activeModel; }
 

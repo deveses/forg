@@ -21,7 +21,8 @@ void CameraOrbitController::TruckPixels(Camera& camera, float dx,
 void CameraOrbitController::ZoomLines(Camera& camera, float delta) const
 {
     float dolly = delta * ZoomSpeed;
-    const float distance = (camera.get_Target() - camera.get_Position()).Length();
+    const float distance =
+        (camera.get_Target() - camera.get_Position()).Length();
     if (dolly > distance - MinTargetDistance)
         dolly = distance - MinTargetDistance;
 

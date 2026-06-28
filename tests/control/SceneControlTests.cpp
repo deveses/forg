@@ -79,7 +79,8 @@ TEST_CASE("clear.color updates the clear color", "[control]")
     REQUIRE(scene.clearColor.b == 0.75f);
 }
 
-TEST_CASE("input.drag dispatches a pointer drag input event", "[control][input]")
+TEST_CASE("input.drag dispatches a pointer drag input event",
+          "[control][input]")
 {
     Scene scene;
     SceneControlContext ctx = scene.context();
@@ -119,11 +120,11 @@ TEST_CASE("input commands reject missing or invalid parameters",
     Scene scene;
     SceneControlContext ctx = scene.context();
 
-    REQUIRE(DispatchCommand(ctx, CommandFromRequest("/input/drag",
-                                                   "button=left&dx=3")) ==
+    REQUIRE(DispatchCommand(
+                ctx, CommandFromRequest("/input/drag", "button=left&dx=3")) ==
             "{\"ok\":false,\"error\":\"badparam\"}");
     REQUIRE(DispatchCommand(ctx, CommandFromRequest("/input/drag",
-                                                   "button=nope&dx=3&dy=4")) ==
+                                                    "button=nope&dx=3&dy=4")) ==
             "{\"ok\":false,\"error\":\"badparam\"}");
     REQUIRE(DispatchCommand(ctx, CommandFromRequest("/input/scroll", "")) ==
             "{\"ok\":false,\"error\":\"badparam\"}");

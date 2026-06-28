@@ -1,7 +1,8 @@
 #include "net/HttpControlSocketServer.h"
 
 // base.h (force-included via the PCH) defines IN, OUT and null as macros that
-// clash with platform socket headers. Drop them before including system headers.
+// clash with platform socket headers. Drop them before including system
+// headers.
 #ifdef IN
 #undef IN
 #endif
@@ -50,8 +51,8 @@ class PosixSocketServer : public PlatformSocketServer
             return false;
         }
 
-        if (::bind(listenFd, reinterpret_cast<sockaddr*>(&addr),
-                   sizeof(addr)) < 0 ||
+        if (::bind(listenFd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr)) <
+                0 ||
             ::listen(listenFd, 4) < 0)
         {
             ::close(listenFd);

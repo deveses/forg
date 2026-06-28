@@ -75,8 +75,7 @@ TEST_CASE("Engine handles left-drag input as camera orbit", "[engine][input]")
     const forg::math::Vector3 before = engine.Camera().get_Position();
 
     REQUIRE(engine.HandleInput({forg::InputEventType::PointerDrag,
-                                forg::InputButton::Left, 10.0f, 0.0f,
-                                0.0f}));
+                                forg::InputButton::Left, 10.0f, 0.0f, 0.0f}));
 
     REQUIRE(engine.Camera().get_Position().X != Approx(before.X));
     REQUIRE(engine.Camera().get_Target().X == Approx(0.0f));
@@ -88,8 +87,7 @@ TEST_CASE("Engine handles right-drag input as camera truck", "[engine][input]")
     forg::Engine engine;
 
     REQUIRE(engine.HandleInput({forg::InputEventType::PointerDrag,
-                                forg::InputButton::Right, 10.0f, 20.0f,
-                                0.0f}));
+                                forg::InputButton::Right, 10.0f, 20.0f, 0.0f}));
 
     REQUIRE(engine.Camera().get_Position().X == Approx(-0.1f));
     REQUIRE(engine.Camera().get_Position().Y == Approx(0.2f));
@@ -114,9 +112,9 @@ TEST_CASE("Engine rejects unsupported input combinations", "[engine][input]")
 {
     forg::Engine engine;
 
-    REQUIRE_FALSE(engine.HandleInput({forg::InputEventType::PointerDrag,
-                                      forg::InputButton::Middle, 1.0f, 1.0f,
-                                      0.0f}));
+    REQUIRE_FALSE(
+        engine.HandleInput({forg::InputEventType::PointerDrag,
+                            forg::InputButton::Middle, 1.0f, 1.0f, 0.0f}));
 
     REQUIRE(std::string(engine.LastError()).find("Unsupported input") !=
             std::string::npos);

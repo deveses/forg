@@ -69,9 +69,8 @@ std::string DispatchInput(SceneControlContext& ctx, const Command& cmd)
         if (!TryGetFloat(cmd, "delta", delta))
             return fail("badparam");
 
-        return DispatchInputEvent(
-            ctx, {InputEventType::Scroll, InputButton::None, 0.0f, 0.0f,
-                  delta});
+        return DispatchInputEvent(ctx, {InputEventType::Scroll,
+                                        InputButton::None, 0.0f, 0.0f, delta});
     }
 
     return fail("unknown");

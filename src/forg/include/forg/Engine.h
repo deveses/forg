@@ -24,7 +24,7 @@ class Camera;
 namespace scene {
 class Model;
 class Scene;
-}
+} // namespace scene
 
 namespace net {
 struct Command;
