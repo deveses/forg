@@ -107,6 +107,7 @@ class MetalRenderDevice : public IRenderDevice
     Matrix4 m_world;
     Matrix4 m_view;
     Matrix4 m_proj;
+    ITexture* m_texture0;
 
     // Recorded by Clear(); consumed when the render pass begins.
     Color m_clear_color;

@@ -1,9 +1,75 @@
 #include "gui.h"
 #include "forg_pch.h"
 #include "math/Math.h"
-#include "script/xml/XMLSerializer.h"
+#include "script/yaml/YAMLSerializer.h"
+
+#include <cstring>
 
 namespace forg::ui {
+
+namespace {
+
+bool AddSerializedControl(CUIDialog& dialog, const core::string& type, int id,
+                          int x, int y, int width, int height)
+{
+    if (std::strcmp(type.c_str(), "button") == 0)
+        return dialog.AddButton(id, x, y, width, height) == FORG_OK;
+
+    if (std::strcmp(type.c_str(), "slider") == 0)
+        return dialog.AddSlider(id, x, y, width, height) == FORG_OK;
+
+    if (std::strcmp(type.c_str(), "knob") == 0)
+        return dialog.AddKnob(id, x, y, width, height) == FORG_OK;
+
+    if (std::strcmp(type.c_str(), "combobox") == 0)
+        return dialog.AddComboBox(id, x, y, width, height) == FORG_OK;
+
+    return false;
+}
+
+bool LoadSerializedControls(CUIDialog& dialog,
+                            forg::io::ISerializer& serializer)
+{
+    if (!serializer.BeginObject("dialog"))
+        return false;
+
+    uint controlCount = 0;
+    if (!serializer.BeginArray("controls", controlCount))
+    {
+        serializer.EndObject();
+        return false;
+    }
+
+    for (uint i = 0; i < controlCount; ++i)
+    {
+        if (!serializer.BeginObject("control"))
+            return false;
+
+        core::string type;
+        int id = 0;
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
+
+        const bool loaded =
+            serializer.Value("type", type) && serializer.Value("id", id) &&
+            serializer.Value("x", x) && serializer.Value("y", y) &&
+            serializer.Value("width", width) &&
+            serializer.Value("height", height) &&
+            AddSerializedControl(dialog, type, id, x, y, width, height);
+
+        if (!serializer.EndObject() || !loaded)
+            return false;
+    }
+
+    if (!serializer.EndArray())
+        return false;
+
+    return serializer.EndObject();
+}
+
+} // namespace
 
 // #define FORG_UI_BUTTON_RECT {0, 0, 136, 54}
 #define FORG_UI_BUTTON_RECT_BG {128, 0, 128 + 50, 17}
@@ -244,19 +310,20 @@ bool CUIDialog::Init(IRenderDevice* _device, const char* _filename)
 
 bool CUIDialog::Load(const char* _filename)
 {
-    forg::io::XMLSerializer xmlfile;
+    forg::io::YAMLSerializer yamlfile;
 
-    if (xmlfile.Open(_filename))
-    {
-        Serialize(&xmlfile);
+    if (!yamlfile.OpenRead(_filename))
+        return false;
 
-        return true;
-    }
-
-    return false;
+    m_controls.clear();
+    return LoadSerializedControls(*this, yamlfile);
 }
 
-void CUIDialog::Serialize(forg::io::ISerializer*) {}
+void CUIDialog::Serialize(forg::io::ISerializer* _serializer)
+{
+    if (_serializer != nullptr && _serializer->IsReading())
+        LoadSerializedControls(*this, *_serializer);
+}
 
 void CUIDialog::Render()
 {

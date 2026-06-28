@@ -103,18 +103,24 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
     if (!m_engine->LoadScene("scene.yml"))
         return 1;
 
-    forg::FontDescription fd = {12, 0, 0, 1, false, 0, 0, 0, 0, (""),
-                                //"../bin/test.ttf"
-                                ("c:/windows/fonts/arial.ttf")};
+#ifdef FORG_USE_FREETYPE
+    forg::FontDescription fd = {12,
+                                0,
+                                0,
+                                1,
+                                false,
+                                0,
+                                0,
+                                0,
+                                0,
+                                (""),
+                                ("data/fonts/Roboto-Regular.ttf")};
     m_font = forg::Font::CreateIndirect(m_device, &fd);
+#endif
 
     // m_Dialog.Init(m_device, "../bin/data/ui/dxutcontrols.dds");
     m_Dialog.Init(m_device, "data/ui/debug_texture2.dds");
-    m_Dialog.Load("data/ui/dialog.xml");
-    m_Dialog.AddButton(0, 100, 15, 50, 30);
-    m_Dialog.AddSlider(1, 180, 15, 80, 30);
-    m_Dialog.AddKnob(2, 0, 15, 30, 30);
-    m_Dialog.AddComboBox(3, 300, 15, 100, 30);
+    m_Dialog.Load("data/ui/dialog.yml");
 
     UpdateWindow(m_hWnd);
     return 0;
@@ -392,10 +398,12 @@ void Viewport::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
     switch (nChar)
     {
     case VK_DOWN:
-        m_Dialog.GetKnob(2)->SetValue(m_Dialog.GetKnob(2)->GetValue() - 1);
+        if (forg::ui::CUIKnob* knob = m_Dialog.GetKnob(2))
+            knob->SetValue(knob->GetValue() - 1);
         break;
     case VK_UP:
-        m_Dialog.GetKnob(2)->SetValue(m_Dialog.GetKnob(2)->GetValue() + 1);
+        if (forg::ui::CUIKnob* knob = m_Dialog.GetKnob(2))
+            knob->SetValue(knob->GetValue() + 1);
         break;
     }
 

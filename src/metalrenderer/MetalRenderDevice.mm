@@ -26,6 +26,7 @@
 #include <cstdint>
 #include <cstring>
 #include <unordered_map>
+#include <vector>
 
 #include "MetalBuffers.h"
 #include "MetalRenderDevice.h"
@@ -75,6 +76,18 @@ struct VSOut {
     float3 worldNormal;
 };
 
+struct SpriteVSIn {
+    float3 position [[attribute(0)]];
+    float2 uv       [[attribute(2)]];
+    float4 color    [[attribute(3)]];
+};
+
+struct SpriteVSOut {
+    float4 position [[position]];
+    float2 uv;
+    float4 color;
+};
+
 vertex VSOut vs_main(VSIn in [[stage_in]],
                      constant Uniforms& u [[buffer(1)]])
 {
@@ -103,6 +116,24 @@ fragment float4 fs_main(VSOut in [[stage_in]],
     float3 color = d * u.lightDiffuse.rgb * u.lightAmbient.rgb;
     return float4(color, 1.0);
 }
+
+vertex SpriteVSOut vs_sprite(SpriteVSIn in [[stage_in]],
+                             constant Uniforms& u [[buffer(1)]])
+{
+    SpriteVSOut out;
+    out.position = u.mvp * float4(in.position, 1.0);
+    out.uv = in.uv;
+    out.color = in.color.bgra;
+    return out;
+}
+
+fragment float4 fs_sprite(SpriteVSOut in [[stage_in]],
+                          texture2d<float> colorTexture [[texture(0)]])
+{
+    constexpr sampler textureSampler(address::clamp_to_edge,
+                                     filter::linear);
+    return colorTexture.sample(textureSampler, in.uv) * in.color;
+}
 )METAL";
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -116,13 +147,17 @@ struct MetalImpl
     id<MTLLibrary> library = nil;
     id<MTLFunction> vfn = nil;
     id<MTLFunction> ffn = nil;
+    id<MTLFunction> spriteVfn = nil;
+    id<MTLFunction> spriteFfn = nil;
     id<MTLDepthStencilState> depthState = nil;
+    id<MTLDepthStencilState> spriteDepthState = nil;
     id<MTLTexture> depthTexture = nil;
     NSUInteger depthW = 0;
     NSUInteger depthH = 0;
 
     // Render pipelines keyed by a (vertex declaration) fingerprint.
     std::unordered_map<uint64_t, id<MTLRenderPipelineState>> pipelines;
+    id<MTLRenderPipelineState> spritePipeline = nil;
 
     // Live for the duration of one frame (BeginScene -> Present).
     id<CAMetalDrawable> drawable = nil;
@@ -181,12 +216,113 @@ static uint64_t DeclarationFingerprint(const VertexDeclaration& decl)
     return h;
 }
 
+static MTLCullMode CullModeToMetal(uint cull)
+{
+    switch (cull)
+    {
+    case Cull_None:
+        return MTLCullModeNone;
+    case Cull_Clockwise:
+        return MTLCullModeBack;
+    case Cull_CounterClockwise:
+        return MTLCullModeFront;
+    default:
+        return MTLCullModeNone;
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+// Minimal BGRA texture used by Sprite/Font.
+/////////////////////////////////////////////////////////////////////////////////////
+class MetalTexture : public ITexture
+{
+  public:
+    MetalTexture() : m_texture(nil), m_width(0), m_height(0), m_format(0) {}
+
+    ~MetalTexture() override
+    {
+        [m_texture release];
+        m_texture = nil;
+    }
+
+    bool Create(id<MTLDevice> device, uint width, uint height, uint format)
+    {
+        if (device == nil || width == 0 || height == 0)
+            return false;
+
+        MTLPixelFormat pixelFormat = MTLPixelFormatBGRA8Unorm;
+        if (format != Format::A8R8G8B8 && format != Format::X8R8G8B8)
+            return false;
+
+        MTLTextureDescriptor* td =
+            [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat
+                                                               width:width
+                                                              height:height
+                                                           mipmapped:NO];
+        td.usage = MTLTextureUsageShaderRead;
+        td.storageMode = MTLStorageModeShared;
+
+        m_texture = [device newTextureWithDescriptor:td];
+        if (m_texture == nil)
+            return false;
+
+        m_width = width;
+        m_height = height;
+        m_format = format;
+        m_pixels.resize(static_cast<std::size_t>(width) * height * 4);
+        return true;
+    }
+
+    id<MTLTexture> GetMTLTexture() const { return m_texture; }
+
+    int GetLevelDesc(uint level, SurfaceDescription* description) const override
+    {
+        if (level != 0 || description == nullptr)
+            return FORG_INVALID_CALL;
+
+        description->Width = m_width;
+        description->Height = m_height;
+        description->Format = m_format;
+        return FORG_OK;
+    }
+
+    void* LockRect(uint level, uint /*flags*/) override
+    {
+        if (level != 0 || m_pixels.empty())
+            return nullptr;
+
+        return m_pixels.data();
+    }
+
+    int UnlockRect(uint level) override
+    {
+        if (level != 0 || m_texture == nil || m_pixels.empty())
+            return FORG_INVALID_CALL;
+
+        MTLRegion region = MTLRegionMake2D(0, 0, m_width, m_height);
+        [m_texture replaceRegion:region
+                     mipmapLevel:0
+                       withBytes:m_pixels.data()
+                     bytesPerRow:(NSUInteger)m_width * 4];
+        return FORG_OK;
+    }
+
+    uint GetLevelCount() override { return 1; }
+
+  private:
+    id<MTLTexture> m_texture;
+    uint m_width;
+    uint m_height;
+    uint m_format;
+    std::vector<char> m_pixels;
+};
+
 /////////////////////////////////////////////////////////////////////////////////////
 // MetalRenderDevice
 /////////////////////////////////////////////////////////////////////////////////////
 MetalRenderDevice::MetalRenderDevice(HWIN handle)
     : m_window(handle), m_impl(new MetalImpl()), m_width(0), m_height(0),
-      m_clear_color(0.0f, 0.0f, 0.0f, 1.0f), m_clear_z(1.0f),
+      m_texture0(0), m_clear_color(0.0f, 0.0f, 0.0f, 1.0f), m_clear_z(1.0f),
       m_clear_flags(ClearFlags_Target | ClearFlags_ZBuffer),
       m_vdecl(&VertexElement::VertexDeclarationEnd), m_stream0(0),
       m_stream0_offset(0), m_stream0_stride(0), m_indices(0), m_cull(Cull_None),
@@ -201,6 +337,7 @@ MetalRenderDevice::~MetalRenderDevice()
 {
     SetStreamSource(0, 0, 0, 0);
     SetIndices(0);
+    SetTexture(0, 0);
 
     if (m_impl)
     {
@@ -212,8 +349,12 @@ MetalRenderDevice::~MetalRenderDevice()
         }
         m_impl->pipelines.clear();
 
+        [m_impl->spritePipeline release];
         [m_impl->depthTexture release];
+        [m_impl->spriteDepthState release];
         [m_impl->depthState release];
+        [m_impl->spriteFfn release];
+        [m_impl->spriteVfn release];
         [m_impl->ffn release];
         [m_impl->vfn release];
         [m_impl->library release];
@@ -248,6 +389,8 @@ int MetalRenderDevice::Initialize(uint /*width*/, uint /*height*/)
 
     m_impl->vfn = [m_impl->library newFunctionWithName:@"vs_main"];
     m_impl->ffn = [m_impl->library newFunctionWithName:@"fs_main"];
+    m_impl->spriteVfn = [m_impl->library newFunctionWithName:@"vs_sprite"];
+    m_impl->spriteFfn = [m_impl->library newFunctionWithName:@"fs_sprite"];
 
     MTLDepthStencilDescriptor* dsd = [[MTLDepthStencilDescriptor alloc] init];
     dsd.depthCompareFunction =
@@ -257,6 +400,14 @@ int MetalRenderDevice::Initialize(uint /*width*/, uint /*height*/)
     m_impl->depthState =
         [m_impl->device newDepthStencilStateWithDescriptor:dsd];
     [dsd release];
+
+    MTLDepthStencilDescriptor* spriteDsd =
+        [[MTLDepthStencilDescriptor alloc] init];
+    spriteDsd.depthCompareFunction = MTLCompareFunctionAlways;
+    spriteDsd.depthWriteEnabled = NO;
+    m_impl->spriteDepthState =
+        [m_impl->device newDepthStencilStateWithDescriptor:spriteDsd];
+    [spriteDsd release];
 
     EnsureSurfaces();
 
@@ -382,23 +533,7 @@ int MetalRenderDevice::BeginScene(void)
 
     // The reference renderer fills both windings (it never culls); map the cull
     // render state but verify against it visually - see docs plan, point 4.
-    MTLCullMode cull = MTLCullModeNone;
-    switch (m_cull)
-    {
-    case Cull_None:
-        cull = MTLCullModeNone;
-        break;
-    case Cull_Clockwise:
-        cull = MTLCullModeBack;
-        break;
-    case Cull_CounterClockwise:
-        cull = MTLCullModeFront;
-        break;
-    default:
-        cull = MTLCullModeNone;
-        break;
-    }
-    [m_impl->encoder setCullMode:cull];
+    [m_impl->encoder setCullMode:CullModeToMetal(m_cull)];
     [m_impl->encoder setFrontFacingWinding:MTLWindingCounterClockwise];
 
     [m_impl->encoder setTriangleFillMode:(m_fill == FillMode_WireFrame)
@@ -457,12 +592,17 @@ LPINDEXBUFFER MetalRenderDevice::CreateIndexBuffer(uint length, uint /*usage*/,
     return ib;
 }
 
-LPTEXTURE MetalRenderDevice::CreateTexture(uint /*Width*/, uint /*Height*/,
+LPTEXTURE MetalRenderDevice::CreateTexture(uint Width, uint Height,
                                            uint /*Levels*/, uint /*Usage*/,
-                                           uint /*Format*/, uint /*Pool*/)
+                                           uint Format, uint /*Pool*/)
 {
-    // Out of scope for the first pass; the demo calls SetTexture(0, null) only.
-    return 0;
+    MetalTexture* texture = new MetalTexture();
+    if (!texture->Create(m_impl->device, Width, Height, Format))
+    {
+        delete texture;
+        return 0;
+    }
+    return texture;
 }
 
 LPTEXTURE MetalRenderDevice::CreateTextureFromFile(
@@ -588,13 +728,102 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
 }
 
 int MetalRenderDevice::DrawIndexedUserPrimitives(
-    PrimitiveType /*primitiveType*/, uint /*minVertexIndex*/,
-    uint /*numVertexIndices*/, uint /*primitiveCount*/,
-    const void* /*indexData*/, bool /*sixteenBitIndices*/,
-    const void* /*vertexStreamZeroData*/, uint /*vertexStreamZeroStride*/)
+    PrimitiveType primitiveType, uint /*minVertexIndex*/, uint numVertexIndices,
+    uint /*primitiveCount*/, const void* indexData, bool sixteenBitIndices,
+    const void* vertexStreamZeroData, uint vertexStreamZeroStride)
 {
-    // Out of scope for the first pass (the demo draws via vertex/index
-    // buffers).
+    if (m_impl->encoder == nil || m_texture0 == 0 || indexData == nullptr ||
+        vertexStreamZeroData == nullptr || vertexStreamZeroStride == 0)
+    {
+        return FORG_OK;
+    }
+
+    if (primitiveType != PrimitiveType_TriangleStrip || !sixteenBitIndices)
+        return FORG_OK;
+
+    if (m_impl->spritePipeline == nil)
+    {
+        MTLVertexDescriptor* vd = [MTLVertexDescriptor vertexDescriptor];
+        vd.attributes[0].format = MTLVertexFormatFloat3;
+        vd.attributes[0].offset = 0;
+        vd.attributes[0].bufferIndex = 0;
+        vd.attributes[2].format = MTLVertexFormatFloat2;
+        vd.attributes[2].offset = 16;
+        vd.attributes[2].bufferIndex = 0;
+        vd.attributes[3].format = MTLVertexFormatUChar4Normalized;
+        vd.attributes[3].offset = 12;
+        vd.attributes[3].bufferIndex = 0;
+        vd.layouts[0].stride = (NSUInteger)vertexStreamZeroStride;
+        vd.layouts[0].stepFunction = MTLVertexStepFunctionPerVertex;
+
+        MTLRenderPipelineDescriptor* pd =
+            [[MTLRenderPipelineDescriptor alloc] init];
+        pd.vertexFunction = m_impl->spriteVfn;
+        pd.fragmentFunction = m_impl->spriteFfn;
+        pd.vertexDescriptor = vd;
+        pd.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+        pd.colorAttachments[0].blendingEnabled = YES;
+        pd.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+        pd.colorAttachments[0].destinationRGBBlendFactor =
+            MTLBlendFactorOneMinusSourceAlpha;
+        pd.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+        pd.colorAttachments[0].sourceAlphaBlendFactor =
+            MTLBlendFactorSourceAlpha;
+        pd.colorAttachments[0].destinationAlphaBlendFactor =
+            MTLBlendFactorOneMinusSourceAlpha;
+        pd.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+        pd.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
+
+        NSError* error = nil;
+        m_impl->spritePipeline =
+            [m_impl->device newRenderPipelineStateWithDescriptor:pd
+                                                           error:&error];
+        [pd release];
+
+        if (m_impl->spritePipeline == nil)
+        {
+            NSLog(@"[metalrenderer] sprite pipeline creation failed: %@",
+                  error);
+            return FORG_INVALID_CALL;
+        }
+    }
+
+    const auto* indices = static_cast<const uint16_t*>(indexData);
+    const auto* vertices = static_cast<const char*>(vertexStreamZeroData);
+    std::vector<char> ordered(static_cast<std::size_t>(numVertexIndices) *
+                              vertexStreamZeroStride);
+
+    for (uint i = 0; i < numVertexIndices; ++i)
+    {
+        std::memcpy(ordered.data() + i * vertexStreamZeroStride,
+                    vertices + indices[i] * vertexStreamZeroStride,
+                    vertexStreamZeroStride);
+    }
+
+    Matrix4 mv;
+    Matrix4 mvp;
+    Matrix4::Multiply(mv, m_world, m_view);
+    Matrix4::Multiply(mvp, mv, m_proj);
+
+    MetalUniforms u;
+    memset(&u, 0, sizeof(u));
+    memcpy(u.mvp, (const float*)mvp, sizeof(u.mvp));
+    memcpy(u.world, (const float*)m_world, sizeof(u.world));
+
+    MetalTexture* texture = static_cast<MetalTexture*>(m_texture0);
+
+    [m_impl->encoder setDepthStencilState:m_impl->spriteDepthState];
+    [m_impl->encoder setRenderPipelineState:m_impl->spritePipeline];
+    [m_impl->encoder setVertexBytes:ordered.data()
+                             length:ordered.size()
+                            atIndex:0];
+    [m_impl->encoder setVertexBytes:&u length:sizeof(u) atIndex:1];
+    [m_impl->encoder setFragmentTexture:texture->GetMTLTexture() atIndex:0];
+    [m_impl->encoder drawPrimitives:MTLPrimitiveTypeTriangleStrip
+                        vertexStart:0
+                        vertexCount:(NSUInteger)numVertexIndices];
+    [m_impl->encoder setDepthStencilState:m_impl->depthState];
+
     return FORG_OK;
 }
 
@@ -703,9 +932,17 @@ int MetalRenderDevice::SetRenderState(uint state, uint value)
     {
     case RenderStates_CullMode:
         m_cull = value;
+        if (m_impl->encoder != nil)
+            [m_impl->encoder setCullMode:CullModeToMetal(m_cull)];
         break;
     case RenderStates_FillMode:
         m_fill = value;
+        if (m_impl->encoder != nil)
+        {
+            [m_impl->encoder setTriangleFillMode:(m_fill == FillMode_WireFrame)
+                                                     ? MTLTriangleFillModeLines
+                                                     : MTLTriangleFillModeFill];
+        }
         break;
     case RenderStates_Lighting:
         m_lighting = (value != 0);
@@ -716,9 +953,19 @@ int MetalRenderDevice::SetRenderState(uint state, uint value)
     return FORG_OK;
 }
 
-int MetalRenderDevice::SetTexture(uint /*Sampler*/, ITexture* /*pTexture*/)
+int MetalRenderDevice::SetTexture(uint Sampler, ITexture* pTexture)
 {
-    // Texturing is out of scope; the demo only ever clears the sampler (null).
+    if (Sampler != 0)
+        return FORG_OK;
+
+    if (m_texture0)
+        m_texture0->Release();
+
+    m_texture0 = pTexture;
+
+    if (m_texture0)
+        m_texture0->AddRef();
+
     return FORG_OK;
 }
 

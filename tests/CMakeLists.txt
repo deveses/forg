@@ -17,6 +17,7 @@ add_executable(forg_tests
     core/BitArrayTests.cpp
     core/RefCounterTests.cpp
     core/StringTests.cpp
+    image/ImageLoadTests.cpp
     nn/NeuralNetworkTests.cpp
     script/XMLParserTests.cpp
     script/YAMLParserTests.cpp
@@ -27,6 +28,7 @@ add_executable(forg_tests
     rendering/ReferenceRenderTests.cpp
     scene/ModelTests.cpp
     scene/SceneTreeTests.cpp
+    ui/CUIDialogTests.cpp
     mesh/GltfLoaderTests.cpp
     net/HttpRequestTests.cpp
     net/CommandTests.cpp
@@ -44,6 +46,7 @@ forg_configure_target(forg_tests)
 target_compile_definitions(forg_tests
     PRIVATE
     FORG_TEST_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}/data"
+    FORG_TEST_REPO_DATA_DIR="${PROJECT_SOURCE_DIR}/data"
 )
 
 if(TARGET swrenderer)

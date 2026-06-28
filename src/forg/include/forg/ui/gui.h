@@ -90,15 +90,8 @@ class CUIControl
 
     virtual bool ContainsPoint(const Point& _point) const
     {
-        int dx = _point.x - m_bounds.left;
-        int dy = _point.y - m_bounds.top;
-
-        if (dx <= m_bounds.Width() || dy <= m_bounds.Height())
-        {
-            return true;
-        }
-
-        return false;
+        return _point.x >= m_bounds.left && _point.x <= m_bounds.right &&
+               _point.y >= m_bounds.top && _point.y <= m_bounds.bottom;
     }
 };
 
