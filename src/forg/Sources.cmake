@@ -121,6 +121,8 @@ set(net_sources
     HttpRequest.cpp
     CommandQueue.cpp
     HttpControlServer.cpp
+    $<${FORG_PLATFORM_WINDOWS}:HttpControlSocketServer_win32.cpp>
+    $<$<NOT:$<BOOL:${FORG_PLATFORM_WINDOWS}>>:HttpControlSocketServer_posix.cpp>
 )
 list(TRANSFORM net_sources PREPEND "src/net/")
 
