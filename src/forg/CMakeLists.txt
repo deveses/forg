@@ -32,6 +32,11 @@ target_include_directories(forg
 target_include_directories(forg PRIVATE ${PROJECT_SOURCE_DIR}/extern/cgltf)
 forg_configure_target(forg)
 
+if(FORG_USE_FREETYPE)
+    target_compile_definitions(forg PRIVATE FORG_USE_FREETYPE)
+    target_link_libraries(forg PRIVATE freetype)
+endif()
+
 if(WIN32)
     target_compile_definitions(forg PUBLIC FORG_STATIC NOMINMAX WIN32_LEAN_AND_MEAN)
     target_link_libraries(forg PRIVATE winmm ws2_32)
