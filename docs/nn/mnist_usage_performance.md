@@ -119,6 +119,12 @@ Approximate extrapolation from that run:
 These numbers are rough. Runtime depends on compiler, CPU, build type, test
 limit, and whether the loss graph allocation pattern changes.
 
+The current example reuses the input and one-hot target `Value` storage across
+samples and reuses the scratch containers used by `Backward()`. Scalar
+operations with literal constants also avoid allocating temporary constant
+nodes. The remaining large allocation cost is the per-sample forward/loss graph
+itself.
+
 The built-in `profile_us` line reports per-epoch timing in microseconds:
 
 - `epoch`: Whole epoch including training and evaluation.
@@ -157,7 +163,8 @@ Expected behavior:
 
 Useful future optimization targets:
 
-- Reduce per-sample graph allocation overhead.
+- Further reduce per-sample graph allocation overhead with a graph arena or
+  fused dense-layer operations.
 - Add batched training.
 - Add tensor or matrix primitives for dense layers.
 - Add softmax cross-entropy.

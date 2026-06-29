@@ -12,6 +12,7 @@
 
 #include <functional>
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 namespace forg::nn {
@@ -21,6 +22,12 @@ struct ValueGraphAccess;
 
 using ValuePtr = std::shared_ptr<Value>;
 using Values = std::vector<ValuePtr>;
+
+struct BackwardScratch
+{
+    std::unordered_set<const Value*> visited;
+    Values topo;
+};
 
 class Value
 {
@@ -33,7 +40,11 @@ class Value
   private:
     friend ValuePtr MakeValue(double value);
     friend ValuePtr operator+(const ValuePtr& lhs, const ValuePtr& rhs);
+    friend ValuePtr operator+(const ValuePtr& lhs, double rhs);
+    friend ValuePtr operator+(double lhs, const ValuePtr& rhs);
     friend ValuePtr operator*(const ValuePtr& lhs, const ValuePtr& rhs);
+    friend ValuePtr operator*(const ValuePtr& lhs, double rhs);
+    friend ValuePtr operator*(double lhs, const ValuePtr& rhs);
     friend ValuePtr Pow(const ValuePtr& value, double exponent);
     friend ValuePtr Relu(const ValuePtr& value);
     friend struct ValueGraphAccess;
@@ -76,6 +87,7 @@ ValuePtr Pow(const ValuePtr& value, double exponent);
 ValuePtr Relu(const ValuePtr& value);
 
 void Backward(const ValuePtr& root);
+void Backward(const ValuePtr& root, BackwardScratch& scratch);
 
 } // namespace forg::nn
 

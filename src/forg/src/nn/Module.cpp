@@ -234,12 +234,33 @@ Values Flatten::Forward(const Values& input) const { return input; }
 Values Flatten::From(const std::vector<double>& input)
 {
     Values output;
-    output.reserve(input.size());
-    for (const double value : input)
-    {
-        output.push_back(MakeValue(value));
-    }
+    Into(input, output);
     return output;
+}
+
+bool Flatten::Into(const std::vector<double>& input, Values& output)
+{
+    if (output.size() != input.size())
+    {
+        output.clear();
+        output.reserve(input.size());
+        for (const double value : input)
+        {
+            output.push_back(MakeValue(value));
+        }
+        return true;
+    }
+
+    for (std::size_t index = 0; index < input.size(); ++index)
+    {
+        if (!output[index])
+            output[index] = MakeValue(input[index]);
+        else
+            output[index]->SetData(input[index]);
+
+        output[index]->SetGrad(0.0);
+    }
+    return true;
 }
 
 Values Flatten::FromImage(const std::vector<std::vector<double>>& image)
@@ -324,16 +345,41 @@ ValuePtr MSELoss(const Values& prediction, const Values& target)
 
 Values OneHot(std::size_t class_count, std::size_t index)
 {
-    if (class_count == 0 || index >= class_count)
-        return {};
-
     Values output;
-    output.reserve(class_count);
+    OneHotInto(class_count, index, output);
+    return output;
+}
+
+bool OneHotInto(std::size_t class_count, std::size_t index, Values& output)
+{
+    if (class_count == 0 || index >= class_count)
+    {
+        output.clear();
+        return false;
+    }
+
+    if (output.size() != class_count)
+    {
+        output.clear();
+        output.reserve(class_count);
+        for (std::size_t class_index = 0; class_index < class_count;
+             ++class_index)
+        {
+            output.push_back(MakeValue(class_index == index ? 1.0 : 0.0));
+        }
+        return true;
+    }
+
     for (std::size_t class_index = 0; class_index < class_count; ++class_index)
     {
-        output.push_back(MakeValue(class_index == index ? 1.0 : 0.0));
+        if (!output[class_index])
+            output[class_index] = MakeValue(class_index == index ? 1.0 : 0.0);
+        else
+            output[class_index]->SetData(class_index == index ? 1.0 : 0.0);
+
+        output[class_index]->SetGrad(0.0);
     }
-    return output;
+    return true;
 }
 
 std::size_t ArgMax(const Values& values)

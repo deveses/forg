@@ -79,10 +79,10 @@ double Evaluate(forg::nn::Sequential& model,
         return 0.0;
 
     std::size_t correct = 0;
+    forg::nn::Values input;
     for (std::size_t index = 0; index < count; ++index)
     {
-        const forg::nn::Values input =
-            forg::nn::Flatten::From(samples[index].pixels);
+        forg::nn::Flatten::Into(samples[index].pixels, input);
         const forg::nn::Values output = model.Forward(input);
         if (!output.empty() && forg::nn::ArgMax(output) == samples[index].label)
             ++correct;
@@ -136,6 +136,9 @@ int main(int argc, char** argv)
     const std::vector<forg::nn::MnistSample>& test_samples = test.Samples();
     const std::size_t samples_per_epoch =
         std::min(train_limit, train_samples.size());
+    forg::nn::Values input;
+    forg::nn::Values target;
+    forg::nn::BackwardScratch backward_scratch;
 
     for (std::size_t epoch = 0; epoch < epochs; ++epoch)
     {
@@ -146,10 +149,8 @@ int main(int argc, char** argv)
         for (std::size_t index = 0; index < samples_per_epoch; ++index)
         {
             Clock::time_point start = Clock::now();
-            const forg::nn::Values input =
-                forg::nn::Flatten::From(train_samples[index].pixels);
-            const forg::nn::Values target =
-                forg::nn::OneHot(10, train_samples[index].label);
+            forg::nn::Flatten::Into(train_samples[index].pixels, input);
+            forg::nn::OneHotInto(10, train_samples[index].label, target);
             profile.input_us += ElapsedUs(start);
 
             start = Clock::now();
@@ -167,7 +168,7 @@ int main(int argc, char** argv)
             profile.zero_grad_us += ElapsedUs(start);
 
             start = Clock::now();
-            forg::nn::Backward(loss);
+            forg::nn::Backward(loss, backward_scratch);
             profile.backward_us += ElapsedUs(start);
 
             start = Clock::now();

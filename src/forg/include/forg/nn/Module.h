@@ -107,6 +107,7 @@ class Flatten : public Module
     Values Forward(const Values& input) const override;
 
     static Values From(const std::vector<double>& input);
+    static bool Into(const std::vector<double>& input, Values& output);
     static Values FromImage(const std::vector<std::vector<double>>& image);
 };
 
@@ -131,6 +132,7 @@ class Sequential : public Module
 
 ValuePtr MSELoss(const Values& prediction, const Values& target);
 Values OneHot(std::size_t class_count, std::size_t index);
+bool OneHotInto(std::size_t class_count, std::size_t index, Values& output);
 std::size_t ArgMax(const Values& values);
 
 class SGD

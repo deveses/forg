@@ -2,7 +2,6 @@
 
 #include <cmath>
 #include <functional>
-#include <unordered_set>
 #include <utility>
 
 namespace forg::nn {
@@ -20,7 +19,7 @@ struct ValueGraphAccess
 namespace {
 
 void BuildTopo(const ValuePtr& value, std::unordered_set<const Value*>& visited,
-               std::vector<ValuePtr>& topo)
+               Values& topo)
 {
     if (!value)
         return;
@@ -74,13 +73,22 @@ ValuePtr operator+(const ValuePtr& lhs, const ValuePtr& rhs)
 
 ValuePtr operator+(const ValuePtr& lhs, double rhs)
 {
-    return lhs + MakeValue(rhs);
+    if (!lhs)
+        return nullptr;
+
+    ValuePtr out(new Value(lhs->m_data + rhs, Values{lhs}));
+    std::weak_ptr<Value> weak_out = out;
+    out->m_backward = [lhs, weak_out]()
+    {
+        if (auto out = weak_out.lock())
+        {
+            lhs->m_grad += out->m_grad;
+        }
+    };
+    return out;
 }
 
-ValuePtr operator+(double lhs, const ValuePtr& rhs)
-{
-    return MakeValue(lhs) + rhs;
-}
+ValuePtr operator+(double lhs, const ValuePtr& rhs) { return rhs + lhs; }
 
 ValuePtr operator-(const ValuePtr& value) { return value * -1.0; }
 
@@ -120,13 +128,22 @@ ValuePtr operator*(const ValuePtr& lhs, const ValuePtr& rhs)
 
 ValuePtr operator*(const ValuePtr& lhs, double rhs)
 {
-    return lhs * MakeValue(rhs);
+    if (!lhs)
+        return nullptr;
+
+    ValuePtr out(new Value(lhs->m_data * rhs, Values{lhs}));
+    std::weak_ptr<Value> weak_out = out;
+    out->m_backward = [lhs, rhs, weak_out]()
+    {
+        if (auto out = weak_out.lock())
+        {
+            lhs->m_grad += rhs * out->m_grad;
+        }
+    };
+    return out;
 }
 
-ValuePtr operator*(double lhs, const ValuePtr& rhs)
-{
-    return MakeValue(lhs) * rhs;
-}
+ValuePtr operator*(double lhs, const ValuePtr& rhs) { return rhs * lhs; }
 
 ValuePtr operator/(const ValuePtr& lhs, const ValuePtr& rhs)
 {
@@ -135,7 +152,7 @@ ValuePtr operator/(const ValuePtr& lhs, const ValuePtr& rhs)
 
 ValuePtr operator/(const ValuePtr& lhs, double rhs)
 {
-    return lhs / MakeValue(rhs);
+    return lhs * (1.0 / rhs);
 }
 
 ValuePtr operator/(double lhs, const ValuePtr& rhs)
@@ -183,15 +200,21 @@ ValuePtr Relu(const ValuePtr& value)
 
 void Backward(const ValuePtr& root)
 {
+    BackwardScratch scratch;
+    Backward(root, scratch);
+}
+
+void Backward(const ValuePtr& root, BackwardScratch& scratch)
+{
     if (!root)
         return;
 
-    std::unordered_set<const Value*> visited;
-    std::vector<ValuePtr> topo;
-    BuildTopo(root, visited, topo);
+    scratch.visited.clear();
+    scratch.topo.clear();
+    BuildTopo(root, scratch.visited, scratch.topo);
 
     root->SetGrad(1.0);
-    for (auto it = topo.rbegin(); it != topo.rend(); ++it)
+    for (auto it = scratch.topo.rbegin(); it != scratch.topo.rend(); ++it)
     {
         ValueGraphAccess::ApplyBackward(**it);
     }

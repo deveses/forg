@@ -196,6 +196,41 @@ TEST_CASE("Flatten converts numeric inputs into Values", "[nn][module]")
     REQUIRE(image[2]->GetData() == Approx(1.0));
 }
 
+TEST_CASE("Flatten and OneHot can reuse Value storage", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    Values input;
+    REQUIRE(Flatten::Into({0.0, 0.5, 1.0}, input));
+    REQUIRE(input.size() == 3);
+
+    const ValuePtr first = input[0];
+    const ValuePtr second = input[1];
+    const ValuePtr third = input[2];
+
+    input[0]->SetGrad(4.0);
+    REQUIRE(Flatten::Into({1.0, 0.25, 0.0}, input));
+    REQUIRE(input[0] == first);
+    REQUIRE(input[1] == second);
+    REQUIRE(input[2] == third);
+    REQUIRE(input[0]->GetData() == Approx(1.0));
+    REQUIRE(input[1]->GetData() == Approx(0.25));
+    REQUIRE(input[2]->GetData() == Approx(0.0));
+    REQUIRE(input[0]->GetGrad() == Approx(0.0));
+
+    Values target;
+    REQUIRE(OneHotInto(3, 2, target));
+    REQUIRE(target.size() == 3);
+    const ValuePtr hot = target[2];
+    target[2]->SetGrad(7.0);
+
+    REQUIRE(OneHotInto(3, 0, target));
+    REQUIRE(target[2] == hot);
+    REQUIRE(target[0]->GetData() == Approx(1.0));
+    REQUIRE(target[2]->GetData() == Approx(0.0));
+    REQUIRE(target[2]->GetGrad() == Approx(0.0));
+}
+
 TEST_CASE("Loss, classification helpers, and SGD support training loops",
           "[nn][module]")
 {
@@ -230,6 +265,27 @@ TEST_CASE("Loss, classification helpers, and SGD support training loops",
 
     optimizer.ZeroGrad();
     REQUIRE(weight->GetGrad() == Approx(0.0));
+}
+
+TEST_CASE("Backward scratch can be reused across passes", "[nn][value]")
+{
+    using namespace forg::nn;
+
+    const ValuePtr weight = MakeValue(2.0);
+    BackwardScratch scratch;
+
+    ValuePtr loss = Pow(weight * 3.0 - 1.0, 2.0);
+    Backward(loss, scratch);
+    REQUIRE(weight->GetGrad() == Approx(30.0));
+    REQUIRE_FALSE(scratch.topo.empty());
+    REQUIRE_FALSE(scratch.visited.empty());
+
+    weight->SetGrad(0.0);
+    loss = Pow(weight * 4.0 - 1.0, 2.0);
+    Backward(loss, scratch);
+    REQUIRE(weight->GetGrad() == Approx(56.0));
+    REQUIRE_FALSE(scratch.topo.empty());
+    REQUIRE_FALSE(scratch.visited.empty());
 }
 
 TEST_CASE("MNIST dataset reads valid IDX image and label files", "[nn][mnist]")
