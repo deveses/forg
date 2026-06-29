@@ -17,10 +17,12 @@
 #include "forg/script/yaml/YAMLSerializer.h"
 
 #include <charconv>
+#include <memory>
 #include <sstream>
 #include <string_view>
 #include <system_error>
 #include <utility>
+#include <vector>
 
 #ifdef FORG_PLATFORM_WINDOWS
 #include <windows.h>
@@ -204,6 +206,12 @@ class RendererHandle
 
     IRenderer* Get() const { return m_renderer; }
 
+    std::string_view Name() const
+    {
+        return m_binding.Name != nullptr ? std::string_view(m_binding.Name)
+                                         : std::string_view();
+    }
+
     void Attach(IRenderer* renderer, const RendererPluginBinding& binding)
     {
         std::string ignored;
@@ -244,7 +252,7 @@ struct Engine::Impl
 {
     EngineConfig config;
     bool configLoaded = false;
-    scene::Scene scene;
+    std::vector<std::unique_ptr<scene::Scene>> scenes;
     PluginModuleHandle module;
     RendererHandle renderer;
     RenderDeviceHandle device;
@@ -265,6 +273,83 @@ struct Engine::Impl
     std::unique_ptr<net::CommandQueue> controlQueue;
     std::unique_ptr<net::HttpControlServer> controlServer;
     std::string lastError;
+
+    Impl() { ResetScenes(); }
+
+    void ResetScenes()
+    {
+        scenes.clear();
+        EnsureScene(0);
+    }
+
+    scene::Scene& EnsureScene(uint sceneIndex)
+    {
+        scenes.reserve(sceneIndex + 1);
+
+        while (sceneIndex >= scenes.size())
+            scenes.push_back(std::unique_ptr<scene::Scene>(new scene::Scene()));
+        return *scenes[sceneIndex];
+    }
+
+    const scene::Scene& GetScene(uint sceneIndex) const
+    {
+        if (sceneIndex < scenes.size() && scenes[sceneIndex])
+            return *scenes[sceneIndex];
+        return *scenes[0];
+    }
+
+    scene::CameraNode* ControllableCameraNode()
+    {
+        for (std::unique_ptr<scene::Scene>& scene : scenes)
+        {
+            if (!scene)
+                continue;
+
+            for (uint i = 0; i < scene->NodeCount(); ++i)
+            {
+                scene::CameraNode* cameraNode =
+                    dynamic_cast<scene::CameraNode*>(scene->Node(i));
+                if (cameraNode != nullptr && cameraNode->Controllable())
+                    return cameraNode;
+            }
+        }
+        return nullptr;
+    }
+
+    const scene::CameraNode* ControllableCameraNode() const
+    {
+        return const_cast<Impl*>(this)->ControllableCameraNode();
+    }
+
+    forg::Camera& ControlledCamera()
+    {
+        scene::CameraNode* controllable = ControllableCameraNode();
+        if (controllable != nullptr)
+            return controllable->GetCamera();
+
+        if (!scenes.empty() && scenes[0])
+        {
+            scene::CameraNode* cameraNode = scenes[0]->ActiveCameraNode();
+            if (cameraNode != nullptr)
+                return cameraNode->GetCamera();
+        }
+        return camera;
+    }
+
+    const forg::Camera& ControlledCamera() const
+    {
+        const scene::CameraNode* controllable = ControllableCameraNode();
+        if (controllable != nullptr)
+            return controllable->GetCamera();
+
+        if (!scenes.empty() && scenes[0])
+        {
+            const scene::CameraNode* cameraNode = scenes[0]->ActiveCameraNode();
+            if (cameraNode != nullptr)
+                return cameraNode->GetCamera();
+        }
+        return camera;
+    }
 
     bool IsInitialized() const
     {
@@ -452,7 +537,7 @@ struct Engine::Impl
         return true;
     }
 
-    bool LoadScene(std::string_view filename)
+    bool LoadScene(std::string_view filename, uint sceneIndex)
     {
         if (!RequireInitialized())
             return false;
@@ -472,7 +557,8 @@ struct Engine::Impl
             return false;
         }
 
-        if (!scene.Load(serializer))
+        std::unique_ptr<scene::Scene> nextScene(new scene::Scene());
+        if (!nextScene->Load(serializer))
         {
             std::ostringstream stream;
             stream << "Unable to load scene <" << std::string(filename) << ">";
@@ -480,7 +566,7 @@ struct Engine::Impl
             return false;
         }
 
-        if (!scene.LoadResources(device.Get()))
+        if (!nextScene->LoadResources(device.Get()))
         {
             std::ostringstream stream;
             stream << "Unable to load scene resources <"
@@ -488,6 +574,9 @@ struct Engine::Impl
             SetError(stream.str());
             return false;
         }
+
+        EnsureScene(sceneIndex);
+        scenes[sceneIndex] = std::move(nextScene);
 
         activeModel = nullptr;
         ClearError();
@@ -554,13 +643,61 @@ struct Engine::Impl
         return count;
     }
 
+    void ApplyFallbackSceneTransforms(uint sceneIndex)
+    {
+        IRenderDevice* renderDevice = device.Get();
+        if (renderDevice == nullptr)
+            return;
+
+        if (sceneIndex == 0)
+        {
+            Matrix4 view;
+            camera.GetViewMatrix(view);
+            renderDevice->SetTransform(TransformType_View, view);
+
+            Matrix4 projection;
+            camera.GetProjectionMatrix(projection);
+            renderDevice->SetTransform(TransformType_Projection, projection);
+        }
+        else
+        {
+            Viewport viewport;
+            renderDevice->GetViewport(&viewport);
+
+            Matrix4 view = Matrix4::Identity;
+            Matrix4 projection;
+            Matrix4::OrthoOffCenterRH(projection, 0.0f, viewport.Width,
+                                      viewport.Height, 0.0f, 0.0f, 100.0f);
+            renderDevice->SetTransform(TransformType_View, view);
+            renderDevice->SetTransform(TransformType_Projection, projection);
+        }
+
+        renderDevice->SetTransform(TransformType_World, Matrix4::Identity);
+    }
+
+    void ApplySceneTransforms(uint sceneIndex, scene::Scene& scene)
+    {
+        scene::CameraNode* cameraNode = scene.ActiveCameraNode();
+        if (cameraNode != nullptr)
+        {
+            cameraNode->Apply(device.Get());
+            return;
+        }
+
+        ApplyFallbackSceneTransforms(sceneIndex);
+    }
+
     bool Update(double deltaSeconds, Engine& engine)
     {
         if (!RequireInitialized())
             return false;
 
         PumpControlCommands();
-        scene.Update(deltaSeconds);
+        for (std::unique_ptr<scene::Scene>& scene : scenes)
+        {
+            if (scene)
+                scene->Update(deltaSeconds);
+        }
         if (updateCallback != nullptr &&
             !updateCallback(engine, deltaSeconds, updateUserData))
         {
@@ -581,14 +718,6 @@ struct Engine::Impl
         renderTimer.Start();
 
         IRenderDevice* renderDevice = device.Get();
-        Matrix4 view;
-        camera.GetViewMatrix(view);
-        renderDevice->SetTransform(TransformType_View, view);
-
-        Matrix4 projection;
-        camera.GetProjectionMatrix(projection);
-        renderDevice->SetTransform(TransformType_Projection, projection);
-
         renderDevice->Clear(ClearFlags_Target | ClearFlags_ZBuffer, clearColor,
                             1.0f, 0);
         renderDevice->BeginScene();
@@ -598,7 +727,14 @@ struct Engine::Impl
         renderDevice->LightEnable(0, lightEnabled);
         renderDevice->SetRenderState(RenderStates_Lighting, lightEnabled);
 
-        scene.Render(renderDevice);
+        for (uint i = 0; i < scenes.size(); ++i)
+        {
+            if (scenes[i])
+            {
+                ApplySceneTransforms(i, *scenes[i]);
+                scenes[i]->Render(renderDevice);
+            }
+        }
 
         bool callbackOk = true;
         if (renderCallback != nullptr)
@@ -659,8 +795,8 @@ struct Engine::Impl
 
         device.Get()->SetViewport(0, 0, width, height);
         device.Get()->Reset();
-        camera.set_ScreenSize(static_cast<float>(width),
-                              static_cast<float>(height));
+        ControlledCamera().set_ScreenSize(static_cast<float>(width),
+                                          static_cast<float>(height));
         ClearError();
     }
 
@@ -670,14 +806,14 @@ struct Engine::Impl
         {
             if (event.Button == InputButton::Left)
             {
-                cameraController.OrbitPixels(camera, event.DeltaX,
+                cameraController.OrbitPixels(ControlledCamera(), event.DeltaX,
                                              event.DeltaY);
                 ClearError();
                 return true;
             }
             if (event.Button == InputButton::Right)
             {
-                cameraController.TruckPixels(camera, event.DeltaX,
+                cameraController.TruckPixels(ControlledCamera(), event.DeltaX,
                                              event.DeltaY);
                 ClearError();
                 return true;
@@ -685,7 +821,7 @@ struct Engine::Impl
         }
         else if (event.Type == InputEventType::Scroll)
         {
-            cameraController.ZoomLines(camera, event.ScrollDelta);
+            cameraController.ZoomLines(ControlledCamera(), event.ScrollDelta);
             ClearError();
             return true;
         }
@@ -748,7 +884,7 @@ struct Engine::Impl
     std::string DispatchCommand(const net::Command& cmd)
     {
         control::SceneControlContext ctx;
-        ctx.camera = &camera;
+        ctx.camera = &ControlledCamera();
         ctx.model = activeModel;
         ctx.light = &light;
         ctx.clearColor = &clearColor;
@@ -771,7 +907,7 @@ struct Engine::Impl
         std::string shutdownError;
 
         StopControlServer();
-        scene.ClearNodes();
+        ResetScenes();
         activeModel = nullptr;
 
         device.Reset();
@@ -814,7 +950,12 @@ bool Engine::Initialize(HWIN window, std::string_view configFilename)
 
 bool Engine::LoadScene(std::string_view filename)
 {
-    return m_impl->LoadScene(filename);
+    return m_impl->LoadScene(filename, 0);
+}
+
+bool Engine::LoadScene(std::string_view filename, uint sceneIndex)
+{
+    return m_impl->LoadScene(filename, sceneIndex);
 }
 
 bool Engine::StartControlServer(std::string_view bindAddr, int port)
@@ -915,17 +1056,40 @@ std::string Engine::DispatchCommand(const net::Command& cmd)
     return m_impl->DispatchCommand(cmd);
 }
 
-scene::Scene& Engine::Scene() { return m_impl->scene; }
+scene::Scene& Engine::Scene() { return m_impl->EnsureScene(0); }
 
-const scene::Scene& Engine::Scene() const { return m_impl->scene; }
+const scene::Scene& Engine::Scene() const { return m_impl->GetScene(0); }
 
-forg::Camera& Engine::Camera() { return m_impl->camera; }
+scene::Scene& Engine::Scene(uint sceneIndex)
+{
+    return m_impl->EnsureScene(sceneIndex);
+}
 
-const forg::Camera& Engine::Camera() const { return m_impl->camera; }
+const scene::Scene& Engine::Scene(uint sceneIndex) const
+{
+    return m_impl->GetScene(sceneIndex);
+}
+
+uint Engine::SceneCount() const
+{
+    return static_cast<uint>(m_impl->scenes.size());
+}
+
+forg::Camera& Engine::Camera() { return m_impl->ControlledCamera(); }
+
+const forg::Camera& Engine::Camera() const
+{
+    return m_impl->ControlledCamera();
+}
 
 IRenderDevice* Engine::Device() const { return m_impl->device.Get(); }
 
 IRenderer* Engine::Renderer() const { return m_impl->renderer.Get(); }
+
+std::string_view Engine::RendererPluginName() const
+{
+    return m_impl->renderer.Name();
+}
 
 const EngineConfig& Engine::Config() const { return m_impl->config; }
 

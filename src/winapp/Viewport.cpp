@@ -6,6 +6,8 @@
 #include "stdafx.h"
 
 #include <commdlg.h>
+#include <cstdio>
+#include <string_view>
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -33,8 +35,6 @@ Viewport::~Viewport()
         DestroyWindow(m_hWnd);
         m_hWnd = 0;
     }
-
-    m_Dialog.Close();
 
     if (m_font)
     {
@@ -103,18 +103,23 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
     if (!m_engine->LoadScene("scene.yml"))
         return 1;
 
-    forg::FontDescription fd = {12, 0, 0, 1, false, 0, 0, 0, 0, (""),
-                                //"../bin/test.ttf"
-                                ("c:/windows/fonts/arial.ttf")};
-    m_font = forg::Font::CreateIndirect(m_device, &fd);
+    if (!m_engine->LoadScene("data/ui/dialog.yml", 1))
+        return 1;
 
-    // m_Dialog.Init(m_device, "../bin/data/ui/dxutcontrols.dds");
-    m_Dialog.Init(m_device, "data/ui/debug_texture2.dds");
-    m_Dialog.Load("data/ui/dialog.xml");
-    m_Dialog.AddButton(0, 100, 15, 50, 30);
-    m_Dialog.AddSlider(1, 180, 15, 80, 30);
-    m_Dialog.AddKnob(2, 0, 15, 30, 30);
-    m_Dialog.AddComboBox(3, 300, 15, 100, 30);
+#ifdef FORG_USE_FREETYPE
+    forg::FontDescription fd = {12,
+                                0,
+                                0,
+                                1,
+                                false,
+                                0,
+                                0,
+                                0,
+                                0,
+                                (""),
+                                ("data/fonts/Roboto-Regular.ttf")};
+    m_font = forg::Font::CreateIndirect(m_device, &fd);
+#endif
 
     UpdateWindow(m_hWnd);
     return 0;
@@ -346,22 +351,24 @@ void Viewport::RenderUI()
         if (m_font)
         {
             char str[512];
+            std::string_view rendererName = m_engine->RendererPluginName();
+            if (rendererName.empty())
+                rendererName = "Unknown Renderer";
 
-            sprintf(
-                str, "%u fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
-                m_engine->FrameStats().FPS, m_engine->Camera().get_Position().X,
-                m_engine->Camera().get_Position().Y,
-                m_engine->Camera().get_Position().Z,
-                m_engine->Camera().get_Target().X,
-                m_engine->Camera().get_Target().Y,
-                m_engine->Camera().get_Target().Z);
+            std::snprintf(str, sizeof(str),
+                          "%u fps   renderer: %.*s   camera pos: %.3f %.3f "
+                          "%.3f  dir: %.3f %.3f %.3f",
+                          m_engine->FrameStats().FPS,
+                          static_cast<int>(rendererName.size()),
+                          rendererName.data(),
+                          m_engine->Camera().get_Position().X,
+                          m_engine->Camera().get_Position().Y,
+                          m_engine->Camera().get_Position().Z,
+                          m_engine->Camera().get_Target().X,
+                          m_engine->Camera().get_Target().Y,
+                          m_engine->Camera().get_Target().Z);
 
             m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
-        }
-
-        if (m_show_gui == 1)
-        {
-            m_Dialog.Render();
         }
     }
 }
@@ -389,13 +396,19 @@ void Viewport::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 void Viewport::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
+    forg::ui::GuiNode* guiRoot =
+        dynamic_cast<forg::ui::GuiNode*>(m_engine->Scene(1).Node(0));
+    forg::ui::GuiNode* knob = guiRoot != nullptr ? guiRoot->FindById(2) : 0;
+
     switch (nChar)
     {
     case VK_DOWN:
-        m_Dialog.GetKnob(2)->SetValue(m_Dialog.GetKnob(2)->GetValue() - 1);
+        if (knob != nullptr)
+            knob->SetValue(knob->Value() - 1);
         break;
     case VK_UP:
-        m_Dialog.GetKnob(2)->SetValue(m_Dialog.GetKnob(2)->GetValue() + 1);
+        if (knob != nullptr)
+            knob->SetValue(knob->Value() + 1);
         break;
     }
 
@@ -430,11 +443,6 @@ void Viewport::OnMouseWheel(UINT nFlags, POINTS point, int delta)
 
 void Viewport::OnMouseMove(UINT nFlags, POINTS point)
 {
-    {
-        forg::Point forg_point = {point.x, point.y};
-        m_Dialog.HandleMouse(forg::ui::EMouseEvent::Move, forg_point, 0, 0);
-    }
-
     if (!m_hasLastMousePoint)
     {
         m_lastMousePoint = point;

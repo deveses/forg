@@ -138,6 +138,13 @@ int Sprite::Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
     const VertexDeclaration decl(
         forg::geometry::PositionColoredTextured::Declaration);
 
+    Matrix4 previousWorld;
+    Matrix4 previousView;
+    Matrix4 previousProjection;
+    m_device->GetTransform(TransformType_World, previousWorld);
+    m_device->GetTransform(TransformType_View, previousView);
+    m_device->GetTransform(TransformType_Projection, previousProjection);
+
     Matrix4 tm = m_transform;
 
     if (center)
@@ -229,6 +236,10 @@ int Sprite::Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
     m_device->DrawIndexedUserPrimitives(
         PrimitiveType_TriangleStrip, 0, 4, 2, indices, true, points,
         forg::geometry::PositionColoredTextured::StrideSize);
+
+    m_device->SetTransform(TransformType_View, previousView);
+    m_device->SetTransform(TransformType_Projection, previousProjection);
+    m_device->SetTransform(TransformType_World, previousWorld);
 
     return FORG_OK;
 }

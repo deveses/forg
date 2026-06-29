@@ -62,6 +62,8 @@ void CheckPlugin(const char* path)
             forg::RendererPluginStatus::Ok);
     REQUIRE(binding.ApiVersion == forg::RendererPluginApiVersion2);
     REQUIRE(binding.UsesPluginDestroy);
+    REQUIRE(binding.Name != nullptr);
+    REQUIRE(binding.Name[0] != '\0');
 
     forg::IRenderer* renderer = nullptr;
     REQUIRE(forg::CreateRendererFromPlugin(binding, renderer) ==
@@ -85,7 +87,7 @@ TEST_CASE("Renderer plugin descriptors reject incompatible contracts",
 {
     forg::RendererPluginDescriptor descriptor{
         sizeof(forg::RendererPluginDescriptor),
-        forg::RendererPluginApiVersion + 1, nullptr, nullptr};
+        forg::RendererPluginApiVersion + 1, nullptr, nullptr, "Test Renderer"};
     REQUIRE_FALSE(forg::IsRendererPluginCompatible(&descriptor));
 
     descriptor.ApiVersion = forg::RendererPluginApiVersion;
@@ -105,12 +107,15 @@ TEST_CASE("Renderer plugin boundary supports v1 v2 and legacy factories",
         forg::RendererPluginApiVersion2,
         &CreateTestRenderer,
         &DestroyTestRenderer,
+        "Test Renderer",
     };
     REQUIRE(forg::BindRendererPluginDescriptor(&descriptor_v2, binding) ==
             forg::RendererPluginStatus::Ok);
     REQUIRE(binding.ApiVersion == forg::RendererPluginApiVersion2);
     REQUIRE(binding.UsesPluginDestroy);
     REQUIRE_FALSE(binding.UsesLegacyFactory);
+    REQUIRE(binding.Name != nullptr);
+    REQUIRE(binding.Name[0] != '\0');
 
     forg::IRenderer* renderer = nullptr;
     REQUIRE(forg::CreateRendererFromPlugin(binding, renderer) ==
@@ -165,6 +170,7 @@ TEST_CASE("Renderer plugin boundary reports distinct failures",
         forg::RendererPluginApiVersion2,
         &CreateTestRenderer,
         &DestroyTestRenderer,
+        "Test Renderer",
     };
     REQUIRE(forg::BindRendererPluginDescriptor(&descriptor, binding) ==
             forg::RendererPluginStatus::TruncatedDescriptor);
@@ -175,6 +181,15 @@ TEST_CASE("Renderer plugin boundary reports distinct failures",
             forg::RendererPluginStatus::UnsupportedVersion);
 
     descriptor.ApiVersion = forg::RendererPluginApiVersion2;
+    descriptor.Name = nullptr;
+    REQUIRE(forg::BindRendererPluginDescriptor(&descriptor, binding) ==
+            forg::RendererPluginStatus::MissingName);
+
+    descriptor.Name = "";
+    REQUIRE(forg::BindRendererPluginDescriptor(&descriptor, binding) ==
+            forg::RendererPluginStatus::MissingName);
+
+    descriptor.Name = "Test Renderer";
     descriptor.CreateRenderer = nullptr;
     REQUIRE(forg::BindRendererPluginDescriptor(&descriptor, binding) ==
             forg::RendererPluginStatus::MissingCreate);

@@ -146,6 +146,7 @@ list(TRANSFORM control_sources PREPEND "src/control/")
 # scene
 ###############################################################################
 set(scene_includes
+    CameraNode.h
     MeshNode.h
     Model.h
     Scene.h
@@ -154,6 +155,7 @@ set(scene_includes
 )
 list(TRANSFORM scene_includes PREPEND "include/forg/scene/")
 set(scene_sources
+    CameraNode.cpp
     MeshNode.cpp
     Model.cpp
     Scene.cpp

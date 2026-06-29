@@ -1,6 +1,7 @@
 #include "forg_pch.h"
 
 #include "forg/io/ISerializer.h"
+#include "forg/ui/gui.h"
 #include "scene/Scene.h"
 
 #include <algorithm>
@@ -54,8 +55,12 @@ std::unique_ptr<SceneNode> CreateSerializedNode(const core::string& type)
     const std::string typeText = type.c_str();
     if (typeText == "SceneNode")
         return std::unique_ptr<SceneNode>(new SceneNode());
+    if (typeText == "CameraNode")
+        return std::unique_ptr<SceneNode>(new CameraNode());
     if (typeText == "MeshNode")
         return std::unique_ptr<SceneNode>(new MeshNode());
+    if (typeText == "GuiNode")
+        return std::unique_ptr<SceneNode>(new ui::GuiNode());
     return nullptr;
 }
 
@@ -70,10 +75,28 @@ SceneNode& Scene::CreateNode()
     return ref;
 }
 
+CameraNode& Scene::CreateCameraNode()
+{
+    std::unique_ptr<CameraNode> node(new CameraNode());
+    CameraNode& ref = *node;
+    m_nodes.push_back(std::move(node));
+    AddChild(ref);
+    return ref;
+}
+
 MeshNode& Scene::CreateMeshNode()
 {
     std::unique_ptr<MeshNode> node(new MeshNode());
     MeshNode& ref = *node;
+    m_nodes.push_back(std::move(node));
+    AddChild(ref);
+    return ref;
+}
+
+ui::GuiNode& Scene::CreateGuiNode()
+{
+    std::unique_ptr<ui::GuiNode> node(new ui::GuiNode());
+    ui::GuiNode& ref = *node;
     m_nodes.push_back(std::move(node));
     AddChild(ref);
     return ref;
@@ -247,8 +270,34 @@ bool Scene::LoadResources(IRenderDevice* device)
         {
             loaded = meshNode->GetModel().LoadResources(device) && loaded;
         }
+
+        ui::GuiNode* guiNode = dynamic_cast<ui::GuiNode*>(node.get());
+        if (guiNode != nullptr)
+            loaded = guiNode->LoadResources(device) && loaded;
     }
     return loaded;
+}
+
+CameraNode* Scene::ActiveCameraNode()
+{
+    CameraNode* firstCamera = nullptr;
+    for (std::unique_ptr<SceneNode>& node : m_nodes)
+    {
+        CameraNode* cameraNode = dynamic_cast<CameraNode*>(node.get());
+        if (cameraNode == nullptr)
+            continue;
+
+        if (firstCamera == nullptr)
+            firstCamera = cameraNode;
+        if (cameraNode->Active())
+            return cameraNode;
+    }
+    return firstCamera;
+}
+
+const CameraNode* Scene::ActiveCameraNode() const
+{
+    return const_cast<Scene*>(this)->ActiveCameraNode();
 }
 
 void Scene::Update(double deltaSeconds)

@@ -114,7 +114,7 @@ class Camera
 
             FORG_API void set_FarRange(float value);*/
 
-    /*FORG_API void set_View(CameraView value);*/
+    FORG_API void set_View(CameraView value);
     FORG_API CameraView get_View() const;
 
     FORG_API void set_ScreenSize(float width, float height);

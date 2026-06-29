@@ -14,7 +14,6 @@ class Viewport
     forg::IRenderDevice* m_device;
 
     forg::Font* m_font;
-    forg::ui::CUIDialog m_Dialog;
 
     bool m_fullscreen;
     int m_show_gui;

@@ -62,3 +62,22 @@ TEST_CASE("Camera computes its projection matrix at construction",
 
     RequireMatricesEqual(proj, expected);
 }
+
+TEST_CASE("Camera supports orthographic projection mode", "[rendering][camera]")
+{
+    Camera camera;
+    camera.set_View(forg::Orthogonal);
+
+    Matrix4 proj;
+    camera.GetProjectionMatrix(proj);
+
+    const float distance =
+        (camera.get_Target() - camera.get_Position()).Length();
+    const float height = 2.0f * distance * std::tan(camera.get_FOV() / 2.0f);
+
+    Matrix4 expected;
+    Matrix4::OrthoRH(expected, height * camera.get_Aspect(), height,
+                     camera.get_NearRange(), camera.get_FarRange());
+
+    RequireMatricesEqual(proj, expected);
+}

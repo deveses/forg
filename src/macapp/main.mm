@@ -9,8 +9,10 @@
 #include <MacTypes.h>
 #include <unistd.h>
 
+#include <cstdio>
 #include <iostream>
 #include <string>
+#include <string_view>
 
 #include "forg.h"
 #include "forg/script/yaml/YAMLParser.h"
@@ -33,6 +35,7 @@ struct AppSettings
 {
     AppSettings m_settings;
     forg::Engine m_engine;
+    forg::Font* m_font;
 
     NSWindow* m_window;
     NSView* m_view;
@@ -40,7 +43,17 @@ struct AppSettings
     id m_event_monitor;
 }
 - (instancetype)initWithSettings:(const AppSettings&)settings;
+- (bool)renderEngineFrame:(forg::Engine&)engine;
 @end
+
+static bool RenderEngineFrame(forg::Engine& engine, void* userData)
+{
+    AppDelegate* delegate = static_cast<AppDelegate*>(userData);
+    if (delegate == nil)
+        return false;
+
+    return [delegate renderEngineFrame:engine];
+}
 
 @implementation AppDelegate
 
@@ -50,6 +63,7 @@ struct AppSettings
     if (self)
     {
         m_settings = settings;
+        m_font = nullptr;
     }
     return self;
 }
@@ -85,6 +99,7 @@ struct AppSettings
         [NSApp terminate:nil];
         return;
     }
+    m_engine.SetRenderCallback(&RenderEngineFrame, self);
 
     if (!m_engine.LoadScene("scene.yml"))
     {
@@ -108,6 +123,28 @@ struct AppSettings
             std::cout << "Control server listening on http://127.0.0.1:"
                       << m_settings.controlPort << "\n";
         }
+    }
+
+#ifdef FORG_USE_FREETYPE
+    forg::FontDescription fd = {20,
+                                0,
+                                0,
+                                1,
+                                false,
+                                0,
+                                0,
+                                0,
+                                0,
+                                (""),
+                                ("data/fonts/Roboto-Regular.ttf")};
+    m_font = forg::Font::CreateIndirect(m_engine.Device(), &fd);
+#endif
+
+    if (!m_engine.LoadScene("data/ui/dialog.yml", 1))
+    {
+        std::cerr << m_engine.LastError() << "\n";
+        [NSApp terminate:nil];
+        return;
     }
 
     [self onResize];
@@ -184,6 +221,41 @@ struct AppSettings
     [self onResize];
 }
 
+- (bool)renderEngineFrame:(forg::Engine&)engine
+{
+    forg::IRenderDevice* device = engine.Device();
+    if (device == nullptr)
+        return false;
+
+    device->SetRenderState(forg::RenderStates_Lighting, false);
+
+    if (m_font)
+    {
+        forg::Viewport vp;
+        device->GetViewport(&vp);
+        forg::Rectangle r = {0, 0, static_cast<int>(vp.Width),
+                             static_cast<int>(vp.Height)};
+
+        char str[512];
+        std::string_view rendererName = engine.RendererPluginName();
+        if (rendererName.empty())
+            rendererName = "Unknown Renderer";
+        std::snprintf(
+            str, sizeof(str),
+            "%u fps   renderer: %.*s   camera pos: %.3f %.3f %.3f  dir: %.3f "
+            "%.3f %.3f",
+            engine.FrameStats().FPS, static_cast<int>(rendererName.size()),
+            rendererName.data(), engine.Camera().get_Position().X,
+            engine.Camera().get_Position().Y, engine.Camera().get_Position().Z,
+            engine.Camera().get_Target().X, engine.Camera().get_Target().Y,
+            engine.Camera().get_Target().Z);
+
+        m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 255, 255));
+    }
+
+    return true;
+}
+
 // port of Viewport::OnPaint + CWinApp::OnIdle
 - (void)onIdle:(NSTimer*)timer
 {
@@ -204,6 +276,14 @@ struct AppSettings
     {
         [NSEvent removeMonitor:m_event_monitor];
         m_event_monitor = nil;
+    }
+
+    m_engine.SetRenderCallback(nullptr, nullptr);
+
+    if (m_font)
+    {
+        delete m_font;
+        m_font = nullptr;
     }
 
     m_engine.Shutdown();

@@ -7,6 +7,7 @@
 #include "forg/rendering/Camera.h"
 #include "forg/scene/Scene.h"
 #include "forg/scene/SceneNode.h"
+#include "forg/ui/gui.h"
 
 #include <filesystem>
 #include <fstream>
@@ -49,12 +50,92 @@ TEST_CASE("Engine starts empty and owns an empty scene", "[engine]")
 
     REQUIRE(engine.Device() == nullptr);
     REQUIRE(engine.Renderer() == nullptr);
+    REQUIRE(engine.SceneCount() == 1);
     REQUIRE(engine.Scene().NodeCount() == 0);
     REQUIRE(engine.Config().RendererDriver.empty());
     REQUIRE(engine.Config().BackBufferWidth == 100);
     REQUIRE(engine.Config().BackBufferHeight == 100);
     REQUIRE(std::string(engine.LastError()).empty());
 }
+
+TEST_CASE("Engine indexed scene access keeps world scene stable", "[engine]")
+{
+    forg::Engine engine;
+    forg::scene::Scene& world = engine.Scene();
+    forg::scene::SceneNode& worldNode = world.CreateNode();
+
+    forg::scene::Scene& gui = engine.Scene(1);
+    forg::scene::SceneNode& guiNode = gui.CreateNode();
+
+    REQUIRE(engine.SceneCount() == 2);
+    REQUIRE(engine.Scene().NodeCount() == 1);
+    REQUIRE(engine.Scene().Node(0) == &worldNode);
+    REQUIRE(engine.Scene(1).NodeCount() == 1);
+    REQUIRE(engine.Scene(1).Node(0) == &guiNode);
+}
+
+#ifdef FORG_TEST_SWRENDERER_PATH
+TEST_CASE("Engine loads a second scene without replacing world scene",
+          "[engine][scene]")
+{
+    const std::filesystem::path configPath =
+        TestConfigPath("forg-engine-scenes-config.yml");
+    WriteText(configPath, "config:\n"
+                          "  renderer:\n"
+                          "    driver: \"" FORG_TEST_SWRENDERER_PATH "\"\n"
+                          "  window:\n"
+                          "    width: 320\n"
+                          "    height: 200\n");
+
+    const std::filesystem::path worldPath =
+        TestConfigPath("forg-engine-world-scene.yml");
+    WriteText(worldPath, "scene:\n"
+                         "  version: \"1\"\n"
+                         "  nodes:\n"
+                         "    count: \"1\"\n"
+                         "    item_0:\n"
+                         "      type: \"SceneNode\"\n"
+                         "      parent: \"-1\"\n");
+
+    const std::filesystem::path guiPath =
+        TestConfigPath("forg-engine-gui-scene.yml");
+    WriteText(guiPath, "scene:\n"
+                       "  version: \"1\"\n"
+                       "  nodes:\n"
+                       "    count: \"1\"\n"
+                       "    item_0:\n"
+                       "      type: \"GuiNode\"\n"
+                       "      parent: \"-1\"\n"
+                       "      gui:\n"
+                       "        control_type: \"button\"\n"
+                       "        id: \"7\"\n"
+                       "        x: \"10\"\n"
+                       "        y: \"20\"\n"
+                       "        width: \"30\"\n"
+                       "        height: \"40\"\n"
+                       "        texture_path: \"\"\n"
+                       "        min: \"0\"\n"
+                       "        max: \"100\"\n"
+                       "        value: \"0\"\n");
+
+    forg::Engine engine;
+    REQUIRE(engine.Initialize(nullptr, configPath.string().c_str()));
+    REQUIRE(engine.LoadScene(worldPath.string().c_str()));
+    REQUIRE(engine.LoadScene(guiPath.string().c_str(), 1));
+
+    REQUIRE(engine.SceneCount() == 2);
+    REQUIRE(engine.Scene().NodeCount() == 1);
+    REQUIRE(dynamic_cast<forg::ui::GuiNode*>(engine.Scene().Node(0)) ==
+            nullptr);
+    REQUIRE(engine.Scene(1).NodeCount() == 1);
+    REQUIRE(dynamic_cast<forg::ui::GuiNode*>(engine.Scene(1).Node(0)) !=
+            nullptr);
+
+    std::filesystem::remove(configPath);
+    std::filesystem::remove(worldPath);
+    std::filesystem::remove(guiPath);
+}
+#endif
 
 TEST_CASE("Engine owns a stable active camera", "[engine]")
 {
@@ -106,6 +187,49 @@ TEST_CASE("Engine handles scroll input as camera zoom", "[engine][input]")
     REQUIRE(engine.Camera().get_Position().Z == Approx(4.7f));
     REQUIRE(engine.Camera().get_Target().Z == Approx(0.0f));
     REQUIRE(std::string(engine.LastError()).empty());
+}
+
+TEST_CASE("Engine input targets active scene camera node", "[engine][input]")
+{
+    forg::Engine engine;
+    forg::scene::CameraNode& cameraNode = engine.Scene().CreateCameraNode();
+    cameraNode.SetProjection(forg::scene::CameraProjection::Orthogonal);
+    cameraNode.SetControllable(true);
+
+    const forg::math::Vector3 before = cameraNode.GetCamera().get_Position();
+
+    REQUIRE(engine.HandleInput({forg::InputEventType::PointerDrag,
+                                forg::InputButton::Left, 10.0f, 0.0f, 0.0f}));
+
+    REQUIRE(&engine.Camera() == &cameraNode.GetCamera());
+    REQUIRE(cameraNode.GetCamera().get_Position().X != Approx(before.X));
+    REQUIRE(std::string(engine.LastError()).empty());
+}
+
+TEST_CASE("Engine input prefers controllable camera over scene zero fallback",
+          "[engine][input]")
+{
+    forg::Engine engine;
+    forg::scene::CameraNode& worldCamera = engine.Scene().CreateCameraNode();
+    worldCamera.SetProjection(forg::scene::CameraProjection::Orthogonal);
+
+    forg::scene::CameraNode& controlledCamera =
+        engine.Scene(1).CreateCameraNode();
+    controlledCamera.SetProjection(forg::scene::CameraProjection::Orthogonal);
+    controlledCamera.SetControllable(true);
+
+    const forg::math::Vector3 worldBefore =
+        worldCamera.GetCamera().get_Position();
+    const forg::math::Vector3 controlledBefore =
+        controlledCamera.GetCamera().get_Position();
+
+    REQUIRE(engine.HandleInput({forg::InputEventType::PointerDrag,
+                                forg::InputButton::Left, 10.0f, 0.0f, 0.0f}));
+
+    REQUIRE(&engine.Camera() == &controlledCamera.GetCamera());
+    REQUIRE(worldCamera.GetCamera().get_Position().X == Approx(worldBefore.X));
+    REQUIRE(controlledCamera.GetCamera().get_Position().X !=
+            Approx(controlledBefore.X));
 }
 
 TEST_CASE("Engine rejects unsupported input combinations", "[engine][input]")

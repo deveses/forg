@@ -24,165 +24,89 @@
 #endif
 
 #include "core/RefPtr.h"
+#include "core/string.hpp"
 #include "rendering/Sprite.h"
+#include "scene/SceneNode.h"
 
 #include <memory>
-#include <vector>
-
-namespace forg::io {
-class ISerializer;
-} // namespace forg::io
 
 namespace forg::ui {
 
-struct SUIElement
+enum class GuiControlType
 {
-    Rectangle tex_coords;
-    float angle;
-
-    SUIElement() { angle = 0.0f; }
+    Container,
+    Button,
+    Slider,
+    Knob,
+    ComboBox
 };
 
-class CUIDialog;
-
-namespace EControlType {
-enum
+class FORG_API GuiNode : public scene::SceneNode
 {
-    Custom,
-    Knob
-};
-}
-
-class CUIControl
-{
-  protected:
-    Rectangle m_bounds;
-    int m_id;
-    int m_type;
-    bool m_focus;
-    bool m_mouse_over;
-    CUIDialog* m_dialog;
-
   public:
-    CUIControl(CUIDialog* _dialog);
-    virtual ~CUIControl() {};
+    GuiNode();
+    ~GuiNode() override;
 
-  public:
-    void SetId(int _id);
-    void SetLocation(int _x, int _y);
-    void SetSize(int _width, int _height);
+    const char* TypeName() const override;
+    bool Save(io::ISerializer& serializer) const override;
+    bool Load(io::ISerializer& serializer) override;
+    void Render(IRenderDevice* device) override;
 
-    int GetId() const { return m_id; }
-    int GetType() const { return m_type; }
+    bool LoadResources(IRenderDevice* device);
+    void CloseResources();
 
-  public:
-    virtual void Render() {};
+    void SetId(int id);
+    int Id() const;
 
-    virtual bool CanHaveFocus() { return false; }
+    void SetControlType(GuiControlType type);
+    GuiControlType ControlType() const;
 
-    virtual void OnFocusIn() { m_focus = true; }
+    void SetBounds(int x, int y, int width, int height);
+    void SetLocation(int x, int y);
+    void SetSize(int width, int height);
+    const Rectangle& Bounds() const;
+    Rectangle AbsoluteBounds() const;
 
-    virtual void OnFocusOut() { m_focus = false; }
+    void SetTexturePath(const char* path);
+    const core::string& TexturePath() const;
 
-    virtual void OnMouseEnter() { m_mouse_over = true; }
+    void SetRange(int min, int max);
+    int Min() const;
+    int Max() const;
+    void SetValue(int value);
+    int Value() const;
 
-    virtual void OnMouseLeave() { m_mouse_over = false; }
-
-    virtual bool ContainsPoint(const Point& _point) const
-    {
-        int dx = _point.x - m_bounds.left;
-        int dy = _point.y - m_bounds.top;
-
-        if (dx <= m_bounds.Width() || dy <= m_bounds.Height())
-        {
-            return true;
-        }
-
-        return false;
-    }
-};
-
-class FORG_API CUIKnob : public CUIControl
-{
-  private:
-    int m_Min;
-    int m_Max;
-    int m_Value;
-
-  public:
-    CUIKnob(CUIDialog* _dialog);
-
-    void SetValue(int _value);
-    void SetRange(int _min, int _max);
-
-    int GetValue() const { return m_Value; }
-    int GetMin() const { return m_Min; }
-    int GetMax() const { return m_Max; }
-
-    virtual void Render();
-};
-
-///////////////////////////////////////////////////////////////////////////
-// Dialog
-///////////////////////////////////////////////////////////////////////////
-namespace EMouseEvent {
-enum
-{
-    None,
-    Move,
-};
-}
-
-namespace EMouseButton {
-enum
-{
-    Button0,
-    Button1,
-    Button2
-};
-}
-
-class FORG_API CUIDialog
-{
-    typedef std::vector<std::unique_ptr<CUIControl>> ControlList;
-
-    std::unique_ptr<Sprite> m_Sprite;
-    core::RefPtr<ITexture> m_Texture;
-
-    ControlList m_controls;
-
-  public:
-    CUIDialog();
-    ~CUIDialog();
-
-    bool Init(IRenderDevice* _device, const char* _filename);
-    bool Load(const char* _filename);
-    void Serialize(forg::io::ISerializer* _serializer);
-    void Close();
-    void Render();
-
-    int AddButton(int _id, int x, int y, int width, int height);
-    int AddSlider(int _id, int x, int y, int width, int height);
-    int AddKnob(int _id, int x, int y, int width, int height);
-    int AddComboBox(int _id, int x, int y, int width, int height);
-    int AddControl(CUIControl* _control);
-
-    CUIControl* GetControl(int _id);
-    CUIControl* GetControl(int _id, int _type);
-    CUIControl* GetControlAtPoint(const Point& _point);
-
-    CUIKnob* GetKnob(int _id)
-    {
-        return (CUIKnob*)GetControl(_id, EControlType::Knob);
-    }
-
-    bool HandleMouse(int _event_id, Point _point, int _buttons, int _delta);
-
-    int InitControl(CUIControl* _control);
-    void DrawSprite(const SUIElement& _element, Rectangle& _rect);
+    bool ContainsPoint(const Point& point) const;
+    GuiNode* FindById(int id);
+    const GuiNode* FindById(int id) const;
+    GuiNode* FindAtPoint(const Point& point);
+    const GuiNode* FindAtPoint(const Point& point) const;
 
   private:
+    struct UIElement
+    {
+        Rectangle texCoords;
+        float angle = 0.0f;
+    };
+
+    const GuiNode* ResourceOwner() const;
+    GuiNode* ResourceOwner();
+    void RenderControl(IRenderDevice* device);
+    void DrawSprite(const UIElement& element, const Rectangle& rect);
+
+    int m_id = 0;
+    GuiControlType m_controlType = GuiControlType::Container;
+    Rectangle m_bounds = {0, 0, 0, 0};
+    int m_min = 0;
+    int m_max = 100;
+    int m_value = 0;
+    core::string m_texturePath;
+    std::unique_ptr<Sprite> m_sprite;
+    core::RefPtr<ITexture> m_texture;
 };
+
+const char* GuiControlTypeName(GuiControlType type);
+bool GuiControlTypeFromName(const core::string& name, GuiControlType& type);
 
 } // namespace forg::ui
 

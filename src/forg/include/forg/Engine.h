@@ -63,6 +63,7 @@ class FORG_API Engine
     bool Initialize(HWIN window);
     bool Initialize(HWIN window, std::string_view configFilename);
     bool LoadScene(std::string_view filename);
+    bool LoadScene(std::string_view filename, uint sceneIndex);
     bool StartControlServer(std::string_view bindAddr, int port);
     void StopControlServer();
     bool ControlServerRunning() const;
@@ -92,11 +93,15 @@ class FORG_API Engine
 
     scene::Scene& Scene();
     const scene::Scene& Scene() const;
+    scene::Scene& Scene(uint sceneIndex);
+    const scene::Scene& Scene(uint sceneIndex) const;
+    uint SceneCount() const;
     forg::Camera& Camera();
     const forg::Camera& Camera() const;
 
     IRenderDevice* Device() const;
     IRenderer* Renderer() const;
+    std::string_view RendererPluginName() const;
     const EngineConfig& Config() const;
     const EngineFrameStats& FrameStats() const;
 

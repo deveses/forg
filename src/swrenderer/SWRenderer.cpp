@@ -51,6 +51,6 @@ const forg::RendererPluginDescriptor* forgGetRendererPluginDescriptor()
 {
     static const forg::RendererPluginDescriptor descriptor{
         sizeof(forg::RendererPluginDescriptor), forg::RendererPluginApiVersion,
-        &forgCreateRenderer, &forgDestroyRenderer};
+        &forgCreateRenderer, &forgDestroyRenderer, "Software Renderer"};
     return &descriptor;
 }

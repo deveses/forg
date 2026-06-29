@@ -2,6 +2,7 @@
 
 #include "image/dds/dds.h"
 
+#include <cstdint>
 #include <memory>
 
 namespace forg {
@@ -10,10 +11,10 @@ namespace forg {
 // Defines
 //////////////////////////////////////////////////////////////////////////
 
-typedef unsigned short WORD;
-typedef unsigned long DWORD;
-typedef unsigned long UINT;
-typedef unsigned char UCHAR;
+typedef std::uint16_t WORD;
+typedef std::uint32_t DWORD;
+typedef std::uint32_t UINT;
+typedef std::uint8_t UCHAR;
 typedef UCHAR BYTE;
 
 // Pixelformat flags
