@@ -291,6 +291,22 @@ TEST_CASE("Loss, classification helpers, and SGD support training loops",
     REQUIRE(weight->GetGrad() == Approx(0.0));
 }
 
+TEST_CASE("SGD can scale accumulated gradients for batches", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    const ValuePtr weight = MakeValue(0.0);
+    SGD optimizer({weight}, 0.1);
+
+    optimizer.ZeroGrad();
+    Backward(Pow(weight * 2.0 - 4.0, 2.0));
+    Backward(Pow(weight * 2.0 - 4.0, 2.0));
+    REQUIRE(weight->GetGrad() == Approx(-32.0));
+
+    optimizer.Step(0.5);
+    REQUIRE(weight->GetData() == Approx(1.6));
+}
+
 TEST_CASE("Softmax and cross entropy support multiclass training",
           "[nn][module]")
 {

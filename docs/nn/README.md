@@ -148,7 +148,7 @@ Run it with IDX image and label files:
 build/examples/examples/mnist/forg_mnist \
   train-images.idx3-ubyte train-labels.idx1-ubyte \
   t10k-images.idx3-ubyte t10k-labels.idx1-ubyte \
-  1 1000 200 0.01
+  1 1000 200 0.01 16
 ```
 
 This is a scalar-autograd educational example, so use small subsets first.

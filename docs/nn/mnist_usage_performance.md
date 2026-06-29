@@ -26,7 +26,7 @@ Usage:
 ```sh
 forg_mnist \
   <train-images> <train-labels> <test-images> <test-labels> \
-  [epochs] [train-limit] [test-limit] [learning-rate]
+  [epochs] [train-limit] [test-limit] [learning-rate] [batch-size]
 ```
 
 Example using local MNIST IDX files:
@@ -37,7 +37,7 @@ Example using local MNIST IDX files:
   data/mnist_dataset/train-labels.idx1-ubyte \
   data/mnist_dataset/t10k-images.idx3-ubyte \
   data/mnist_dataset/t10k-labels.idx1-ubyte \
-  3 1000 1000 0.01
+  3 1000 1000 0.01 16
 ```
 
 Arguments:
@@ -46,6 +46,8 @@ Arguments:
 - `train-limit`: Maximum number of training samples used per epoch.
 - `test-limit`: Maximum number of test samples used for accuracy reporting.
 - `learning-rate`: SGD learning rate.
+- `batch-size`: Number of samples whose gradients are accumulated before one
+  averaged optimizer update.
 
 ## Recommended Starting Points
 
@@ -57,10 +59,10 @@ and educational experiments, not fast full-dataset training.
 /usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 1 100 100 0.01
 
 # First meaningful run
-/usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 1000 1000 0.01
+/usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 1000 1000 0.01 16
 
 # Larger scalar-autograd experiment
-/usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 5000 1000 0.01
+/usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 5000 1000 0.01 32
 ```
 
 Start with `0.01` learning rate. If loss explodes or accuracy becomes unstable,
@@ -79,8 +81,9 @@ Sequential{
 ```
 
 Input images are flattened 28x28 MNIST pixels normalized to `[0.0, 1.0]`.
-Training uses `CrossEntropyLoss(output, label)` over raw logits and `SGD`.
-Inference predicts the digit with `ArgMax()` over the 10 raw output scores.
+Training uses `CrossEntropyLoss(output, label)` over raw logits and mini-batch
+SGD. Inference predicts the digit with `ArgMax()` over the 10 raw output
+scores.
 
 ## Baseline Timing
 
@@ -123,6 +126,12 @@ the scratch containers used by `Backward()`. Scalar operations with literal
 constants also avoid allocating temporary constant nodes. The remaining large
 allocation cost is the per-sample forward/loss graph itself.
 
+Batching is implemented as scalar mini-batch gradient accumulation: each sample
+still runs its own forward and backward pass, parameter gradients accumulate
+across the batch, then `SGD::Step(1.0 / batch_size)` applies one averaged
+update. This can improve optimization behavior and reduces optimizer-update
+frequency, but it is not tensor-vectorized batching.
+
 The built-in `profile_us` line reports per-epoch timing in microseconds:
 
 - `epoch`: Whole epoch including training and evaluation.
@@ -144,7 +153,7 @@ Do not treat the current example as a competitive MNIST classifier.
 Main limitations:
 
 - Scalar autograd creates many small heap-allocated `Value` nodes per sample.
-- Training is single-sample SGD with no batching.
+- Batching is gradient accumulation, not vectorized matrix/tensor execution.
 - Dense layers are implemented through scalar operations, not matrix kernels.
 - Cross-entropy is implemented through scalar softmax/log operations, not a
   fused log-softmax kernel.
@@ -164,7 +173,7 @@ Useful future optimization targets:
 
 - Further reduce per-sample graph allocation overhead with a graph arena or
   fused dense-layer operations.
-- Add batched training.
+- Add tensor-vectorized batched training.
 - Add tensor or matrix primitives for dense layers.
 - Add fused log-softmax cross-entropy.
 - Add model serialization so inference does not require retraining.

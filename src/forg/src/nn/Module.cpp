@@ -496,15 +496,18 @@ void SGD::ZeroGrad()
     }
 }
 
-void SGD::Step()
+void SGD::Step() { Step(1.0); }
+
+void SGD::Step(double gradient_scale)
 {
     for (const ValuePtr& parameter : m_parameters)
     {
         if (!parameter)
             continue;
 
-        parameter->SetData(parameter->GetData() -
-                           m_learning_rate * parameter->GetGrad());
+        parameter->SetData(parameter->GetData() - m_learning_rate *
+                                                      gradient_scale *
+                                                      parameter->GetGrad());
     }
 }
 

@@ -15,6 +15,7 @@ optimization, and MNIST IDX loading.
   - `Sequential` for ordered module composition.
   - `MSELoss`, `Softmax`, `CrossEntropyLoss`, `OneHot`, and `ArgMax`.
   - `SGD` with `ZeroGrad()` and `Step()`.
+  - Mini-batch gradient accumulation through scaled `SGD::Step()`.
 - Add MNIST IDX utilities:
   - Read image and label IDX files from user-provided paths.
   - Validate magic numbers and count/dimension consistency.
@@ -25,7 +26,7 @@ optimization, and MNIST IDX loading.
   - Loss: cross-entropy over raw logits.
   - Optimizer: SGD.
   - CLI args for train images, train labels, test images, test labels, epochs,
-    subset size, and learning rate.
+    subset size, learning rate, and batch size.
   - Print loss and accuracy.
   - Keep full MNIST training manual, not part of default CI.
 
@@ -39,7 +40,6 @@ optimization, and MNIST IDX loading.
   - `ctest --test-dir build/debug --output-on-failure`
 
 ## Future Steps
-- Add batching support.
 - Add model serialization for saving/loading trained weights.
 - Add a tensor or matrix backend for practical MNIST performance.
 - Add optimizers such as momentum SGD and Adam.

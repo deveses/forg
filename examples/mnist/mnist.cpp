@@ -67,7 +67,8 @@ void PrintUsage(const char* program)
 {
     std::cout << "Usage: " << program
               << " <train-images> <train-labels> <test-images> <test-labels>"
-                 " [epochs] [train-limit] [test-limit] [learning-rate]\n";
+                 " [epochs] [train-limit] [test-limit] [learning-rate]"
+                 " [batch-size]\n";
 }
 
 double Evaluate(forg::nn::Sequential& model,
@@ -104,6 +105,8 @@ int main(int argc, char** argv)
     const std::size_t train_limit = argc > 6 ? ParseSize(argv[6], 1000) : 1000;
     const std::size_t test_limit = argc > 7 ? ParseSize(argv[7], 200) : 200;
     const double learning_rate = argc > 8 ? ParseDouble(argv[8], 0.01) : 0.01;
+    const std::size_t batch_size =
+        std::max<std::size_t>(1, argc > 9 ? ParseSize(argv[9], 1) : 1);
 
     forg::nn::MnistDataset train;
     if (!train.Load(argv[1], argv[2]))
@@ -145,37 +148,46 @@ int main(int argc, char** argv)
         EpochProfile profile;
         double total_loss = 0.0;
         std::size_t trained = 0;
-        for (std::size_t index = 0; index < samples_per_epoch; ++index)
+        for (std::size_t index = 0; index < samples_per_epoch;)
         {
             Clock::time_point start = Clock::now();
-            forg::nn::Flatten::Into(train_samples[index].pixels, input);
-            profile.input_us += ElapsedUs(start);
-
-            start = Clock::now();
-            const forg::nn::Values output = model.Forward(input);
-            profile.forward_us += ElapsedUs(start);
-
-            start = Clock::now();
-            const forg::nn::ValuePtr loss =
-                forg::nn::CrossEntropyLoss(output, train_samples[index].label);
-            profile.loss_us += ElapsedUs(start);
-            if (!loss)
-                continue;
-
-            start = Clock::now();
             optimizer.ZeroGrad();
             profile.zero_grad_us += ElapsedUs(start);
 
-            start = Clock::now();
-            forg::nn::Backward(loss, backward_scratch);
-            profile.backward_us += ElapsedUs(start);
+            std::size_t batch_count = 0;
+            for (; index < samples_per_epoch && batch_count < batch_size;
+                 ++index)
+            {
+                start = Clock::now();
+                forg::nn::Flatten::Into(train_samples[index].pixels, input);
+                profile.input_us += ElapsedUs(start);
+
+                start = Clock::now();
+                const forg::nn::Values output = model.Forward(input);
+                profile.forward_us += ElapsedUs(start);
+
+                start = Clock::now();
+                const forg::nn::ValuePtr loss = forg::nn::CrossEntropyLoss(
+                    output, train_samples[index].label);
+                profile.loss_us += ElapsedUs(start);
+                if (!loss)
+                    continue;
+
+                start = Clock::now();
+                forg::nn::Backward(loss, backward_scratch);
+                profile.backward_us += ElapsedUs(start);
+
+                total_loss += loss->GetData();
+                ++trained;
+                ++batch_count;
+            }
+
+            if (batch_count == 0)
+                continue;
 
             start = Clock::now();
-            optimizer.Step();
+            optimizer.Step(1.0 / static_cast<double>(batch_count));
             profile.update_us += ElapsedUs(start);
-
-            total_loss += loss->GetData();
-            ++trained;
         }
 
         const double mean_loss =

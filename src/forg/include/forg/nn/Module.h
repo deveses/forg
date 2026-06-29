@@ -145,6 +145,7 @@ class SGD
 
     void ZeroGrad();
     void Step();
+    void Step(double gradient_scale);
 
     double LearningRate() const noexcept { return m_learning_rate; }
     const Values& Parameters() const noexcept { return m_parameters; }
