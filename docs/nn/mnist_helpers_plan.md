@@ -14,7 +14,7 @@ optimization, and MNIST IDX loading.
   - `Flatten` for converting numeric image data into flat `Values`.
   - `Sequential` for ordered module composition.
   - `MSELoss`, `Softmax`, `CrossEntropyLoss`, `OneHot`, and `ArgMax`.
-  - `SGD` with `ZeroGrad()` and `Step()`.
+  - `SGD`, `MomentumSGD`, and `Adam` with `ZeroGrad()` and `Step()`.
   - Mini-batch gradient accumulation through scaled `SGD::Step()`.
   - Model parameter serialization with `SaveParameters()` and
     `LoadParameters()`.
@@ -46,7 +46,6 @@ optimization, and MNIST IDX loading.
   - `ctest --test-dir build/debug --output-on-failure`
 
 ## Future Steps
-- Add optimizers such as momentum SGD and Adam.
 - Add multithreaded CPU execution for the matrix backend, such as row-parallel
   batch processing with a small thread pool.
 - Add SIMD or BLAS-backed matrix kernels for dense layers.

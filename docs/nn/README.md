@@ -72,7 +72,7 @@ plain parameter serialization.
 
 For small multi-class experiments, the helper API provides `Linear`, `ReLU`,
 `Dropout`, `Conv2d`, `MaxPool2d`, `BatchNorm`, `Sequential`, `Flatten`,
-`ArgMax`, `CrossEntropyLoss`, and `SGD`:
+`ArgMax`, `CrossEntropyLoss`, `SGD`, `MomentumSGD`, and `Adam`:
 
 ```cpp
 using namespace forg::nn;
@@ -141,12 +141,11 @@ Gradients accumulate until `ZeroGrad()` or `SetGrad(0.0)` is called.
 
 ## Minimal Training Loop
 
-`Value::SetData()` lets callers update parameters directly. A minimal SGD step
-looks like this:
+`Value::SetData()` lets callers update parameters directly, but most training
+loops should use one of the optimizer helpers. A minimal Adam step looks like
+this:
 
 ```cpp
-const double learning_rate = 0.01;
-
 std::vector<ValuePtr> output = model.Forward(input);
 if (output.empty())
 {
@@ -156,15 +155,15 @@ if (output.empty())
 ValuePtr target = MakeValue(1.0);
 ValuePtr loss = Pow(output[0] - target, 2.0);
 
-model.ZeroGrad();
+Adam optimizer(model.Parameters(), 0.001);
+optimizer.ZeroGrad();
 Backward(loss);
-
-for (const ValuePtr& parameter : model.Parameters())
-{
-    parameter->SetData(parameter->GetData() -
-                       learning_rate * parameter->GetGrad());
-}
+optimizer.Step();
 ```
+
+`SGD::Step(scale)`, `MomentumSGD::Step(scale)`, and `Adam::Step(scale)` can
+scale accumulated gradients before applying an update, which is useful for
+averaged mini-batches.
 
 For binary experiments, `Sigmoid()` can turn one raw score into a probability.
 For multi-class classification, prefer raw logits with `CrossEntropyLoss()`.

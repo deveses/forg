@@ -600,6 +600,46 @@ TEST_CASE("SGD can scale accumulated gradients for batches", "[nn][module]")
     REQUIRE(weight->GetData() == Approx(1.6));
 }
 
+TEST_CASE("MomentumSGD accumulates velocity across steps", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    const ValuePtr weight = MakeValue(0.0);
+    MomentumSGD optimizer({weight}, 0.1, 0.9);
+
+    weight->SetGrad(2.0);
+    optimizer.Step();
+    REQUIRE(weight->GetData() == Approx(-0.2));
+    REQUIRE(optimizer.Velocity()[0] == Approx(2.0));
+
+    weight->SetGrad(3.0);
+    optimizer.Step(0.5);
+    REQUIRE(optimizer.Velocity()[0] == Approx(3.3));
+    REQUIRE(weight->GetData() == Approx(-0.53));
+
+    optimizer.ZeroGrad();
+    REQUIRE(weight->GetGrad() == Approx(0.0));
+}
+
+TEST_CASE("Adam applies bias-corrected adaptive updates", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    const ValuePtr weight = MakeValue(0.0);
+    Adam optimizer({weight}, 0.1);
+
+    weight->SetGrad(4.0);
+    optimizer.Step(0.5);
+
+    REQUIRE(optimizer.StepCount() == 1);
+    REQUIRE(optimizer.FirstMoment()[0] == Approx(0.2));
+    REQUIRE(optimizer.SecondMoment()[0] == Approx(0.004));
+    REQUIRE(weight->GetData() == Approx(-0.1).epsilon(1e-6));
+
+    optimizer.ZeroGrad();
+    REQUIRE(weight->GetGrad() == Approx(0.0));
+}
+
 TEST_CASE("Softmax and cross entropy support multiclass training",
           "[nn][module]")
 {
