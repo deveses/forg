@@ -1,8 +1,24 @@
 scene:
   version: "1"
   nodes:
-    count: "5"
+    count: "6"
     item_0:
+      type: "CameraNode"
+      parent: "-1"
+      camera:
+        projection: "screen"
+        active: "1"
+        controllable: "0"
+        position_x: "0.000000"
+        position_y: "0.000000"
+        position_z: "5.000000"
+        target_x: "0.000000"
+        target_y: "0.000000"
+        target_z: "0.000000"
+        fov: "0.785398"
+        near: "1.500000"
+        far: "1000.000000"
+    item_1:
       type: "GuiNode"
       parent: "-1"
       gui:
@@ -16,9 +32,9 @@ scene:
         min: "0"
         max: "100"
         value: "0"
-    item_1:
+    item_2:
       type: "GuiNode"
-      parent: "0"
+      parent: "1"
       gui:
         control_type: "button"
         id: "0"
@@ -30,9 +46,9 @@ scene:
         min: "0"
         max: "100"
         value: "0"
-    item_2:
+    item_3:
       type: "GuiNode"
-      parent: "0"
+      parent: "1"
       gui:
         control_type: "slider"
         id: "1"
@@ -44,9 +60,9 @@ scene:
         min: "0"
         max: "100"
         value: "0"
-    item_3:
+    item_4:
       type: "GuiNode"
-      parent: "0"
+      parent: "1"
       gui:
         control_type: "knob"
         id: "2"
@@ -58,9 +74,9 @@ scene:
         min: "0"
         max: "100"
         value: "0"
-    item_4:
+    item_5:
       type: "GuiNode"
-      parent: "0"
+      parent: "1"
       gui:
         control_type: "combobox"
         id: "3"

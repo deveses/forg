@@ -1,8 +1,24 @@
 scene:
   version: "1"
   nodes:
-    count: "1"
+    count: "2"
     item_0:
+      type: "CameraNode"
+      parent: "-1"
+      camera:
+        projection: "orthogonal"
+        active: "1"
+        controllable: "1"
+        position_x: "0.000000"
+        position_y: "0.000000"
+        position_z: "5.000000"
+        target_x: "0.000000"
+        target_y: "0.000000"
+        target_z: "0.000000"
+        fov: "0.785398"
+        near: "1.500000"
+        far: "1000.000000"
+    item_1:
       type: "MeshNode"
       parent: "-1"
       model:

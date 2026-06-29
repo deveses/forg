@@ -5,6 +5,7 @@
 #pragma once
 #endif
 
+#include "scene/CameraNode.h"
 #include "scene/MeshNode.h"
 
 #include <memory>
@@ -26,6 +27,7 @@ class FORG_API Scene : public TreeNode
 
   public:
     SceneNode& CreateNode();
+    CameraNode& CreateCameraNode();
     MeshNode& CreateMeshNode();
     ui::GuiNode& CreateGuiNode();
     uint NodeCount() const;
@@ -37,6 +39,8 @@ class FORG_API Scene : public TreeNode
     bool Save(forg::io::ISerializer& serializer) const;
     bool Load(forg::io::ISerializer& serializer);
     bool LoadResources(IRenderDevice* device);
+    CameraNode* ActiveCameraNode();
+    const CameraNode* ActiveCameraNode() const;
 
     void Update(double deltaSeconds);
     void Render(IRenderDevice* device);

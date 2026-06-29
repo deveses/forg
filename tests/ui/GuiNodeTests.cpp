@@ -15,7 +15,14 @@ std::string DataPath(const char* filename)
 
 forg::ui::GuiNode* GuiRoot(forg::scene::Scene& scene)
 {
-    return dynamic_cast<forg::ui::GuiNode*>(scene.Node(0));
+    for (forg::uint i = 0; i < scene.NodeCount(); ++i)
+    {
+        forg::ui::GuiNode* node =
+            dynamic_cast<forg::ui::GuiNode*>(scene.Node(i));
+        if (node != nullptr)
+            return node;
+    }
+    return nullptr;
 }
 
 } // namespace
@@ -28,7 +35,11 @@ TEST_CASE("GuiNode scene loads controls from dialog YAML", "[ui][yaml]")
     forg::scene::Scene scene;
     REQUIRE(scene.Load(serializer));
 
-    REQUIRE(scene.NodeCount() == 5);
+    REQUIRE(scene.NodeCount() == 6);
+    REQUIRE(scene.ActiveCameraNode() != nullptr);
+    REQUIRE(scene.ActiveCameraNode()->Projection() ==
+            forg::scene::CameraProjection::Screen);
+    REQUIRE_FALSE(scene.ActiveCameraNode()->Controllable());
     forg::ui::GuiNode* root = GuiRoot(scene);
     REQUIRE(root != nullptr);
     REQUIRE(root->ControlType() == forg::ui::GuiControlType::Container);

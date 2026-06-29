@@ -125,7 +125,7 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
     }
 
 #ifdef FORG_USE_FREETYPE
-    forg::FontDescription fd = {12,
+    forg::FontDescription fd = {20,
                                 0,
                                 0,
                                 1,
@@ -145,7 +145,6 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
         [NSApp terminate:nil];
         return;
     }
-    m_engine.Camera().set_View(forg::Orthogonal);
 
     [self onResize];
 
@@ -245,7 +244,7 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
             engine.Camera().get_Target().X, engine.Camera().get_Target().Y,
             engine.Camera().get_Target().Z);
 
-        m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
+        m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 255, 255));
     }
 
     return true;

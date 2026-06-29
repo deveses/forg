@@ -292,6 +292,59 @@ struct Engine::Impl
         return *scenes[0];
     }
 
+    scene::CameraNode* ControllableCameraNode()
+    {
+        for (std::unique_ptr<scene::Scene>& scene : scenes)
+        {
+            if (!scene)
+                continue;
+
+            for (uint i = 0; i < scene->NodeCount(); ++i)
+            {
+                scene::CameraNode* cameraNode =
+                    dynamic_cast<scene::CameraNode*>(scene->Node(i));
+                if (cameraNode != nullptr && cameraNode->Controllable())
+                    return cameraNode;
+            }
+        }
+        return nullptr;
+    }
+
+    const scene::CameraNode* ControllableCameraNode() const
+    {
+        return const_cast<Impl*>(this)->ControllableCameraNode();
+    }
+
+    forg::Camera& ControlledCamera()
+    {
+        scene::CameraNode* controllable = ControllableCameraNode();
+        if (controllable != nullptr)
+            return controllable->GetCamera();
+
+        if (!scenes.empty() && scenes[0])
+        {
+            scene::CameraNode* cameraNode = scenes[0]->ActiveCameraNode();
+            if (cameraNode != nullptr)
+                return cameraNode->GetCamera();
+        }
+        return camera;
+    }
+
+    const forg::Camera& ControlledCamera() const
+    {
+        const scene::CameraNode* controllable = ControllableCameraNode();
+        if (controllable != nullptr)
+            return controllable->GetCamera();
+
+        if (!scenes.empty() && scenes[0])
+        {
+            const scene::CameraNode* cameraNode = scenes[0]->ActiveCameraNode();
+            if (cameraNode != nullptr)
+                return cameraNode->GetCamera();
+        }
+        return camera;
+    }
+
     bool IsInitialized() const
     {
         return !module.Empty() || renderer.Get() != nullptr ||
@@ -584,7 +637,7 @@ struct Engine::Impl
         return count;
     }
 
-    void ApplySceneTransforms(uint sceneIndex)
+    void ApplyFallbackSceneTransforms(uint sceneIndex)
     {
         IRenderDevice* renderDevice = device.Get();
         if (renderDevice == nullptr)
@@ -614,6 +667,18 @@ struct Engine::Impl
         }
 
         renderDevice->SetTransform(TransformType_World, Matrix4::Identity);
+    }
+
+    void ApplySceneTransforms(uint sceneIndex, scene::Scene& scene)
+    {
+        scene::CameraNode* cameraNode = scene.ActiveCameraNode();
+        if (cameraNode != nullptr)
+        {
+            cameraNode->Apply(device.Get());
+            return;
+        }
+
+        ApplyFallbackSceneTransforms(sceneIndex);
     }
 
     bool Update(double deltaSeconds, Engine& engine)
@@ -660,7 +725,7 @@ struct Engine::Impl
         {
             if (scenes[i])
             {
-                ApplySceneTransforms(i);
+                ApplySceneTransforms(i, *scenes[i]);
                 scenes[i]->Render(renderDevice);
             }
         }
@@ -724,8 +789,8 @@ struct Engine::Impl
 
         device.Get()->SetViewport(0, 0, width, height);
         device.Get()->Reset();
-        camera.set_ScreenSize(static_cast<float>(width),
-                              static_cast<float>(height));
+        ControlledCamera().set_ScreenSize(static_cast<float>(width),
+                                          static_cast<float>(height));
         ClearError();
     }
 
@@ -735,14 +800,14 @@ struct Engine::Impl
         {
             if (event.Button == InputButton::Left)
             {
-                cameraController.OrbitPixels(camera, event.DeltaX,
+                cameraController.OrbitPixels(ControlledCamera(), event.DeltaX,
                                              event.DeltaY);
                 ClearError();
                 return true;
             }
             if (event.Button == InputButton::Right)
             {
-                cameraController.TruckPixels(camera, event.DeltaX,
+                cameraController.TruckPixels(ControlledCamera(), event.DeltaX,
                                              event.DeltaY);
                 ClearError();
                 return true;
@@ -750,7 +815,7 @@ struct Engine::Impl
         }
         else if (event.Type == InputEventType::Scroll)
         {
-            cameraController.ZoomLines(camera, event.ScrollDelta);
+            cameraController.ZoomLines(ControlledCamera(), event.ScrollDelta);
             ClearError();
             return true;
         }
@@ -813,7 +878,7 @@ struct Engine::Impl
     std::string DispatchCommand(const net::Command& cmd)
     {
         control::SceneControlContext ctx;
-        ctx.camera = &camera;
+        ctx.camera = &ControlledCamera();
         ctx.model = activeModel;
         ctx.light = &light;
         ctx.clearColor = &clearColor;
@@ -1004,9 +1069,9 @@ uint Engine::SceneCount() const
     return static_cast<uint>(m_impl->scenes.size());
 }
 
-forg::Camera& Engine::Camera() { return m_impl->camera; }
+forg::Camera& Engine::Camera() { return m_impl->ControlledCamera(); }
 
-const forg::Camera& Engine::Camera() const { return m_impl->camera; }
+const forg::Camera& Engine::Camera() const { return m_impl->ControlledCamera(); }
 
 IRenderDevice* Engine::Device() const { return m_impl->device.Get(); }
 

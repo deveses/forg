@@ -55,6 +55,8 @@ std::unique_ptr<SceneNode> CreateSerializedNode(const core::string& type)
     const std::string typeText = type.c_str();
     if (typeText == "SceneNode")
         return std::unique_ptr<SceneNode>(new SceneNode());
+    if (typeText == "CameraNode")
+        return std::unique_ptr<SceneNode>(new CameraNode());
     if (typeText == "MeshNode")
         return std::unique_ptr<SceneNode>(new MeshNode());
     if (typeText == "GuiNode")
@@ -68,6 +70,15 @@ SceneNode& Scene::CreateNode()
 {
     std::unique_ptr<SceneNode> node(new SceneNode());
     SceneNode& ref = *node;
+    m_nodes.push_back(std::move(node));
+    AddChild(ref);
+    return ref;
+}
+
+CameraNode& Scene::CreateCameraNode()
+{
+    std::unique_ptr<CameraNode> node(new CameraNode());
+    CameraNode& ref = *node;
     m_nodes.push_back(std::move(node));
     AddChild(ref);
     return ref;
@@ -265,6 +276,28 @@ bool Scene::LoadResources(IRenderDevice* device)
             loaded = guiNode->LoadResources(device) && loaded;
     }
     return loaded;
+}
+
+CameraNode* Scene::ActiveCameraNode()
+{
+    CameraNode* firstCamera = nullptr;
+    for (std::unique_ptr<SceneNode>& node : m_nodes)
+    {
+        CameraNode* cameraNode = dynamic_cast<CameraNode*>(node.get());
+        if (cameraNode == nullptr)
+            continue;
+
+        if (firstCamera == nullptr)
+            firstCamera = cameraNode;
+        if (cameraNode->Active())
+            return cameraNode;
+    }
+    return firstCamera;
+}
+
+const CameraNode* Scene::ActiveCameraNode() const
+{
+    return const_cast<Scene*>(this)->ActiveCameraNode();
 }
 
 void Scene::Update(double deltaSeconds)

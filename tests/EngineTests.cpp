@@ -189,6 +189,50 @@ TEST_CASE("Engine handles scroll input as camera zoom", "[engine][input]")
     REQUIRE(std::string(engine.LastError()).empty());
 }
 
+TEST_CASE("Engine input targets active scene camera node", "[engine][input]")
+{
+    forg::Engine engine;
+    forg::scene::CameraNode& cameraNode = engine.Scene().CreateCameraNode();
+    cameraNode.SetProjection(forg::scene::CameraProjection::Orthogonal);
+    cameraNode.SetControllable(true);
+
+    const forg::math::Vector3 before =
+        cameraNode.GetCamera().get_Position();
+
+    REQUIRE(engine.HandleInput({forg::InputEventType::PointerDrag,
+                                forg::InputButton::Left, 10.0f, 0.0f, 0.0f}));
+
+    REQUIRE(&engine.Camera() == &cameraNode.GetCamera());
+    REQUIRE(cameraNode.GetCamera().get_Position().X != Approx(before.X));
+    REQUIRE(std::string(engine.LastError()).empty());
+}
+
+TEST_CASE("Engine input prefers controllable camera over scene zero fallback",
+          "[engine][input]")
+{
+    forg::Engine engine;
+    forg::scene::CameraNode& worldCamera = engine.Scene().CreateCameraNode();
+    worldCamera.SetProjection(forg::scene::CameraProjection::Orthogonal);
+
+    forg::scene::CameraNode& controlledCamera =
+        engine.Scene(1).CreateCameraNode();
+    controlledCamera.SetProjection(forg::scene::CameraProjection::Orthogonal);
+    controlledCamera.SetControllable(true);
+
+    const forg::math::Vector3 worldBefore =
+        worldCamera.GetCamera().get_Position();
+    const forg::math::Vector3 controlledBefore =
+        controlledCamera.GetCamera().get_Position();
+
+    REQUIRE(engine.HandleInput({forg::InputEventType::PointerDrag,
+                                forg::InputButton::Left, 10.0f, 0.0f, 0.0f}));
+
+    REQUIRE(&engine.Camera() == &controlledCamera.GetCamera());
+    REQUIRE(worldCamera.GetCamera().get_Position().X == Approx(worldBefore.X));
+    REQUIRE(controlledCamera.GetCamera().get_Position().X !=
+            Approx(controlledBefore.X));
+}
+
 TEST_CASE("Engine rejects unsupported input combinations", "[engine][input]")
 {
     forg::Engine engine;
