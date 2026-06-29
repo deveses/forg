@@ -13,10 +13,15 @@ namespace forg::xfile::reader {
 #ifdef FORG_USE_ZLIB
 voidpf MSZipAlloc(voidpf opaque, uInt items, uInt size)
 {
+    (void)opaque;
     return new char[items * size];
 }
 
-void MSZipFree(voidpf opaque, voidpf address) { delete[] (char*)address; }
+void MSZipFree(voidpf opaque, voidpf address)
+{
+    (void)opaque;
+    delete[] (char*)address;
+}
 
 xbzipreader::xbzipreader(std::ifstream& input, bool doubleFloat)
     : xbinreader(input, doubleFloat), m_org_size(0), m_zstream(0)

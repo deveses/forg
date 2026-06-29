@@ -37,6 +37,26 @@ if(FORG_USE_FREETYPE)
     target_link_libraries(forg PRIVATE freetype)
 endif()
 
+if(FORG_USE_ZLIB)
+    if(NOT FORG_ZLIB_LINK_TARGET)
+        message(FATAL_ERROR "FORG_USE_ZLIB is enabled, but no zlib target was configured")
+    endif()
+
+    target_compile_definitions(forg PRIVATE FORG_USE_ZLIB)
+    if(FORG_ZLIB_INCLUDE_DIRS)
+        target_include_directories(forg PRIVATE ${FORG_ZLIB_INCLUDE_DIRS})
+    endif()
+
+    if(FORG_ZLIB_LINK_TARGET STREQUAL "ZLIB::ZLIB")
+        target_link_libraries(forg PRIVATE ZLIB::ZLIB)
+    else()
+        add_dependencies(forg ${FORG_ZLIB_LINK_TARGET})
+        target_link_libraries(forg PRIVATE
+            "$<BUILD_INTERFACE:$<TARGET_FILE:${FORG_ZLIB_LINK_TARGET}>>"
+            "$<INSTALL_INTERFACE:ZLIB::ZLIB>")
+    endif()
+endif()
+
 if(WIN32)
     target_compile_definitions(forg PUBLIC FORG_STATIC NOMINMAX WIN32_LEAN_AND_MEAN)
     target_link_libraries(forg PRIVATE winmm ws2_32)

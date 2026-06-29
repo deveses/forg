@@ -52,9 +52,11 @@ Notes:
 - CMake uses the host default macOS architecture. Pass `-DCMAKE_OSX_ARCHITECTURES=x86_64` or `-DCMAKE_OSX_ARCHITECTURES=arm64` at configure time when you need a specific architecture.
 - The options `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB`
   default to `OFF`. Enabling `FORG_USE_FREETYPE` fetches FreeType and enables
-  `forg::Font` text overlays in the sample apps. The header-only `cgltf`
-  parser in `extern/cgltf/` is always wired in (`extern/CMakeLists.txt`) and
-  linked into `forg` for glTF mesh loading.
+  `forg::Font` text overlays in the sample apps. Enabling `FORG_USE_ZLIB`
+  enables compressed DirectX `.x` mesh support using CMake's zlib package or a
+  fetched fallback. The header-only `cgltf` parser in `extern/cgltf/` is always
+  wired in (`extern/CMakeLists.txt`) and linked into `forg` for glTF mesh
+  loading.
 - Source files for the `forg` library are listed explicitly in `src/forg/Sources.cmake` — new files must be added there.
 
 ## Using FORG from CMake
@@ -164,7 +166,7 @@ data/                    Shared sample assets, UI YAML, textures, and fonts
 tests/                   Catch2/CTest unit tests for the forg library
 docs/nn/README.md        Notes and examples for the tiny neural-network module
 extern/                  Vendored dependencies: cgltf (glTF 2.0 parser, wired
-                         into CMake and linked into forg); zlib, OpenCL/OpenGL
+                         into CMake and linked into forg); OpenCL/OpenGL
                          headers
 tools/                   Repository tooling, including clang-format
 ```
