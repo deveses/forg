@@ -205,6 +205,68 @@ this run. The scalar baseline above was about 15 seconds for one epoch over 100
 training samples, while this matrix run completed three epochs over 5,000
 training samples plus evaluation in under 8 seconds.
 
+## Full MNIST Matrix Run
+
+Measured locally on 2026-06-29 with the full 60,000-sample training set and
+10,000-sample test set:
+
+```sh
+/usr/bin/time -p /private/tmp/forg-example-build/examples/mnist/forg_mnist \
+  data/mnist_dataset/train-images.idx3-ubyte \
+  data/mnist_dataset/train-labels.idx1-ubyte \
+  data/mnist_dataset/t10k-images.idx3-ubyte \
+  data/mnist_dataset/t10k-labels.idx1-ubyte \
+  10 60000 10000 0.05 64 mnist_matrix.mnparams matrix
+```
+
+Output:
+
+```text
+epoch 1/10 backend=matrix loss=0.473042 accuracy=0.9148
+profile_us epoch=24736320 input=381763 train_batch=22573033 eval=1780368
+profile_avg_us_per_sample input=6.36272 train_batch=376.217
+epoch 2/10 backend=matrix loss=0.268993 accuracy=0.9284
+profile_us epoch=24792460 input=382783 train_batch=22639622 eval=1768853
+profile_avg_us_per_sample input=6.37972 train_batch=377.327
+epoch 3/10 backend=matrix loss=0.223326 accuracy=0.9391
+profile_us epoch=24703422 input=380800 train_batch=22548907 eval=1772559
+profile_avg_us_per_sample input=6.34667 train_batch=375.815
+epoch 4/10 backend=matrix loss=0.193755 accuracy=0.9437
+profile_us epoch=24706584 input=381069 train_batch=22558280 eval=1766064
+profile_avg_us_per_sample input=6.35115 train_batch=375.971
+epoch 5/10 backend=matrix loss=0.172001 accuracy=0.9495
+profile_us epoch=24732123 input=381502 train_batch=22579413 eval=1770043
+profile_avg_us_per_sample input=6.35837 train_batch=376.324
+epoch 6/10 backend=matrix loss=0.154819 accuracy=0.9542
+profile_us epoch=24775368 input=381545 train_batch=22624821 eval=1767803
+profile_avg_us_per_sample input=6.35908 train_batch=377.08
+epoch 7/10 backend=matrix loss=0.140941 accuracy=0.9569
+profile_us epoch=24737488 input=381625 train_batch=22583886 eval=1770818
+profile_avg_us_per_sample input=6.36042 train_batch=376.398
+epoch 8/10 backend=matrix loss=0.129512 accuracy=0.9601
+profile_us epoch=24720094 input=381258 train_batch=22569564 eval=1768097
+profile_avg_us_per_sample input=6.3543 train_batch=376.159
+epoch 9/10 backend=matrix loss=0.119795 accuracy=0.963
+profile_us epoch=24799864 input=381896 train_batch=22632860 eval=1783935
+profile_avg_us_per_sample input=6.36493 train_batch=377.214
+epoch 10/10 backend=matrix loss=0.111567 accuracy=0.9658
+profile_us epoch=24727168 input=381301 train_batch=22575643 eval=1769040
+profile_avg_us_per_sample input=6.35502 train_batch=376.261
+saved_checkpoint=mnist_matrix.mnparams
+real 248.72
+user 248.16
+sys 0.33
+```
+
+Summary:
+
+| Backend | Epochs | Train samples | Test samples | Batch size | Total real time | Final accuracy |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| matrix | 10 | 60,000 | 10,000 | 64 | 248.72 seconds | 0.9658 |
+
+Per-epoch time was consistently about 24.7 seconds, with `train_batch` around
+376 us per sample and evaluation around 1.77 seconds over the full test set.
+
 ## Accuracy Expectations
 
 Do not treat the current example as a competitive MNIST classifier.

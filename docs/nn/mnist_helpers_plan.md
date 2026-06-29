@@ -47,6 +47,9 @@ optimization, and MNIST IDX loading.
 
 ## Future Steps
 - Add optimizers such as momentum SGD and Adam.
+- Add multithreaded CPU execution for the matrix backend, such as row-parallel
+  batch processing with a small thread pool.
+- Add SIMD or BLAS-backed matrix kernels for dense layers.
 - Add fused log-softmax cross-entropy for lower graph overhead.
 - Add an inference-only demo for classifying a single image.
 - Document the difference between the educational scalar backend and future
