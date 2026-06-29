@@ -35,6 +35,10 @@ optimization, and MNIST IDX loading.
     subset size, learning rate, batch size, and an optional checkpoint path.
   - Print loss and accuracy.
   - Keep full MNIST training manual, not part of default CI.
+- Add an optional MNIST inference executable:
+  - Load a saved matrix checkpoint.
+  - Classify one IDX sample by index with predicted and expected labels.
+  - Classify a whole IDX dataset and print accuracy when no index is supplied.
 
 ## Tests
 - Extend NN tests for `Linear`, `Sequential`, `Flatten`, `MSELoss`,
@@ -50,7 +54,6 @@ optimization, and MNIST IDX loading.
   batch processing with a small thread pool.
 - Add SIMD or BLAS-backed matrix kernels for dense layers.
 - Add fused log-softmax cross-entropy for lower graph overhead.
-- Add an inference-only demo for classifying a single image.
 - Document the difference between the educational scalar backend and future
   tensor-backed APIs.
 

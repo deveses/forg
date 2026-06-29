@@ -174,7 +174,7 @@ An optional MNIST trainer is available when examples are enabled:
 
 ```sh
 cmake -S . -B build/examples -DFORG_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF
-cmake --build build/examples --target forg_mnist
+cmake --build build/examples --target forg_mnist forg_mnist_infer
 ```
 
 Run it with IDX image and label files:
@@ -195,6 +195,17 @@ build/examples/examples/mnist/forg_mnist \
   t10k-images.idx3-ubyte t10k-labels.idx1-ubyte \
   3 5000 1000 0.05 64 matrix
 ```
+
+After training, classify one test image from a saved matrix checkpoint:
+
+```sh
+build/examples/examples/mnist/forg_mnist_infer \
+  mnist_matrix.mnparams \
+  t10k-images.idx3-ubyte t10k-labels.idx1-ubyte \
+  0
+```
+
+Omit the final index to classify the whole IDX dataset and print accuracy.
 
 See `docs/nn/mnist_usage_performance.md` for timing notes and optimization
 baseline guidance.

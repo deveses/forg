@@ -6,17 +6,19 @@ a baseline when optimizing the neural-network module later.
 
 ## Build
 
-The MNIST trainer is an optional example target. Build it with examples enabled:
+The MNIST trainer and inference demo are optional example targets. Build them
+with examples enabled:
 
 ```sh
 cmake -S . -B build/examples -DFORG_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF
-cmake --build build/examples --target forg_mnist
+cmake --build build/examples --target forg_mnist forg_mnist_infer
 ```
 
-The example binary is expected at:
+The example binaries are expected at:
 
 ```sh
 build/examples/examples/mnist/forg_mnist
+build/examples/examples/mnist/forg_mnist_infer
 ```
 
 ## Run
@@ -53,6 +55,31 @@ Arguments:
   it before training. After training, the example saves current weights there.
 - `backend`: Optional `scalar` or `matrix`. `scalar` preserves the educational
   autograd path. `matrix` uses the dense matrix backend.
+
+## Inference
+
+Use `forg_mnist_infer` to classify data from a saved matrix checkpoint without
+training:
+
+```sh
+build/examples/examples/mnist/forg_mnist_infer \
+  mnist_matrix.mnparams \
+  data/mnist_dataset/t10k-images.idx3-ubyte \
+  data/mnist_dataset/t10k-labels.idx1-ubyte \
+  0
+```
+
+The optional final argument is the sample index. When it is present, the demo
+prints the predicted digit, expected label, match result, and an ASCII rendering
+of the image. Omit the index to classify the whole IDX dataset and print
+accuracy:
+
+```sh
+build/examples/examples/mnist/forg_mnist_infer \
+  mnist_matrix.mnparams \
+  data/mnist_dataset/t10k-images.idx3-ubyte \
+  data/mnist_dataset/t10k-labels.idx1-ubyte
+```
 
 ## Recommended Starting Points
 
@@ -303,7 +330,7 @@ Useful future optimization targets:
 - Add tensor-vectorized batched training.
 - Add tensor primitives beyond the current dense `MatrixMLP` backend.
 - Add fused log-softmax cross-entropy.
-- Add a dedicated inference executable that loads a saved parameter file.
+- Extend inference to load standalone image files in addition to IDX datasets.
 - Use the built-in profile output to target forward, backward, and update
   bottlenecks.
 
