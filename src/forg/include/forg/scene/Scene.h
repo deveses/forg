@@ -14,6 +14,10 @@ namespace forg::io {
 class ISerializer;
 }
 
+namespace forg::ui {
+class GuiNode;
+}
+
 namespace forg::scene {
 
 class FORG_API Scene : public TreeNode
@@ -23,6 +27,7 @@ class FORG_API Scene : public TreeNode
   public:
     SceneNode& CreateNode();
     MeshNode& CreateMeshNode();
+    ui::GuiNode& CreateGuiNode();
     uint NodeCount() const;
     SceneNode* Node(uint index);
     const SceneNode* Node(uint index) const;

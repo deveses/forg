@@ -34,8 +34,6 @@ Viewport::~Viewport()
         m_hWnd = 0;
     }
 
-    m_Dialog.Close();
-
     if (m_font)
     {
         delete m_font;
@@ -103,6 +101,9 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
     if (!m_engine->LoadScene("scene.yml"))
         return 1;
 
+    if (!m_engine->LoadScene("data/ui/dialog.yml", 1))
+        return 1;
+
 #ifdef FORG_USE_FREETYPE
     forg::FontDescription fd = {12,
                                 0,
@@ -117,10 +118,6 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
                                 ("data/fonts/Roboto-Regular.ttf")};
     m_font = forg::Font::CreateIndirect(m_device, &fd);
 #endif
-
-    // m_Dialog.Init(m_device, "../bin/data/ui/dxutcontrols.dds");
-    m_Dialog.Init(m_device, "data/ui/debug_texture2.dds");
-    m_Dialog.Load("data/ui/dialog.yml");
 
     UpdateWindow(m_hWnd);
     return 0;
@@ -365,10 +362,6 @@ void Viewport::RenderUI()
             m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
         }
 
-        if (m_show_gui == 1)
-        {
-            m_Dialog.Render();
-        }
     }
 }
 
@@ -395,15 +388,19 @@ void Viewport::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 void Viewport::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
+    forg::ui::GuiNode* guiRoot =
+        dynamic_cast<forg::ui::GuiNode*>(m_engine->Scene(1).Node(0));
+    forg::ui::GuiNode* knob = guiRoot != nullptr ? guiRoot->FindById(2) : 0;
+
     switch (nChar)
     {
     case VK_DOWN:
-        if (forg::ui::CUIKnob* knob = m_Dialog.GetKnob(2))
-            knob->SetValue(knob->GetValue() - 1);
+        if (knob != nullptr)
+            knob->SetValue(knob->Value() - 1);
         break;
     case VK_UP:
-        if (forg::ui::CUIKnob* knob = m_Dialog.GetKnob(2))
-            knob->SetValue(knob->GetValue() + 1);
+        if (knob != nullptr)
+            knob->SetValue(knob->Value() + 1);
         break;
     }
 
@@ -438,11 +435,6 @@ void Viewport::OnMouseWheel(UINT nFlags, POINTS point, int delta)
 
 void Viewport::OnMouseMove(UINT nFlags, POINTS point)
 {
-    {
-        forg::Point forg_point = {point.x, point.y};
-        m_Dialog.HandleMouse(forg::ui::EMouseEvent::Move, forg_point, 0, 0);
-    }
-
     if (!m_hasLastMousePoint)
     {
         m_lastMousePoint = point;

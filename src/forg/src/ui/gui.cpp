@@ -1,77 +1,14 @@
 #include "gui.h"
 #include "forg_pch.h"
+#include "forg/io/ISerializer.h"
 #include "math/Math.h"
-#include "script/yaml/YAMLSerializer.h"
 
+#include <algorithm>
 #include <cstring>
 
 namespace forg::ui {
-
 namespace {
 
-bool AddSerializedControl(CUIDialog& dialog, const core::string& type, int id,
-                          int x, int y, int width, int height)
-{
-    if (std::strcmp(type.c_str(), "button") == 0)
-        return dialog.AddButton(id, x, y, width, height) == FORG_OK;
-
-    if (std::strcmp(type.c_str(), "slider") == 0)
-        return dialog.AddSlider(id, x, y, width, height) == FORG_OK;
-
-    if (std::strcmp(type.c_str(), "knob") == 0)
-        return dialog.AddKnob(id, x, y, width, height) == FORG_OK;
-
-    if (std::strcmp(type.c_str(), "combobox") == 0)
-        return dialog.AddComboBox(id, x, y, width, height) == FORG_OK;
-
-    return false;
-}
-
-bool LoadSerializedControls(CUIDialog& dialog,
-                            forg::io::ISerializer& serializer)
-{
-    if (!serializer.BeginObject("dialog"))
-        return false;
-
-    uint controlCount = 0;
-    if (!serializer.BeginArray("controls", controlCount))
-    {
-        serializer.EndObject();
-        return false;
-    }
-
-    for (uint i = 0; i < controlCount; ++i)
-    {
-        if (!serializer.BeginObject("control"))
-            return false;
-
-        core::string type;
-        int id = 0;
-        int x = 0;
-        int y = 0;
-        int width = 0;
-        int height = 0;
-
-        const bool loaded =
-            serializer.Value("type", type) && serializer.Value("id", id) &&
-            serializer.Value("x", x) && serializer.Value("y", y) &&
-            serializer.Value("width", width) &&
-            serializer.Value("height", height) &&
-            AddSerializedControl(dialog, type, id, x, y, width, height);
-
-        if (!serializer.EndObject() || !loaded)
-            return false;
-    }
-
-    if (!serializer.EndArray())
-        return false;
-
-    return serializer.EndObject();
-}
-
-} // namespace
-
-// #define FORG_UI_BUTTON_RECT {0, 0, 136, 54}
 #define FORG_UI_BUTTON_RECT_BG {128, 0, 128 + 50, 17}
 #define FORG_UI_BUTTON_RECT_FG {178, 0, 178 + 50, 17}
 #define FORG_UI_SLIDER_BG_RECT {10, 191, 10 + 92, 191 + 41}
@@ -80,451 +17,424 @@ bool LoadSerializedControls(CUIDialog& dialog,
 #define FORG_UI_KNOB_FG_RECT {163, 19, 163 + 35, 19 + 35}
 #define FORG_UI_RECT_COMBOBOX_BG {15, 85, 15 + 240, 85 + 42}
 #define FORG_UI_RECT_COMBOBOX_BUTTON {106, 193, 106 + 53, 193 + 49}
-#define FORG_UI_RECT_COMBOBOX_DROPDOWN {21, 127, 21 + 228, 127 + 37}
-#define FORG_UI_RECT_COMBOBOX_SELECTION {20, 167, 20 + 227, 167 + 20}
-#define FORG_UI_RECT_SCROLLBAR_TRACK {204, 195 + 21, 204 + 22, 195 + 32}
-#define FORG_UI_RECT_SCROLLBAR_UP {204, 195 + 1, 204 + 22, 195 + 21}
-#define FORG_UI_RECT_SCROLLBAR_DOWN {204, 195 + 32, 204 + 22, 195 + 53}
-#define FORG_UI_RECT_SCROLLBAR_BUTTON {228, 196, 228 + 18, 196 + 42}
 
-///////////////////////////////////////////////////////////////////////////////
-// CUIControl
-///////////////////////////////////////////////////////////////////////////////
-
-CUIControl::CUIControl(CUIDialog* _dialog)
+bool StringEquals(const core::string& lhs, const char* rhs)
 {
-    m_dialog = _dialog;
-
-    m_id = 0;
-    m_type = EControlType::Custom;
-
-    m_bounds.left = m_bounds.top = 0;
-    m_bounds.bottom = m_bounds.right = 10;
+    return std::strcmp(lhs.c_str(), rhs) == 0;
 }
 
-void CUIControl::SetId(int _id) { m_id = _id; }
-
-void CUIControl::SetLocation(int _x, int _y)
+float RangePosition(int minValue, int maxValue, int value)
 {
-    int w = m_bounds.right - m_bounds.bottom;
-    int h = m_bounds.bottom - m_bounds.top;
+    const int range = maxValue - minValue;
+    if (range <= 0)
+        return 0.0f;
 
-    m_bounds.left = _x;
-    m_bounds.top = _y;
-    m_bounds.right = m_bounds.left + w;
-    m_bounds.bottom = m_bounds.top + h;
+    return float(value - minValue) / float(range);
 }
 
-void CUIControl::SetSize(int _width, int _height)
+} // namespace
+
+const char* GuiControlTypeName(GuiControlType type)
 {
-    m_bounds.right = m_bounds.left + _width;
-    m_bounds.bottom = m_bounds.top + _height;
+    switch (type)
+    {
+    case GuiControlType::Container:
+        return "container";
+    case GuiControlType::Button:
+        return "button";
+    case GuiControlType::Slider:
+        return "slider";
+    case GuiControlType::Knob:
+        return "knob";
+    case GuiControlType::ComboBox:
+        return "combobox";
+    }
+    return "container";
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// CUIButton
-///////////////////////////////////////////////////////////////////////////////
-class CUIButton : public CUIControl
+bool GuiControlTypeFromName(const core::string& name, GuiControlType& type)
 {
-  public:
-    CUIButton(CUIDialog* _dialog);
-
-    virtual void Render();
-};
-
-CUIButton::CUIButton(CUIDialog* _dialog) : CUIControl(_dialog) {}
-
-void CUIButton::Render()
-{
-    forg::Rectangle rect_tex = FORG_UI_BUTTON_RECT_BG;
-
-    SUIElement el;
-
-    el.tex_coords = rect_tex;
-
-    m_dialog->DrawSprite(el, m_bounds);
-
-    forg::Rectangle rect_tex2 = FORG_UI_BUTTON_RECT_FG;
-    el.tex_coords = rect_tex2;
-
-    m_dialog->DrawSprite(el, m_bounds);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// CUIComboBox
-///////////////////////////////////////////////////////////////////////////////
-class CUIComboBox : public CUIControl
-{
-  public:
-    CUIComboBox(CUIDialog* _dialog);
-
-    virtual void Render();
-};
-
-CUIComboBox::CUIComboBox(CUIDialog* _dialog) : CUIControl(_dialog) {}
-
-void CUIComboBox::Render()
-{
-    forg::Rectangle text_rect = m_bounds;
-    forg::Rectangle text_tex = FORG_UI_RECT_COMBOBOX_BG;
-
-    text_rect.right -= text_rect.Height();
-
-    forg::Rectangle button_rect = m_bounds;
-    forg::Rectangle button_tex = FORG_UI_RECT_COMBOBOX_BUTTON;
-
-    button_rect.left = text_rect.right;
-
-    SUIElement el;
-    el.tex_coords = text_tex;
-    m_dialog->DrawSprite(el, text_rect);
-
-    el.tex_coords = button_tex;
-    m_dialog->DrawSprite(el, button_rect);
-
-    /*
-    forg::Rectangle rect_tex2 = FORG_UI_BUTTON_RECT_FG;
-    el.tex_coords = rect_tex2;
-
-    m_dialog->DrawSprite(el, m_bounds);
-    */
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// CUISlider
-///////////////////////////////////////////////////////////////////////////////
-class CUISlider : public CUIControl
-{
-  private:
-    int m_Min;
-    int m_Max;
-    int m_Value;
-
-  public:
-    CUISlider(CUIDialog* _dialog);
-
-    virtual void Render();
-};
-
-CUISlider::CUISlider(CUIDialog* _dialog) : CUIControl(_dialog)
-{
-    m_Min = 0;
-    m_Max = 100;
-    m_Value = 0;
-}
-
-void CUISlider::Render()
-{
-    int range = m_Max - m_Min;
-    float pos = float(m_Value - m_Min) / float(range);
-    forg::Rectangle rect_tex = FORG_UI_SLIDER_BG_RECT;
-
-    SUIElement el;
-    el.tex_coords = rect_tex;
-    m_dialog->DrawSprite(el, m_bounds);
-
-    forg::Rectangle rect_tex2 = FORG_UI_SLIDER_FG_RECT;
-
-    SUIElement el2;
-    el2.tex_coords = rect_tex2;
-    forg::Rectangle rect_button = m_bounds;
-    rect_button.right = rect_button.left + rect_button.Height();
-    rect_button.Offset(-rect_button.Width() / 2, 0);
-    rect_button.Offset(pos * m_bounds.Width(), 0);
-    m_dialog->DrawSprite(el2, rect_button);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// CUIKnob
-///////////////////////////////////////////////////////////////////////////////
-
-CUIKnob::CUIKnob(CUIDialog* _dialog) : CUIControl(_dialog)
-{
-    m_type = EControlType::Knob;
-
-    m_Min = 0;
-    m_Max = 100;
-    m_Value = 0;
-}
-
-void CUIKnob::SetValue(int _value)
-{
-    m_Value = min(_value, m_Max);
-    m_Value = max(m_Value, m_Min);
-}
-
-void CUIKnob::SetRange(int _min, int _max)
-{
-    m_Min = _min;
-    m_Max = _max;
-}
-
-void CUIKnob::Render()
-{
-    int range = m_Max - m_Min;
-    int half_range = range / 2;
-    float angle = 0.5f * 1.5f * Math::PI * float(m_Value - half_range) /
-                  float(half_range);
-    forg::Rectangle rect_tex = FORG_UI_KNOB_BG_RECT;
-
-    SUIElement el;
-
-    el.tex_coords = rect_tex;
-
-    m_dialog->DrawSprite(el, m_bounds);
-
-    forg::Rectangle rect_tex2 = FORG_UI_KNOB_FG_RECT;
-
-    SUIElement el2;
-
-    el2.tex_coords = rect_tex2;
-    el2.angle = angle;
-
-    m_dialog->DrawSprite(el2, m_bounds);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// CUIDialog
-///////////////////////////////////////////////////////////////////////////////
-
-CUIDialog::CUIDialog() { m_Sprite = nullptr; }
-
-CUIDialog::~CUIDialog() { Close(); }
-
-void CUIDialog::Close()
-{
-    m_controls.clear();
-
-    m_Sprite.reset();
-
-    m_Texture.reset();
-}
-
-bool CUIDialog::Init(IRenderDevice* _device, const char* _filename)
-{
-    m_Texture.reset(forg::ITexture::FromFile(_device, _filename));
-    m_Sprite.reset(forg::Sprite::CreateSprite(_device));
+    if (StringEquals(name, "container"))
+        type = GuiControlType::Container;
+    else if (StringEquals(name, "button"))
+        type = GuiControlType::Button;
+    else if (StringEquals(name, "slider"))
+        type = GuiControlType::Slider;
+    else if (StringEquals(name, "knob"))
+        type = GuiControlType::Knob;
+    else if (StringEquals(name, "combobox"))
+        type = GuiControlType::ComboBox;
+    else
+        return false;
 
     return true;
 }
 
-bool CUIDialog::Load(const char* _filename)
-{
-    forg::io::YAMLSerializer yamlfile;
+GuiNode::GuiNode() = default;
 
-    if (!yamlfile.OpenRead(_filename))
+GuiNode::~GuiNode() { CloseResources(); }
+
+const char* GuiNode::TypeName() const { return "GuiNode"; }
+
+bool GuiNode::Save(io::ISerializer& serializer) const
+{
+    if (!SceneNode::Save(serializer) || !serializer.BeginObject("gui"))
         return false;
 
-    m_controls.clear();
-    return LoadSerializedControls(*this, yamlfile);
-}
+    core::string controlType(GuiControlTypeName(m_controlType));
+    core::string texturePath = m_texturePath;
 
-void CUIDialog::Serialize(forg::io::ISerializer* _serializer)
-{
-    if (_serializer != nullptr && _serializer->IsReading())
-        LoadSerializedControls(*this, *_serializer);
-}
+    int id = m_id;
+    int x = m_bounds.left;
+    int y = m_bounds.top;
+    int minValue = m_min;
+    int maxValue = m_max;
+    int value = m_value;
 
-void CUIDialog::Render()
-{
-    /*
-    Matrix4 tm;
-    float angle = 0.5f*1.5f*Math::PI*float(d_value-50)/50.0f;
-
-    tm.Scale(0.5f, 0.5f, 0.5f);
-    m_Sprite->SetTransform(&tm);
-
-    forg::Rectangle rect = {3, 252, 3+121, 252+121};
-    //forg::Rectangle rect = {3, 376, 3+121, 376+121};
-    forg::Vector3 translation(0.0f, 15.0f, 0.0f);
-    forg::Vector3 center((rect.right - rect.left)/2.0f, (rect.bottom -
-    rect.top)/2.0f, 0.0f); m_Sprite->Begin(forg::SpriteFlags::AlphaBlend);
-    m_Sprite->Draw(m_Texture, &rect, 0, &translation, forg::Color4b(0xff, 0xff,
-    0xff, 0xff)); m_Sprite->End();
-
-    tm.RotateZ(angle);
-    m_Sprite->SetTransform(&tm);
-
-    forg::Rectangle rect2 = {3, 376, 3+121, 376+121};
-    rect = rect2;
-    center = Vector3((rect.right - rect.left)/2.0f, (rect.bottom -
-    rect.top)/2.0f, 0.0f); m_Sprite->Begin(forg::SpriteFlags::AlphaBlend);
-    m_Sprite->Draw(m_Texture, &rect, &center, &translation, forg::Color4b(0xff,
-    0xff, 0xff, 0xff)); m_Sprite->End();
-    */
-    /*
-    m_Sprite->SetTransform(0);
-
-    forg::Rectangle rectButton = {0, 0, 136, 54};
-    translation.X = 100.0f;
-    m_Sprite->Begin(forg::SpriteFlags::AlphaBlend);
-    m_Sprite->Draw(m_Texture, &rectButton, 0, &translation, forg::Color4b(0xff,
-    0xff, 0xff, 0xff)); m_Sprite->End();
-    */
-
-    for (uint i = 0; i < m_controls.size(); i++)
+    if (!serializer.Value("control_type", controlType) ||
+        !serializer.Value("id", id) || !serializer.Value("x", x) ||
+        !serializer.Value("y", y))
     {
-        m_controls[i]->Render();
+        return false;
+    }
+
+    int width = m_bounds.Width();
+    int height = m_bounds.Height();
+    if (!serializer.Value("width", width) || !serializer.Value("height", height) ||
+        !serializer.Value("texture_path", texturePath) ||
+        !serializer.Value("min", minValue) ||
+        !serializer.Value("max", maxValue) ||
+        !serializer.Value("value", value))
+    {
+        return false;
+    }
+
+    return serializer.EndObject();
+}
+
+bool GuiNode::Load(io::ISerializer& serializer)
+{
+    if (!SceneNode::Load(serializer) || !serializer.BeginObject("gui"))
+        return false;
+
+    core::string controlType;
+    int id = 0;
+    int x = 0;
+    int y = 0;
+    int width = 0;
+    int height = 0;
+
+    if (!serializer.Value("control_type", controlType) ||
+        !serializer.Value("id", id) || !serializer.Value("x", x) ||
+        !serializer.Value("y", y) || !serializer.Value("width", width) ||
+        !serializer.Value("height", height))
+    {
+        return false;
+    }
+
+    GuiControlType parsedType = GuiControlType::Container;
+    if (!GuiControlTypeFromName(controlType, parsedType))
+        return false;
+
+    core::string texturePath;
+    serializer.Value("texture_path", texturePath);
+
+    int minValue = 0;
+    int maxValue = 100;
+    int value = 0;
+    serializer.Value("min", minValue);
+    serializer.Value("max", maxValue);
+    serializer.Value("value", value);
+
+    if (!serializer.EndObject())
+        return false;
+
+    m_controlType = parsedType;
+    m_id = id;
+    SetBounds(x, y, width, height);
+    m_texturePath = texturePath;
+    SetRange(minValue, maxValue);
+    SetValue(value);
+    return true;
+}
+
+bool GuiNode::LoadResources(IRenderDevice* device)
+{
+    CloseResources();
+
+    if (m_texturePath.length() != 0)
+    {
+        m_texture.reset(ITexture::FromFile(device, m_texturePath.c_str()));
+        if (!m_texture)
+            return false;
+
+        m_sprite.reset(Sprite::CreateSprite(device));
+        if (!m_sprite)
+            return false;
+    }
+
+    return true;
+}
+
+void GuiNode::CloseResources()
+{
+    m_sprite.reset();
+    m_texture.reset();
+}
+
+void GuiNode::Render(IRenderDevice* device)
+{
+    RenderControl(device);
+    SceneNode::Render(device);
+}
+
+void GuiNode::SetId(int id) { m_id = id; }
+
+int GuiNode::Id() const { return m_id; }
+
+void GuiNode::SetControlType(GuiControlType type) { m_controlType = type; }
+
+GuiControlType GuiNode::ControlType() const { return m_controlType; }
+
+void GuiNode::SetBounds(int x, int y, int width, int height)
+{
+    m_bounds.left = x;
+    m_bounds.top = y;
+    m_bounds.right = x + width;
+    m_bounds.bottom = y + height;
+}
+
+void GuiNode::SetLocation(int x, int y)
+{
+    SetBounds(x, y, m_bounds.Width(), m_bounds.Height());
+}
+
+void GuiNode::SetSize(int width, int height)
+{
+    m_bounds.right = m_bounds.left + width;
+    m_bounds.bottom = m_bounds.top + height;
+}
+
+const Rectangle& GuiNode::Bounds() const { return m_bounds; }
+
+Rectangle GuiNode::AbsoluteBounds() const
+{
+    Rectangle bounds = m_bounds;
+    const TreeNode* parent = Parent();
+    while (parent != nullptr)
+    {
+        const GuiNode* parentGui = dynamic_cast<const GuiNode*>(parent);
+        if (parentGui != nullptr)
+            bounds.Offset(parentGui->m_bounds.left, parentGui->m_bounds.top);
+        parent = parent->Parent();
+    }
+    return bounds;
+}
+
+void GuiNode::SetTexturePath(const char* path)
+{
+    m_texturePath = path != nullptr ? path : "";
+}
+
+const core::string& GuiNode::TexturePath() const { return m_texturePath; }
+
+void GuiNode::SetRange(int minValue, int maxValue)
+{
+    m_min = minValue;
+    m_max = std::max(maxValue, minValue);
+    SetValue(m_value);
+}
+
+int GuiNode::Min() const { return m_min; }
+
+int GuiNode::Max() const { return m_max; }
+
+void GuiNode::SetValue(int value)
+{
+    m_value = std::min(std::max(value, m_min), m_max);
+}
+
+int GuiNode::Value() const { return m_value; }
+
+bool GuiNode::ContainsPoint(const Point& point) const
+{
+    const Rectangle bounds = AbsoluteBounds();
+    return point.x >= bounds.left && point.x <= bounds.right &&
+           point.y >= bounds.top && point.y <= bounds.bottom;
+}
+
+GuiNode* GuiNode::FindById(int id)
+{
+    if (m_id == id)
+        return this;
+
+    for (TreeNode* child : Children())
+    {
+        GuiNode* guiNode = dynamic_cast<GuiNode*>(child);
+        if (guiNode == nullptr)
+            continue;
+
+        GuiNode* found = guiNode->FindById(id);
+        if (found != nullptr)
+            return found;
+    }
+
+    return nullptr;
+}
+
+const GuiNode* GuiNode::FindById(int id) const
+{
+    return const_cast<GuiNode*>(this)->FindById(id);
+}
+
+GuiNode* GuiNode::FindAtPoint(const Point& point)
+{
+    for (auto it = Children().rbegin(); it != Children().rend(); ++it)
+    {
+        GuiNode* guiNode = dynamic_cast<GuiNode*>(*it);
+        if (guiNode == nullptr)
+            continue;
+
+        GuiNode* found = guiNode->FindAtPoint(point);
+        if (found != nullptr)
+            return found;
+    }
+
+    return ContainsPoint(point) ? this : nullptr;
+}
+
+const GuiNode* GuiNode::FindAtPoint(const Point& point) const
+{
+    return const_cast<GuiNode*>(this)->FindAtPoint(point);
+}
+
+const GuiNode* GuiNode::ResourceOwner() const
+{
+    const GuiNode* node = this;
+    while (node != nullptr)
+    {
+        if (node->m_sprite && node->m_texture)
+            return node;
+
+        node = dynamic_cast<const GuiNode*>(node->Parent());
+    }
+    return nullptr;
+}
+
+GuiNode* GuiNode::ResourceOwner()
+{
+    return const_cast<GuiNode*>(
+        static_cast<const GuiNode*>(this)->ResourceOwner());
+}
+
+void GuiNode::RenderControl(IRenderDevice* device)
+{
+    if (m_controlType == GuiControlType::Container)
+        return;
+
+    GuiNode* owner = ResourceOwner();
+    if (owner == nullptr)
+        return;
+
+    device->SetRenderState(RenderStates_Lighting, false);
+
+    const Rectangle bounds = AbsoluteBounds();
+    UIElement element;
+
+    switch (m_controlType)
+    {
+    case GuiControlType::Button:
+    {
+        element.texCoords = FORG_UI_BUTTON_RECT_BG;
+        owner->DrawSprite(element, bounds);
+        element.texCoords = FORG_UI_BUTTON_RECT_FG;
+        owner->DrawSprite(element, bounds);
+        break;
+    }
+
+    case GuiControlType::Slider:
+    {
+        element.texCoords = FORG_UI_SLIDER_BG_RECT;
+        owner->DrawSprite(element, bounds);
+
+        UIElement thumb;
+        thumb.texCoords = FORG_UI_SLIDER_FG_RECT;
+        Rectangle thumbBounds = bounds;
+        thumbBounds.right = thumbBounds.left + thumbBounds.Height();
+        thumbBounds.Offset(-thumbBounds.Width() / 2, 0);
+        thumbBounds.Offset(
+            static_cast<int>(RangePosition(m_min, m_max, m_value) *
+                             bounds.Width()),
+            0);
+        owner->DrawSprite(thumb, thumbBounds);
+        break;
+    }
+
+    case GuiControlType::Knob:
+    {
+        element.texCoords = FORG_UI_KNOB_BG_RECT;
+        owner->DrawSprite(element, bounds);
+
+        UIElement knob;
+        knob.texCoords = FORG_UI_KNOB_FG_RECT;
+        knob.angle =
+            0.5f * 1.5f * Math::PI *
+            (RangePosition(m_min, m_max, m_value) * 2.0f - 1.0f);
+        owner->DrawSprite(knob, bounds);
+        break;
+    }
+
+    case GuiControlType::ComboBox:
+    {
+        Rectangle textBounds = bounds;
+        textBounds.right -= textBounds.Height();
+
+        Rectangle buttonBounds = bounds;
+        buttonBounds.left = textBounds.right;
+
+        element.texCoords = FORG_UI_RECT_COMBOBOX_BG;
+        owner->DrawSprite(element, textBounds);
+        element.texCoords = FORG_UI_RECT_COMBOBOX_BUTTON;
+        owner->DrawSprite(element, buttonBounds);
+        break;
+    }
+
+    case GuiControlType::Container:
+        break;
     }
 }
 
-void CUIDialog::DrawSprite(const SUIElement& _element, Rectangle& _rect)
+void GuiNode::DrawSprite(const UIElement& element, const Rectangle& rect)
 {
+    if (!m_sprite || !m_texture)
+        return;
+
     Vector3 translation;
     Vector3 center;
 
-    translation.X = _rect.left;
-    translation.Y = _rect.top;
+    translation.X = rect.left;
+    translation.Y = rect.top;
     translation.Z = 0.0f;
 
-    float sx = float(_rect.right - _rect.left) /
-               float(_element.tex_coords.right - _element.tex_coords.left);
-    float sy = float(_rect.bottom - _rect.top) /
-               float(_element.tex_coords.bottom - _element.tex_coords.top);
+    const float sx = float(rect.Width()) / float(element.texCoords.Width());
+    const float sy = float(rect.Height()) / float(element.texCoords.Height());
 
-    Matrix4 tm;
-
-    Matrix4::Scaling(tm, sx, sy, 1.0f);
-    if (_element.angle != 0.0f)
+    Matrix4 transform;
+    Matrix4::Scaling(transform, sx, sy, 1.0f);
+    if (element.angle != 0.0f)
     {
-        center.X =
-            float(_element.tex_coords.right - _element.tex_coords.left) / 2.0f;
-        center.Y =
-            float(_element.tex_coords.bottom - _element.tex_coords.top) / 2.0f;
+        center.X = float(element.texCoords.Width()) / 2.0f;
+        center.Y = float(element.texCoords.Height()) / 2.0f;
         center.Z = 0.0f;
 
-        tm.RotateZ(_element.angle);
+        transform.RotateZ(element.angle);
     }
 
-    m_Sprite->SetTransform(&tm);
-
-    m_Sprite->Begin(forg::SpriteFlags::AlphaBlend);
-    m_Sprite->Draw(m_Texture.get(), &_element.tex_coords, &center, &translation,
-                   forg::Color4b(0xff, 0xff, 0xff, 0xff));
-    m_Sprite->End();
-}
-
-CUIControl* CUIDialog::GetControl(int _id)
-{
-    for (uint i = 0; i < m_controls.size(); i++)
-    {
-        if (m_controls[i]->GetId() == _id)
-        {
-            return m_controls[i].get();
-        }
-    }
-
-    return 0;
-}
-
-CUIControl* CUIDialog::GetControl(int _id, int _type)
-{
-    for (uint i = 0; i < m_controls.size(); i++)
-    {
-        if (m_controls[i]->GetType() == _type && m_controls[i]->GetId() == _id)
-        {
-            return m_controls[i].get();
-        }
-    }
-
-    return 0;
-}
-
-CUIControl* CUIDialog::GetControlAtPoint(const Point& _point)
-{
-    for (uint i = 0; i < m_controls.size(); i++)
-    {
-        if (m_controls[i]->ContainsPoint(_point))
-        {
-            return m_controls[i].get();
-        }
-    }
-
-    return 0;
-}
-
-bool CUIDialog::HandleMouse(int, Point _point, int, int)
-{
-    CUIControl* c = GetControlAtPoint(_point);
-
-    if (c != 0)
-    {
-    }
-
-    return false;
-}
-
-int CUIDialog::InitControl(CUIControl*) { return FORG_OK; }
-
-int CUIDialog::AddControl(CUIControl* _control)
-{
-    std::unique_ptr<CUIControl> control(_control);
-
-    InitControl(_control);
-
-    m_controls.push_back(std::move(control));
-
-    return FORG_OK;
-}
-
-int CUIDialog::AddButton(int _id, int x, int y, int width, int height)
-{
-    std::unique_ptr<CUIButton> control(new CUIButton(this));
-    CUIButton* c = control.get();
-
-    AddControl(control.release());
-
-    // TODO: set control's properies
-    c->SetId(_id);
-    c->SetLocation(x, y);
-    c->SetSize(width, height);
-
-    return FORG_OK;
-}
-
-int CUIDialog::AddSlider(int _id, int x, int y, int width, int height)
-{
-    std::unique_ptr<CUISlider> control(new CUISlider(this));
-    CUISlider* c = control.get();
-
-    AddControl(control.release());
-
-    // TODO: set control's properies
-    c->SetId(_id);
-    c->SetLocation(x, y);
-    c->SetSize(width, height);
-
-    return FORG_OK;
-}
-
-int CUIDialog::AddKnob(int _id, int x, int y, int width, int height)
-{
-    std::unique_ptr<CUIKnob> control(new CUIKnob(this));
-    CUIKnob* c = control.get();
-
-    AddControl(control.release());
-
-    // TODO: set control's properies
-    c->SetId(_id);
-    c->SetLocation(x, y);
-    c->SetSize(width, height);
-
-    return FORG_OK;
-}
-
-int CUIDialog::AddComboBox(int _id, int x, int y, int width, int height)
-{
-    std::unique_ptr<CUIComboBox> control(new CUIComboBox(this));
-    CUIComboBox* c = control.get();
-
-    AddControl(control.release());
-
-    // TODO: set control's properies
-    c->SetId(_id);
-    c->SetLocation(x, y);
-    c->SetSize(width, height);
-
-    return FORG_OK;
+    m_sprite->SetTransform(&transform);
+    m_sprite->Begin(SpriteFlags::AlphaBlend);
+    m_sprite->Draw(m_texture.get(), &element.texCoords, &center, &translation,
+                   Color4b(0xff, 0xff, 0xff, 0xff));
+    m_sprite->End();
 }
 
 } // namespace forg::ui

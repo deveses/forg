@@ -9,15 +9,17 @@
 #include "forg/scene/TreeNode.h"
 #include "forg/script/yaml/YAMLSerializer.h"
 #include "forg/rendering/reference/SWRenderDevice.h"
+#include "forg/ui/gui.h"
 
 namespace {
 
 void RequireSerializedMixedScene(const forg::scene::Scene& target)
 {
-    REQUIRE(target.NodeCount() == 3);
+    REQUIRE(target.NodeCount() == 4);
     REQUIRE(target.Node(0)->Parent() == &target);
     REQUIRE(target.Node(1)->Parent() == target.Node(0));
     REQUIRE(target.Node(2)->Parent() == target.Node(1));
+    REQUIRE(target.Node(3)->Parent() == target.Node(0));
     REQUIRE(dynamic_cast<const forg::scene::MeshNode*>(target.Node(0)) ==
             nullptr);
     const forg::scene::MeshNode* loadedMesh =
@@ -25,6 +27,11 @@ void RequireSerializedMixedScene(const forg::scene::Scene& target)
     REQUIRE(loadedMesh != nullptr);
     REQUIRE(dynamic_cast<const forg::scene::MeshNode*>(target.Node(2)) ==
             nullptr);
+    const forg::ui::GuiNode* loadedGui =
+        dynamic_cast<const forg::ui::GuiNode*>(target.Node(3));
+    REQUIRE(loadedGui != nullptr);
+    REQUIRE(loadedGui->Id() == 9);
+    REQUIRE(loadedGui->ControlType() == forg::ui::GuiControlType::Button);
 
     REQUIRE(loadedMesh->GetModel().SourcePath() == "assets/triangle.gltf");
     REQUIRE(loadedMesh->GetModel().LoadOptions() == 17);
@@ -39,8 +46,10 @@ void PopulateSerializedMixedScene(forg::scene::Scene& source)
     forg::scene::SceneNode& root = source.CreateNode();
     forg::scene::MeshNode& mesh = source.CreateMeshNode();
     forg::scene::SceneNode& child = source.CreateNode();
+    forg::ui::GuiNode& gui = source.CreateGuiNode();
     REQUIRE(root.AddChild(mesh));
     REQUIRE(mesh.AddChild(child));
+    REQUIRE(root.AddChild(gui));
 
     forg::Matrix4 transform = forg::Matrix4::Identity;
     transform.M41 = 2.0f;
@@ -48,6 +57,10 @@ void PopulateSerializedMixedScene(forg::scene::Scene& source)
     transform.M43 = 4.0f;
     mesh.GetModel().SetSource("assets/triangle.gltf", 17);
     mesh.GetModel().SetTransform(transform);
+
+    gui.SetId(9);
+    gui.SetControlType(forg::ui::GuiControlType::Button);
+    gui.SetBounds(10, 20, 30, 40);
 }
 
 } // namespace

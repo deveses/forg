@@ -17,10 +17,12 @@
 #include "forg/script/yaml/YAMLSerializer.h"
 
 #include <charconv>
+#include <memory>
 #include <sstream>
 #include <string_view>
 #include <system_error>
 #include <utility>
+#include <vector>
 
 #ifdef FORG_PLATFORM_WINDOWS
 #include <windows.h>
@@ -244,7 +246,7 @@ struct Engine::Impl
 {
     EngineConfig config;
     bool configLoaded = false;
-    scene::Scene scene;
+    std::vector<std::unique_ptr<scene::Scene>> scenes;
     PluginModuleHandle module;
     RendererHandle renderer;
     RenderDeviceHandle device;
@@ -265,6 +267,30 @@ struct Engine::Impl
     std::unique_ptr<net::CommandQueue> controlQueue;
     std::unique_ptr<net::HttpControlServer> controlServer;
     std::string lastError;
+
+    Impl() { ResetScenes(); }
+
+    void ResetScenes()
+    {
+        scenes.clear();
+        EnsureScene(1);
+    }
+
+    scene::Scene& EnsureScene(uint sceneIndex)
+    {
+        scenes.reserve(sceneIndex + 1);
+
+        while (sceneIndex >= scenes.size())
+            scenes.push_back(std::unique_ptr<scene::Scene>(new scene::Scene()));
+        return *scenes[sceneIndex];
+    }
+
+    const scene::Scene& GetScene(uint sceneIndex) const
+    {
+        if (sceneIndex < scenes.size() && scenes[sceneIndex])
+            return *scenes[sceneIndex];
+        return *scenes[0];
+    }
 
     bool IsInitialized() const
     {
@@ -452,7 +478,7 @@ struct Engine::Impl
         return true;
     }
 
-    bool LoadScene(std::string_view filename)
+    bool LoadScene(std::string_view filename, uint sceneIndex)
     {
         if (!RequireInitialized())
             return false;
@@ -472,7 +498,8 @@ struct Engine::Impl
             return false;
         }
 
-        if (!scene.Load(serializer))
+        std::unique_ptr<scene::Scene> nextScene(new scene::Scene());
+        if (!nextScene->Load(serializer))
         {
             std::ostringstream stream;
             stream << "Unable to load scene <" << std::string(filename) << ">";
@@ -480,7 +507,7 @@ struct Engine::Impl
             return false;
         }
 
-        if (!scene.LoadResources(device.Get()))
+        if (!nextScene->LoadResources(device.Get()))
         {
             std::ostringstream stream;
             stream << "Unable to load scene resources <"
@@ -488,6 +515,9 @@ struct Engine::Impl
             SetError(stream.str());
             return false;
         }
+
+        EnsureScene(sceneIndex);
+        scenes[sceneIndex] = std::move(nextScene);
 
         activeModel = nullptr;
         ClearError();
@@ -560,7 +590,11 @@ struct Engine::Impl
             return false;
 
         PumpControlCommands();
-        scene.Update(deltaSeconds);
+        for (std::unique_ptr<scene::Scene>& scene : scenes)
+        {
+            if (scene)
+                scene->Update(deltaSeconds);
+        }
         if (updateCallback != nullptr &&
             !updateCallback(engine, deltaSeconds, updateUserData))
         {
@@ -598,7 +632,11 @@ struct Engine::Impl
         renderDevice->LightEnable(0, lightEnabled);
         renderDevice->SetRenderState(RenderStates_Lighting, lightEnabled);
 
-        scene.Render(renderDevice);
+        for (std::unique_ptr<scene::Scene>& scene : scenes)
+        {
+            if (scene)
+                scene->Render(renderDevice);
+        }
 
         bool callbackOk = true;
         if (renderCallback != nullptr)
@@ -771,7 +809,7 @@ struct Engine::Impl
         std::string shutdownError;
 
         StopControlServer();
-        scene.ClearNodes();
+        ResetScenes();
         activeModel = nullptr;
 
         device.Reset();
@@ -814,7 +852,12 @@ bool Engine::Initialize(HWIN window, std::string_view configFilename)
 
 bool Engine::LoadScene(std::string_view filename)
 {
-    return m_impl->LoadScene(filename);
+    return m_impl->LoadScene(filename, 0);
+}
+
+bool Engine::LoadScene(std::string_view filename, uint sceneIndex)
+{
+    return m_impl->LoadScene(filename, sceneIndex);
 }
 
 bool Engine::StartControlServer(std::string_view bindAddr, int port)
@@ -915,9 +958,24 @@ std::string Engine::DispatchCommand(const net::Command& cmd)
     return m_impl->DispatchCommand(cmd);
 }
 
-scene::Scene& Engine::Scene() { return m_impl->scene; }
+scene::Scene& Engine::Scene() { return m_impl->EnsureScene(0); }
 
-const scene::Scene& Engine::Scene() const { return m_impl->scene; }
+const scene::Scene& Engine::Scene() const { return m_impl->GetScene(0); }
+
+scene::Scene& Engine::Scene(uint sceneIndex)
+{
+    return m_impl->EnsureScene(sceneIndex);
+}
+
+const scene::Scene& Engine::Scene(uint sceneIndex) const
+{
+    return m_impl->GetScene(sceneIndex);
+}
+
+uint Engine::SceneCount() const
+{
+    return static_cast<uint>(m_impl->scenes.size());
+}
 
 forg::Camera& Engine::Camera() { return m_impl->camera; }
 

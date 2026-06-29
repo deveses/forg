@@ -28,7 +28,7 @@ add_executable(forg_tests
     rendering/ReferenceRenderTests.cpp
     scene/ModelTests.cpp
     scene/SceneTreeTests.cpp
-    ui/CUIDialogTests.cpp
+    ui/GuiNodeTests.cpp
     mesh/GltfLoaderTests.cpp
     net/HttpRequestTests.cpp
     net/CommandTests.cpp

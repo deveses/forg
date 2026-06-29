@@ -35,7 +35,6 @@ struct AppSettings
     AppSettings m_settings;
     forg::Engine m_engine;
     forg::Font* m_font;
-    forg::ui::CUIDialog m_dialog;
 
     NSWindow* m_window;
     NSView* m_view;
@@ -140,10 +139,11 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
     m_font = forg::Font::CreateIndirect(m_engine.Device(), &fd);
 #endif
 
-    m_dialog.Init(m_engine.Device(), "data/ui/debug_texture2.dds");
-    if (!m_dialog.Load("data/ui/dialog.yml"))
+    if (!m_engine.LoadScene("data/ui/dialog.yml", 1))
     {
-        std::cerr << "Unable to load data/ui/dialog.yml\n";
+        std::cerr << m_engine.LastError() << "\n";
+        [NSApp terminate:nil];
+        return;
     }
 
     [self onResize];
@@ -247,7 +247,6 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
         m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
     }
 
-    m_dialog.Render();
     return true;
 }
 
@@ -274,7 +273,6 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
     }
 
     m_engine.SetRenderCallback(nullptr, nullptr);
-    m_dialog.Close();
 
     if (m_font)
     {
