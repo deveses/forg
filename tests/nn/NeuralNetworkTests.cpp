@@ -280,6 +280,144 @@ TEST_CASE("Model parameter loading rejects invalid files", "[nn][module]")
     std::filesystem::remove(invalid_filename);
 }
 
+TEST_CASE("Dropout respects training and evaluation modes", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    const Values input = {MakeValue(2.0), MakeValue(-3.0)};
+    Dropout dropout(1.0);
+    Values output = dropout.Forward(input);
+
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0]->GetData() == Approx(0.0));
+    REQUIRE(output[1]->GetData() == Approx(0.0));
+
+    Backward(output[0] + output[1]);
+    REQUIRE(input[0]->GetGrad() == Approx(0.0));
+    REQUIRE(input[1]->GetGrad() == Approx(0.0));
+
+    dropout.Eval();
+    output = dropout.Forward(input);
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0] == input[0]);
+    REQUIRE(output[1] == input[1]);
+
+    const auto shared_dropout = std::make_shared<Dropout>(1.0);
+    Sequential model({shared_dropout});
+    model.Eval();
+    REQUIRE_FALSE(model.Training());
+    REQUIRE_FALSE(shared_dropout->Training());
+}
+
+TEST_CASE("Conv2d applies channel-first scalar convolution", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(5);
+    Conv2d conv(1, 1, 3, 3, 2, 2, 1, 0, rng);
+    REQUIRE(conv.OutputHeight() == 2);
+    REQUIRE(conv.OutputWidth() == 2);
+    REQUIRE(conv.Parameters().size() == 5);
+
+    for (const ValuePtr& weight : conv.Weights())
+    {
+        weight->SetData(1.0);
+    }
+    conv.Biases()[0]->SetData(0.0);
+
+    const Values input = {
+        MakeValue(1.0), MakeValue(2.0), MakeValue(3.0),
+        MakeValue(4.0), MakeValue(5.0), MakeValue(6.0),
+        MakeValue(7.0), MakeValue(8.0), MakeValue(9.0),
+    };
+    const Values output = conv.Forward(input);
+
+    REQUIRE(output.size() == 4);
+    REQUIRE(output[0]->GetData() == Approx(12.0));
+    REQUIRE(output[1]->GetData() == Approx(16.0));
+    REQUIRE(output[2]->GetData() == Approx(24.0));
+    REQUIRE(output[3]->GetData() == Approx(28.0));
+
+    Backward(output[0]);
+    REQUIRE(input[0]->GetGrad() == Approx(1.0));
+    REQUIRE(input[1]->GetGrad() == Approx(1.0));
+    REQUIRE(input[3]->GetGrad() == Approx(1.0));
+    REQUIRE(input[4]->GetGrad() == Approx(1.0));
+    REQUIRE(input[8]->GetGrad() == Approx(0.0));
+    REQUIRE(conv.Weights()[0]->GetGrad() == Approx(1.0));
+    REQUIRE(conv.Weights()[1]->GetGrad() == Approx(2.0));
+    REQUIRE(conv.Weights()[2]->GetGrad() == Approx(4.0));
+    REQUIRE(conv.Weights()[3]->GetGrad() == Approx(5.0));
+    REQUIRE(conv.Biases()[0]->GetGrad() == Approx(1.0));
+}
+
+TEST_CASE("MaxPool2d forwards the maximum value with gradient routing",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    MaxPool2d pool(1, 2, 2, 2, 2);
+    const Values input = {
+        MakeValue(1.0),
+        MakeValue(3.0),
+        MakeValue(2.0),
+        MakeValue(4.0),
+    };
+    const Values output = pool.Forward(input);
+
+    REQUIRE(output.size() == 1);
+    REQUIRE(output[0] == input[3]);
+    REQUIRE(output[0]->GetData() == Approx(4.0));
+
+    Backward(output[0]);
+    REQUIRE(input[0]->GetGrad() == Approx(0.0));
+    REQUIRE(input[1]->GetGrad() == Approx(0.0));
+    REQUIRE(input[2]->GetGrad() == Approx(0.0));
+    REQUIRE(input[3]->GetGrad() == Approx(1.0));
+}
+
+TEST_CASE("BatchNorm normalizes vectors and exposes affine parameters",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    BatchNorm norm(3);
+    const Values input = {MakeValue(1.0), MakeValue(2.0), MakeValue(3.0)};
+    const Values output = norm.Forward(input);
+
+    REQUIRE(output.size() == 3);
+    REQUIRE(norm.Parameters().size() == 6);
+    REQUIRE(output[0]->GetData() + output[1]->GetData() +
+                output[2]->GetData() ==
+            Approx(0.0));
+
+    Backward(output[0]);
+    REQUIRE(norm.Scale()[0]->GetGrad() != Approx(0.0));
+    REQUIRE(norm.Bias()[0]->GetGrad() == Approx(1.0));
+}
+
+TEST_CASE("Image-shaped modules reject invalid shapes", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    Conv2d invalid_conv(1, 1, 2, 2, 3, 3);
+    REQUIRE(invalid_conv.Parameters().empty());
+    REQUIRE(invalid_conv.Forward({MakeValue(1.0)}).empty());
+
+    MaxPool2d invalid_pool(1, 2, 2, 3, 3);
+    REQUIRE(invalid_pool
+                .Forward({
+                    MakeValue(1.0),
+                    MakeValue(2.0),
+                    MakeValue(3.0),
+                    MakeValue(4.0),
+                })
+                .empty());
+
+    BatchNorm norm(2);
+    REQUIRE(norm.Forward({MakeValue(1.0)}).empty());
+}
+
 TEST_CASE("Flatten converts numeric inputs into Values", "[nn][module]")
 {
     using namespace forg::nn;

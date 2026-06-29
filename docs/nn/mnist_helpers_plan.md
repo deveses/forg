@@ -18,6 +18,8 @@ optimization, and MNIST IDX loading.
   - Mini-batch gradient accumulation through scaled `SGD::Step()`.
   - Model parameter serialization with `SaveParameters()` and
     `LoadParameters()`.
+  - Scalar image-model helpers: `Dropout`, `Conv2d`, `MaxPool2d`, and
+    `BatchNorm`.
 - Add MNIST IDX utilities:
   - Read image and label IDX files from user-provided paths.
   - Validate magic numbers and count/dimension consistency.
@@ -44,7 +46,6 @@ optimization, and MNIST IDX loading.
 ## Future Steps
 - Add a tensor or matrix backend for practical MNIST performance.
 - Add optimizers such as momentum SGD and Adam.
-- Add modules like `Dropout`, `Conv2d`, `MaxPool2d`, and `BatchNorm`.
 - Add fused log-softmax cross-entropy for lower graph overhead.
 - Add an inference-only demo for classifying a single image.
 - Document the difference between the educational scalar backend and future

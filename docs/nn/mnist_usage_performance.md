@@ -88,6 +88,11 @@ Training uses `CrossEntropyLoss(output, label)` over raw logits and mini-batch
 SGD. Inference predicts the digit with `ArgMax()` over the 10 raw output
 scores.
 
+The NN module also includes scalar `Conv2d`, `MaxPool2d`, `Dropout`, and
+`BatchNorm` helpers. They compose with `Sequential`, but they still allocate
+scalar autograd graph nodes, so a CNN built from them is primarily useful for
+small correctness experiments until a tensor backend exists.
+
 ## Baseline Timing
 
 Measured locally on 2026-06-29 with:
@@ -158,6 +163,7 @@ Main limitations:
 - Scalar autograd creates many small heap-allocated `Value` nodes per sample.
 - Batching is gradient accumulation, not vectorized matrix/tensor execution.
 - Dense layers are implemented through scalar operations, not matrix kernels.
+- Convolution and pooling helpers are scalar modules, not tensor kernels.
 - Cross-entropy is implemented through scalar softmax/log operations, not a
   fused log-softmax kernel.
 - Checkpoints store parameter values only; callers must recreate the matching

@@ -66,7 +66,8 @@ These scores are raw logits. The current module includes `Softmax()` and
 plain parameter serialization.
 
 For small multi-class experiments, the helper API provides `Linear`, `ReLU`,
-`Sequential`, `Flatten`, `ArgMax`, `CrossEntropyLoss`, and `SGD`:
+`Dropout`, `Conv2d`, `MaxPool2d`, `BatchNorm`, `Sequential`, `Flatten`,
+`ArgMax`, `CrossEntropyLoss`, and `SGD`:
 
 ```cpp
 using namespace forg::nn;
@@ -107,6 +108,11 @@ if (!LoadParameters(loaded, "mnist.nnparams", &error))
 
 The checkpoint stores only the ordered parameter values. Recreate the same
 module structure before loading.
+
+`Conv2d` and `MaxPool2d` operate on flattened channel-first image data:
+`channel * height * width + y * width + x`. They are scalar-autograd modules,
+so they are useful for correctness experiments and tiny image models, not fast
+full MNIST CNN training.
 
 ## Gradients And Losses
 
