@@ -1,0 +1,56 @@
+# Save And Implement MNIST NN Helpers Plan
+
+## Summary
+Save this implementation plan, then add a practical v1 for MNIST training using
+the current scalar autograd engine. Keep the API small and PyTorch-inspired,
+with helpers for dense layers, sequential composition, flattening, loss,
+optimization, and MNIST IDX loading.
+
+## Key Changes
+- Extend `forg::nn` with lightweight helpers:
+  - `using Values = std::vector<ValuePtr>`.
+  - `Linear` as a dense affine layer, reusing existing `Layer` behavior.
+  - `ReLU` for vector activation.
+  - `Flatten` for converting numeric image data into flat `Values`.
+  - `Sequential` for ordered module composition.
+  - `MSELoss`, `OneHot`, and `ArgMax`.
+  - `SGD` with `ZeroGrad()` and `Step()`.
+- Add MNIST IDX utilities:
+  - Read image and label IDX files from user-provided paths.
+  - Validate magic numbers and count/dimension consistency.
+  - Normalize pixels to `[0.0, 1.0]`.
+  - Return samples as flat `std::vector<double>` plus label.
+- Add an optional MNIST example executable:
+  - Model: `Sequential{Linear(784, 64), ReLU, Linear(64, 10)}`.
+  - Loss: one-hot MSE.
+  - Optimizer: SGD.
+  - CLI args for train images, train labels, test images, test labels, epochs,
+    subset size, and learning rate.
+  - Print loss and accuracy.
+  - Keep full MNIST training manual, not part of default CI.
+
+## Tests
+- Extend NN tests for `Linear`, `Sequential`, `Flatten`, `MSELoss`, `SGD`,
+  `OneHot`, and `ArgMax`.
+- Add loader tests for valid data, invalid magic numbers, and mismatched
+  image/label counts using tiny synthetic IDX files.
+- Run:
+  - `cmake --build build/debug`
+  - `ctest --test-dir build/debug --output-on-failure`
+
+## Future Steps
+- Add `Exp`, `Log`, `Sigmoid`, `Softmax`, and cross-entropy loss.
+- Add batching support.
+- Add model serialization for saving/loading trained weights.
+- Add a tensor or matrix backend for practical MNIST performance.
+- Add optimizers such as momentum SGD and Adam.
+- Add modules like `Dropout`, `Conv2d`, `MaxPool2d`, and `BatchNorm`.
+- Add an inference-only demo for classifying a single image.
+- Document the difference between the educational scalar backend and future
+  tensor-backed APIs.
+
+## Assumptions
+- v1 remains CPU-only and scalar-autograd-based.
+- Existing `Neuron`, `Layer`, and `MLP` APIs remain source-compatible.
+- No tensor backend, softmax/cross-entropy, or model serialization in v1.
+- Full MNIST data is not committed to the repo.

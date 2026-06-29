@@ -1,6 +1,9 @@
 #include "forg/nn/Module.h"
 
+#include <cstddef>
+#include <limits>
 #include <random>
+#include <utility>
 
 namespace forg::nn {
 namespace {
@@ -11,10 +14,10 @@ std::mt19937& DefaultRng()
     return rng;
 }
 
-std::vector<ValuePtr> MakeWeights(std::size_t count, std::mt19937& rng)
+Values MakeWeights(std::size_t count, std::mt19937& rng)
 {
     std::uniform_real_distribution<double> distribution(-1.0, 1.0);
-    std::vector<ValuePtr> weights;
+    Values weights;
     weights.reserve(count);
     for (std::size_t index = 0; index < count; ++index)
     {
@@ -23,7 +26,7 @@ std::vector<ValuePtr> MakeWeights(std::size_t count, std::mt19937& rng)
     return weights;
 }
 
-bool IsInputValid(const std::vector<ValuePtr>& input, std::size_t expected)
+bool IsInputValid(const Values& input, std::size_t expected)
 {
     if (input.size() != expected)
         return false;
@@ -38,6 +41,8 @@ bool IsInputValid(const std::vector<ValuePtr>& input, std::size_t expected)
 
 } // namespace
 
+Values Module::Forward(const Values& input) const { return input; }
+
 void Module::ZeroGrad()
 {
     for (const ValuePtr& parameter : Parameters())
@@ -47,7 +52,7 @@ void Module::ZeroGrad()
     }
 }
 
-std::vector<ValuePtr> Module::Parameters() const { return {}; }
+Values Module::Parameters() const { return {}; }
 
 Neuron::Neuron(std::size_t input_count, bool nonlin)
     : Neuron(input_count, DefaultRng(), nonlin)
@@ -64,7 +69,7 @@ Neuron::Neuron(std::size_t input_count, std::mt19937& rng, bool nonlin)
     m_bias = MakeValue(0.0);
 }
 
-std::vector<ValuePtr> Neuron::Forward(const std::vector<ValuePtr>& input) const
+Values Neuron::Forward(const Values& input) const
 {
     if (!m_bias || m_weights.empty() || !IsInputValid(input, m_weights.size()))
         return {};
@@ -78,12 +83,12 @@ std::vector<ValuePtr> Neuron::Forward(const std::vector<ValuePtr>& input) const
     }
 
     ValuePtr output = m_nonlin ? Relu(activation) : activation;
-    return output ? std::vector<ValuePtr>{output} : std::vector<ValuePtr>{};
+    return output ? Values{output} : Values{};
 }
 
-std::vector<ValuePtr> Neuron::Parameters() const
+Values Neuron::Parameters() const
 {
-    std::vector<ValuePtr> parameters = m_weights;
+    Values parameters = m_weights;
     if (m_bias)
         parameters.push_back(m_bias);
     return parameters;
@@ -107,16 +112,16 @@ Layer::Layer(std::size_t input_count, std::size_t output_count,
     }
 }
 
-std::vector<ValuePtr> Layer::Forward(const std::vector<ValuePtr>& input) const
+Values Layer::Forward(const Values& input) const
 {
     if (m_neurons.empty())
         return {};
 
-    std::vector<ValuePtr> output;
+    Values output;
     output.reserve(m_neurons.size());
     for (const Neuron& neuron : m_neurons)
     {
-        std::vector<ValuePtr> neuron_output = neuron.Forward(input);
+        Values neuron_output = neuron.Forward(input);
         if (neuron_output.empty())
             return {};
 
@@ -125,12 +130,12 @@ std::vector<ValuePtr> Layer::Forward(const std::vector<ValuePtr>& input) const
     return output;
 }
 
-std::vector<ValuePtr> Layer::Parameters() const
+Values Layer::Parameters() const
 {
-    std::vector<ValuePtr> parameters;
+    Values parameters;
     for (const Neuron& neuron : m_neurons)
     {
-        std::vector<ValuePtr> neuron_parameters = neuron.Parameters();
+        Values neuron_parameters = neuron.Parameters();
         parameters.insert(parameters.end(), neuron_parameters.begin(),
                           neuron_parameters.end());
     }
@@ -165,12 +170,12 @@ MLP::MLP(std::size_t input_count, const std::vector<std::size_t>& output_counts,
     }
 }
 
-std::vector<ValuePtr> MLP::Forward(const std::vector<ValuePtr>& input) const
+Values MLP::Forward(const Values& input) const
 {
     if (m_layers.empty())
         return {};
 
-    std::vector<ValuePtr> output = input;
+    Values output = input;
     for (const Layer& layer : m_layers)
     {
         output = layer.Forward(output);
@@ -180,16 +185,201 @@ std::vector<ValuePtr> MLP::Forward(const std::vector<ValuePtr>& input) const
     return output;
 }
 
-std::vector<ValuePtr> MLP::Parameters() const
+Values MLP::Parameters() const
 {
-    std::vector<ValuePtr> parameters;
+    Values parameters;
     for (const Layer& layer : m_layers)
     {
-        std::vector<ValuePtr> layer_parameters = layer.Parameters();
+        Values layer_parameters = layer.Parameters();
         parameters.insert(parameters.end(), layer_parameters.begin(),
                           layer_parameters.end());
     }
     return parameters;
+}
+
+Linear::Linear(std::size_t input_count, std::size_t output_count)
+    : Linear(input_count, output_count, DefaultRng())
+{
+}
+
+Linear::Linear(std::size_t input_count, std::size_t output_count,
+               std::mt19937& rng)
+    : m_layer(input_count, output_count, rng, false)
+{
+}
+
+Values Linear::Forward(const Values& input) const
+{
+    return m_layer.Forward(input);
+}
+
+Values Linear::Parameters() const { return m_layer.Parameters(); }
+
+Values ReLU::Forward(const Values& input) const
+{
+    Values output;
+    output.reserve(input.size());
+    for (const ValuePtr& value : input)
+    {
+        ValuePtr activated = Relu(value);
+        if (!activated)
+            return {};
+        output.push_back(activated);
+    }
+    return output;
+}
+
+Values Flatten::Forward(const Values& input) const { return input; }
+
+Values Flatten::From(const std::vector<double>& input)
+{
+    Values output;
+    output.reserve(input.size());
+    for (const double value : input)
+    {
+        output.push_back(MakeValue(value));
+    }
+    return output;
+}
+
+Values Flatten::FromImage(const std::vector<std::vector<double>>& image)
+{
+    std::size_t count = 0;
+    for (const std::vector<double>& row : image)
+    {
+        count += row.size();
+    }
+
+    Values output;
+    output.reserve(count);
+    for (const std::vector<double>& row : image)
+    {
+        for (const double value : row)
+        {
+            output.push_back(MakeValue(value));
+        }
+    }
+    return output;
+}
+
+Sequential::Sequential(std::vector<std::shared_ptr<Module>> modules)
+    : m_modules(std::move(modules))
+{
+}
+
+void Sequential::Add(std::shared_ptr<Module> module)
+{
+    if (module)
+        m_modules.push_back(std::move(module));
+}
+
+Values Sequential::Forward(const Values& input) const
+{
+    Values output = input;
+    for (const std::shared_ptr<Module>& module : m_modules)
+    {
+        if (!module)
+            return {};
+
+        output = module->Forward(output);
+        if (output.empty())
+            return {};
+    }
+    return output;
+}
+
+Values Sequential::Parameters() const
+{
+    Values parameters;
+    for (const std::shared_ptr<Module>& module : m_modules)
+    {
+        if (!module)
+            continue;
+
+        Values module_parameters = module->Parameters();
+        parameters.insert(parameters.end(), module_parameters.begin(),
+                          module_parameters.end());
+    }
+    return parameters;
+}
+
+ValuePtr MSELoss(const Values& prediction, const Values& target)
+{
+    if (prediction.empty() || prediction.size() != target.size())
+        return nullptr;
+
+    ValuePtr loss = MakeValue(0.0);
+    for (std::size_t index = 0; index < prediction.size(); ++index)
+    {
+        if (!prediction[index] || !target[index])
+            return nullptr;
+
+        const ValuePtr error = prediction[index] - target[index];
+        loss = loss + error * error;
+        if (!loss)
+            return nullptr;
+    }
+    return loss / static_cast<double>(prediction.size());
+}
+
+Values OneHot(std::size_t class_count, std::size_t index)
+{
+    if (class_count == 0 || index >= class_count)
+        return {};
+
+    Values output;
+    output.reserve(class_count);
+    for (std::size_t class_index = 0; class_index < class_count; ++class_index)
+    {
+        output.push_back(MakeValue(class_index == index ? 1.0 : 0.0));
+    }
+    return output;
+}
+
+std::size_t ArgMax(const Values& values)
+{
+    if (values.empty())
+        return std::numeric_limits<std::size_t>::max();
+
+    std::size_t best_index = 0;
+    for (std::size_t index = 1; index < values.size(); ++index)
+    {
+        if (!values[index])
+            continue;
+
+        if (!values[best_index] ||
+            values[index]->GetData() > values[best_index]->GetData())
+        {
+            best_index = index;
+        }
+    }
+    return best_index;
+}
+
+SGD::SGD(Values parameters, double learning_rate)
+    : m_parameters(std::move(parameters)), m_learning_rate(learning_rate)
+{
+}
+
+void SGD::ZeroGrad()
+{
+    for (const ValuePtr& parameter : m_parameters)
+    {
+        if (parameter)
+            parameter->SetGrad(0.0);
+    }
+}
+
+void SGD::Step()
+{
+    for (const ValuePtr& parameter : m_parameters)
+    {
+        if (!parameter)
+            continue;
+
+        parameter->SetData(parameter->GetData() -
+                           m_learning_rate * parameter->GetGrad());
+    }
 }
 
 } // namespace forg::nn

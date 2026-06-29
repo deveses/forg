@@ -3,10 +3,22 @@
 
 #include "forg/nn.h"
 
+#include <filesystem>
+#include <memory>
 #include <random>
+#include <string>
 #include <vector>
 
 using Catch::Approx;
+
+namespace {
+
+std::filesystem::path MnistDataPath(const char* name)
+{
+    return std::filesystem::path(FORG_TEST_DATA_DIR) / "mnist" / name;
+}
+
+} // namespace
 
 TEST_CASE("Value backward matches micrograd sanity expression", "[nn][value]")
 {
@@ -139,4 +151,128 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
     forg::nn::Layer layer(2, 1, rng);
     REQUIRE(layer.Forward({forg::nn::MakeValue(1.0)}).empty());
     REQUIRE(layer.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
+}
+
+TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(42);
+    Linear linear(3, 2, rng);
+    const Values input = {MakeValue(1.0), MakeValue(-2.0), MakeValue(0.5)};
+    const Values output = linear.Forward(input);
+
+    REQUIRE(output.size() == 2);
+    REQUIRE(linear.Parameters().size() == 8);
+
+    Sequential model({
+        std::make_shared<Linear>(3, 4, rng),
+        std::make_shared<ReLU>(),
+        std::make_shared<Linear>(4, 1, rng),
+    });
+    const Values prediction = model.Forward(input);
+
+    REQUIRE(prediction.size() == 1);
+    REQUIRE(model.Parameters().size() == 21);
+}
+
+TEST_CASE("Flatten converts numeric inputs into Values", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    const Values flat = Flatten::From({0.0, 0.5, 1.0});
+    REQUIRE(flat.size() == 3);
+    REQUIRE(flat[0]->GetData() == Approx(0.0));
+    REQUIRE(flat[1]->GetData() == Approx(0.5));
+    REQUIRE(flat[2]->GetData() == Approx(1.0));
+
+    const Values image = Flatten::FromImage({
+        {0.25, 0.75},
+        {1.0}
+    });
+    REQUIRE(image.size() == 3);
+    REQUIRE(image[0]->GetData() == Approx(0.25));
+    REQUIRE(image[1]->GetData() == Approx(0.75));
+    REQUIRE(image[2]->GetData() == Approx(1.0));
+}
+
+TEST_CASE("Loss, classification helpers, and SGD support training loops",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    const Values target = OneHot(3, 1);
+    REQUIRE(target.size() == 3);
+    REQUIRE(target[0]->GetData() == Approx(0.0));
+    REQUIRE(target[1]->GetData() == Approx(1.0));
+    REQUIRE(target[2]->GetData() == Approx(0.0));
+
+    const Values scores = {MakeValue(-1.0), MakeValue(2.0), MakeValue(0.5)};
+    REQUIRE(ArgMax(scores) == 1);
+    REQUIRE(OneHot(0, 0).empty());
+    REQUIRE(OneHot(3, 4).empty());
+
+    const ValuePtr weight = MakeValue(0.0);
+    const Values prediction = {weight * 2.0};
+    const Values expected = {MakeValue(4.0)};
+    const ValuePtr loss = MSELoss(prediction, expected);
+
+    REQUIRE(loss);
+    REQUIRE(loss->GetData() == Approx(16.0));
+
+    SGD optimizer({weight}, 0.1);
+    optimizer.ZeroGrad();
+    Backward(loss);
+    REQUIRE(weight->GetGrad() == Approx(-16.0));
+
+    optimizer.Step();
+    REQUIRE(weight->GetData() == Approx(1.6));
+
+    optimizer.ZeroGrad();
+    REQUIRE(weight->GetGrad() == Approx(0.0));
+}
+
+TEST_CASE("MNIST dataset reads valid IDX image and label files", "[nn][mnist]")
+{
+    const std::filesystem::path images =
+        MnistDataPath("valid-images.idx3-ubyte");
+    const std::filesystem::path labels =
+        MnistDataPath("valid-labels.idx1-ubyte");
+
+    forg::nn::MnistDataset dataset;
+    REQUIRE(dataset.Load(images.string(), labels.string()));
+    REQUIRE(dataset.Rows() == 2);
+    REQUIRE(dataset.Columns() == 2);
+    REQUIRE(dataset.ImageSize() == 4);
+    REQUIRE(dataset.Samples().size() == 2);
+    REQUIRE(dataset.Samples()[0].label == 3);
+    REQUIRE(dataset.Samples()[1].label == 9);
+    REQUIRE(dataset.Samples()[0].pixels[0] == Approx(0.0));
+    REQUIRE(dataset.Samples()[0].pixels[2] == Approx(1.0));
+    REQUIRE(dataset.Samples()[1].pixels[2] == Approx(128.0 / 255.0));
+}
+
+TEST_CASE("MNIST dataset rejects invalid magic numbers", "[nn][mnist]")
+{
+    const std::filesystem::path images =
+        MnistDataPath("invalid-magic-images.idx3-ubyte");
+    const std::filesystem::path labels =
+        MnistDataPath("invalid-magic-labels.idx1-ubyte");
+
+    forg::nn::MnistDataset dataset;
+    REQUIRE_FALSE(dataset.Load(images.string(), labels.string()));
+    REQUIRE_FALSE(dataset.Error().empty());
+}
+
+TEST_CASE("MNIST dataset rejects mismatched image and label counts",
+          "[nn][mnist]")
+{
+    const std::filesystem::path images =
+        MnistDataPath("mismatch-images.idx3-ubyte");
+    const std::filesystem::path labels =
+        MnistDataPath("mismatch-labels.idx1-ubyte");
+
+    forg::nn::MnistDataset dataset;
+    REQUIRE_FALSE(dataset.Load(images.string(), labels.string()));
+    REQUIRE_FALSE(dataset.Error().empty());
 }

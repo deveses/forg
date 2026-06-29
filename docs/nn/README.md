@@ -62,7 +62,26 @@ for (std::size_t i = 1; i < output.size(); ++i)
 ```
 
 These scores are raw logits. The current module does not include softmax,
-sigmoid, cross-entropy, batching, serialization, or an optimizer.
+sigmoid, cross-entropy, batching, or serialization.
+
+For small multi-class experiments, the helper API provides `Linear`, `ReLU`,
+`Sequential`, `Flatten`, `OneHot`, `ArgMax`, `MSELoss`, and `SGD`:
+
+```cpp
+using namespace forg::nn;
+
+Sequential model({
+    std::make_shared<Linear>(784, 64),
+    std::make_shared<ReLU>(),
+    std::make_shared<Linear>(64, 10),
+});
+
+SGD optimizer(model.Parameters(), 0.01);
+Values input = Flatten::From(normalized_pixels);
+Values target = OneHot(10, label);
+Values output = model.Forward(input);
+ValuePtr loss = MSELoss(output, target);
+```
 
 ## Gradients And Losses
 
@@ -114,3 +133,25 @@ for (const ValuePtr& parameter : model.Parameters())
 For classification experiments, start with one output and squared error for a
 binary target. Better classifier training will need additional helpers such as
 sigmoid or softmax plus cross-entropy.
+
+## MNIST Example
+
+An optional MNIST trainer is available when examples are enabled:
+
+```sh
+cmake -S . -B build/examples -DFORG_BUILD_EXAMPLES=ON -DBUILD_TESTING=OFF
+cmake --build build/examples --target forg_mnist
+```
+
+Run it with IDX image and label files:
+
+```sh
+build/examples/examples/mnist/forg_mnist \
+  train-images.idx3-ubyte train-labels.idx1-ubyte \
+  t10k-images.idx3-ubyte t10k-labels.idx1-ubyte \
+  1 1000 200 0.01
+```
+
+This is a scalar-autograd educational example, so use small subsets first.
+See `docs/nn/mnist_usage_performance.md` for timing notes and optimization
+baseline guidance.

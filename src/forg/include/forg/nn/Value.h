@@ -20,6 +20,7 @@ class Value;
 struct ValueGraphAccess;
 
 using ValuePtr = std::shared_ptr<Value>;
+using Values = std::vector<ValuePtr>;
 
 class Value
 {

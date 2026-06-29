@@ -8,6 +8,7 @@
 #ifndef FORG_NN_H
 #define FORG_NN_H
 
+#include "forg/nn/Mnist.h"
 #include "forg/nn/Module.h"
 #include "forg/nn/Value.h"
 

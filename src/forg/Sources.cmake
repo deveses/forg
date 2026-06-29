@@ -31,11 +31,13 @@ list(TRANSFORM core_sources PREPEND "src/core/")
 # nn
 ###############################################################################
 set(nn_includes
+    Mnist.h
     Module.h
     Value.h
 )
 list(TRANSFORM nn_includes PREPEND "include/forg/nn/")
 set(nn_sources
+    Mnist.cpp
     Module.cpp
     Value.cpp
 )
