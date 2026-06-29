@@ -35,7 +35,10 @@ Run the sample with:
 ./build/release/src/macapp/macapp
 ```
 
-A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`, and `src/macapp/config.yml` next to the binary. `config.yml` selects which plugin `macapp` loads (default: `libmetalrenderer.dylib`; switch to `libswrenderer.dylib` to compare).
+A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`,
+`src/macapp/config.yml`, `src/macapp/scene.yml`, and the shared `data/` assets
+next to the binary. `config.yml` selects which plugin `macapp` loads (default:
+`libmetalrenderer.dylib`; switch to `libswrenderer.dylib` to compare).
 
 If `controlserver.enabled` is `true` in `config.yml`, the sample starts a
 local HTTP control endpoint. It accepts scene/camera commands plus normalized
@@ -47,7 +50,11 @@ the same `forg::InputEvent` path through `Engine::HandleInput`.
 Notes:
 
 - CMake uses the host default macOS architecture. Pass `-DCMAKE_OSX_ARCHITECTURES=x86_64` or `-DCMAKE_OSX_ARCHITECTURES=arm64` at configure time when you need a specific architecture.
-- The options `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB` default to `OFF`; their vendored dependencies in `extern/` (`freetype`, `zlib`, OpenCL/OpenGL headers) are not currently wired into the build. The header-only `cgltf` parser in `extern/cgltf/` *is* wired in (`extern/CMakeLists.txt`) and linked into `forg` for glTF mesh loading.
+- The options `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB`
+  default to `OFF`. Enabling `FORG_USE_FREETYPE` fetches FreeType and enables
+  `forg::Font` text overlays in the sample apps. The header-only `cgltf`
+  parser in `extern/cgltf/` is always wired in (`extern/CMakeLists.txt`) and
+  linked into `forg` for glTF mesh loading.
 - Source files for the `forg` library are listed explicitly in `src/forg/Sources.cmake` — new files must be added there.
 
 ## Using FORG from CMake
@@ -132,7 +139,10 @@ windowing and OpenCL remain outside the automated test surface.
 
 Use the `windows-debug` and `windows-release` presets with Visual Studio 2022. CMake builds `forg`, the direct Win32 `winapp`, `glrenderer`, the Windows software renderer, and the test suite. OpenCL and C++ AMP remain unsupported legacy targets until they are independently revived or removed.
 
-A post-build step copies `glrenderer.dll`, `swrenderer.dll`, and `src/winapp/config.yml` next to `winapp.exe`. `config.yml` selects which plugin `winapp` loads and controls the initial window geometry.
+A post-build step copies `glrenderer.dll`, `swrenderer.dll`,
+`src/winapp/config.yml`, `src/winapp/scene.yml`, and the shared `data/` assets
+next to `winapp.exe`. `config.yml` selects which plugin `winapp` loads and
+controls the initial window geometry.
 
 ## Project layout
 
@@ -150,11 +160,12 @@ src/swrenderer/          Software-renderer plugin (CMake dylib on macOS,
 src/metalrenderer/       Native Apple Metal renderer plugin (CMake dylib, macOS)
 src/glrenderer/          OpenGL renderer plugin (CMake DLL on Windows)
 src/{cl,amp}renderer/    Unsupported legacy renderer sources
+data/                    Shared sample assets, UI YAML, textures, and fonts
 tests/                   Catch2/CTest unit tests for the forg library
 docs/nn/README.md        Notes and examples for the tiny neural-network module
 extern/                  Vendored dependencies: cgltf (glTF 2.0 parser, wired
-                         into CMake and linked into forg); freetype, zlib,
-                         OpenCL/OpenGL headers
+                         into CMake and linked into forg); optional FreeType;
+                         zlib, OpenCL/OpenGL headers
 tools/                   Repository tooling, including clang-format
 ```
 
@@ -170,11 +181,11 @@ The rendering abstraction lives in `include/forg/rendering/`. Backends implement
 - **OpenGL renderer plugin** (`src/glrenderer/`) — loaded at runtime on Windows via `LoadLibrary`
 - **OpenCL / C++ AMP renderers** — unsupported legacy sources, not part of the canonical CMake build
 
-Canonical renderer plugins expose a versioned descriptor. Version 2 adds a
-plugin-local destroy callback so hosts do not delete plugin-owned renderer
-objects across module or CRT boundaries. The loaders still accept version-1
-descriptors and legacy `forgCreateRenderer`-only plugins for 1.x
-compatibility.
+Canonical renderer plugins expose a versioned descriptor. The current
+descriptor includes a display name plus a plugin-local destroy callback so hosts
+can show the active renderer and do not delete plugin-owned renderer objects
+across module or CRT boundaries. The loaders still accept version-1 descriptors
+and legacy `forgCreateRenderer`-only plugins for 1.x compatibility.
 
 Beyond rendering, the library includes math types, audio output, XML and YAML parsers (`script`), image loading, mesh loading (DirectX `.x`, `.ply`, and glTF 2.0 `.gltf`/`.glb` static meshes via `Mesh::FromFile`), a UI layer, filesystem and OS abstractions.
 
