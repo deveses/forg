@@ -164,8 +164,8 @@ data/                    Shared sample assets, UI YAML, textures, and fonts
 tests/                   Catch2/CTest unit tests for the forg library
 docs/nn/README.md        Notes and examples for the tiny neural-network module
 extern/                  Vendored dependencies: cgltf (glTF 2.0 parser, wired
-                         into CMake and linked into forg); optional FreeType;
-                         zlib, OpenCL/OpenGL headers
+                         into CMake and linked into forg); zlib, OpenCL/OpenGL
+                         headers
 tools/                   Repository tooling, including clang-format
 ```
 
