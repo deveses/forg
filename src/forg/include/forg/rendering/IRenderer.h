@@ -72,6 +72,7 @@ struct RendererPluginDescriptor
     std::uint32_t ApiVersion;
     PFCREATERENDERER CreateRenderer;
     PFDESTROYRENDERER DestroyRenderer;
+    const char* Name;
 };
 
 using PFGETRENDERERPLUGINDESCRIPTOR = const RendererPluginDescriptor* (*)(void);
@@ -83,6 +84,7 @@ enum class RendererPluginStatus : std::uint32_t
     NullDescriptor,
     TruncatedDescriptor,
     UnsupportedVersion,
+    MissingName,
     MissingCreate,
     MissingDestroy,
     FactoryFailed,
@@ -93,6 +95,7 @@ struct RendererPluginBinding
 {
     PFCREATERENDERER CreateRenderer = nullptr;
     PFDESTROYRENDERER DestroyRenderer = nullptr;
+    const char* Name = nullptr;
     std::uint32_t ApiVersion = 0;
     bool UsesLegacyFactory = false;
     bool UsesPluginDestroy = false;
@@ -113,6 +116,8 @@ RendererPluginStatusName(RendererPluginStatus status) noexcept
         return "truncated renderer plugin descriptor";
     case RendererPluginStatus::UnsupportedVersion:
         return "unsupported renderer plugin version";
+    case RendererPluginStatus::MissingName:
+        return "missing renderer plugin name";
     case RendererPluginStatus::MissingCreate:
         return "missing renderer creation callback";
     case RendererPluginStatus::MissingDestroy:
@@ -153,6 +158,9 @@ BindRendererPluginDescriptor(const RendererPluginDescriptor* descriptor,
     if (descriptor->Size < sizeof(RendererPluginDescriptor))
         return RendererPluginStatus::TruncatedDescriptor;
 
+    if (descriptor->Name == nullptr || descriptor->Name[0] == '\0')
+        return RendererPluginStatus::MissingName;
+
     if (descriptor->CreateRenderer == nullptr)
         return RendererPluginStatus::MissingCreate;
 
@@ -161,6 +169,7 @@ BindRendererPluginDescriptor(const RendererPluginDescriptor* descriptor,
 
     binding.CreateRenderer = descriptor->CreateRenderer;
     binding.DestroyRenderer = descriptor->DestroyRenderer;
+    binding.Name = descriptor->Name;
     binding.ApiVersion = descriptor->ApiVersion;
     binding.UsesPluginDestroy = true;
     return RendererPluginStatus::Ok;

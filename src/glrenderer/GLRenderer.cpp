@@ -187,6 +187,6 @@ const forg::RendererPluginDescriptor* forgGetRendererPluginDescriptor()
 {
     static const forg::RendererPluginDescriptor descriptor{
         sizeof(forg::RendererPluginDescriptor), forg::RendererPluginApiVersion,
-        &forgCreateRenderer, &forgDestroyRenderer};
+        &forgCreateRenderer, &forgDestroyRenderer, "OpenGL Renderer"};
     return &descriptor;
 }

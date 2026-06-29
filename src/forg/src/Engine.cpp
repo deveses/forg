@@ -206,6 +206,12 @@ class RendererHandle
 
     IRenderer* Get() const { return m_renderer; }
 
+    std::string_view Name() const
+    {
+        return m_binding.Name != nullptr ? std::string_view(m_binding.Name)
+                                         : std::string_view();
+    }
+
     void Attach(IRenderer* renderer, const RendererPluginBinding& binding)
     {
         std::string ignored;
@@ -1076,6 +1082,11 @@ const forg::Camera& Engine::Camera() const { return m_impl->ControlledCamera(); 
 IRenderDevice* Engine::Device() const { return m_impl->device.Get(); }
 
 IRenderer* Engine::Renderer() const { return m_impl->renderer.Get(); }
+
+std::string_view Engine::RendererPluginName() const
+{
+    return m_impl->renderer.Name();
+}
 
 const EngineConfig& Engine::Config() const { return m_impl->config; }
 

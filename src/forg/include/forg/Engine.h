@@ -101,6 +101,7 @@ class FORG_API Engine
 
     IRenderDevice* Device() const;
     IRenderer* Renderer() const;
+    std::string_view RendererPluginName() const;
     const EngineConfig& Config() const;
     const EngineFrameStats& FrameStats() const;
 

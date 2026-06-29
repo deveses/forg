@@ -25,7 +25,7 @@ scene:
         control_type: "container"
         id: "-1"
         x: "0"
-        y: "0"
+        y: "15"
         width: "0"
         height: "0"
         texture_path: "data/ui/debug_texture2.dds"

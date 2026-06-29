@@ -6,6 +6,8 @@
 #include "stdafx.h"
 
 #include <commdlg.h>
+#include <cstdio>
+#include <string_view>
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -349,10 +351,16 @@ void Viewport::RenderUI()
         if (m_font)
         {
             char str[512];
+            std::string_view rendererName = m_engine->RendererPluginName();
+            if (rendererName.empty())
+                rendererName = "Unknown Renderer";
 
-            sprintf(
-                str, "%u fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
-                m_engine->FrameStats().FPS, m_engine->Camera().get_Position().X,
+            std::snprintf(
+                str, sizeof(str),
+                "%u fps   renderer: %.*s   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
+                m_engine->FrameStats().FPS,
+                static_cast<int>(rendererName.size()), rendererName.data(),
+                m_engine->Camera().get_Position().X,
                 m_engine->Camera().get_Position().Y,
                 m_engine->Camera().get_Position().Z,
                 m_engine->Camera().get_Target().X,

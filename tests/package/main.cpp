@@ -42,6 +42,7 @@ int main()
         forg::RendererPluginApiVersion,
         &CreateNoRenderer,
         &DestroyNoRenderer,
+        "Package Consumer Renderer",
     };
     if (!forg::IsRendererPluginCompatible(&descriptor))
     {

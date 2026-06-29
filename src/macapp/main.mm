@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <iostream>
 #include <string>
+#include <string_view>
 
 #include "forg.h"
 #include "forg/script/yaml/YAMLParser.h"
@@ -236,10 +237,14 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
                              static_cast<int>(vp.Height)};
 
         char str[512];
+        std::string_view rendererName = engine.RendererPluginName();
+        if (rendererName.empty())
+            rendererName = "Unknown Renderer";
         std::snprintf(
             str, sizeof(str),
-            "%u fps   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
-            engine.FrameStats().FPS, engine.Camera().get_Position().X,
+            "%u fps   renderer: %.*s   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
+            engine.FrameStats().FPS, static_cast<int>(rendererName.size()),
+            rendererName.data(), engine.Camera().get_Position().X,
             engine.Camera().get_Position().Y, engine.Camera().get_Position().Z,
             engine.Camera().get_Target().X, engine.Camera().get_Target().Y,
             engine.Camera().get_Target().Z);
