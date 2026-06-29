@@ -242,7 +242,8 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
             rendererName = "Unknown Renderer";
         std::snprintf(
             str, sizeof(str),
-            "%u fps   renderer: %.*s   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
+            "%u fps   renderer: %.*s   camera pos: %.3f %.3f %.3f  dir: %.3f "
+            "%.3f %.3f",
             engine.FrameStats().FPS, static_cast<int>(rendererName.size()),
             rendererName.data(), engine.Camera().get_Position().X,
             engine.Camera().get_Position().Y, engine.Camera().get_Position().Z,

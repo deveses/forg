@@ -100,11 +100,11 @@ bool GuiNode::Save(io::ISerializer& serializer) const
 
     int width = m_bounds.Width();
     int height = m_bounds.Height();
-    if (!serializer.Value("width", width) || !serializer.Value("height", height) ||
+    if (!serializer.Value("width", width) ||
+        !serializer.Value("height", height) ||
         !serializer.Value("texture_path", texturePath) ||
         !serializer.Value("min", minValue) ||
-        !serializer.Value("max", maxValue) ||
-        !serializer.Value("value", value))
+        !serializer.Value("max", maxValue) || !serializer.Value("value", value))
     {
         return false;
     }
@@ -377,9 +377,8 @@ void GuiNode::RenderControl(IRenderDevice* device)
 
         UIElement knob;
         knob.texCoords = FORG_UI_KNOB_FG_RECT;
-        knob.angle =
-            0.5f * 1.5f * Math::PI *
-            (RangePosition(m_min, m_max, m_value) * 2.0f - 1.0f);
+        knob.angle = 0.5f * 1.5f * Math::PI *
+                     (RangePosition(m_min, m_max, m_value) * 2.0f - 1.0f);
         owner->DrawSprite(knob, bounds);
         break;
     }

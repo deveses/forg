@@ -196,8 +196,7 @@ TEST_CASE("Engine input targets active scene camera node", "[engine][input]")
     cameraNode.SetProjection(forg::scene::CameraProjection::Orthogonal);
     cameraNode.SetControllable(true);
 
-    const forg::math::Vector3 before =
-        cameraNode.GetCamera().get_Position();
+    const forg::math::Vector3 before = cameraNode.GetCamera().get_Position();
 
     REQUIRE(engine.HandleInput({forg::InputEventType::PointerDrag,
                                 forg::InputButton::Left, 10.0f, 0.0f, 0.0f}));

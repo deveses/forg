@@ -82,8 +82,7 @@ bool CameraNode::Save(io::ISerializer& serializer) const
         !serializer.Value("target_x", target.X) ||
         !serializer.Value("target_y", target.Y) ||
         !serializer.Value("target_z", target.Z) ||
-        !serializer.Value("fov", fov) ||
-        !serializer.Value("near", nearRange) ||
+        !serializer.Value("fov", fov) || !serializer.Value("near", nearRange) ||
         !serializer.Value("far", farRange))
     {
         return false;

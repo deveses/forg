@@ -50,15 +50,9 @@ float Camera::get_NearRange() const { return m_near; }
 
 float Camera::get_FarRange() const { return m_far; }
 
-void Camera::set_Target(const Vector3& value)
-{
-    SetTarget(value);
-}
+void Camera::set_Target(const Vector3& value) { SetTarget(value); }
 
-void Camera::set_Position(const Vector3& value)
-{
-    SetPosition(value);
-}
+void Camera::set_Position(const Vector3& value) { SetPosition(value); }
 
 /*
 

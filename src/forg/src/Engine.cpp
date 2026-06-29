@@ -1077,7 +1077,10 @@ uint Engine::SceneCount() const
 
 forg::Camera& Engine::Camera() { return m_impl->ControlledCamera(); }
 
-const forg::Camera& Engine::Camera() const { return m_impl->ControlledCamera(); }
+const forg::Camera& Engine::Camera() const
+{
+    return m_impl->ControlledCamera();
+}
 
 IRenderDevice* Engine::Device() const { return m_impl->device.Get(); }
 

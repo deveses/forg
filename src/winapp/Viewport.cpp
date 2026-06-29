@@ -355,21 +355,21 @@ void Viewport::RenderUI()
             if (rendererName.empty())
                 rendererName = "Unknown Renderer";
 
-            std::snprintf(
-                str, sizeof(str),
-                "%u fps   renderer: %.*s   camera pos: %.3f %.3f %.3f  dir: %.3f %.3f %.3f",
-                m_engine->FrameStats().FPS,
-                static_cast<int>(rendererName.size()), rendererName.data(),
-                m_engine->Camera().get_Position().X,
-                m_engine->Camera().get_Position().Y,
-                m_engine->Camera().get_Position().Z,
-                m_engine->Camera().get_Target().X,
-                m_engine->Camera().get_Target().Y,
-                m_engine->Camera().get_Target().Z);
+            std::snprintf(str, sizeof(str),
+                          "%u fps   renderer: %.*s   camera pos: %.3f %.3f "
+                          "%.3f  dir: %.3f %.3f %.3f",
+                          m_engine->FrameStats().FPS,
+                          static_cast<int>(rendererName.size()),
+                          rendererName.data(),
+                          m_engine->Camera().get_Position().X,
+                          m_engine->Camera().get_Position().Y,
+                          m_engine->Camera().get_Position().Z,
+                          m_engine->Camera().get_Target().X,
+                          m_engine->Camera().get_Target().Y,
+                          m_engine->Camera().get_Target().Z);
 
             m_font->DrawText2(str, -1, &r, 0, forg::Color4b(255, 255, 0, 255));
         }
-
     }
 }
 
