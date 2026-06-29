@@ -103,6 +103,7 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
 
     if (!m_engine->LoadScene("data/ui/dialog.yml", 1))
         return 1;
+    m_engine->Camera().set_View(forg::Orthogonal);
 
 #ifdef FORG_USE_FREETYPE
     forg::FontDescription fd = {12,

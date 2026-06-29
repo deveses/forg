@@ -273,7 +273,7 @@ struct Engine::Impl
     void ResetScenes()
     {
         scenes.clear();
-        EnsureScene(1);
+        EnsureScene(0);
     }
 
     scene::Scene& EnsureScene(uint sceneIndex)
@@ -584,6 +584,38 @@ struct Engine::Impl
         return count;
     }
 
+    void ApplySceneTransforms(uint sceneIndex)
+    {
+        IRenderDevice* renderDevice = device.Get();
+        if (renderDevice == nullptr)
+            return;
+
+        if (sceneIndex == 0)
+        {
+            Matrix4 view;
+            camera.GetViewMatrix(view);
+            renderDevice->SetTransform(TransformType_View, view);
+
+            Matrix4 projection;
+            camera.GetProjectionMatrix(projection);
+            renderDevice->SetTransform(TransformType_Projection, projection);
+        }
+        else
+        {
+            Viewport viewport;
+            renderDevice->GetViewport(&viewport);
+
+            Matrix4 view = Matrix4::Identity;
+            Matrix4 projection;
+            Matrix4::OrthoOffCenterRH(projection, 0.0f, viewport.Width,
+                                      viewport.Height, 0.0f, 0.0f, 100.0f);
+            renderDevice->SetTransform(TransformType_View, view);
+            renderDevice->SetTransform(TransformType_Projection, projection);
+        }
+
+        renderDevice->SetTransform(TransformType_World, Matrix4::Identity);
+    }
+
     bool Update(double deltaSeconds, Engine& engine)
     {
         if (!RequireInitialized())
@@ -615,14 +647,6 @@ struct Engine::Impl
         renderTimer.Start();
 
         IRenderDevice* renderDevice = device.Get();
-        Matrix4 view;
-        camera.GetViewMatrix(view);
-        renderDevice->SetTransform(TransformType_View, view);
-
-        Matrix4 projection;
-        camera.GetProjectionMatrix(projection);
-        renderDevice->SetTransform(TransformType_Projection, projection);
-
         renderDevice->Clear(ClearFlags_Target | ClearFlags_ZBuffer, clearColor,
                             1.0f, 0);
         renderDevice->BeginScene();
@@ -632,10 +656,13 @@ struct Engine::Impl
         renderDevice->LightEnable(0, lightEnabled);
         renderDevice->SetRenderState(RenderStates_Lighting, lightEnabled);
 
-        for (std::unique_ptr<scene::Scene>& scene : scenes)
+        for (uint i = 0; i < scenes.size(); ++i)
         {
-            if (scene)
-                scene->Render(renderDevice);
+            if (scenes[i])
+            {
+                ApplySceneTransforms(i);
+                scenes[i]->Render(renderDevice);
+            }
         }
 
         bool callbackOk = true;

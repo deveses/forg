@@ -145,6 +145,7 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
         [NSApp terminate:nil];
         return;
     }
+    m_engine.Camera().set_View(forg::Orthogonal);
 
     [self onResize];
 

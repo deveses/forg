@@ -50,17 +50,17 @@ float Camera::get_NearRange() const { return m_near; }
 
 float Camera::get_FarRange() const { return m_far; }
 
-/*
-
 void Camera::set_Target(const Vector3& value)
 {
-        m_target = value;
+    SetTarget(value);
 }
 
 void Camera::set_Position(const Vector3& value)
 {
-        m_position = value;
+    SetPosition(value);
 }
+
+/*
 
 const Vector3& Camera::get_Up() const
 {
@@ -70,12 +70,6 @@ void Camera::set_Up(const Vector3& value)
 {
         m_up = value;
 }
-
-void Camera::set_View(CameraView value)
-{
-        m_camera_view = value;
-}
-
 
 void Camera::set_FOV(float value)
 {
@@ -99,6 +93,12 @@ void Camera::set_FarRange(float value)
 {
         m_far = value;
 }*/
+
+void Camera::set_View(CameraView value)
+{
+    m_camera_view = value;
+    UpdateProjectionMatrix();
+}
 
 CameraView Camera::get_View() const { return m_camera_view; }
 
@@ -125,7 +125,15 @@ void Camera::UpdateViewMatrix()
 
 void Camera::UpdateProjectionMatrix()
 {
-    // TODO: LH/RH, Ortho
+    if (m_camera_view == Orthogonal)
+    {
+        const float distance = (m_target - m_position).Length();
+        const float height = 2.0f * distance * Math::Tan(m_fovy / 2.0f);
+        Matrix4::OrthoRH(m_matProjection, height * m_aspect, height, m_near,
+                         m_far);
+        return;
+    }
+
     Matrix4::PerspectiveFovRH(m_matProjection, m_fovy, m_aspect, m_near, m_far);
 }
 
@@ -151,6 +159,7 @@ void Camera::SetPosition(const Vector3& value)
     m_dir.Normalize();
 
     UpdateViewMatrix();
+    UpdateProjectionMatrix();
 }
 
 void Camera::SetTarget(const Vector3& value)
@@ -161,6 +170,7 @@ void Camera::SetTarget(const Vector3& value)
     m_dir.Normalize();
 
     UpdateViewMatrix();
+    UpdateProjectionMatrix();
 }
 
 void Camera::SetUp(const Vector3& value)
@@ -169,12 +179,6 @@ void Camera::SetUp(const Vector3& value)
 
     UpdateViewMatrix();
 }
-
-// Public absolute placement: delegate to the protected setters so m_dir and
-// the cached view matrix are kept in sync (same path the movement ops use).
-void Camera::set_Position(const Vector3& value) { SetPosition(value); }
-
-void Camera::set_Target(const Vector3& value) { SetTarget(value); }
 
 //////////////////////////////////////////////////////////////////////////
 //	Camera operations

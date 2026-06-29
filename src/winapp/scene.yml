@@ -11,7 +11,7 @@ scene:
         load_options: "0"
         mesh_params:
           radius1: "1.000000"
-          radius2: "2.000000"
+          radius2: "1.000000"
           length: "5.000000"
           slices: "10"
           stacks: "40"
