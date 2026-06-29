@@ -4,8 +4,11 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <system_error>
 
 namespace {
 
@@ -68,7 +71,7 @@ void PrintUsage(const char* program)
     std::cout << "Usage: " << program
               << " <train-images> <train-labels> <test-images> <test-labels>"
                  " [epochs] [train-limit] [test-limit] [learning-rate]"
-                 " [batch-size]\n";
+                 " [batch-size] [checkpoint-path]\n";
 }
 
 double Evaluate(forg::nn::Sequential& model,
@@ -107,6 +110,7 @@ int main(int argc, char** argv)
     const double learning_rate = argc > 8 ? ParseDouble(argv[8], 0.01) : 0.01;
     const std::size_t batch_size =
         std::max<std::size_t>(1, argc > 9 ? ParseSize(argv[9], 1) : 1);
+    const std::string checkpoint_path = argc > 10 ? argv[10] : "";
 
     forg::nn::MnistDataset train;
     if (!train.Load(argv[1], argv[2]))
@@ -133,6 +137,31 @@ int main(int argc, char** argv)
         std::make_shared<forg::nn::ReLU>(),
         std::make_shared<forg::nn::Linear>(64, 10),
     });
+
+    if (!checkpoint_path.empty())
+    {
+        std::error_code filesystem_error;
+        const bool checkpoint_exists =
+            std::filesystem::exists(checkpoint_path, filesystem_error);
+        if (filesystem_error)
+        {
+            std::cerr << "Unable to inspect checkpoint: "
+                      << filesystem_error.message() << '\n';
+            return 1;
+        }
+
+        if (checkpoint_exists)
+        {
+            std::string error;
+            if (!forg::nn::LoadParameters(model, checkpoint_path, &error))
+            {
+                std::cerr << "Unable to load checkpoint: " << error << '\n';
+                return 1;
+            }
+            std::cout << "loaded_checkpoint=" << checkpoint_path << '\n';
+        }
+    }
+
     forg::nn::SGD optimizer(model.Parameters(), learning_rate);
 
     const std::vector<forg::nn::MnistSample>& train_samples = train.Samples();
@@ -216,6 +245,17 @@ int main(int argc, char** argv)
                   << " backward=" << AverageUs(profile.backward_us, trained)
                   << " update=" << AverageUs(profile.update_us, trained)
                   << '\n';
+    }
+
+    if (!checkpoint_path.empty())
+    {
+        std::string error;
+        if (!forg::nn::SaveParameters(model, checkpoint_path, &error))
+        {
+            std::cerr << "Unable to save checkpoint: " << error << '\n';
+            return 1;
+        }
+        std::cout << "saved_checkpoint=" << checkpoint_path << '\n';
     }
 
     return 0;

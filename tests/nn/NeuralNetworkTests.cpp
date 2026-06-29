@@ -4,6 +4,7 @@
 #include "forg/nn.h"
 
 #include <cmath>
+#include <fstream>
 #include <filesystem>
 #include <memory>
 #include <random>
@@ -17,6 +18,12 @@ namespace {
 std::filesystem::path MnistDataPath(const char* name)
 {
     return std::filesystem::path(FORG_TEST_DATA_DIR) / "mnist" / name;
+}
+
+std::filesystem::path TempDataPath(const std::string& name)
+{
+    return std::filesystem::temp_directory_path() /
+           (name + "-" + std::to_string(std::random_device{}()));
 }
 
 } // namespace
@@ -198,6 +205,79 @@ TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
 
     REQUIRE(prediction.size() == 1);
     REQUIRE(model.Parameters().size() == 21);
+}
+
+TEST_CASE("Model parameters can be saved and loaded", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 source_rng(11);
+    std::mt19937 target_rng(22);
+    Linear source(2, 2, source_rng);
+    Linear target(2, 2, target_rng);
+    const Values source_parameters = source.Parameters();
+    const Values target_parameters = target.Parameters();
+    REQUIRE(source_parameters.size() == target_parameters.size());
+
+    for (std::size_t index = 0; index < source_parameters.size(); ++index)
+    {
+        source_parameters[index]->SetData(static_cast<double>(index) + 0.25);
+        target_parameters[index]->SetData(-10.0);
+        target_parameters[index]->SetGrad(3.0);
+    }
+
+    const std::filesystem::path filename = TempDataPath("forg-nn-params");
+    std::string error = "not cleared";
+    REQUIRE(SaveParameters(source, filename.string(), &error));
+    REQUIRE(error.empty());
+    REQUIRE(LoadParameters(target, filename.string(), &error));
+    REQUIRE(error.empty());
+
+    for (std::size_t index = 0; index < source_parameters.size(); ++index)
+    {
+        REQUIRE(target_parameters[index]->GetData() ==
+                Approx(source_parameters[index]->GetData()));
+        REQUIRE(target_parameters[index]->GetGrad() == Approx(0.0));
+    }
+
+    std::filesystem::remove(filename);
+}
+
+TEST_CASE("Model parameter loading rejects invalid files", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(3);
+    Linear source(2, 2, rng);
+    Linear mismatched(2, 1, rng);
+    const Values mismatched_parameters = mismatched.Parameters();
+    for (const ValuePtr& parameter : mismatched_parameters)
+    {
+        parameter->SetData(7.0);
+    }
+
+    const std::filesystem::path valid_filename =
+        TempDataPath("forg-nn-valid-params");
+    std::string error;
+    REQUIRE(SaveParameters(source, valid_filename.string(), &error));
+    REQUIRE_FALSE(LoadParameters(mismatched, valid_filename.string(), &error));
+    REQUIRE_FALSE(error.empty());
+    for (const ValuePtr& parameter : mismatched_parameters)
+    {
+        REQUIRE(parameter->GetData() == Approx(7.0));
+    }
+
+    const std::filesystem::path invalid_filename =
+        TempDataPath("forg-nn-invalid-params");
+    {
+        std::ofstream stream(invalid_filename);
+        stream << "not a forg parameter file\n";
+    }
+    REQUIRE_FALSE(LoadParameters(source, invalid_filename.string(), &error));
+    REQUIRE_FALSE(error.empty());
+
+    std::filesystem::remove(valid_filename);
+    std::filesystem::remove(invalid_filename);
 }
 
 TEST_CASE("Flatten converts numeric inputs into Values", "[nn][module]")

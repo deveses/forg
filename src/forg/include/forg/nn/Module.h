@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <memory>
 #include <random>
+#include <string>
 #include <vector>
 
 namespace forg::nn {
@@ -137,6 +138,10 @@ ValuePtr CrossEntropyLoss(const Values& logits, const Values& target);
 Values OneHot(std::size_t class_count, std::size_t index);
 bool OneHotInto(std::size_t class_count, std::size_t index, Values& output);
 std::size_t ArgMax(const Values& values);
+bool SaveParameters(const Module& module, const std::string& filename,
+                    std::string* error = nullptr);
+bool LoadParameters(Module& module, const std::string& filename,
+                    std::string* error = nullptr);
 
 class SGD
 {

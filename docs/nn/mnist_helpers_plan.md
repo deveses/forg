@@ -16,6 +16,8 @@ optimization, and MNIST IDX loading.
   - `MSELoss`, `Softmax`, `CrossEntropyLoss`, `OneHot`, and `ArgMax`.
   - `SGD` with `ZeroGrad()` and `Step()`.
   - Mini-batch gradient accumulation through scaled `SGD::Step()`.
+  - Model parameter serialization with `SaveParameters()` and
+    `LoadParameters()`.
 - Add MNIST IDX utilities:
   - Read image and label IDX files from user-provided paths.
   - Validate magic numbers and count/dimension consistency.
@@ -26,7 +28,7 @@ optimization, and MNIST IDX loading.
   - Loss: cross-entropy over raw logits.
   - Optimizer: SGD.
   - CLI args for train images, train labels, test images, test labels, epochs,
-    subset size, learning rate, and batch size.
+    subset size, learning rate, batch size, and an optional checkpoint path.
   - Print loss and accuracy.
   - Keep full MNIST training manual, not part of default CI.
 
@@ -40,7 +42,6 @@ optimization, and MNIST IDX loading.
   - `ctest --test-dir build/debug --output-on-failure`
 
 ## Future Steps
-- Add model serialization for saving/loading trained weights.
 - Add a tensor or matrix backend for practical MNIST performance.
 - Add optimizers such as momentum SGD and Adam.
 - Add modules like `Dropout`, `Conv2d`, `MaxPool2d`, and `BatchNorm`.
@@ -52,5 +53,5 @@ optimization, and MNIST IDX loading.
 ## Assumptions
 - v1 remains CPU-only and scalar-autograd-based.
 - Existing `Neuron`, `Layer`, and `MLP` APIs remain source-compatible.
-- No tensor backend or model serialization in v1.
+- No tensor backend in v1.
 - Full MNIST data is not committed to the repo.

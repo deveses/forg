@@ -26,7 +26,8 @@ Usage:
 ```sh
 forg_mnist \
   <train-images> <train-labels> <test-images> <test-labels> \
-  [epochs] [train-limit] [test-limit] [learning-rate] [batch-size]
+  [epochs] [train-limit] [test-limit] [learning-rate] [batch-size] \
+  [checkpoint-path]
 ```
 
 Example using local MNIST IDX files:
@@ -37,7 +38,7 @@ Example using local MNIST IDX files:
   data/mnist_dataset/train-labels.idx1-ubyte \
   data/mnist_dataset/t10k-images.idx3-ubyte \
   data/mnist_dataset/t10k-labels.idx1-ubyte \
-  3 1000 1000 0.01 16
+  3 1000 1000 0.01 16 data/mnist_dataset/mnist.nnparams
 ```
 
 Arguments:
@@ -48,6 +49,8 @@ Arguments:
 - `learning-rate`: SGD learning rate.
 - `batch-size`: Number of samples whose gradients are accumulated before one
   averaged optimizer update.
+- `checkpoint-path`: Optional parameter file. If it exists, the example loads
+  it before training. After training, the example saves current weights there.
 
 ## Recommended Starting Points
 
@@ -58,8 +61,8 @@ and educational experiments, not fast full-dataset training.
 # Fast sanity check
 /usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 1 100 100 0.01
 
-# First meaningful run
-/usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 1000 1000 0.01 16
+# First meaningful run with checkpoint save/resume
+/usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 1000 1000 0.01 16 mnist.nnparams
 
 # Larger scalar-autograd experiment
 /usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 5000 1000 0.01 32
@@ -157,7 +160,8 @@ Main limitations:
 - Dense layers are implemented through scalar operations, not matrix kernels.
 - Cross-entropy is implemented through scalar softmax/log operations, not a
   fused log-softmax kernel.
-- There is no model serialization yet, so trained weights are not saved.
+- Checkpoints store parameter values only; callers must recreate the matching
+  model architecture before loading.
 - The model is an MLP, not a convolutional network.
 
 Expected behavior:
@@ -176,7 +180,7 @@ Useful future optimization targets:
 - Add tensor-vectorized batched training.
 - Add tensor or matrix primitives for dense layers.
 - Add fused log-softmax cross-entropy.
-- Add model serialization so inference does not require retraining.
+- Add a dedicated inference executable that loads a saved parameter file.
 - Use the built-in profile output to target forward, backward, and update
   bottlenecks.
 

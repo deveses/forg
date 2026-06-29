@@ -62,8 +62,8 @@ for (std::size_t i = 1; i < output.size(); ++i)
 ```
 
 These scores are raw logits. The current module includes `Softmax()` and
-`CrossEntropyLoss()` helpers, but it does not include batching or
-serialization.
+`CrossEntropyLoss()` helpers, scalar mini-batch gradient accumulation, and
+plain parameter serialization.
 
 For small multi-class experiments, the helper API provides `Linear`, `ReLU`,
 `Sequential`, `Flatten`, `ArgMax`, `CrossEntropyLoss`, and `SGD`:
@@ -82,6 +82,31 @@ Values input = Flatten::From(normalized_pixels);
 Values output = model.Forward(input);
 ValuePtr loss = CrossEntropyLoss(output, label);
 ```
+
+Save trained parameters and load them into another model with the same
+architecture:
+
+```cpp
+std::string error;
+if (!SaveParameters(model, "mnist.nnparams", &error))
+{
+    return;
+}
+
+Sequential loaded({
+    std::make_shared<Linear>(784, 64),
+    std::make_shared<ReLU>(),
+    std::make_shared<Linear>(64, 10),
+});
+
+if (!LoadParameters(loaded, "mnist.nnparams", &error))
+{
+    return;
+}
+```
+
+The checkpoint stores only the ordered parameter values. Recreate the same
+module structure before loading.
 
 ## Gradients And Losses
 
@@ -148,7 +173,7 @@ Run it with IDX image and label files:
 build/examples/examples/mnist/forg_mnist \
   train-images.idx3-ubyte train-labels.idx1-ubyte \
   t10k-images.idx3-ubyte t10k-labels.idx1-ubyte \
-  1 1000 200 0.01 16
+  1 1000 200 0.01 16 mnist.nnparams
 ```
 
 This is a scalar-autograd educational example, so use small subsets first.
