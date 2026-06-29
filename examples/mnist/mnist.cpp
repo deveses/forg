@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <system_error>
+#include <vector>
 
 namespace {
 
@@ -71,7 +72,12 @@ void PrintUsage(const char* program)
     std::cout << "Usage: " << program
               << " <train-images> <train-labels> <test-images> <test-labels>"
                  " [epochs] [train-limit] [test-limit] [learning-rate]"
-                 " [batch-size] [checkpoint-path]\n";
+                 " [batch-size] [checkpoint-path|backend] [backend]\n";
+}
+
+bool IsBackendName(const std::string& text)
+{
+    return text == "scalar" || text == "matrix";
 }
 
 double Evaluate(forg::nn::Sequential& model,
@@ -94,6 +100,53 @@ double Evaluate(forg::nn::Sequential& model,
     return static_cast<double>(correct) / static_cast<double>(count);
 }
 
+double Evaluate(forg::nn::MatrixMLP& model,
+                const std::vector<forg::nn::MnistSample>& samples,
+                std::size_t limit)
+{
+    const std::size_t count = std::min(limit, samples.size());
+    if (count == 0)
+        return 0.0;
+
+    std::size_t correct = 0;
+    for (std::size_t index = 0; index < count; ++index)
+    {
+        if (model.Predict(samples[index].pixels) == samples[index].label)
+            ++correct;
+    }
+    return static_cast<double>(correct) / static_cast<double>(count);
+}
+
+void FillBatch(const std::vector<forg::nn::MnistSample>& samples,
+               std::size_t begin, std::size_t count, forg::nn::Matrix& input,
+               std::vector<std::size_t>& labels)
+{
+    input = forg::nn::Matrix(count, samples[begin].pixels.size());
+    labels.assign(count, 0);
+    for (std::size_t row = 0; row < count; ++row)
+    {
+        const forg::nn::MnistSample& sample = samples[begin + row];
+        labels[row] = sample.label;
+        for (std::size_t column = 0; column < sample.pixels.size(); ++column)
+        {
+            input(row, column) = sample.pixels[column];
+        }
+    }
+}
+
+bool CheckpointExists(const std::string& checkpoint_path, bool& exists)
+{
+    std::error_code filesystem_error;
+    exists = std::filesystem::exists(checkpoint_path, filesystem_error);
+    if (filesystem_error)
+    {
+        std::cerr << "Unable to inspect checkpoint: "
+                  << filesystem_error.message() << '\n';
+        return false;
+    }
+    return true;
+}
+
 } // namespace
 
 int main(int argc, char** argv)
@@ -110,7 +163,23 @@ int main(int argc, char** argv)
     const double learning_rate = argc > 8 ? ParseDouble(argv[8], 0.01) : 0.01;
     const std::size_t batch_size =
         std::max<std::size_t>(1, argc > 9 ? ParseSize(argv[9], 1) : 1);
-    const std::string checkpoint_path = argc > 10 ? argv[10] : "";
+    std::string checkpoint_path;
+    std::string backend = "scalar";
+    if (argc > 10)
+    {
+        const std::string text = argv[10];
+        if (IsBackendName(text))
+            backend = text;
+        else
+            checkpoint_path = text;
+    }
+    if (argc > 11)
+        backend = argv[11];
+    if (!IsBackendName(backend))
+    {
+        std::cerr << "Backend must be 'scalar' or 'matrix'\n";
+        return 1;
+    }
 
     forg::nn::MnistDataset train;
     if (!train.Load(argv[1], argv[2]))
@@ -132,6 +201,93 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    const std::vector<forg::nn::MnistSample>& train_samples = train.Samples();
+    const std::vector<forg::nn::MnistSample>& test_samples = test.Samples();
+    const std::size_t samples_per_epoch =
+        std::min(train_limit, train_samples.size());
+
+    if (backend == "matrix")
+    {
+        forg::nn::MatrixMLP model(784, 64, 10);
+        bool checkpoint_exists = false;
+        if (!checkpoint_path.empty() &&
+            !CheckpointExists(checkpoint_path, checkpoint_exists))
+        {
+            return 1;
+        }
+        if (checkpoint_exists)
+        {
+            std::string error;
+            if (!model.LoadParameters(checkpoint_path, &error))
+            {
+                std::cerr << "Unable to load checkpoint: " << error << '\n';
+                return 1;
+            }
+            std::cout << "loaded_checkpoint=" << checkpoint_path << '\n';
+        }
+
+        forg::nn::Matrix input;
+        std::vector<std::size_t> labels;
+        for (std::size_t epoch = 0; epoch < epochs; ++epoch)
+        {
+            const Clock::time_point epoch_start = Clock::now();
+            EpochProfile profile;
+            double total_loss = 0.0;
+            std::size_t trained = 0;
+            for (std::size_t index = 0; index < samples_per_epoch;)
+            {
+                const std::size_t count =
+                    std::min(batch_size, samples_per_epoch - index);
+
+                Clock::time_point start = Clock::now();
+                FillBatch(train_samples, index, count, input, labels);
+                profile.input_us += ElapsedUs(start);
+
+                start = Clock::now();
+                total_loss += model.TrainBatch(input, labels, learning_rate) *
+                              static_cast<double>(count);
+                profile.forward_us += ElapsedUs(start);
+
+                trained += count;
+                index += count;
+            }
+
+            const double mean_loss =
+                trained == 0 ? 0.0 : total_loss / static_cast<double>(trained);
+            const Clock::time_point eval_start = Clock::now();
+            const double accuracy = Evaluate(model, test_samples, test_limit);
+            profile.eval_us = ElapsedUs(eval_start);
+            profile.epoch_us = ElapsedUs(epoch_start);
+
+            std::cout << "epoch " << (epoch + 1) << "/" << epochs
+                      << " backend=matrix"
+                      << " loss=" << mean_loss << " accuracy=" << accuracy
+                      << '\n';
+            std::cout << "profile_us"
+                      << " epoch=" << profile.epoch_us
+                      << " input=" << profile.input_us
+                      << " train_batch=" << profile.forward_us
+                      << " eval=" << profile.eval_us << '\n';
+            std::cout << "profile_avg_us_per_sample"
+                      << " input=" << AverageUs(profile.input_us, trained)
+                      << " train_batch="
+                      << AverageUs(profile.forward_us, trained) << '\n';
+        }
+
+        if (!checkpoint_path.empty())
+        {
+            std::string error;
+            if (!model.SaveParameters(checkpoint_path, &error))
+            {
+                std::cerr << "Unable to save checkpoint: " << error << '\n';
+                return 1;
+            }
+            std::cout << "saved_checkpoint=" << checkpoint_path << '\n';
+        }
+
+        return 0;
+    }
+
     forg::nn::Sequential model({
         std::make_shared<forg::nn::Linear>(784, 64),
         std::make_shared<forg::nn::ReLU>(),
@@ -140,15 +296,9 @@ int main(int argc, char** argv)
 
     if (!checkpoint_path.empty())
     {
-        std::error_code filesystem_error;
-        const bool checkpoint_exists =
-            std::filesystem::exists(checkpoint_path, filesystem_error);
-        if (filesystem_error)
-        {
-            std::cerr << "Unable to inspect checkpoint: "
-                      << filesystem_error.message() << '\n';
+        bool checkpoint_exists = false;
+        if (!CheckpointExists(checkpoint_path, checkpoint_exists))
             return 1;
-        }
 
         if (checkpoint_exists)
         {
@@ -164,10 +314,6 @@ int main(int argc, char** argv)
 
     forg::nn::SGD optimizer(model.Parameters(), learning_rate);
 
-    const std::vector<forg::nn::MnistSample>& train_samples = train.Samples();
-    const std::vector<forg::nn::MnistSample>& test_samples = test.Samples();
-    const std::size_t samples_per_epoch =
-        std::min(train_limit, train_samples.size());
     forg::nn::Values input;
     forg::nn::BackwardScratch backward_scratch;
 

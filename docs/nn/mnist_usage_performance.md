@@ -1,8 +1,8 @@
 # MNIST Example Usage And Performance Notes
 
 This document records how to run the current MNIST example and what performance
-to expect from the scalar autograd implementation. Use it as a baseline when
-optimizing the neural-network module later.
+to expect from the scalar autograd and dense matrix implementations. Use it as
+a baseline when optimizing the neural-network module later.
 
 ## Build
 
@@ -27,7 +27,7 @@ Usage:
 forg_mnist \
   <train-images> <train-labels> <test-images> <test-labels> \
   [epochs] [train-limit] [test-limit] [learning-rate] [batch-size] \
-  [checkpoint-path]
+  [checkpoint-path|backend] [backend]
 ```
 
 Example using local MNIST IDX files:
@@ -51,6 +51,8 @@ Arguments:
   averaged optimizer update.
 - `checkpoint-path`: Optional parameter file. If it exists, the example loads
   it before training. After training, the example saves current weights there.
+- `backend`: Optional `scalar` or `matrix`. `scalar` preserves the educational
+  autograd path. `matrix` uses the dense matrix backend.
 
 ## Recommended Starting Points
 
@@ -66,6 +68,9 @@ and educational experiments, not fast full-dataset training.
 
 # Larger scalar-autograd experiment
 /usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 5000 1000 0.01 32
+
+# Faster dense matrix backend
+/usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 5000 1000 0.05 64 matrix
 ```
 
 Start with `0.01` learning rate. If loss explodes or accuracy becomes unstable,
@@ -93,7 +98,12 @@ The NN module also includes scalar `Conv2d`, `MaxPool2d`, `Dropout`, and
 scalar autograd graph nodes, so a CNN built from them is primarily useful for
 small correctness experiments until a tensor backend exists.
 
-## Baseline Timing
+The `matrix` backend uses `MatrixMLP`, a dense `Linear -> ReLU -> Linear`
+classifier trained with batched softmax cross-entropy and manual
+backpropagation. It does not build scalar autograd graphs per sample and is the
+recommended path for larger MNIST subsets with the current codebase.
+
+## Scalar Baseline Timing
 
 Measured locally on 2026-06-29 with:
 
@@ -154,6 +164,47 @@ The built-in `profile_us` line reports per-epoch timing in microseconds:
 The `profile_avg_us_per_sample` line divides the training phases by the number
 of successfully trained samples in that epoch.
 
+## Matrix Backend Timing
+
+Measured locally on 2026-06-29 with:
+
+```sh
+/usr/bin/time -p /private/tmp/forg-example-build/examples/mnist/forg_mnist \
+  data/mnist_dataset/train-images.idx3-ubyte \
+  data/mnist_dataset/train-labels.idx1-ubyte \
+  data/mnist_dataset/t10k-images.idx3-ubyte \
+  data/mnist_dataset/t10k-labels.idx1-ubyte \
+  3 5000 1000 0.05 64 matrix
+```
+
+Output:
+
+```text
+epoch 1/3 backend=matrix loss=1.30615 accuracy=0.797
+profile_us epoch=2114188 input=32267 train_batch=1900666 eval=181149
+profile_avg_us_per_sample input=6.4534 train_batch=380.133
+epoch 2/3 backend=matrix loss=0.598185 accuracy=0.851
+profile_us epoch=2094492 input=31814 train_batch=1887203 eval=175385
+profile_avg_us_per_sample input=6.3628 train_batch=377.441
+epoch 3/3 backend=matrix loss=0.449604 accuracy=0.864
+profile_us epoch=2092788 input=31859 train_batch=1885076 eval=175749
+profile_avg_us_per_sample input=6.3718 train_batch=377.015
+real 7.59
+user 7.50
+sys 0.06
+```
+
+Approximate timing from that run:
+
+| Backend | Epochs | Train samples | Test samples | Batch size | Total real time | Accuracy |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| matrix | 3 | 5,000 | 1,000 | 64 | 7.59 seconds | 0.864 |
+
+The matrix backend's per-sample `train_batch` time was about 377 to 380 us in
+this run. The scalar baseline above was about 15 seconds for one epoch over 100
+training samples, while this matrix run completed three epochs over 5,000
+training samples plus evaluation in under 8 seconds.
+
 ## Accuracy Expectations
 
 Do not treat the current example as a competitive MNIST classifier.
@@ -170,6 +221,10 @@ Main limitations:
   model architecture before loading.
 - The model is an MLP, not a convolutional network.
 
+These limitations apply to the scalar backend. The matrix backend avoids the
+largest scalar graph costs for dense MLP training, but it is still a small CPU
+implementation rather than a general tensor library.
+
 Expected behavior:
 
 - Small runs such as `1 100 100 0.01` mainly verify that the pipeline works.
@@ -184,7 +239,7 @@ Useful future optimization targets:
 - Further reduce per-sample graph allocation overhead with a graph arena or
   fused dense-layer operations.
 - Add tensor-vectorized batched training.
-- Add tensor or matrix primitives for dense layers.
+- Add tensor primitives beyond the current dense `MatrixMLP` backend.
 - Add fused log-softmax cross-entropy.
 - Add a dedicated inference executable that loads a saved parameter file.
 - Use the built-in profile output to target forward, backward, and update

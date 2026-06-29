@@ -207,6 +207,81 @@ TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
     REQUIRE(model.Parameters().size() == 21);
 }
 
+TEST_CASE("Matrix stores row-major numeric data", "[nn][matrix]")
+{
+    forg::nn::Matrix matrix(2, 3, 1.0);
+    REQUIRE(matrix.Rows() == 2);
+    REQUIRE(matrix.Columns() == 3);
+    REQUIRE(matrix.Size() == 6);
+
+    matrix(1, 2) = 5.0;
+    REQUIRE(matrix(0, 0) == Approx(1.0));
+    REQUIRE(matrix(1, 2) == Approx(5.0));
+    REQUIRE(matrix.Data()[5] == Approx(5.0));
+}
+
+TEST_CASE("MatrixMLP trains batched dense classifier", "[nn][matrix]")
+{
+    std::mt19937 rng(9);
+    forg::nn::MatrixMLP model(2, 4, 2, rng);
+    forg::nn::Matrix input(4, 2);
+    input(0, 0) = 1.0;
+    input(0, 1) = 0.0;
+    input(1, 0) = 0.9;
+    input(1, 1) = 0.1;
+    input(2, 0) = 0.0;
+    input(2, 1) = 1.0;
+    input(3, 0) = 0.1;
+    input(3, 1) = 0.9;
+    const std::vector<std::size_t> labels = {0, 0, 1, 1};
+
+    const double first_loss = model.TrainBatch(input, labels, 0.1);
+    double last_loss = first_loss;
+    for (std::size_t step = 0; step < 200; ++step)
+    {
+        last_loss = model.TrainBatch(input, labels, 0.1);
+    }
+
+    REQUIRE(first_loss > 0.0);
+    REQUIRE(last_loss < first_loss);
+    REQUIRE(model.Predict({1.0, 0.0}) == 0);
+    REQUIRE(model.Predict({0.0, 1.0}) == 1);
+}
+
+TEST_CASE("MatrixMLP parameters can be saved and loaded", "[nn][matrix]")
+{
+    std::mt19937 source_rng(7);
+    std::mt19937 target_rng(8);
+    forg::nn::MatrixMLP source(2, 3, 2, source_rng);
+    forg::nn::MatrixMLP target(2, 3, 2, target_rng);
+    forg::nn::Matrix input(1, 2);
+    input(0, 0) = 0.25;
+    input(0, 1) = 0.75;
+
+    const std::filesystem::path filename = TempDataPath("forg-nn-matrix");
+    std::string error = "not cleared";
+    REQUIRE(source.SaveParameters(filename.string(), &error));
+    REQUIRE(error.empty());
+    REQUIRE(target.LoadParameters(filename.string(), &error));
+    REQUIRE(error.empty());
+
+    const forg::nn::Matrix source_output = source.Forward(input);
+    const forg::nn::Matrix target_output = target.Forward(input);
+    REQUIRE(source_output.Rows() == target_output.Rows());
+    REQUIRE(source_output.Columns() == target_output.Columns());
+    for (std::size_t index = 0; index < source_output.Size(); ++index)
+    {
+        REQUIRE(target_output.Data()[index] ==
+                Approx(source_output.Data()[index]));
+    }
+
+    forg::nn::MatrixMLP mismatched(2, 4, 2, target_rng);
+    REQUIRE_FALSE(mismatched.LoadParameters(filename.string(), &error));
+    REQUIRE_FALSE(error.empty());
+
+    std::filesystem::remove(filename);
+}
+
 TEST_CASE("Model parameters can be saved and loaded", "[nn][module]")
 {
     using namespace forg::nn;

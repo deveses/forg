@@ -20,6 +20,8 @@ optimization, and MNIST IDX loading.
     `LoadParameters()`.
   - Scalar image-model helpers: `Dropout`, `Conv2d`, `MaxPool2d`, and
     `BatchNorm`.
+  - Dense matrix backend through `Matrix` and `MatrixMLP` for practical
+    batched MNIST training.
 - Add MNIST IDX utilities:
   - Read image and label IDX files from user-provided paths.
   - Validate magic numbers and count/dimension consistency.
@@ -44,7 +46,6 @@ optimization, and MNIST IDX loading.
   - `ctest --test-dir build/debug --output-on-failure`
 
 ## Future Steps
-- Add a tensor or matrix backend for practical MNIST performance.
 - Add optimizers such as momentum SGD and Adam.
 - Add fused log-softmax cross-entropy for lower graph overhead.
 - Add an inference-only demo for classifying a single image.

@@ -8,6 +8,11 @@ The API is intentionally small. It is useful for experiments, tests, and
 learning-oriented models, not as a replacement for a full machine-learning
 runtime.
 
+For practical dense MNIST-style training, the module also includes a small
+matrix backend. `MatrixMLP` trains a `Linear -> ReLU -> Linear` classifier with
+batched softmax cross-entropy and manual backpropagation, avoiding per-sample
+scalar graph allocation.
+
 ## Basic Forward Pass
 
 Include the umbrella header:
@@ -183,5 +188,14 @@ build/examples/examples/mnist/forg_mnist \
 ```
 
 This is a scalar-autograd educational example, so use small subsets first.
+Pass `matrix` as the backend to use the faster dense matrix path:
+
+```sh
+build/examples/examples/mnist/forg_mnist \
+  train-images.idx3-ubyte train-labels.idx1-ubyte \
+  t10k-images.idx3-ubyte t10k-labels.idx1-ubyte \
+  3 5000 1000 0.05 64 matrix
+```
+
 See `docs/nn/mnist_usage_performance.md` for timing notes and optimization
 baseline guidance.
