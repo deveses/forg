@@ -47,6 +47,9 @@ class Value
     friend ValuePtr operator*(double lhs, const ValuePtr& rhs);
     friend ValuePtr Pow(const ValuePtr& value, double exponent);
     friend ValuePtr Relu(const ValuePtr& value);
+    friend ValuePtr Exp(const ValuePtr& value);
+    friend ValuePtr Log(const ValuePtr& value);
+    friend ValuePtr Sigmoid(const ValuePtr& value);
     friend struct ValueGraphAccess;
 
     explicit Value(double value);
@@ -85,6 +88,9 @@ ValuePtr operator/(double lhs, const ValuePtr& rhs);
 
 ValuePtr Pow(const ValuePtr& value, double exponent);
 ValuePtr Relu(const ValuePtr& value);
+ValuePtr Exp(const ValuePtr& value);
+ValuePtr Log(const ValuePtr& value);
+ValuePtr Sigmoid(const ValuePtr& value);
 
 void Backward(const ValuePtr& root);
 void Backward(const ValuePtr& root, BackwardScratch& scratch);

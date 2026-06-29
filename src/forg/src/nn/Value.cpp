@@ -97,15 +97,9 @@ ValuePtr operator-(const ValuePtr& lhs, const ValuePtr& rhs)
     return lhs + (-rhs);
 }
 
-ValuePtr operator-(const ValuePtr& lhs, double rhs)
-{
-    return lhs - MakeValue(rhs);
-}
+ValuePtr operator-(const ValuePtr& lhs, double rhs) { return lhs + (-rhs); }
 
-ValuePtr operator-(double lhs, const ValuePtr& rhs)
-{
-    return MakeValue(lhs) - rhs;
-}
+ValuePtr operator-(double lhs, const ValuePtr& rhs) { return (-rhs) + lhs; }
 
 ValuePtr operator*(const ValuePtr& lhs, const ValuePtr& rhs)
 {
@@ -193,6 +187,62 @@ ValuePtr Relu(const ValuePtr& value)
         if (auto out = weak_out.lock())
         {
             value->m_grad += (out->m_data > 0.0 ? 1.0 : 0.0) * out->m_grad;
+        }
+    };
+    return out;
+}
+
+ValuePtr Exp(const ValuePtr& value)
+{
+    if (!value)
+        return nullptr;
+
+    const double data = std::exp(value->m_data);
+    ValuePtr out(new Value(data, Values{value}));
+    std::weak_ptr<Value> weak_out = out;
+    out->m_backward = [value, weak_out]()
+    {
+        if (auto out = weak_out.lock())
+        {
+            value->m_grad += out->m_data * out->m_grad;
+        }
+    };
+    return out;
+}
+
+ValuePtr Log(const ValuePtr& value)
+{
+    if (!value)
+        return nullptr;
+
+    ValuePtr out(new Value(std::log(value->m_data), Values{value}));
+    std::weak_ptr<Value> weak_out = out;
+    out->m_backward = [value, weak_out]()
+    {
+        if (auto out = weak_out.lock())
+        {
+            value->m_grad += out->m_grad / value->m_data;
+        }
+    };
+    return out;
+}
+
+ValuePtr Sigmoid(const ValuePtr& value)
+{
+    if (!value)
+        return nullptr;
+
+    const double data = value->m_data;
+    const double exp_data = std::exp(data);
+    const double sigmoid = data >= 0.0 ? 1.0 / (1.0 + std::exp(-data))
+                                       : exp_data / (1.0 + exp_data);
+    ValuePtr out(new Value(sigmoid, Values{value}));
+    std::weak_ptr<Value> weak_out = out;
+    out->m_backward = [value, weak_out]()
+    {
+        if (auto out = weak_out.lock())
+        {
+            value->m_grad += out->m_data * (1.0 - out->m_data) * out->m_grad;
         }
     };
     return out;

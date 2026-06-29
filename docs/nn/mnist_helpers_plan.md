@@ -13,7 +13,7 @@ optimization, and MNIST IDX loading.
   - `ReLU` for vector activation.
   - `Flatten` for converting numeric image data into flat `Values`.
   - `Sequential` for ordered module composition.
-  - `MSELoss`, `OneHot`, and `ArgMax`.
+  - `MSELoss`, `Softmax`, `CrossEntropyLoss`, `OneHot`, and `ArgMax`.
   - `SGD` with `ZeroGrad()` and `Step()`.
 - Add MNIST IDX utilities:
   - Read image and label IDX files from user-provided paths.
@@ -22,7 +22,7 @@ optimization, and MNIST IDX loading.
   - Return samples as flat `std::vector<double>` plus label.
 - Add an optional MNIST example executable:
   - Model: `Sequential{Linear(784, 64), ReLU, Linear(64, 10)}`.
-  - Loss: one-hot MSE.
+  - Loss: cross-entropy over raw logits.
   - Optimizer: SGD.
   - CLI args for train images, train labels, test images, test labels, epochs,
     subset size, and learning rate.
@@ -30,8 +30,8 @@ optimization, and MNIST IDX loading.
   - Keep full MNIST training manual, not part of default CI.
 
 ## Tests
-- Extend NN tests for `Linear`, `Sequential`, `Flatten`, `MSELoss`, `SGD`,
-  `OneHot`, and `ArgMax`.
+- Extend NN tests for `Linear`, `Sequential`, `Flatten`, `MSELoss`,
+  `CrossEntropyLoss`, `SGD`, `OneHot`, and `ArgMax`.
 - Add loader tests for valid data, invalid magic numbers, and mismatched
   image/label counts using tiny synthetic IDX files.
 - Run:
@@ -39,12 +39,12 @@ optimization, and MNIST IDX loading.
   - `ctest --test-dir build/debug --output-on-failure`
 
 ## Future Steps
-- Add `Exp`, `Log`, `Sigmoid`, `Softmax`, and cross-entropy loss.
 - Add batching support.
 - Add model serialization for saving/loading trained weights.
 - Add a tensor or matrix backend for practical MNIST performance.
 - Add optimizers such as momentum SGD and Adam.
 - Add modules like `Dropout`, `Conv2d`, `MaxPool2d`, and `BatchNorm`.
+- Add fused log-softmax cross-entropy for lower graph overhead.
 - Add an inference-only demo for classifying a single image.
 - Document the difference between the educational scalar backend and future
   tensor-backed APIs.
@@ -52,5 +52,5 @@ optimization, and MNIST IDX loading.
 ## Assumptions
 - v1 remains CPU-only and scalar-autograd-based.
 - Existing `Neuron`, `Layer`, and `MLP` APIs remain source-compatible.
-- No tensor backend, softmax/cross-entropy, or model serialization in v1.
+- No tensor backend or model serialization in v1.
 - Full MNIST data is not committed to the repo.

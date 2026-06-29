@@ -137,7 +137,6 @@ int main(int argc, char** argv)
     const std::size_t samples_per_epoch =
         std::min(train_limit, train_samples.size());
     forg::nn::Values input;
-    forg::nn::Values target;
     forg::nn::BackwardScratch backward_scratch;
 
     for (std::size_t epoch = 0; epoch < epochs; ++epoch)
@@ -150,7 +149,6 @@ int main(int argc, char** argv)
         {
             Clock::time_point start = Clock::now();
             forg::nn::Flatten::Into(train_samples[index].pixels, input);
-            forg::nn::OneHotInto(10, train_samples[index].label, target);
             profile.input_us += ElapsedUs(start);
 
             start = Clock::now();
@@ -158,7 +156,8 @@ int main(int argc, char** argv)
             profile.forward_us += ElapsedUs(start);
 
             start = Clock::now();
-            const forg::nn::ValuePtr loss = forg::nn::MSELoss(output, target);
+            const forg::nn::ValuePtr loss =
+                forg::nn::CrossEntropyLoss(output, train_samples[index].label);
             profile.loss_us += ElapsedUs(start);
             if (!loss)
                 continue;

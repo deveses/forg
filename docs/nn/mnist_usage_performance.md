@@ -79,9 +79,8 @@ Sequential{
 ```
 
 Input images are flattened 28x28 MNIST pixels normalized to `[0.0, 1.0]`.
-Labels are converted with `OneHot(10, label)`. Training uses `MSELoss` and
-`SGD`. Inference predicts the digit with `ArgMax()` over the 10 raw output
-scores.
+Training uses `CrossEntropyLoss(output, label)` over raw logits and `SGD`.
+Inference predicts the digit with `ArgMax()` over the 10 raw output scores.
 
 ## Baseline Timing
 
@@ -119,16 +118,15 @@ Approximate extrapolation from that run:
 These numbers are rough. Runtime depends on compiler, CPU, build type, test
 limit, and whether the loss graph allocation pattern changes.
 
-The current example reuses the input and one-hot target `Value` storage across
-samples and reuses the scratch containers used by `Backward()`. Scalar
-operations with literal constants also avoid allocating temporary constant
-nodes. The remaining large allocation cost is the per-sample forward/loss graph
-itself.
+The current example reuses the input `Value` storage across samples and reuses
+the scratch containers used by `Backward()`. Scalar operations with literal
+constants also avoid allocating temporary constant nodes. The remaining large
+allocation cost is the per-sample forward/loss graph itself.
 
 The built-in `profile_us` line reports per-epoch timing in microseconds:
 
 - `epoch`: Whole epoch including training and evaluation.
-- `input`: Pixel flattening and one-hot target creation.
+- `input`: Pixel flattening.
 - `forward`: Model forward pass.
 - `loss`: Scalar loss graph creation.
 - `zero_grad`: Gradient clearing before backpropagation.
@@ -148,7 +146,8 @@ Main limitations:
 - Scalar autograd creates many small heap-allocated `Value` nodes per sample.
 - Training is single-sample SGD with no batching.
 - Dense layers are implemented through scalar operations, not matrix kernels.
-- Classification uses one-hot MSE, not softmax cross-entropy.
+- Cross-entropy is implemented through scalar softmax/log operations, not a
+  fused log-softmax kernel.
 - There is no model serialization yet, so trained weights are not saved.
 - The model is an MLP, not a convolutional network.
 
@@ -167,7 +166,7 @@ Useful future optimization targets:
   fused dense-layer operations.
 - Add batched training.
 - Add tensor or matrix primitives for dense layers.
-- Add softmax cross-entropy.
+- Add fused log-softmax cross-entropy.
 - Add model serialization so inference does not require retraining.
 - Use the built-in profile output to target forward, backward, and update
   bottlenecks.

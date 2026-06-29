@@ -131,6 +131,9 @@ class Sequential : public Module
 };
 
 ValuePtr MSELoss(const Values& prediction, const Values& target);
+Values Softmax(const Values& logits);
+ValuePtr CrossEntropyLoss(const Values& logits, std::size_t target_index);
+ValuePtr CrossEntropyLoss(const Values& logits, const Values& target);
 Values OneHot(std::size_t class_count, std::size_t index);
 bool OneHotInto(std::size_t class_count, std::size_t index, Values& output);
 std::size_t ArgMax(const Values& values);

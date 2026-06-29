@@ -3,6 +3,7 @@
 
 #include "forg/nn.h"
 
+#include <cmath>
 #include <filesystem>
 #include <memory>
 #include <random>
@@ -98,6 +99,29 @@ TEST_CASE("Value data can be updated for simple gradient descent",
 
     REQUIRE(weight->GetData() == Approx(1.6));
     REQUIRE(weight->GetGrad() == Approx(0.0));
+}
+
+TEST_CASE("Value exp log and sigmoid compute gradients", "[nn][value]")
+{
+    using namespace forg::nn;
+
+    const ValuePtr x = MakeValue(2.0);
+    const ValuePtr y = Log(Exp(x));
+    Backward(y);
+
+    REQUIRE(y->GetData() == Approx(2.0));
+    REQUIRE(x->GetGrad() == Approx(1.0));
+
+    const ValuePtr z = MakeValue(0.0);
+    const ValuePtr sigmoid = Sigmoid(z);
+    Backward(sigmoid);
+
+    REQUIRE(sigmoid->GetData() == Approx(0.5));
+    REQUIRE(z->GetGrad() == Approx(0.25));
+
+    REQUIRE_FALSE(Exp(nullptr));
+    REQUIRE_FALSE(Log(nullptr));
+    REQUIRE_FALSE(Sigmoid(nullptr));
 }
 
 TEST_CASE("Module zeroes parameters and MLP builds deterministic shapes",
@@ -265,6 +289,49 @@ TEST_CASE("Loss, classification helpers, and SGD support training loops",
 
     optimizer.ZeroGrad();
     REQUIRE(weight->GetGrad() == Approx(0.0));
+}
+
+TEST_CASE("Softmax and cross entropy support multiclass training",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    const Values logits = {MakeValue(1.0), MakeValue(2.0), MakeValue(3.0)};
+    const Values probabilities = Softmax(logits);
+
+    REQUIRE(probabilities.size() == 3);
+    const double denominator = std::exp(-2.0) + std::exp(-1.0) + 1.0;
+    REQUIRE(probabilities[0]->GetData() ==
+            Approx(std::exp(-2.0) / denominator));
+    REQUIRE(probabilities[1]->GetData() ==
+            Approx(std::exp(-1.0) / denominator));
+    REQUIRE(probabilities[2]->GetData() == Approx(1.0 / denominator));
+
+    const ValuePtr loss = CrossEntropyLoss(logits, 2);
+    REQUIRE(loss);
+    REQUIRE(loss->GetData() == Approx(-std::log(1.0 / denominator)));
+
+    Backward(loss);
+    REQUIRE(logits[0]->GetGrad() == Approx(probabilities[0]->GetData()));
+    REQUIRE(logits[1]->GetGrad() == Approx(probabilities[1]->GetData()));
+    REQUIRE(logits[2]->GetGrad() == Approx(probabilities[2]->GetData() - 1.0));
+}
+
+TEST_CASE("Cross entropy accepts one-hot targets and rejects invalid input",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    const Values logits = {MakeValue(1.0), MakeValue(2.0), MakeValue(3.0)};
+    const Values target = OneHot(3, 2);
+    const ValuePtr loss = CrossEntropyLoss(logits, target);
+    REQUIRE(loss);
+
+    REQUIRE(CrossEntropyLoss(logits, 3) == nullptr);
+    REQUIRE(CrossEntropyLoss({}, 0) == nullptr);
+    REQUIRE(CrossEntropyLoss(logits, Values{MakeValue(1.0)}) == nullptr);
+    REQUIRE(Softmax({}).empty());
+    REQUIRE(Softmax({MakeValue(1.0), nullptr}).empty());
 }
 
 TEST_CASE("Backward scratch can be reused across passes", "[nn][value]")

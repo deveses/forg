@@ -61,11 +61,12 @@ for (std::size_t i = 1; i < output.size(); ++i)
 }
 ```
 
-These scores are raw logits. The current module does not include softmax,
-sigmoid, cross-entropy, batching, or serialization.
+These scores are raw logits. The current module includes `Softmax()` and
+`CrossEntropyLoss()` helpers, but it does not include batching or
+serialization.
 
 For small multi-class experiments, the helper API provides `Linear`, `ReLU`,
-`Sequential`, `Flatten`, `OneHot`, `ArgMax`, `MSELoss`, and `SGD`:
+`Sequential`, `Flatten`, `ArgMax`, `CrossEntropyLoss`, and `SGD`:
 
 ```cpp
 using namespace forg::nn;
@@ -78,9 +79,8 @@ Sequential model({
 
 SGD optimizer(model.Parameters(), 0.01);
 Values input = Flatten::From(normalized_pixels);
-Values target = OneHot(10, label);
 Values output = model.Forward(input);
-ValuePtr loss = MSELoss(output, target);
+ValuePtr loss = CrossEntropyLoss(output, label);
 ```
 
 ## Gradients And Losses
@@ -130,9 +130,8 @@ for (const ValuePtr& parameter : model.Parameters())
 }
 ```
 
-For classification experiments, start with one output and squared error for a
-binary target. Better classifier training will need additional helpers such as
-sigmoid or softmax plus cross-entropy.
+For binary experiments, `Sigmoid()` can turn one raw score into a probability.
+For multi-class classification, prefer raw logits with `CrossEntropyLoss()`.
 
 ## MNIST Example
 

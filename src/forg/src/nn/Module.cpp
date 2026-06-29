@@ -343,6 +343,86 @@ ValuePtr MSELoss(const Values& prediction, const Values& target)
     return loss / static_cast<double>(prediction.size());
 }
 
+Values Softmax(const Values& logits)
+{
+    if (logits.empty())
+        return {};
+
+    for (const ValuePtr& logit : logits)
+    {
+        if (!logit)
+            return {};
+    }
+
+    double max_logit = logits.front()->GetData();
+    for (const ValuePtr& logit : logits)
+    {
+        if (logit->GetData() > max_logit)
+            max_logit = logit->GetData();
+    }
+
+    Values exps;
+    exps.reserve(logits.size());
+    for (const ValuePtr& logit : logits)
+    {
+        exps.push_back(Exp(logit - max_logit));
+        if (!exps.back())
+            return {};
+    }
+
+    ValuePtr sum = exps.front();
+    for (std::size_t index = 1; index < exps.size(); ++index)
+    {
+        sum = sum + exps[index];
+        if (!sum)
+            return {};
+    }
+
+    Values probabilities;
+    probabilities.reserve(exps.size());
+    for (const ValuePtr& value : exps)
+    {
+        probabilities.push_back(value / sum);
+        if (!probabilities.back())
+            return {};
+    }
+    return probabilities;
+}
+
+ValuePtr CrossEntropyLoss(const Values& logits, std::size_t target_index)
+{
+    if (target_index >= logits.size())
+        return nullptr;
+
+    const Values probabilities = Softmax(logits);
+    if (probabilities.empty())
+        return nullptr;
+
+    return -Log(probabilities[target_index]);
+}
+
+ValuePtr CrossEntropyLoss(const Values& logits, const Values& target)
+{
+    if (logits.empty() || logits.size() != target.size())
+        return nullptr;
+
+    const Values probabilities = Softmax(logits);
+    if (probabilities.empty())
+        return nullptr;
+
+    ValuePtr loss = MakeValue(0.0);
+    for (std::size_t index = 0; index < target.size(); ++index)
+    {
+        if (!target[index])
+            return nullptr;
+
+        loss = loss - target[index] * Log(probabilities[index]);
+        if (!loss)
+            return nullptr;
+    }
+    return loss;
+}
+
 Values OneHot(std::size_t class_count, std::size_t index)
 {
     Values output;
