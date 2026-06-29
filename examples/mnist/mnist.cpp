@@ -1,11 +1,43 @@
 #include <forg/nn.h>
 
 #include <algorithm>
+#include <chrono>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 
 namespace {
+
+using Clock = std::chrono::steady_clock;
+
+struct EpochProfile
+{
+    std::uint64_t input_us = 0;
+    std::uint64_t forward_us = 0;
+    std::uint64_t loss_us = 0;
+    std::uint64_t zero_grad_us = 0;
+    std::uint64_t backward_us = 0;
+    std::uint64_t update_us = 0;
+    std::uint64_t eval_us = 0;
+    std::uint64_t epoch_us = 0;
+};
+
+std::uint64_t ElapsedUs(Clock::time_point start)
+{
+    return static_cast<std::uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() -
+                                                              start)
+            .count());
+}
+
+double AverageUs(std::uint64_t total_us, std::size_t count)
+{
+    if (count == 0)
+        return 0.0;
+
+    return static_cast<double>(total_us) / static_cast<double>(count);
+}
 
 std::size_t ParseSize(const char* text, std::size_t fallback)
 {
@@ -107,22 +139,40 @@ int main(int argc, char** argv)
 
     for (std::size_t epoch = 0; epoch < epochs; ++epoch)
     {
+        const Clock::time_point epoch_start = Clock::now();
+        EpochProfile profile;
         double total_loss = 0.0;
         std::size_t trained = 0;
         for (std::size_t index = 0; index < samples_per_epoch; ++index)
         {
+            Clock::time_point start = Clock::now();
             const forg::nn::Values input =
                 forg::nn::Flatten::From(train_samples[index].pixels);
             const forg::nn::Values target =
                 forg::nn::OneHot(10, train_samples[index].label);
+            profile.input_us += ElapsedUs(start);
+
+            start = Clock::now();
             const forg::nn::Values output = model.Forward(input);
+            profile.forward_us += ElapsedUs(start);
+
+            start = Clock::now();
             const forg::nn::ValuePtr loss = forg::nn::MSELoss(output, target);
+            profile.loss_us += ElapsedUs(start);
             if (!loss)
                 continue;
 
+            start = Clock::now();
             optimizer.ZeroGrad();
+            profile.zero_grad_us += ElapsedUs(start);
+
+            start = Clock::now();
             forg::nn::Backward(loss);
+            profile.backward_us += ElapsedUs(start);
+
+            start = Clock::now();
             optimizer.Step();
+            profile.update_us += ElapsedUs(start);
 
             total_loss += loss->GetData();
             ++trained;
@@ -130,9 +180,30 @@ int main(int argc, char** argv)
 
         const double mean_loss =
             trained == 0 ? 0.0 : total_loss / static_cast<double>(trained);
+        const Clock::time_point eval_start = Clock::now();
         const double accuracy = Evaluate(model, test_samples, test_limit);
+        profile.eval_us = ElapsedUs(eval_start);
+        profile.epoch_us = ElapsedUs(epoch_start);
+
         std::cout << "epoch " << (epoch + 1) << "/" << epochs
                   << " loss=" << mean_loss << " accuracy=" << accuracy << '\n';
+        std::cout << "profile_us"
+                  << " epoch=" << profile.epoch_us
+                  << " input=" << profile.input_us
+                  << " forward=" << profile.forward_us
+                  << " loss=" << profile.loss_us
+                  << " zero_grad=" << profile.zero_grad_us
+                  << " backward=" << profile.backward_us
+                  << " update=" << profile.update_us
+                  << " eval=" << profile.eval_us << '\n';
+        std::cout << "profile_avg_us_per_sample"
+                  << " input=" << AverageUs(profile.input_us, trained)
+                  << " forward=" << AverageUs(profile.forward_us, trained)
+                  << " loss=" << AverageUs(profile.loss_us, trained)
+                  << " zero_grad=" << AverageUs(profile.zero_grad_us, trained)
+                  << " backward=" << AverageUs(profile.backward_us, trained)
+                  << " update=" << AverageUs(profile.update_us, trained)
+                  << '\n';
     }
 
     return 0;

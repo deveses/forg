@@ -100,6 +100,8 @@ Output:
 
 ```text
 epoch 1/1 loss=41.0573 accuracy=0.16
+profile_us epoch=14650000 input=... forward=... loss=... zero_grad=... backward=... update=... eval=...
+profile_avg_us_per_sample input=... forward=... loss=... zero_grad=... backward=... update=...
 real 14.65
 user 14.36
 sys 0.05
@@ -116,6 +118,20 @@ Approximate extrapolation from that run:
 
 These numbers are rough. Runtime depends on compiler, CPU, build type, test
 limit, and whether the loss graph allocation pattern changes.
+
+The built-in `profile_us` line reports per-epoch timing in microseconds:
+
+- `epoch`: Whole epoch including training and evaluation.
+- `input`: Pixel flattening and one-hot target creation.
+- `forward`: Model forward pass.
+- `loss`: Scalar loss graph creation.
+- `zero_grad`: Gradient clearing before backpropagation.
+- `backward`: Reverse-mode autograd traversal.
+- `update`: SGD parameter update.
+- `eval`: Accuracy pass over the selected test subset.
+
+The `profile_avg_us_per_sample` line divides the training phases by the number
+of successfully trained samples in that epoch.
 
 ## Accuracy Expectations
 
@@ -146,7 +162,8 @@ Useful future optimization targets:
 - Add tensor or matrix primitives for dense layers.
 - Add softmax cross-entropy.
 - Add model serialization so inference does not require retraining.
-- Add profiling around forward pass, backward pass, and parameter update time.
+- Use the built-in profile output to target forward, backward, and update
+  bottlenecks.
 
 When optimizing, keep this document updated with:
 
@@ -157,4 +174,5 @@ When optimizing, keep this document updated with:
 - Model architecture.
 - Build type and platform.
 - `real`, `user`, and `sys` timing.
+- `profile_us` and `profile_avg_us_per_sample` output.
 - Final loss and accuracy.
