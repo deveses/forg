@@ -449,20 +449,8 @@ struct Engine::Impl
         return true;
     }
 
-    bool Initialize(HWIN window)
+    bool InitializeRenderer(HWIN window)
     {
-        if (IsInitialized())
-        {
-            SetError("Engine is already initialized");
-            return false;
-        }
-
-        if (!configLoaded)
-        {
-            SetError("Engine config is not loaded");
-            return false;
-        }
-
         if (config.RendererDriver.empty())
         {
             SetError("No renderer driver specified in config");
@@ -533,6 +521,26 @@ struct Engine::Impl
                                      Blend_SourceAlpha);
         device.Get()->SetRenderState(RenderStates_DestinationBlend,
                                      Blend_InvSourceAlpha);
+
+        return true;
+    }
+
+    bool Initialize(HWIN window)
+    {
+        if (IsInitialized())
+        {
+            SetError("Engine is already initialized");
+            return false;
+        }
+
+        if (!configLoaded)
+        {
+            SetError("Engine config is not loaded");
+            return false;
+        }
+
+        if (!InitializeRenderer(window))
+            return false;
 
         audio.Init();
 
