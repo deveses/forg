@@ -23,6 +23,9 @@
 #pragma once
 #endif
 
+#include <string_view>
+#include <vector>
+
 #include "core/RefCounter.h"
 #include "enums.h"
 #include "math/Matrix4.h"
@@ -47,6 +50,20 @@ struct Viewport
     uint Height;
     float MinZ;
     float MaxZ;
+};
+
+enum class BackBufferPixelFormat
+{
+    RGBA8
+};
+
+struct BackBuffer
+{
+    uint Width = 0;
+    uint Height = 0;
+    uint RowPitch = 0;
+    BackBufferPixelFormat Format = BackBufferPixelFormat::RGBA8;
+    std::vector<unsigned char> Pixels;
 };
 
 /// IRenderDevice interface
@@ -111,6 +128,23 @@ class IRenderDevice : public core::RefCounter
      * @return If the method succeeds, the return value is FORG_OK.
      */
     virtual int Present() = 0;
+
+    /// Writes the renderer's available backbuffer to a diagnostic image file.
+    /// Backends that cannot read synchronously may schedule the write for a
+    /// suitable point in their frame lifecycle.
+    virtual int SaveBackBuffer(std::string_view filename);
+
+    /// Retrieves the most recent backbuffer pixels in a renderer-independent
+    /// format. Not every backend can service this synchronously at every point
+    /// in the frame.
+    virtual int GetBackBuffer(BackBuffer& backBuffer)
+    {
+        (void)backBuffer;
+        return FORG_INVALID_CALL;
+    }
+
+    static int WriteBackBufferToFile(std::string_view filename,
+                                     const BackBuffer& backBuffer);
 
     /// Resets the type, size, and format of the swap chain.
     /**

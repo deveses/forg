@@ -1,5 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include <filesystem>
+#include <fstream>
+#include <string>
+
 #include "forg/control/SceneControl.h"
 #include "forg/Input.h"
 #include "forg/net/HttpRequest.h"
@@ -77,6 +81,43 @@ TEST_CASE("clear.color updates the clear color", "[control]")
     REQUIRE(scene.clearColor.r == 0.25f);
     REQUIRE(scene.clearColor.g == 0.5f);
     REQUIRE(scene.clearColor.b == 0.75f);
+}
+
+TEST_CASE("render.capture saves the backbuffer through the render device",
+          "[control][render]")
+{
+    const std::filesystem::path path =
+        std::filesystem::temp_directory_path() / "forg-control-capture.ppm";
+    std::filesystem::remove(path);
+
+    forg::rendering::reference::SWRenderDevice device(nullptr);
+    REQUIRE(device.Initialize(2, 2) == FORG_OK);
+    REQUIRE(device.Clear(forg::ClearFlags_Target, forg::Color(1.0f, 0.0f, 0.0f),
+                         1.0f, 0) == FORG_OK);
+
+    Scene scene;
+    SceneControlContext ctx = scene.context(&device);
+
+    std::string r = DispatchCommand(
+        ctx, CommandFromRequest("/render/capture",
+                                (std::string("path=") + path.string()).c_str()));
+
+    REQUIRE(r == "{\"ok\":true}");
+
+    std::ifstream in(path, std::ios::binary);
+    REQUIRE(in.good());
+
+    std::string magic;
+    std::string size;
+    std::string maxValue;
+    std::getline(in, magic);
+    std::getline(in, size);
+    std::getline(in, maxValue);
+    REQUIRE(magic == "P6");
+    REQUIRE(size == "2 2");
+    REQUIRE(maxValue == "255");
+
+    std::filesystem::remove(path);
 }
 
 TEST_CASE("input.drag dispatches a pointer drag input event",

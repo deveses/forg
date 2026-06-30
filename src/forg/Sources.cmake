@@ -150,6 +150,7 @@ set(control_sources
     commands/camera.cpp
     commands/input.cpp
     commands/mesh.cpp
+    commands/render.cpp
     commands/scene.cpp
 )
 list(TRANSFORM control_sources PREPEND "src/control/")
@@ -255,6 +256,7 @@ set(image_sources
     Image.cpp
     bmp/bmp.cpp
     dds/dds.cpp
+    ppm/ppm.cpp
 )
 list(TRANSFORM image_sources PREPEND "src/image/")
 

@@ -17,6 +17,8 @@ std::string DispatchCommand(SceneControlContext& ctx, const net::Command& cmd)
         return DispatchInput(ctx, cmd);
     if (v.rfind("mesh.", 0) == 0)
         return DispatchMesh(ctx, cmd);
+    if (v.rfind("render.", 0) == 0)
+        return DispatchRender(ctx, cmd);
     if (v.rfind("light.", 0) == 0 || v.rfind("clear.", 0) == 0 || v == "state")
         return DispatchScene(ctx, cmd);
 

@@ -14,6 +14,7 @@ namespace forg::control {
 std::string DispatchCamera(SceneControlContext& ctx, const net::Command& cmd);
 std::string DispatchInput(SceneControlContext& ctx, const net::Command& cmd);
 std::string DispatchMesh(SceneControlContext& ctx, const net::Command& cmd);
+std::string DispatchRender(SceneControlContext& ctx, const net::Command& cmd);
 std::string DispatchScene(SceneControlContext& ctx, const net::Command& cmd);
 
 // Shared response builders (inline: one definition across the command TUs).

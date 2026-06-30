@@ -42,6 +42,7 @@ struct ModelBoxParams
     float Width;
     float Height;
     float Depth;
+    int Color;
 };
 
 struct ModelSphereParams
@@ -49,6 +50,7 @@ struct ModelSphereParams
     float Radius;
     int Slices;
     int Stacks;
+    int Color;
 };
 
 struct ModelCylinderParams
@@ -58,6 +60,7 @@ struct ModelCylinderParams
     float Length;
     int Slices;
     int Stacks;
+    int Color;
 };
 
 struct ModelPyramidParams
@@ -65,6 +68,7 @@ struct ModelPyramidParams
     uint NumAngles;
     float Radius;
     float Height;
+    int Color;
 };
 
 struct ModelGridParams
@@ -86,7 +90,7 @@ struct ModelMeshParams
         ModelGridParams Grid;
     };
 
-    ModelMeshParams() : Box{1.0f, 1.0f, 1.0f} {}
+    ModelMeshParams() : Box{1.0f, 1.0f, 1.0f, -1} {}
 };
 
 class FORG_API Model

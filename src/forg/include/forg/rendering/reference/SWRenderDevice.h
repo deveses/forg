@@ -192,6 +192,7 @@ class FORG_API SWRenderDevice : public IRenderDevice
     virtual int EndScene(void);
     virtual int Clear(uint flags, Color color, float zdepth, int stencil);
     virtual int Present();
+    virtual int GetBackBuffer(BackBuffer& backBuffer);
     virtual int Reset();
 
     virtual LPVERTEXDECLARATION

@@ -12,6 +12,34 @@ using forg::rendering::reference::SWRenderDevice;
 
 namespace {
 
+class CountingRenderDevice : public SWRenderDevice
+{
+  public:
+    CountingRenderDevice() : SWRenderDevice(nullptr) {}
+
+    int DrawIndexedPrimitive(forg::PrimitiveType primitiveType, int baseVertex,
+                             int minVertexIndex, int numVertices,
+                             int startIndex, int primCount) override
+    {
+        lastPrimitiveType = primitiveType;
+        lastBaseVertex = baseVertex;
+        lastMinVertexIndex = minVertexIndex;
+        lastNumVertices = numVertices;
+        lastStartIndex = startIndex;
+        lastPrimCount = primCount;
+        ++drawCalls;
+        return FORG_OK;
+    }
+
+    int drawCalls = 0;
+    forg::PrimitiveType lastPrimitiveType = forg::PrimitiveType_TriangleList;
+    int lastBaseVertex = 0;
+    int lastMinVertexIndex = 0;
+    int lastNumVertices = 0;
+    int lastStartIndex = 0;
+    int lastPrimCount = 0;
+};
+
 void RequireEquivalentMesh(const Mesh* legacy, const Mesh* modern)
 {
     REQUIRE(legacy != nullptr);
@@ -64,6 +92,24 @@ TEST_CASE("Modern mesh primitive factories match legacy wrappers",
     auto legacy_landscape = Mesh::Landscape(&device, span, heights, 2, 2);
     auto modern_landscape = Mesh::MakeLandscape(&device, span, heights, 2, 2);
     RequireEquivalentMesh(legacy_landscape.get(), modern_landscape.get());
+}
+
+TEST_CASE("Grid mesh DrawSubset submits its generated triangles",
+          "[rendering][mesh]")
+{
+    CountingRenderDevice device;
+    auto grid = Mesh::MakeGrid(&device, 8.0f, 8.0f, 0xffff0000, 8);
+
+    REQUIRE(grid != nullptr);
+    grid->DrawSubset(0);
+
+    REQUIRE(device.drawCalls == 1);
+    REQUIRE(device.lastPrimitiveType == forg::PrimitiveType_TriangleList);
+    REQUIRE(device.lastBaseVertex == 0);
+    REQUIRE(device.lastMinVertexIndex == 0);
+    REQUIRE(device.lastNumVertices == static_cast<int>(grid->GetNumVertices()));
+    REQUIRE(device.lastStartIndex == 0);
+    REQUIRE(device.lastPrimCount == static_cast<int>(grid->GetNumFaces()));
 }
 
 TEST_CASE("Modern mesh file loader matches legacy FromFile wrapper",

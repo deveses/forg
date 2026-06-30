@@ -40,3 +40,25 @@ TEST_CASE("Reference renderer produces stable headless triangle output",
     REQUIRE(buffer[13 * 16 + 13] == 0xff000000u);
     REQUIRE(BufferChecksum(buffer, 16 * 16) == 0x8aca7a79u);
 }
+
+TEST_CASE("Reference renderer exposes its backbuffer as RGBA pixels",
+          "[rendering][reference]")
+{
+    forg::rendering::reference::SWRenderDevice device(nullptr);
+    REQUIRE(device.Initialize(2, 1) == FORG_OK);
+    REQUIRE(device.Clear(forg::ClearFlags_Target,
+                         forg::Color(1.0f, 0.0f, 0.0f, 1.0f), 1.0f,
+                         0) == FORG_OK);
+
+    forg::BackBuffer backBuffer;
+    REQUIRE(device.GetBackBuffer(backBuffer) == FORG_OK);
+    REQUIRE(backBuffer.Width == 2);
+    REQUIRE(backBuffer.Height == 1);
+    REQUIRE(backBuffer.RowPitch == 8);
+    REQUIRE(backBuffer.Format == forg::BackBufferPixelFormat::RGBA8);
+    REQUIRE(backBuffer.Pixels.size() == 8);
+    REQUIRE(backBuffer.Pixels[0] == 255);
+    REQUIRE(backBuffer.Pixels[1] == 0);
+    REQUIRE(backBuffer.Pixels[2] == 0);
+    REQUIRE(backBuffer.Pixels[3] == 255);
+}

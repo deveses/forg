@@ -89,6 +89,7 @@ class FORG_API Mesh
     uint m_num_vertices;
     uint m_stride_size;
     uint m_options;
+    PrimitiveType m_primitive_type = PrimitiveType_TriangleList;
 
     //////////////////////////////////////////////////////////////////////////
     // Association
@@ -178,6 +179,9 @@ class FORG_API Mesh
     uint GetNumBytesPerVertex() const;
 
     uint GetOptions() const;
+
+    void SetPrimitiveType(PrimitiveType primitiveType);
+    PrimitiveType GetPrimitiveType() const;
 
     /// Sets the attribute table for a mesh and the number of entries stored in
     /// the table.

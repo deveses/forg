@@ -725,6 +725,17 @@ Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, uint numAngles,
         m->UnlockIndexBuffer();
     }
 
+    if (m)
+    {
+        AttributeRange att;
+        att.FaceCount = primitives;
+        att.FaceStart = 0;
+        att.VertexCount = vertices;
+        att.VertexStart = 0;
+        att.AttribId = 0;
+        m->SetAttributeTable(&att, 1);
+    }
+
     return m;
 }
 
@@ -740,9 +751,10 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
                                    float sizeY, int color, uint subgrid)
 {
     PositionColored* buffer = 0;
-    uint primitives = (subgrid + 2) << 1; // 4 + 2*s = (s+2)*2
-    // uint indices = primitives*2;
-    uint vertices = (subgrid + 1) << 2; // 4 + 4*s = (s+1)*4
+    const uint linesPerAxis = subgrid + 2;
+    const uint lines = linesPerAxis << 1;
+    const uint primitives = lines * 2;
+    const uint vertices = lines * 4;
 
     if (sizeX < 0.0f)
         sizeX = -sizeX;
@@ -760,41 +772,38 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
         float vstart_X = -halfc;
         float vstart_Z = -halfr;
 
-        float stepc = sizeX / (1 + subgrid);
-        float stepr = sizeY / (1 + subgrid);
+        const float stepc = sizeX / (1 + subgrid);
+        const float stepr = sizeY / (1 + subgrid);
+        const float shorter = sizeX < sizeY ? sizeX : sizeY;
+        const float halfLine = shorter > 0.0f ? shorter * 0.01f : 0.02f;
 
-        // frame
-        buffer[0].set_Position(-halfc, 0.0f, -halfr);
-        buffer[1].set_Position(halfc, 0.0f, -halfr);
-        buffer[2].set_Position(halfc, 0.0f, halfr);
-        buffer[3].set_Position(-halfc, 0.0f, halfr);
-        buffer[0].set_Color(color);
-        buffer[1].set_Color(color);
-        buffer[2].set_Color(color);
-        buffer[3].set_Color(color);
-
-        uint voff = 4;
-        for (uint row = 0; row < subgrid; row++)
+        uint voff = 0;
+        for (uint row = 0; row < linesPerAxis; ++row)
         {
-            buffer[voff + 2 * row + 0].set_Position(
-                halfc, 0.0f, vstart_Z + (row + 1) * stepr);
-            buffer[voff + 2 * row + 1].set_Position(
-                -halfc, 0.0f, vstart_Z + (row + 1) * stepr);
-
-            buffer[voff + 2 * row + 0].set_Color(color);
-            buffer[voff + 2 * row + 1].set_Color(color);
+            const float z = vstart_Z + row * stepr;
+            buffer[voff + 0].set_Position(-halfc, 0.0f, z - halfLine);
+            buffer[voff + 1].set_Position(halfc, 0.0f, z - halfLine);
+            buffer[voff + 2].set_Position(halfc, 0.0f, z + halfLine);
+            buffer[voff + 3].set_Position(-halfc, 0.0f, z + halfLine);
+            buffer[voff + 0].set_Color(color);
+            buffer[voff + 1].set_Color(color);
+            buffer[voff + 2].set_Color(color);
+            buffer[voff + 3].set_Color(color);
+            voff += 4;
         }
 
-        voff += (subgrid << 1);
-        for (uint col = 0; col < subgrid; col++)
+        for (uint col = 0; col < linesPerAxis; ++col)
         {
-            buffer[voff + 2 * col + 0].set_Position(
-                vstart_X + (col + 1) * stepc, 0.0f, halfr);
-            buffer[voff + 2 * col + 1].set_Position(
-                vstart_X + (col + 1) * stepc, 0.0f, -halfr);
-
-            buffer[voff + 2 * col + 0].set_Color(color);
-            buffer[voff + 2 * col + 1].set_Color(color);
+            const float x = vstart_X + col * stepc;
+            buffer[voff + 0].set_Position(x - halfLine, 0.0f, -halfr);
+            buffer[voff + 1].set_Position(x + halfLine, 0.0f, -halfr);
+            buffer[voff + 2].set_Position(x + halfLine, 0.0f, halfr);
+            buffer[voff + 3].set_Position(x - halfLine, 0.0f, halfr);
+            buffer[voff + 0].set_Color(color);
+            buffer[voff + 1].set_Color(color);
+            buffer[voff + 2].set_Color(color);
+            buffer[voff + 3].set_Color(color);
+            voff += 4;
         }
 
         m->UnlockVertexBuffer();
@@ -808,38 +817,31 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
 
     if (m && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
-        // frame
-        ibuffer[0] = 0;
-        ibuffer[1] = 1;
-
-        ibuffer[2] = 1;
-        ibuffer[3] = 2;
-
-        ibuffer[4] = 2;
-        ibuffer[5] = 3;
-
-        ibuffer[6] = 3;
-        ibuffer[7] = 0;
-
-        uint ioff = 8;
-        uint voff = 4;
-
-        for (uint row = 0; row < subgrid; row++)
+        uint ioff = 0;
+        for (uint line = 0; line < lines; ++line)
         {
-            ibuffer[ioff + 2 * row] = voff + 2 * row;
-            ibuffer[ioff + 2 * row + 1] = voff + 2 * row + 1;
-        }
-
-        ioff += 2 * subgrid;
-        voff += 2 * subgrid;
-
-        for (uint col = 0; col < subgrid; col++)
-        {
-            ibuffer[ioff + 2 * col] = voff + 2 * col;
-            ibuffer[ioff + 2 * col + 1] = voff + 2 * col + 1;
+            const ushort voff = static_cast<ushort>(line * 4);
+            ibuffer[ioff + 0] = voff + 0;
+            ibuffer[ioff + 1] = voff + 2;
+            ibuffer[ioff + 2] = voff + 1;
+            ibuffer[ioff + 3] = voff + 0;
+            ibuffer[ioff + 4] = voff + 3;
+            ibuffer[ioff + 5] = voff + 2;
+            ioff += 6;
         }
 
         m->UnlockIndexBuffer();
+    }
+
+    if (m)
+    {
+        AttributeRange att;
+        att.AttribId = 0;
+        att.FaceStart = 0;
+        att.FaceCount = primitives;
+        att.VertexStart = 0;
+        att.VertexCount = vertices;
+        m->SetAttributeTable(&att, 1);
     }
 
     return m;
@@ -924,6 +926,15 @@ uint Mesh::GetNumBytesPerVertex() const { return m_stride_size; }
 uint Mesh::GetOptions() const { return m_options; }
 
 /////////////////////////////////////////////////////////////////////////////////////
+void Mesh::SetPrimitiveType(PrimitiveType primitiveType)
+{
+    m_primitive_type = primitiveType;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+PrimitiveType Mesh::GetPrimitiveType() const { return m_primitive_type; }
+
+/////////////////////////////////////////////////////////////////////////////////////
 int Mesh::LockVertexBuffer(uint /*Flags*/, void** ppData)
 {
     if (m_vertex_buffer)
@@ -978,14 +989,17 @@ int Mesh::DrawSubset(uint attributeID)
 {
     if (attributeID < m_attribtab.size())
     {
+        const uint indexStride =
+            m_primitive_type == PrimitiveType_LineList ? 2 : 3;
         m_device->SetStreamSource(0, m_vertex_buffer.get(), 0, m_stride_size);
         m_device->SetIndices(m_index_buffer.get());
         m_device->SetVertexDeclaration(&m_vertex_declaration);
         // m_device->SetTexture(0, m_texture.get());
-        m_device->DrawIndexedPrimitive(PrimitiveType_TriangleList, 0,
+        m_device->DrawIndexedPrimitive(m_primitive_type, 0,
                                        m_attribtab[attributeID].VertexStart,
                                        m_attribtab[attributeID].VertexCount,
-                                       m_attribtab[attributeID].FaceStart * 3,
+                                       m_attribtab[attributeID].FaceStart *
+                                           indexStride,
                                        m_attribtab[attributeID].FaceCount);
     }
 

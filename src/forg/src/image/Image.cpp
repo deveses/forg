@@ -5,15 +5,20 @@
 #include "debug/dbg.h"
 #include "image/bmp/bmp.h"
 #include "image/dds/dds.h"
+#include "image/ppm/ppm.h"
 #include "math/Math.h"
 
+#include <cctype>
 #include <memory>
+#include <string>
+#include <string_view>
 
 using namespace forg::math;
 
 namespace forg {
 
 #define MAGIC_BMP 0x4d42
+#define MAGIC_PPM 0x3650
 
 #define MAGIC_DDS 0x20534444
 
@@ -21,6 +26,7 @@ namespace forg {
 #define IMAGE_UNKNOWN 0
 #define IMAGE_BMP 1
 #define IMAGE_DDS 2
+#define IMAGE_PPM 3
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -194,6 +200,8 @@ static int detect_file_type(const char* _filename)
         {
         case MAGIC_BMP:
             return IMAGE_BMP;
+        case MAGIC_PPM:
+            return IMAGE_PPM;
         }
 
         switch (magic_number)
@@ -206,6 +214,27 @@ static int detect_file_type(const char* _filename)
     }
 
     return IMAGE_NOT_FOUND;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+static bool has_extension(std::string_view filename, std::string_view extension)
+{
+    if (filename.size() < extension.size())
+        return false;
+
+    filename = filename.substr(filename.size() - extension.size());
+    for (std::string_view::size_type i = 0; i < extension.size(); ++i)
+    {
+        const char a = static_cast<char>(
+            std::tolower(static_cast<unsigned char>(filename[i])));
+        const char b = static_cast<char>(
+            std::tolower(static_cast<unsigned char>(extension[i])));
+        if (a != b)
+            return false;
+    }
+
+    return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -241,6 +270,12 @@ bool Image::Load(const char* _filename)
     }
     break;
 
+    case IMAGE_PPM:
+    {
+        img_data.reset(LoadPpm(_filename, &img_info));
+    }
+    break;
+
     case IMAGE_NOT_FOUND:
         DBG_MSG("[Image] <%s>: File not found!\n", _filename);
         break;
@@ -262,6 +297,22 @@ bool Image::Load(const char* _filename)
         return true;
     }
 
+    return false;
+}
+
+bool Image::Save(std::string_view filename) const
+{
+    if (m_data.empty() || m_data[0].empty())
+        return false;
+
+    if (has_extension(filename, ".ppm"))
+    {
+        return SavePpm(filename, reinterpret_cast<const Color4b*>(m_data[0].data()),
+                       m_width, m_height, m_width * sizeof(Color4b));
+    }
+
+    DBG_MSG("[Image] <%s>: Unsupported image format!\n",
+            std::string(filename).c_str());
     return false;
 }
 
