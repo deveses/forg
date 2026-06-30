@@ -16,6 +16,7 @@ option(FORG_USE_ZLIB "Use ZLib library" OFF)
 option(FORG_WARNINGS_AS_ERRORS "Treat FORG compiler warnings as errors" OFF)
 option(FORG_ENABLE_CLANG_TIDY "Run clang-tidy while compiling FORG targets" OFF)
 option(FORG_ENABLE_PCH "Use precompiled headers for FORG targets" ON)
+option(FORG_BUILD_EXAMPLES "Build FORG example programs" OFF)
 
 find_program(FORG_CLANG_FORMAT_EXECUTABLE NAMES clang-format)
 if(FORG_CLANG_FORMAT_EXECUTABLE)
@@ -99,6 +100,10 @@ endif()
 
 add_subdirectory(extern)
 add_subdirectory(src)
+
+if(FORG_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
 
 include(CTest)
 if(BUILD_TESTING)

@@ -3,4 +3,5 @@
 /build/
 .cache/
 .vscode/
-data/.DS_Store
+**/.DS_Store
+data/mnist_dataset/*
