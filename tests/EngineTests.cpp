@@ -3,6 +3,7 @@
 
 #include "forg/Engine.h"
 #include "forg/Input.h"
+#include "forg/audio/AudioEngine.h"
 #include "forg/math/Vector3.h"
 #include "forg/rendering/Camera.h"
 #include "forg/scene/Scene.h"
@@ -56,6 +57,20 @@ TEST_CASE("Engine starts empty and owns an empty scene", "[engine]")
     REQUIRE(engine.Config().BackBufferWidth == 100);
     REQUIRE(engine.Config().BackBufferHeight == 100);
     REQUIRE(std::string(engine.LastError()).empty());
+}
+
+TEST_CASE("Engine exposes a stable audio engine", "[engine][audio]")
+{
+    forg::Engine engine;
+    forg::audio::AudioEngine& audio = engine.Audio();
+
+    REQUIRE(&engine.Audio() == &audio);
+    REQUIRE(&audio.Manager() == &engine.Audio().Manager());
+
+    engine.Shutdown();
+
+    REQUIRE(&engine.Audio() == &audio);
+    REQUIRE_FALSE(engine.Audio().IsInitialized());
 }
 
 TEST_CASE("Engine indexed scene access keeps world scene stable", "[engine]")

@@ -9,7 +9,7 @@
 
 namespace forg::audio {
 
-class AudioOutputWaveOut : public IAudioOutput
+class AudioOutputWaveOut final : public IAudioOutput
 {
     HWAVEOUT m_device;
     WAVEHDR m_header[2];

@@ -4,13 +4,21 @@
 set(audio_includes
     AudioDefs.h
     AudioDSP.h
+    AudioEngine.h
+    AudioManager.h
     AudioMixer.h
     WaveFile.h
 )
 list(TRANSFORM audio_includes PREPEND "include/forg/audio/")
 set(audio_sources
     AudioDSP.cpp
+    AudioEngine.cpp
+    AudioManager.cpp
     AudioMixer.cpp
+    AudioOutput.cpp
+    AudioOutput.h
+    $<${FORG_PLATFORM_OSX}:AudioOutputCoreAudio.h>
+    $<${FORG_PLATFORM_OSX}:AudioOutputCoreAudio.cpp>
     $<${FORG_PLATFORM_WINDOWS}:AudioOutputWaveOut.h>
     $<${FORG_PLATFORM_WINDOWS}:AudioOutputWaveOut.cpp>
     WaveFile.cpp

@@ -16,12 +16,38 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_H_
-#define _FORG_AUDIO_H_
+#ifndef _FORG_AUDIO_AUDIOENGINE_H_
+#define _FORG_AUDIO_AUDIOENGINE_H_
 
-#include "audio/AudioEngine.h"
-#include "audio/AudioManager.h"
-#include "audio/AudioMixer.h"
-#include "audio/WaveFile.h"
+#if _MSC_VER > 1000
+#pragma once
+#endif
+
+#include "forg/audio/AudioManager.h"
+#include "forg/base.h"
+
+namespace forg::audio {
+
+class FORG_API AudioEngine
+{
+    AudioManager m_manager;
+
+  public:
+    AudioEngine();
+    ~AudioEngine();
+
+    AudioEngine(const AudioEngine&) = delete;
+    AudioEngine& operator=(const AudioEngine&) = delete;
+
+    bool Init();
+    void Shutdown();
+    void Update();
+
+    bool IsInitialized() const;
+    AudioManager& Manager();
+    const AudioManager& Manager() const;
+};
+
+} // namespace forg::audio
 
 #endif

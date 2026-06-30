@@ -16,12 +16,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_H_
-#define _FORG_AUDIO_H_
+#ifndef _FORG_AUDIO_AUDIOOUTPUT_H_
+#define _FORG_AUDIO_AUDIOOUTPUT_H_
 
-#include "audio/AudioEngine.h"
-#include "audio/AudioManager.h"
-#include "audio/AudioMixer.h"
-#include "audio/WaveFile.h"
+#if _MSC_VER > 1000
+#pragma once
+#endif
+
+#include "forg/audio/AudioDefs.h"
+
+namespace forg::audio {
+
+IAudioOutput* CreateDefaultAudioOutput();
+
+} // namespace forg::audio
 
 #endif

@@ -4,6 +4,7 @@
 
 #include "PerformanceCounter.h"
 #include "forg/Input.h"
+#include "forg/audio/AudioEngine.h"
 #include "forg/rendering/IRenderDevice.h"
 #include "forg/rendering/IRenderer.h"
 #include "forg/rendering/Camera.h"
@@ -256,6 +257,7 @@ struct Engine::Impl
     PluginModuleHandle module;
     RendererHandle renderer;
     RenderDeviceHandle device;
+    audio::AudioEngine audio;
     EngineFrameStats frameStats;
     PerformanceCounter frameClock;
     PerformanceCounter fpsClock;
@@ -532,6 +534,8 @@ struct Engine::Impl
         device.Get()->SetRenderState(RenderStates_DestinationBlend,
                                      Blend_InvSourceAlpha);
 
+        audio.Init();
+
         ResetFrameState();
         ClearError();
         return true;
@@ -704,6 +708,8 @@ struct Engine::Impl
             SetError("Engine update callback failed");
             return false;
         }
+
+        audio.Update();
 
         ClearError();
         return true;
@@ -906,6 +912,7 @@ struct Engine::Impl
     {
         std::string shutdownError;
 
+        audio.Shutdown();
         StopControlServer();
         ResetScenes();
         activeModel = nullptr;
@@ -1074,6 +1081,10 @@ uint Engine::SceneCount() const
 {
     return static_cast<uint>(m_impl->scenes.size());
 }
+
+audio::AudioEngine& Engine::Audio() { return m_impl->audio; }
+
+const audio::AudioEngine& Engine::Audio() const { return m_impl->audio; }
 
 forg::Camera& Engine::Camera() { return m_impl->ControlledCamera(); }
 

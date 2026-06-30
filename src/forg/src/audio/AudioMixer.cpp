@@ -1,5 +1,5 @@
 #include "forg/audio/AudioMixer.h"
-#include "audio/AudioOutputWaveOut.h"
+#include "audio/AudioOutput.h"
 #include "forg_pch.h"
 // #include "forg/cpu/vector.h"
 
@@ -14,9 +14,6 @@ AudioMixer::~AudioMixer() { Shutdown(); }
 
 bool AudioMixer::Init()
 {
-    m_output = CreateAudioOutputWaveOut();
-    m_output->Init();
-
     m_format.freq = 44100;
     m_format.bps = 2;
     m_format.chan = 2;
@@ -27,6 +24,18 @@ bool AudioMixer::Init()
         m_streams[i].state = 0;
     }
 
+    Shutdown();
+    m_output = CreateDefaultAudioOutput();
+    if (m_output == nullptr)
+        return false;
+
+    if (!m_output->Init())
+    {
+        m_output->Release();
+        m_output = nullptr;
+        return false;
+    }
+
     return true;
 }
 
@@ -35,12 +44,16 @@ void AudioMixer::Shutdown()
     if (m_output)
     {
         m_output->Release();
+        m_output = 0;
     }
 }
 
 void AudioMixer::Update()
 {
     char buffer[44100 * 2 * 2];
+
+    if (m_output == 0)
+        return;
 
     if (m_output->CanWrite())
     {

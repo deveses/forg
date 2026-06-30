@@ -21,6 +21,10 @@ class IRenderer;
 class Engine;
 class Camera;
 
+namespace audio {
+class AudioEngine;
+} // namespace audio
+
 namespace scene {
 class Model;
 class Scene;
@@ -96,6 +100,8 @@ class FORG_API Engine
     scene::Scene& Scene(uint sceneIndex);
     const scene::Scene& Scene(uint sceneIndex) const;
     uint SceneCount() const;
+    audio::AudioEngine& Audio();
+    const audio::AudioEngine& Audio() const;
     forg::Camera& Camera();
     const forg::Camera& Camera() const;
 
