@@ -41,13 +41,15 @@ class FORG_API AudioMixer
 
   public:
     bool Init();
-    bool Init(IAudioOutput* output);
+    // Takes ownership of output and releases it through
+    // IAudioOutput::Release().
+    bool InitWithOutput(IAudioOutput* output);
     void Shutdown();
     void Update();
 
     void SetStreamBuffer(unsigned int _stream, char* _buffer,
                          unsigned int size);
-    void SetStreamFormat(unsigned int _stream, SAudioFormat& format);
+    void SetStreamFormat(unsigned int _stream, const SAudioFormat& format);
 
   private:
     unsigned int MixStreams(char* _out_buffer, unsigned int _out_size);

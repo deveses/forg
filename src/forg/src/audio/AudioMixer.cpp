@@ -8,13 +8,23 @@
 
 namespace forg::audio {
 
+namespace {
+
+bool IsSupportedStreamFormat(const SAudioFormat& format)
+{
+    return format.freq == 44100 && format.bps == 2 && format.chan > 0 &&
+           format.chan <= MAX_NUM_CHANNELS;
+}
+
+} // namespace
+
 AudioMixer::AudioMixer() : m_output(0) {}
 
 AudioMixer::~AudioMixer() { Shutdown(); }
 
-bool AudioMixer::Init() { return Init(CreateDefaultAudioOutput()); }
+bool AudioMixer::Init() { return InitWithOutput(CreateDefaultAudioOutput()); }
 
-bool AudioMixer::Init(IAudioOutput* output)
+bool AudioMixer::InitWithOutput(IAudioOutput* output)
 {
     Shutdown();
 
@@ -25,7 +35,13 @@ bool AudioMixer::Init(IAudioOutput* output)
     m_num_streams = 10;
     for (unsigned int i = 0; i < m_num_streams; i++)
     {
-        m_streams[i].state = 0;
+        m_streams[i].buffer.ptr = 0;
+        m_streams[i].buffer.size = 0;
+        m_streams[i].buffer.format = m_format;
+        m_streams[i].format = m_format;
+        m_streams[i].offset = 0;
+        m_streams[i].bytes_left = 0;
+        m_streams[i].state = SAudioStream::STATE_OFF;
     }
 
     m_output = output;
@@ -78,14 +94,20 @@ void AudioMixer::SetStreamBuffer(unsigned int _stream, char* _buffer,
 
         m_streams[_stream].offset = 0;
         m_streams[_stream].bytes_left = _size;
-        m_streams[_stream].state = SAudioStream::STATE_ON;
+        m_streams[_stream].state = _buffer != 0 && _size > 0
+                                       ? SAudioStream::STATE_ON
+                                       : SAudioStream::STATE_OFF;
     }
 }
 
-void AudioMixer::SetStreamFormat(unsigned int _stream, SAudioFormat& format)
+void AudioMixer::SetStreamFormat(unsigned int _stream,
+                                 const SAudioFormat& format)
 {
     if (_stream < m_num_streams)
     {
+        if (!IsSupportedStreamFormat(format))
+            return;
+
         m_streams[_stream].format = format;
     }
 }
@@ -96,11 +118,22 @@ void MixSamples(float* _out, int _out_chan, short* _in, int _in_chan,
 {
     for (uint32 i = 0; i < _count; i++)
     {
-        for (int j = 0; j < _out_chan && j < _in_chan; j++)
+        if (_in_chan == 1)
         {
-            float x = (float)_in[j] / 32768;
-            //_out[j] = clamp((_out[j] + x)/2, -1.0f, 1.0f);
-            _out[j] = _out[j] + x;
+            float x = (float)_in[0] / 32768;
+            for (int j = 0; j < _out_chan; j++)
+            {
+                _out[j] = _out[j] + x;
+            }
+        }
+        else
+        {
+            for (int j = 0; j < _out_chan && j < _in_chan; j++)
+            {
+                float x = (float)_in[j] / 32768;
+                //_out[j] = clamp((_out[j] + x)/2, -1.0f, 1.0f);
+                _out[j] = _out[j] + x;
+            }
         }
 
         _in += _in_chan;
@@ -130,7 +163,10 @@ void ConvertSamplesToIntegers(short* _out, float* _in, uint32 _count,
     {
         for (int j = 0; j < _channels; j++)
         {
-            _out[j] = (short)(_in[j] * 32768);
+            const float sample = std::clamp(_in[j], -1.0f, 1.0f);
+            _out[j] = sample >= 1.0f    ? 32767
+                      : sample <= -1.0f ? -32768
+                                        : (short)(sample * 32768.0f);
         }
 
         _in += _channels;

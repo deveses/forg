@@ -47,7 +47,7 @@ TEST_CASE("AudioMixer writes a stereo stream to the output", "[audio][mixer]")
     CapturingAudioOutput output;
     forg::audio::AudioMixer mixer;
 
-    REQUIRE(mixer.Init(&output));
+    REQUIRE(mixer.InitWithOutput(&output));
     REQUIRE(output.initialized);
 
     forg::audio::SAudioFormat stereo16 = {44100, 2, 2};
@@ -71,7 +71,7 @@ TEST_CASE("AudioMixer sums active stereo streams", "[audio][mixer]")
     CapturingAudioOutput output;
     forg::audio::AudioMixer mixer;
 
-    REQUIRE(mixer.Init(&output));
+    REQUIRE(mixer.InitWithOutput(&output));
 
     forg::audio::SAudioFormat stereo16 = {44100, 2, 2};
     short stream0[] = {1000, 2000, -1000, -2000};
@@ -94,7 +94,7 @@ TEST_CASE("AudioMixer waits until the output can accept data", "[audio][mixer]")
     output.canWrite = false;
 
     forg::audio::AudioMixer mixer;
-    REQUIRE(mixer.Init(&output));
+    REQUIRE(mixer.InitWithOutput(&output));
 
     forg::audio::SAudioFormat stereo16 = {44100, 2, 2};
     short input[] = {100, 200};
@@ -110,4 +110,60 @@ TEST_CASE("AudioMixer waits until the output can accept data", "[audio][mixer]")
 
     REQUIRE(output.writeCount == 1);
     REQUIRE(WrittenSamples(output) == std::vector<short>({100, 200}));
+}
+
+TEST_CASE("AudioMixer uses the default stream format", "[audio][mixer]")
+{
+    CapturingAudioOutput output;
+    forg::audio::AudioMixer mixer;
+
+    REQUIRE(mixer.InitWithOutput(&output));
+
+    short input[] = {500, 600};
+
+    mixer.SetStreamBuffer(0, reinterpret_cast<char*>(input), sizeof(input));
+    mixer.Update();
+
+    REQUIRE(output.writeCount == 1);
+    REQUIRE(WrittenSamples(output) == std::vector<short>({500, 600}));
+}
+
+TEST_CASE("AudioMixer duplicates mono input to stereo output", "[audio][mixer]")
+{
+    CapturingAudioOutput output;
+    forg::audio::AudioMixer mixer;
+
+    REQUIRE(mixer.InitWithOutput(&output));
+
+    forg::audio::SAudioFormat mono16 = {44100, 2, 1};
+    short input[] = {1000, -2000};
+
+    mixer.SetStreamFormat(0, mono16);
+    mixer.SetStreamBuffer(0, reinterpret_cast<char*>(input), sizeof(input));
+    mixer.Update();
+
+    REQUIRE(output.writeCount == 1);
+    REQUIRE(WrittenSamples(output) ==
+            std::vector<short>({1000, 1000, -2000, -2000}));
+}
+
+TEST_CASE("AudioMixer clamps mixed output to 16-bit range", "[audio][mixer]")
+{
+    CapturingAudioOutput output;
+    forg::audio::AudioMixer mixer;
+
+    REQUIRE(mixer.InitWithOutput(&output));
+
+    forg::audio::SAudioFormat stereo16 = {44100, 2, 2};
+    short stream0[] = {30000, -30000};
+    short stream1[] = {30000, -30000};
+
+    mixer.SetStreamFormat(0, stereo16);
+    mixer.SetStreamBuffer(0, reinterpret_cast<char*>(stream0), sizeof(stream0));
+    mixer.SetStreamFormat(1, stereo16);
+    mixer.SetStreamBuffer(1, reinterpret_cast<char*>(stream1), sizeof(stream1));
+    mixer.Update();
+
+    REQUIRE(output.writeCount == 1);
+    REQUIRE(WrittenSamples(output) == std::vector<short>({32767, -32768}));
 }
