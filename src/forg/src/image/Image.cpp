@@ -9,6 +9,8 @@
 #include "math/Math.h"
 
 #include <cctype>
+#include <cstdio>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -17,16 +19,21 @@ using namespace forg::math;
 
 namespace forg {
 
-#define MAGIC_BMP 0x4d42
-#define MAGIC_PPM 0x3650
+enum class ImageMagic : uint
+{
+    Bmp = 0x4d42,
+    Ppm = 0x3650,
+    Dds = 0x20534444,
+};
 
-#define MAGIC_DDS 0x20534444
-
-#define IMAGE_NOT_FOUND -1
-#define IMAGE_UNKNOWN 0
-#define IMAGE_BMP 1
-#define IMAGE_DDS 2
-#define IMAGE_PPM 3
+enum class ImageFileType
+{
+    NotFound = -1,
+    Unknown = 0,
+    Bmp,
+    Dds,
+    Ppm,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -182,38 +189,43 @@ static void Resize_NearestNeighbor(Color4b* src, uint src_width,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static int detect_file_type(const char* _filename)
+static ImageFileType detect_file_type(std::string_view filename)
 {
-    FILE* f = fopen(_filename, "r+b");
+    const std::string path(filename);
+    FILE* f = std::fopen(path.c_str(), "rb");
 
     if (f != NULL)
     {
         uint magic_number = 0;
         uint magic_lword = 0;
 
-        fread(&magic_number, 4, 1, f);
-        fclose(f);
+        std::fread(&magic_number, 4, 1, f);
+        std::fclose(f);
 
         magic_lword = magic_number & 0xffff;
 
-        switch (magic_lword)
+        switch (static_cast<ImageMagic>(magic_lword))
         {
-        case MAGIC_BMP:
-            return IMAGE_BMP;
-        case MAGIC_PPM:
-            return IMAGE_PPM;
+        case ImageMagic::Bmp:
+            return ImageFileType::Bmp;
+        case ImageMagic::Ppm:
+            return ImageFileType::Ppm;
+        default:
+            break;
         }
 
-        switch (magic_number)
+        switch (static_cast<ImageMagic>(magic_number))
         {
-        case MAGIC_DDS:
-            return IMAGE_DDS;
+        case ImageMagic::Dds:
+            return ImageFileType::Dds;
+        default:
+            break;
         }
 
-        return IMAGE_UNKNOWN;
+        return ImageFileType::Unknown;
     }
 
-    return IMAGE_NOT_FOUND;
+    return ImageFileType::NotFound;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -249,39 +261,40 @@ void Image::Clean()
     m_num_mipmaps = 1;
 }
 
-bool Image::Load(const char* _filename)
+bool Image::Load(std::string_view filename)
 {
     Clean();
 
     ImageDescription img_info{};
     std::unique_ptr<Color4b[]> img_data;
+    const std::string path(filename);
 
-    switch (detect_file_type(_filename))
+    switch (detect_file_type(filename))
     {
-    case IMAGE_BMP:
+    case ImageFileType::Bmp:
     {
-        img_data.reset(LoadBmp(_filename, &img_info));
+        img_data.reset(LoadBmp(path.c_str(), &img_info));
     }
     break;
 
-    case IMAGE_DDS:
+    case ImageFileType::Dds:
     {
-        img_data.reset(LoadDds(_filename, &img_info));
+        img_data.reset(LoadDds(path.c_str(), &img_info));
     }
     break;
 
-    case IMAGE_PPM:
+    case ImageFileType::Ppm:
     {
-        img_data.reset(LoadPpm(_filename, &img_info));
+        img_data.reset(LoadPpm(path.c_str(), &img_info));
     }
     break;
 
-    case IMAGE_NOT_FOUND:
-        DBG_MSG("[Image] <%s>: File not found!\n", _filename);
+    case ImageFileType::NotFound:
+        DBG_MSG("[Image] <%s>: File not found!\n", path.c_str());
         break;
 
     default:
-        DBG_MSG("[Image] <%s>: Unsupported image format!\n", _filename);
+        DBG_MSG("[Image] <%s>: Unsupported image format!\n", path.c_str());
     }
 
     if (img_data)
@@ -292,7 +305,7 @@ bool Image::Load(const char* _filename)
         const uint size = GetWidth() * GetHeight() * sizeof(Color4b);
         m_data.resize(m_num_mipmaps);
         m_data[0].resize(size);
-        memcpy(m_data[0].data(), img_data.get(), size);
+        std::memcpy(m_data[0].data(), img_data.get(), size);
 
         return true;
     }

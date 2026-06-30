@@ -54,7 +54,7 @@ class Image
 
     // Public Methods
   public:
-    bool Load(const char* _filename);
+    bool Load(std::string_view filename);
     bool Save(std::string_view filename) const;
 
     const char* GetData(uint _level = 0) const;
