@@ -2,8 +2,11 @@
 
 #include "image/bmp/bmp.h"
 
+#include <cstdint>
+#include <cstdio>
+#include <limits>
 #include <memory>
-#include <stdio.h>
+#include <string>
 
 namespace forg {
 
@@ -13,13 +16,13 @@ extern "C"
 {
 #endif
 
-    typedef unsigned short WORD;
-    typedef unsigned long DWORD;
-    typedef unsigned char UCHAR;
+    typedef std::uint16_t WORD;
+    typedef std::uint32_t DWORD;
+    typedef std::uint8_t UCHAR;
     typedef UCHAR BYTE;
-    typedef long LONG;
+    typedef std::int32_t LONG;
     typedef void* LPVOID;
-    typedef long FXPT2DOT30;
+    typedef std::int32_t FXPT2DOT30;
 
     enum BMPCOMPRESSION
     {
@@ -219,15 +222,20 @@ extern "C"
 /// Force upcasting from type Y to type T
 template <class T, class Y> void FORCE_UPCAST(T& a, Y& b) { a = *((T*)&b); }
 
+static DWORD BmpRowPitchBytes(uint width, uint bpp)
+{
+    return ((width * bpp + 31) / 32) * 4;
+}
+
 Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info)
 {
-    BMPFILEHEADER bmfh;
-    BMPINFOHEADER bmih;
-    BMPV4HEADER bmi4;
-    BMPV5HEADER bmi5;
+    BMPFILEHEADER bmfh{};
+    BMPINFOHEADER bmih{};
+    BMPV4HEADER bmi4{};
+    BMPV5HEADER bmi5{};
     // RGB_QUAD             *aColors = 0;
 
-    FILE* f = fopen(filename, "r+b");
+    FILE* f = std::fopen(filename, "rb");
 
     if (f == 0)
         return NULL;
@@ -238,99 +246,115 @@ Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info)
     LONG bmpWidth = 0;
     LONG bmpHeight = 0;
 
-    fread(&bmfh, 1, sizeof(BMPFILEHEADER), f);
-    fread(&bihSize, 1, sizeof(DWORD), f);
+    std::fread(&bmfh, 1, sizeof(BMPFILEHEADER), f);
+    std::fread(&bihSize, 1, sizeof(DWORD), f);
 
     switch (bihSize)
     {
     case sizeof(BMPINFOHEADER):
-        fread((BYTE*)&bmih + sizeof(DWORD), 1,
-              sizeof(BMPINFOHEADER) - sizeof(DWORD), f);
+        bmih.biSize = bihSize;
+        std::fread((BYTE*)&bmih + sizeof(DWORD), 1,
+                   sizeof(BMPINFOHEADER) - sizeof(DWORD), f);
         bmpBpp = bmih.biBitCount;
         bmpWidth = bmih.biWidth;
         bmpHeight = bmih.biHeight;
         hdr_read = true;
         break;
     case sizeof(BMPV4HEADER):
-        fread((BYTE*)&bmi4 + sizeof(DWORD), 1,
-              sizeof(BMPV4HEADER) - sizeof(DWORD), f);
+        bmi4.bV4Size = bihSize;
+        std::fread((BYTE*)&bmi4 + sizeof(DWORD), 1,
+                   sizeof(BMPV4HEADER) - sizeof(DWORD), f);
         bmpBpp = bmi4.bV4BitCount;
+        bmpWidth = bmi4.bV4Width;
+        bmpHeight = bmi4.bV4Height;
         hdr_read = true;
         break;
     case sizeof(BMPV5HEADER):
-        fread((BYTE*)&bmi5 + sizeof(DWORD), 1,
-              sizeof(BMPV5HEADER) - sizeof(DWORD), f);
+        bmi5.bV5Size = bihSize;
+        std::fread((BYTE*)&bmi5 + sizeof(DWORD), 1,
+                   sizeof(BMPV5HEADER) - sizeof(DWORD), f);
         bmpBpp = bmi5.bV5BitCount;
+        bmpWidth = bmi5.bV5Width;
+        bmpHeight = bmi5.bV5Height;
         hdr_read = true;
         break;
     }
 
+    const bool top_down = bmpHeight < 0;
+    const uint image_width = bmpWidth > 0 ? static_cast<uint>(bmpWidth) : 0;
+    const uint image_height =
+        bmpHeight < 0 ? static_cast<uint>(-bmpHeight) : static_cast<uint>(bmpHeight);
+
     if (bmp_info)
     {
-        bmp_info->Width = bmpWidth;
-        bmp_info->Height = bmpHeight;
+        bmp_info->Width = image_width;
+        bmp_info->Height = image_height;
         bmp_info->Bpp = bmpBpp;
     }
 
     RGB_QUAD color_table[256];
     std::unique_ptr<Color4b[]> aBitmapBits;
 
-    if (hdr_read)
+    if (hdr_read && bmfh.bfType == 0x4d42 && image_width > 0 &&
+        image_height > 0)
     {
-        aBitmapBits = std::make_unique<Color4b[]>(bmpWidth * bmpHeight);
-        std::unique_ptr<BYTE[]> buff_in =
-            std::make_unique<BYTE[]>(bmpWidth * bmpHeight * (bmpBpp / 8));
+        aBitmapBits = std::make_unique<Color4b[]>(image_width * image_height);
 
-        int pitch = bmpWidth * (bmpBpp / 8);
+        const DWORD pitch = BmpRowPitchBytes(image_width, bmpBpp);
+        std::unique_ptr<BYTE[]> buff_in =
+            std::make_unique<BYTE[]>(pitch * image_height);
 
         switch (bmpBpp)
         {
         case 1:
-            fread(color_table, sizeof(RGB_QUAD), 2, f);
+            std::fread(color_table, sizeof(RGB_QUAD), 2, f);
             break;
         case 4:
-            fread(color_table, sizeof(RGB_QUAD), 16, f);
+            std::fread(color_table, sizeof(RGB_QUAD), 16, f);
             break;
         case 8:
-            fread(color_table, sizeof(RGB_QUAD), 256, f);
+            std::fread(color_table, sizeof(RGB_QUAD), 256, f);
             break;
         }
 
+        std::fseek(f, bmfh.bfOffBits, SEEK_SET);
+
         // fill buffer from end to begin. image in bitmap is saved from bottom
         // to top
-        for (int i = 0; i < bmpHeight; i++)
+        for (uint i = 0; i < image_height; i++)
         {
-            fread(buff_in.get() + (pitch * (bmpHeight - i - 1)), 1, pitch, f);
+            const uint dst_row = top_down ? i : image_height - i - 1;
+            std::fread(buff_in.get() + (pitch * dst_row), 1, pitch, f);
         }
 
         switch (bmpBpp)
         {
         case 1:
             // color_table -> pixel
-            for (int h = 0; h < bmpHeight; h++)
+            for (uint h = 0; h < image_height; h++)
             {
-                for (int w = 0; w < bmpWidth; w++)
+                for (uint w = 0; w < image_width; w++)
                 {
                     int cindex =
-                        buff_in[(h * bmpHeight) + (w >> 3)]; // byte = 8 colors
+                        buff_in[(h * pitch) + (w >> 3)]; // byte = 8 colors
                     int shift = w & 0x07; // current color/bit (0-7)
 
                     cindex >>= shift;
 
                     cindex = cindex & 0x01;
 
-                    FORCE_UPCAST(aBitmapBits[h * bmpHeight + w],
+                    FORCE_UPCAST(aBitmapBits[h * image_width + w],
                                  color_table[cindex]);
                 }
             }
             break;
         case 4:
             // color_table -> pixel
-            for (int h = 0; h < bmpHeight; h++)
+            for (uint h = 0; h < image_height; h++)
             {
-                for (int w = 0; w < bmpWidth; w++)
+                for (uint w = 0; w < image_width; w++)
                 {
-                    int cindex = buff_in[(h * bmpHeight) + (w >> 1)];
+                    int cindex = buff_in[(h * pitch) + (w >> 1)];
                     int odd = w & 0x01;
 
                     if (!odd)
@@ -340,34 +364,37 @@ Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info)
 
                     cindex = cindex & 0x0f;
 
-                    FORCE_UPCAST(aBitmapBits[h * bmpHeight + w],
+                    FORCE_UPCAST(aBitmapBits[h * image_width + w],
                                  color_table[cindex]);
                 }
             }
             break;
         case 8:
             // color_table -> pixel
-            for (int h = 0; h < bmpHeight; h++)
+            for (uint h = 0; h < image_height; h++)
             {
-                for (int w = 0; w < bmpWidth; w++)
+                for (uint w = 0; w < image_width; w++)
                 {
-                    FORCE_UPCAST(aBitmapBits[h * bmpHeight + w],
-                                 color_table[buff_in[h * bmpHeight + w]]);
-                    aBitmapBits[h * bmpHeight + w].a = 255;
+                    FORCE_UPCAST(aBitmapBits[h * image_width + w],
+                                 color_table[buff_in[h * pitch + w]]);
+                    aBitmapBits[h * image_width + w].a = 255;
                 }
             }
             break;
         case 24:
-            for (int h = 0; h < bmpHeight; h++)
+            for (uint h = 0; h < image_height; h++)
             {
-                for (int w = 0; w < bmpWidth; w++)
+                for (uint w = 0; w < image_width; w++)
                 {
-                    uint off = h * bmpHeight + w;
-                    RGB_TRIPLE* p = (RGB_TRIPLE*)buff_in.get() + off;
+                    uint off = h * image_width + w;
+                    RGB_TRIPLE* p =
+                        reinterpret_cast<RGB_TRIPLE*>(buff_in.get() +
+                                                       h * pitch) +
+                        w;
 
-                    aBitmapBits[off].r = p->rgbtBlue;
+                    aBitmapBits[off].r = p->rgbtRed;
                     aBitmapBits[off].g = p->rgbtGreen;
-                    aBitmapBits[off].b = p->rgbtRed;
+                    aBitmapBits[off].b = p->rgbtBlue;
                     aBitmapBits[off].a = 255;
                 }
             }
@@ -375,9 +402,80 @@ Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info)
         }
     }
 
-    fclose(f);
+    std::fclose(f);
 
     return aBitmapBits.release();
+}
+
+bool SaveBmp(std::string_view filename, const Color4b* pixels, uint width,
+             uint height, uint rowPitchBytes)
+{
+    if (filename.empty() || pixels == nullptr || width == 0 || height == 0)
+        return false;
+
+    if (rowPitchBytes == 0)
+        rowPitchBytes = width * sizeof(Color4b);
+    if (rowPitchBytes < width * sizeof(Color4b))
+        return false;
+
+    if (width > static_cast<uint>(std::numeric_limits<LONG>::max()) ||
+        height > static_cast<uint>(std::numeric_limits<LONG>::max()))
+        return false;
+
+    const DWORD dst_pitch = BmpRowPitchBytes(width, 24);
+    if (height > std::numeric_limits<DWORD>::max() / dst_pitch)
+        return false;
+    const DWORD image_size = dst_pitch * height;
+
+    const DWORD file_header_size = sizeof(BMPFILEHEADER);
+    const DWORD info_header_size = sizeof(BMPINFOHEADER);
+    const DWORD pixel_offset = file_header_size + info_header_size;
+    if (image_size > std::numeric_limits<DWORD>::max() - pixel_offset)
+        return false;
+
+    const std::string path(filename);
+    FILE* f = std::fopen(path.c_str(), "wb");
+    if (f == nullptr)
+        return false;
+
+    BMPFILEHEADER file_header{};
+    file_header.bfType = 0x4d42;
+    file_header.bfSize = pixel_offset + image_size;
+    file_header.bfOffBits = pixel_offset;
+
+    BMPINFOHEADER info_header{};
+    info_header.biSize = info_header_size;
+    info_header.biWidth = static_cast<LONG>(width);
+    info_header.biHeight = static_cast<LONG>(height);
+    info_header.biPlanes = 1;
+    info_header.biBitCount = 24;
+    info_header.biCompression = BMPC_RGB;
+    info_header.biSizeImage = image_size;
+
+    bool ok = std::fwrite(&file_header, sizeof(file_header), 1, f) == 1 &&
+              std::fwrite(&info_header, sizeof(info_header), 1, f) == 1;
+
+    const BYTE padding[3] = {};
+    const uint padding_size = dst_pitch - width * sizeof(RGB_TRIPLE);
+    for (uint row = 0; ok && row < height; ++row)
+    {
+        const uint src_y = height - row - 1;
+        const Color4b* src =
+            reinterpret_cast<const Color4b*>(
+                reinterpret_cast<const BYTE*>(pixels) + src_y * rowPitchBytes);
+
+        for (uint x = 0; ok && x < width; ++x)
+        {
+            const RGB_TRIPLE out = {src[x].b, src[x].g, src[x].r};
+            ok = std::fwrite(&out, sizeof(out), 1, f) == 1;
+        }
+
+        if (ok && padding_size > 0)
+            ok = std::fwrite(padding, padding_size, 1, f) == 1;
+    }
+
+    ok = std::fclose(f) == 0 && ok;
+    return ok;
 }
 
 } // namespace forg

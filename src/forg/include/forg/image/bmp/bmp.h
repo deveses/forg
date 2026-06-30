@@ -26,6 +26,8 @@
 #include "image/Image.h"
 #include "rendering/Color.h"
 
+#include <string_view>
+
 namespace forg {
 
 /**
@@ -39,6 +41,8 @@ namespace forg {
  */
 
 FORG_API Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info);
+FORG_API bool SaveBmp(std::string_view filename, const Color4b* pixels,
+                      uint width, uint height, uint rowPitchBytes);
 
 } // namespace forg
 

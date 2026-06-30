@@ -324,6 +324,12 @@ bool Image::Save(std::string_view filename) const
                        m_width, m_height, m_width * sizeof(Color4b));
     }
 
+    if (has_extension(filename, ".bmp"))
+    {
+        return SaveBmp(filename, reinterpret_cast<const Color4b*>(m_data[0].data()),
+                       m_width, m_height, m_width * sizeof(Color4b));
+    }
+
     DBG_MSG("[Image] <%s>: Unsupported image format!\n",
             std::string(filename).c_str());
     return false;

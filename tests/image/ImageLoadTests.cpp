@@ -68,3 +68,47 @@ TEST_CASE("Image loads and saves binary PPM files", "[image][ppm]")
     std::filesystem::remove(path);
     std::filesystem::remove(copyPath);
 }
+
+TEST_CASE("Image saves and loads BMP files", "[image][bmp]")
+{
+    const std::filesystem::path ppmPath =
+        std::filesystem::temp_directory_path() / "forg-image-test-bmp-source.ppm";
+    const std::filesystem::path bmpPath =
+        std::filesystem::temp_directory_path() / "forg-image-test.bmp";
+    std::filesystem::remove(ppmPath);
+    std::filesystem::remove(bmpPath);
+
+    const forg::Color4b pixels[] = {
+        forg::Color4b(255, 0, 0, 255),
+        forg::Color4b(0, 255, 0, 255),
+        forg::Color4b(0, 0, 255, 255),
+        forg::Color4b(255, 255, 0, 255),
+        forg::Color4b(0, 255, 255, 255),
+        forg::Color4b(255, 0, 255, 255),
+    };
+
+    REQUIRE(forg::SavePpm(ppmPath.string(), pixels, 3, 2,
+                          3 * sizeof(forg::Color4b)));
+
+    forg::Image image;
+    REQUIRE(image.Load(ppmPath.string()));
+    REQUIRE(image.Save(bmpPath.string()));
+
+    forg::Image copy;
+    REQUIRE(copy.Load(bmpPath.string()));
+    REQUIRE(copy.GetWidth() == 3);
+    REQUIRE(copy.GetHeight() == 2);
+
+    const forg::Color4b* loaded =
+        reinterpret_cast<const forg::Color4b*>(copy.GetData(0));
+    for (uint i = 0; i < 6; ++i)
+    {
+        REQUIRE(loaded[i].r == pixels[i].r);
+        REQUIRE(loaded[i].g == pixels[i].g);
+        REQUIRE(loaded[i].b == pixels[i].b);
+        REQUIRE(loaded[i].a == 255);
+    }
+
+    std::filesystem::remove(ppmPath);
+    std::filesystem::remove(bmpPath);
+}
