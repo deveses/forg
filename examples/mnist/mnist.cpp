@@ -72,7 +72,8 @@ void PrintUsage(const char* program)
     std::cout << "Usage: " << program
               << " <train-images> <train-labels> <test-images> <test-labels>"
                  " [epochs] [train-limit] [test-limit] [learning-rate]"
-                 " [batch-size] [checkpoint-path|backend] [backend]\n";
+                 " [batch-size] [checkpoint-path|backend]"
+                 " [backend|thread-count] [thread-count]\n";
 }
 
 bool IsBackendName(const std::string& text)
@@ -165,6 +166,7 @@ int main(int argc, char** argv)
         std::max<std::size_t>(1, argc > 9 ? ParseSize(argv[9], 1) : 1);
     std::string checkpoint_path;
     std::string backend = "scalar";
+    std::size_t thread_count = 0;
     if (argc > 10)
     {
         const std::string text = argv[10];
@@ -174,7 +176,15 @@ int main(int argc, char** argv)
             checkpoint_path = text;
     }
     if (argc > 11)
-        backend = argv[11];
+    {
+        const std::string text = argv[11];
+        if (IsBackendName(text))
+            backend = text;
+        else
+            thread_count = ParseSize(argv[11], 0);
+    }
+    if (argc > 12)
+        thread_count = ParseSize(argv[12], 0);
     if (!IsBackendName(backend))
     {
         std::cerr << "Backend must be 'scalar' or 'matrix'\n";
@@ -209,6 +219,7 @@ int main(int argc, char** argv)
     if (backend == "matrix")
     {
         forg::nn::MatrixMLP model(784, 64, 10);
+        model.SetThreadCount(thread_count);
         bool checkpoint_exists = false;
         if (!checkpoint_path.empty() &&
             !CheckpointExists(checkpoint_path, checkpoint_exists))
@@ -261,6 +272,7 @@ int main(int argc, char** argv)
 
             std::cout << "epoch " << (epoch + 1) << "/" << epochs
                       << " backend=matrix"
+                      << " threads=" << model.ThreadCount()
                       << " loss=" << mean_loss << " accuracy=" << accuracy
                       << '\n';
             std::cout << "profile_us"

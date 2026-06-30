@@ -11,7 +11,8 @@ runtime.
 For practical dense MNIST-style training, the module also includes a small
 matrix backend. `MatrixMLP` trains a `Linear -> ReLU -> Linear` classifier with
 batched softmax cross-entropy and manual backpropagation, avoiding per-sample
-scalar graph allocation.
+scalar graph allocation. Matrix training uses row-parallel CPU execution by
+default and can be limited with `MatrixMLP::SetThreadCount()`.
 
 ## Basic Forward Pass
 
@@ -195,6 +196,9 @@ build/examples/examples/mnist/forg_mnist \
   t10k-images.idx3-ubyte t10k-labels.idx1-ubyte \
   3 5000 1000 0.05 64 matrix
 ```
+
+Add a thread count after `matrix` to limit CPU parallelism, for example
+`matrix 4`.
 
 After training, classify one test image from a saved matrix checkpoint:
 

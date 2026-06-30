@@ -22,6 +22,7 @@ optimization, and MNIST IDX loading.
     `BatchNorm`.
   - Dense matrix backend through `Matrix` and `MatrixMLP` for practical
     batched MNIST training.
+  - Multithreaded row-parallel matrix training with configurable thread count.
 - Add MNIST IDX utilities:
   - Read image and label IDX files from user-provided paths.
   - Validate magic numbers and count/dimension consistency.
@@ -50,8 +51,6 @@ optimization, and MNIST IDX loading.
   - `ctest --test-dir build/debug --output-on-failure`
 
 ## Future Steps
-- Add multithreaded CPU execution for the matrix backend, such as row-parallel
-  batch processing with a small thread pool.
 - Add SIMD or BLAS-backed matrix kernels for dense layers.
 - Add fused log-softmax cross-entropy for lower graph overhead.
 - Document the difference between the educational scalar backend and future

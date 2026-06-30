@@ -60,6 +60,9 @@ class MatrixMLP
                       double learning_rate);
     std::size_t Predict(const std::vector<double>& input) const;
 
+    void SetThreadCount(std::size_t thread_count);
+    std::size_t ThreadCount() const noexcept { return m_thread_count; }
+
     bool SaveParameters(const std::string& filename,
                         std::string* error = nullptr) const;
     bool LoadParameters(const std::string& filename,
@@ -84,6 +87,7 @@ class MatrixMLP
     std::vector<double> m_b1;
     Matrix m_w2;
     std::vector<double> m_b2;
+    std::size_t m_thread_count = 1;
 };
 
 } // namespace forg::nn

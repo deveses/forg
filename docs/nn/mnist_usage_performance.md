@@ -29,7 +29,7 @@ Usage:
 forg_mnist \
   <train-images> <train-labels> <test-images> <test-labels> \
   [epochs] [train-limit] [test-limit] [learning-rate] [batch-size] \
-  [checkpoint-path|backend] [backend]
+  [checkpoint-path|backend] [backend|thread-count] [thread-count]
 ```
 
 Example using local MNIST IDX files:
@@ -55,6 +55,8 @@ Arguments:
   it before training. After training, the example saves current weights there.
 - `backend`: Optional `scalar` or `matrix`. `scalar` preserves the educational
   autograd path. `matrix` uses the dense matrix backend.
+- `thread-count`: Optional matrix backend CPU thread count. Use `0` or omit it
+  to use hardware concurrency.
 
 ## Inference
 
@@ -103,6 +105,21 @@ and educational experiments, not fast full-dataset training.
 Start with `0.01` learning rate. If loss explodes or accuracy becomes unstable,
 try `0.005` or `0.001`.
 
+## Benchmark Hardware
+
+The local timing results below were measured on:
+
+| Component | Value |
+| --- | --- |
+| Machine | MacBook Pro, Mac17,6 |
+| Chip | Apple M5 Max |
+| CPU cores | 18 total, reported as 6 Super and 12 Performance |
+| Memory | 128 GB |
+| OS | macOS 26.5.1, build 25F80 |
+
+The matrix backend uses hardware concurrency by default, so the threaded runs
+below used 18 worker threads unless a different `thread-count` is shown.
+
 ## Current Model
 
 The example trains this model:
@@ -128,7 +145,9 @@ small correctness experiments until a tensor backend exists.
 The `matrix` backend uses `MatrixMLP`, a dense `Linear -> ReLU -> Linear`
 classifier trained with batched softmax cross-entropy and manual
 backpropagation. It does not build scalar autograd graphs per sample and is the
-recommended path for larger MNIST subsets with the current codebase.
+recommended path for larger MNIST subsets with the current codebase. Matrix
+training uses row-parallel CPU execution by default; pass an explicit
+`thread-count` after `matrix` to limit parallelism for benchmarking.
 
 ## Scalar Baseline Timing
 
@@ -227,15 +246,68 @@ Approximate timing from that run:
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 | matrix | 3 | 5,000 | 1,000 | 64 | 7.59 seconds | 0.864 |
 
-The matrix backend's per-sample `train_batch` time was about 377 to 380 us in
-this run. The scalar baseline above was about 15 seconds for one epoch over 100
-training samples, while this matrix run completed three epochs over 5,000
-training samples plus evaluation in under 8 seconds.
+This run was captured before row-parallel CPU execution was added to
+`MatrixMLP`, so it is a historical single-thread-ish baseline. The matrix
+backend's per-sample `train_batch` time was about 377 to 380 us in this run.
+The scalar baseline above was about 15 seconds for one epoch over 100 training
+samples, while this matrix run completed three epochs over 5,000 training
+samples plus evaluation in under 8 seconds.
 
-## Full MNIST Matrix Run
+## Threaded Matrix Spot Check
+
+Measured locally after row-parallel matrix training was added:
+
+```sh
+/usr/bin/time -p /private/tmp/forg-example-build/examples/mnist/forg_mnist \
+  data/mnist_dataset/train-images.idx3-ubyte \
+  data/mnist_dataset/train-labels.idx1-ubyte \
+  data/mnist_dataset/t10k-images.idx3-ubyte \
+  data/mnist_dataset/t10k-labels.idx1-ubyte \
+  1 5000 1000 0.05 64 matrix
+```
+
+Output:
+
+```text
+epoch 1/1 backend=matrix threads=18 loss=1.28953 accuracy=0.793
+profile_us epoch=1099739 input=31683 train_batch=887296 eval=180654
+profile_avg_us_per_sample input=6.3366 train_batch=177.459
+real 2.60
+user 4.45
+sys 0.13
+```
+
+Single-thread comparison:
+
+```sh
+/usr/bin/time -p /private/tmp/forg-example-build/examples/mnist/forg_mnist \
+  data/mnist_dataset/train-images.idx3-ubyte \
+  data/mnist_dataset/train-labels.idx1-ubyte \
+  data/mnist_dataset/t10k-images.idx3-ubyte \
+  data/mnist_dataset/t10k-labels.idx1-ubyte \
+  1 5000 1000 0.05 64 matrix 1
+```
+
+Output:
+
+```text
+epoch 1/1 backend=matrix threads=1 loss=1.35034 accuracy=0.796
+profile_us epoch=2195805 input=31578 train_batch=1982727 eval=181395
+profile_avg_us_per_sample input=6.3156 train_batch=396.545
+real 3.47
+user 3.41
+sys 0.05
+```
+
+The short threaded run cut `train_batch` time from about 397 us/sample to about
+177 us/sample. `user` time exceeded `real` time in the threaded run, confirming
+that multiple CPU cores were active.
+
+## Full MNIST Matrix Run Before Threading
 
 Measured locally on 2026-06-29 with the full 60,000-sample training set and
-10,000-sample test set:
+10,000-sample test set. This was also captured before row-parallel CPU
+execution was added, so newer runs should print `threads=` and may be faster:
 
 ```sh
 /usr/bin/time -p /private/tmp/forg-example-build/examples/mnist/forg_mnist \
@@ -293,6 +365,70 @@ Summary:
 
 Per-epoch time was consistently about 24.7 seconds, with `train_batch` around
 376 us per sample and evaluation around 1.77 seconds over the full test set.
+
+## Full MNIST Threaded Matrix Run
+
+Measured locally after row-parallel CPU execution was added, using the full
+60,000-sample training set and 10,000-sample test set:
+
+```sh
+/usr/bin/time -p /private/tmp/forg-example-build/examples/mnist/forg_mnist \
+  data/mnist_dataset/train-images.idx3-ubyte \
+  data/mnist_dataset/train-labels.idx1-ubyte \
+  data/mnist_dataset/t10k-images.idx3-ubyte \
+  data/mnist_dataset/t10k-labels.idx1-ubyte \
+  10 60000 10000 0.05 64 matrix
+```
+
+Output:
+
+```text
+epoch 1/10 backend=matrix threads=18 loss=0.478677 accuracy=0.9182
+profile_us epoch=12959404 input=393963 train_batch=10762459 eval=1801854
+profile_avg_us_per_sample input=6.56605 train_batch=179.374
+epoch 2/10 backend=matrix threads=18 loss=0.258823 accuracy=0.9343
+profile_us epoch=12969396 input=383276 train_batch=10789348 eval=1795595
+profile_avg_us_per_sample input=6.38793 train_batch=179.822
+epoch 3/10 backend=matrix threads=18 loss=0.211695 accuracy=0.9437
+profile_us epoch=12948624 input=384094 train_batch=10767307 eval=1796083
+profile_avg_us_per_sample input=6.40157 train_batch=179.455
+epoch 4/10 backend=matrix threads=18 loss=0.181521 accuracy=0.9491
+profile_us epoch=13044656 input=382108 train_batch=10842629 eval=1818782
+profile_avg_us_per_sample input=6.36847 train_batch=180.71
+epoch 5/10 backend=matrix threads=18 loss=0.159324 accuracy=0.9532
+profile_us epoch=12991800 input=382162 train_batch=10809194 eval=1799317
+profile_avg_us_per_sample input=6.36937 train_batch=180.153
+epoch 6/10 backend=matrix threads=18 loss=0.14232 accuracy=0.9573
+profile_us epoch=13059123 input=382838 train_batch=10862173 eval=1812970
+profile_avg_us_per_sample input=6.38063 train_batch=181.036
+epoch 7/10 backend=matrix threads=18 loss=0.128817 accuracy=0.9613
+profile_us epoch=13131903 input=384853 train_batch=10927350 eval=1818544
+profile_avg_us_per_sample input=6.41422 train_batch=182.123
+epoch 8/10 backend=matrix threads=18 loss=0.117819 accuracy=0.9625
+profile_us epoch=13182522 input=389322 train_batch=10961824 eval=1830229
+profile_avg_us_per_sample input=6.4887 train_batch=182.697
+epoch 9/10 backend=matrix threads=18 loss=0.108779 accuracy=0.9637
+profile_us epoch=13360904 input=394307 train_batch=11142937 eval=1822503
+profile_avg_us_per_sample input=6.57178 train_batch=185.716
+epoch 10/10 backend=matrix threads=18 loss=0.101157 accuracy=0.9649
+profile_us epoch=13269403 input=385929 train_batch=11068491 eval=1813805
+profile_avg_us_per_sample input=6.43215 train_batch=184.475
+real 132.19
+user 383.95
+sys 10.23
+```
+
+Summary:
+
+| Backend | Threads | Epochs | Train samples | Test samples | Batch size | Total real time | Final accuracy |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| matrix | 18 | 10 | 60,000 | 10,000 | 64 | 132.19 seconds | 0.9649 |
+
+Compared with the pre-threaded full matrix run, total real time improved from
+248.72 seconds to 132.19 seconds, about 1.88x faster. The per-sample
+`train_batch` time dropped from about 376 us to about 179 to 185 us. The higher
+`user` time than `real` time shows that training work was spread across
+multiple CPU cores.
 
 ## Accuracy Expectations
 

@@ -248,6 +248,47 @@ TEST_CASE("MatrixMLP trains batched dense classifier", "[nn][matrix]")
     REQUIRE(model.Predict({0.0, 1.0}) == 1);
 }
 
+TEST_CASE("MatrixMLP multithreaded training matches single-thread training",
+          "[nn][matrix]")
+{
+    std::mt19937 single_rng(12);
+    std::mt19937 threaded_rng(12);
+    forg::nn::MatrixMLP single_threaded(2, 4, 2, single_rng);
+    forg::nn::MatrixMLP multithreaded(2, 4, 2, threaded_rng);
+    single_threaded.SetThreadCount(1);
+    multithreaded.SetThreadCount(2);
+    REQUIRE(single_threaded.ThreadCount() == 1);
+    REQUIRE(multithreaded.ThreadCount() == 2);
+
+    forg::nn::Matrix input(6, 2);
+    input(0, 0) = 1.0;
+    input(0, 1) = 0.0;
+    input(1, 0) = 0.9;
+    input(1, 1) = 0.1;
+    input(2, 0) = 0.8;
+    input(2, 1) = 0.2;
+    input(3, 0) = 0.0;
+    input(3, 1) = 1.0;
+    input(4, 0) = 0.1;
+    input(4, 1) = 0.9;
+    input(5, 0) = 0.2;
+    input(5, 1) = 0.8;
+    const std::vector<std::size_t> labels = {0, 0, 0, 1, 1, 1};
+
+    const double single_loss = single_threaded.TrainBatch(input, labels, 0.05);
+    const double threaded_loss = multithreaded.TrainBatch(input, labels, 0.05);
+    REQUIRE(threaded_loss == Approx(single_loss));
+
+    const forg::nn::Matrix single_output = single_threaded.Forward(input);
+    const forg::nn::Matrix threaded_output = multithreaded.Forward(input);
+    REQUIRE(threaded_output.Size() == single_output.Size());
+    for (std::size_t index = 0; index < single_output.Size(); ++index)
+    {
+        REQUIRE(threaded_output.Data()[index] ==
+                Approx(single_output.Data()[index]).epsilon(1e-12));
+    }
+}
+
 TEST_CASE("MatrixMLP parameters can be saved and loaded", "[nn][matrix]")
 {
     std::mt19937 source_rng(7);
