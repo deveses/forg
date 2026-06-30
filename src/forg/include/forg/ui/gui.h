@@ -30,6 +30,10 @@
 
 #include <memory>
 
+namespace forg::fs {
+class Filesystem;
+}
+
 namespace forg::ui {
 
 enum class GuiControlType
@@ -53,6 +57,8 @@ class FORG_API GuiNode : public scene::SceneNode
     void Render(IRenderDevice* device) override;
 
     bool LoadResources(IRenderDevice* device);
+    bool LoadResources(const fs::Filesystem& filesystem,
+                       IRenderDevice* device);
     void CloseResources();
 
     void SetId(int id);

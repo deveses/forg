@@ -18,6 +18,10 @@ namespace forg::io {
 class ISerializer;
 }
 
+namespace forg::fs {
+class Filesystem;
+}
+
 namespace forg::scene {
 
 using math::Matrix4;
@@ -100,7 +104,11 @@ class FORG_API Model
     Model();
 
     bool Load(const char* filename, IRenderDevice* device, uint options = 0);
+    bool Load(const fs::Filesystem& filesystem, const char* filename,
+              IRenderDevice* device, uint options = 0);
     bool LoadResources(IRenderDevice* device);
+    bool LoadResources(const fs::Filesystem& filesystem,
+                       IRenderDevice* device);
     void SetMesh(geometry::Mesh::MeshPtr mesh);
     void Clear();
 

@@ -1,5 +1,6 @@
 #include "forg_pch.h"
 
+#include "forg/fs/Filesystem.h"
 #include "forg/io/ISerializer.h"
 #include "forg/ui/gui.h"
 #include "scene/Scene.h"
@@ -260,6 +261,14 @@ bool Scene::Load(io::ISerializer& serializer)
 
 bool Scene::LoadResources(IRenderDevice* device)
 {
+    fs::Filesystem filesystem;
+    filesystem.Mount("data:", "data", fs::MountPermissions::ReadOnly);
+    return LoadResources(filesystem, device);
+}
+
+bool Scene::LoadResources(const fs::Filesystem& filesystem,
+                          IRenderDevice* device)
+{
     bool loaded = true;
     for (std::unique_ptr<SceneNode>& node : m_nodes)
     {
@@ -268,12 +277,14 @@ bool Scene::LoadResources(IRenderDevice* device)
             (meshNode->GetModel().MeshType() != ModelMeshType::None ||
              meshNode->GetModel().SourcePath().length() != 0))
         {
-            loaded = meshNode->GetModel().LoadResources(device) && loaded;
+            loaded =
+                meshNode->GetModel().LoadResources(filesystem, device) &&
+                loaded;
         }
 
         ui::GuiNode* guiNode = dynamic_cast<ui::GuiNode*>(node.get());
         if (guiNode != nullptr)
-            loaded = guiNode->LoadResources(device) && loaded;
+            loaded = guiNode->LoadResources(filesystem, device) && loaded;
     }
     return loaded;
 }

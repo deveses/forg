@@ -1,10 +1,13 @@
 #include "gui.h"
 #include "forg_pch.h"
+#include "forg/fs/Filesystem.h"
 #include "forg/io/ISerializer.h"
 #include "math/Math.h"
 
 #include <algorithm>
 #include <cstring>
+#include <filesystem>
+#include <string>
 
 namespace forg::ui {
 namespace {
@@ -160,11 +163,24 @@ bool GuiNode::Load(io::ISerializer& serializer)
 
 bool GuiNode::LoadResources(IRenderDevice* device)
 {
+    fs::Filesystem filesystem;
+    filesystem.Mount("data:", "data", fs::MountPermissions::ReadOnly);
+    return LoadResources(filesystem, device);
+}
+
+bool GuiNode::LoadResources(const fs::Filesystem& filesystem,
+                            IRenderDevice* device)
+{
     CloseResources();
 
     if (m_texturePath.length() != 0)
     {
-        m_texture.reset(ITexture::FromFile(device, m_texturePath.c_str()));
+        std::filesystem::path nativePath;
+        if (!filesystem.ResolveReadPath(m_texturePath.c_str(), nativePath))
+            return false;
+
+        const std::string nativePathText = nativePath.string();
+        m_texture.reset(ITexture::FromFile(device, nativePathText.c_str()));
         if (!m_texture)
             return false;
 

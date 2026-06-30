@@ -5,6 +5,7 @@
 #include "PerformanceCounter.h"
 #include "forg/Input.h"
 #include "forg/audio/AudioEngine.h"
+#include "forg/fs/Filesystem.h"
 #include "forg/rendering/IRenderDevice.h"
 #include "forg/rendering/IRenderer.h"
 #include "forg/rendering/Camera.h"
@@ -18,6 +19,7 @@
 #include "forg/script/yaml/YAMLSerializer.h"
 
 #include <charconv>
+#include <filesystem>
 #include <memory>
 #include <sstream>
 #include <string_view>
@@ -257,6 +259,7 @@ struct Engine::Impl
     PluginModuleHandle module;
     RendererHandle renderer;
     RenderDeviceHandle device;
+    fs::Filesystem filesystem;
     audio::AudioEngine audio;
     EngineFrameStats frameStats;
     PerformanceCounter frameClock;
@@ -276,7 +279,11 @@ struct Engine::Impl
     std::unique_ptr<net::HttpControlServer> controlServer;
     std::string lastError;
 
-    Impl() { ResetScenes(); }
+    Impl()
+    {
+        filesystem.Mount("data:", "data", fs::MountPermissions::ReadOnly);
+        ResetScenes();
+    }
 
     void ResetScenes()
     {
@@ -394,7 +401,17 @@ struct Engine::Impl
             return false;
         }
 
-        const std::string filenameText(filename);
+        std::filesystem::path nativePath;
+        if (!filesystem.ResolveReadPath(filename, nativePath))
+        {
+            std::ostringstream stream;
+            stream << "Unable to resolve config <" << std::string(filename)
+                   << ">";
+            SetError(stream.str());
+            return false;
+        }
+
+        const std::string filenameText = nativePath.string();
         script::yaml::YAMLParser parser;
         if (!parser.Open(filenameText.c_str()))
         {
@@ -560,8 +577,19 @@ struct Engine::Impl
             return false;
         }
 
+        std::filesystem::path nativePath;
+        if (!filesystem.ResolveReadPath(filename, nativePath))
+        {
+            std::ostringstream stream;
+            stream << "Unable to resolve scene <" << std::string(filename)
+                   << ">";
+            SetError(stream.str());
+            return false;
+        }
+
+        const std::string filenameText = nativePath.string();
         io::YAMLSerializer serializer;
-        if (!serializer.OpenRead(filename))
+        if (!serializer.OpenRead(filenameText))
         {
             std::ostringstream stream;
             stream << "Unable to open scene <" << std::string(filename) << ">";
@@ -578,7 +606,7 @@ struct Engine::Impl
             return false;
         }
 
-        if (!nextScene->LoadResources(device.Get()))
+        if (!nextScene->LoadResources(filesystem, device.Get()))
         {
             std::ostringstream stream;
             stream << "Unable to load scene resources <"
@@ -1093,6 +1121,13 @@ uint Engine::SceneCount() const
 audio::AudioEngine& Engine::Audio() { return m_impl->audio; }
 
 const audio::AudioEngine& Engine::Audio() const { return m_impl->audio; }
+
+fs::Filesystem& Engine::Filesystem() { return m_impl->filesystem; }
+
+const fs::Filesystem& Engine::Filesystem() const
+{
+    return m_impl->filesystem;
+}
 
 forg::Camera& Engine::Camera() { return m_impl->ControlledCamera(); }
 

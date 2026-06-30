@@ -1,32 +1,17 @@
 #include "forg_pch.h"
 
 #include "debug/dbg.h"
+#include "forg/fs/Filesystem.h"
 #include "forg/io/ISerializer.h"
 #include "scene/Model.h"
 
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <utility>
 
 namespace forg::scene {
 namespace {
-
-std::string BaseDirectory(const char* filename)
-{
-    if (filename == nullptr)
-        return {};
-
-    std::string baseDir(filename);
-    std::string::size_type lastSlash = baseDir.find_last_of('/');
-    if (lastSlash == std::string::npos)
-        lastSlash = baseDir.find_last_of('\\');
-
-    if (lastSlash == std::string::npos)
-        return {};
-
-    baseDir.erase(lastSlash + 1);
-    return baseDir;
-}
 
 bool serializeMatrix(io::ISerializer& serializer, Matrix4& transform)
 {
@@ -244,18 +229,30 @@ Model::Model()
 
 bool Model::Load(const char* filename, IRenderDevice* device, uint options)
 {
+    fs::Filesystem filesystem;
+    filesystem.Mount("data:", "data", fs::MountPermissions::ReadOnly);
+    return Load(filesystem, filename, device, options);
+}
+
+bool Model::Load(const fs::Filesystem& filesystem, const char* filename,
+                 IRenderDevice* device, uint options)
+{
     if (filename == nullptr || device == nullptr)
         return false;
 
     const std::string filenameText(filename);
+    std::filesystem::path nativePath;
+    if (!filesystem.ResolveReadPath(filenameText, nativePath))
+        return false;
+
+    const std::string nativeFilenameText = nativePath.string();
     geometry::Mesh::ExtendedMaterialVec materials;
     geometry::Mesh::MeshPtr mesh = geometry::Mesh::FromFile(
-        filenameText.c_str(), options, device, materials);
+        nativeFilenameText.c_str(), options, device, materials);
 
     if (!mesh || mesh->GetNumVertices() == 0)
         return false;
 
-    const std::string baseDir = BaseDirectory(filenameText.c_str());
     std::vector<core::RefPtr<ITexture>> textures;
     textures.reserve(materials.size());
 
@@ -268,7 +265,11 @@ bool Model::Load(const char* filename, IRenderDevice* device, uint options)
             continue;
         }
 
-        const std::string fullPath = baseDir + textureFilename;
+        std::filesystem::path texturePath;
+        const bool resolved = filesystem.ResolveReadPathRelative(
+            filenameText, textureFilename, texturePath);
+        const std::string fullPath =
+            resolved ? texturePath.string() : std::string(textureFilename);
         core::RefPtr<ITexture> texture(
             ITexture::FromFile(device, fullPath.c_str()));
         textures.push_back(std::move(texture));
@@ -294,6 +295,14 @@ bool Model::Load(const char* filename, IRenderDevice* device, uint options)
 
 bool Model::LoadResources(IRenderDevice* device)
 {
+    fs::Filesystem filesystem;
+    filesystem.Mount("data:", "data", fs::MountPermissions::ReadOnly);
+    return LoadResources(filesystem, device);
+}
+
+bool Model::LoadResources(const fs::Filesystem& filesystem,
+                          IRenderDevice* device)
+{
     if (device == nullptr)
         return false;
 
@@ -302,7 +311,8 @@ bool Model::LoadResources(IRenderDevice* device)
 
     if (m_mesh_type == ModelMeshType::File && m_source_path.length() != 0)
     {
-        loaded = Load(m_source_path.c_str(), device, m_load_options);
+        loaded =
+            Load(filesystem, m_source_path.c_str(), device, m_load_options);
     }
     else
     {

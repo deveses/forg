@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "forg/fs/Filesystem.h"
 #include "forg/io/MemorySerializer.h"
 #include "forg/scene/Model.h"
 #include "forg/rendering/reference/SWRenderDevice.h"
@@ -61,6 +62,23 @@ TEST_CASE("Model loads a glTF mesh", "[scene][model]")
     REQUIRE(model.SourcePath() == filename.c_str());
     REQUIRE(model.LoadOptions() == 0);
     RequireIdentity(model.GetTransform());
+}
+
+TEST_CASE("Model loads a mounted glTF mesh", "[scene][model][fs]")
+{
+    forg::rendering::reference::SWRenderDevice device(nullptr);
+    forg::fs::Filesystem filesystem;
+    REQUIRE(filesystem.Mount("data:", FORG_TEST_DATA_DIR));
+
+    forg::scene::Model model;
+    REQUIRE(model.Load(filesystem, "data:gltf/triangle_external.gltf",
+                       &device));
+
+    REQUIRE(model.IsLoaded());
+    REQUIRE(model.GetMesh() != nullptr);
+    REQUIRE(model.GetMesh()->GetNumVertices() == 3);
+    REQUIRE(model.GetMesh()->GetNumFaces() == 1);
+    REQUIRE(model.SourcePath() == "data:gltf/triangle_external.gltf");
 }
 
 TEST_CASE("Model reloads resources from serialized metadata", "[scene][model]")

@@ -19,6 +19,7 @@ add_executable(forg_tests
     core/BitArrayTests.cpp
     core/RefCounterTests.cpp
     core/StringTests.cpp
+    fs/FilesystemTests.cpp
     image/ImageLoadTests.cpp
     nn/NeuralNetworkTests.cpp
     script/XMLParserTests.cpp

@@ -4,6 +4,7 @@
 #include "forg/Engine.h"
 #include "forg/Input.h"
 #include "forg/audio/AudioEngine.h"
+#include "forg/fs/Filesystem.h"
 #include "forg/math/Vector3.h"
 #include "forg/rendering/Camera.h"
 #include "forg/scene/Scene.h"
@@ -149,6 +150,68 @@ TEST_CASE("Engine loads a second scene without replacing world scene",
     std::filesystem::remove(configPath);
     std::filesystem::remove(worldPath);
     std::filesystem::remove(guiPath);
+}
+#endif
+
+#ifdef FORG_TEST_SWRENDERER_PATH
+TEST_CASE("Engine loads scene resources from mounted data paths",
+          "[engine][scene][fs]")
+{
+    const std::filesystem::path configPath =
+        TestConfigPath("forg-engine-fs-config.yml");
+    WriteText(configPath, "config:\n"
+                          "  renderer:\n"
+                          "    driver: \"" FORG_TEST_SWRENDERER_PATH "\"\n"
+                          "  window:\n"
+                          "    width: 320\n"
+                          "    height: 200\n");
+
+    const std::filesystem::path scenePath =
+        TestConfigPath("forg-engine-fs-scene.yml");
+    WriteText(scenePath,
+              "scene:\n"
+              "  version: \"1\"\n"
+              "  nodes:\n"
+              "    count: \"1\"\n"
+              "    item_0:\n"
+              "      type: \"MeshNode\"\n"
+              "      parent: \"-1\"\n"
+              "      model:\n"
+              "        mesh_type: \"file\"\n"
+              "        source_path: \"data:gltf/triangle.gltf\"\n"
+              "        load_options: \"0\"\n"
+              "        mesh_params:\n"
+              "        transform:\n"
+              "          m11: \"1.000000\"\n"
+              "          m12: \"0.000000\"\n"
+              "          m13: \"0.000000\"\n"
+              "          m14: \"0.000000\"\n"
+              "          m21: \"0.000000\"\n"
+              "          m22: \"1.000000\"\n"
+              "          m23: \"0.000000\"\n"
+              "          m24: \"0.000000\"\n"
+              "          m31: \"0.000000\"\n"
+              "          m32: \"0.000000\"\n"
+              "          m33: \"1.000000\"\n"
+              "          m34: \"0.000000\"\n"
+              "          m41: \"0.000000\"\n"
+              "          m42: \"0.000000\"\n"
+              "          m43: \"0.000000\"\n"
+              "          m44: \"1.000000\"\n");
+
+    forg::Engine engine;
+    engine.Filesystem().Mount("data:", FORG_TEST_DATA_DIR);
+    REQUIRE(engine.Initialize(nullptr, configPath.string().c_str()));
+    REQUIRE(engine.LoadScene(scenePath.string().c_str()));
+
+    auto* meshNode =
+        dynamic_cast<forg::scene::MeshNode*>(engine.Scene().Node(0));
+    REQUIRE(meshNode != nullptr);
+    REQUIRE(meshNode->GetModel().IsLoaded());
+    REQUIRE(meshNode->GetModel().SourcePath() == "data:gltf/triangle.gltf");
+
+    std::filesystem::remove(configPath);
+    std::filesystem::remove(scenePath);
 }
 #endif
 

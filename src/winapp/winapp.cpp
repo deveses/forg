@@ -6,6 +6,7 @@
 #include "stdafx.h"
 
 #include "forg.h"
+#include "forg/fs/Filesystem.h"
 #include "forg/script/yaml/YAMLParser.h"
 
 #include <string>
@@ -161,6 +162,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     AppConfig config = LoadConfig();
     forg::Engine engine;
+    engine.Filesystem().Mount("data:", "data",
+                              forg::fs::MountPermissions::ReadOnly);
 
     int result = 1;
     {

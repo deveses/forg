@@ -21,6 +21,10 @@ class IRenderer;
 class Engine;
 class Camera;
 
+namespace fs {
+class Filesystem;
+}
+
 namespace audio {
 class AudioEngine;
 } // namespace audio
@@ -102,6 +106,8 @@ class FORG_API Engine
     uint SceneCount() const;
     audio::AudioEngine& Audio();
     const audio::AudioEngine& Audio() const;
+    fs::Filesystem& Filesystem();
+    const fs::Filesystem& Filesystem() const;
     forg::Camera& Camera();
     const forg::Camera& Camera() const;
 
