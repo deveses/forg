@@ -12,8 +12,12 @@ AudioMixer::AudioMixer() : m_output(0) {}
 
 AudioMixer::~AudioMixer() { Shutdown(); }
 
-bool AudioMixer::Init()
+bool AudioMixer::Init() { return Init(CreateDefaultAudioOutput()); }
+
+bool AudioMixer::Init(IAudioOutput* output)
 {
+    Shutdown();
+
     m_format.freq = 44100;
     m_format.bps = 2;
     m_format.chan = 2;
@@ -24,8 +28,7 @@ bool AudioMixer::Init()
         m_streams[i].state = 0;
     }
 
-    Shutdown();
-    m_output = CreateDefaultAudioOutput();
+    m_output = output;
     if (m_output == nullptr)
         return false;
 

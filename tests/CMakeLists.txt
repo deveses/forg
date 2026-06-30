@@ -13,6 +13,7 @@ endif()
 add_executable(forg_tests
     EngineTests.cpp
     audio/AudioEngineTests.cpp
+    audio/AudioMixerTests.cpp
     math/MathTests.cpp
     audio/WaveFileTests.cpp
     core/BitArrayTests.cpp

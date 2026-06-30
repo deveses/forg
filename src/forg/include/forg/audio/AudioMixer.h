@@ -41,6 +41,7 @@ class FORG_API AudioMixer
 
   public:
     bool Init();
+    bool Init(IAudioOutput* output);
     void Shutdown();
     void Update();
 

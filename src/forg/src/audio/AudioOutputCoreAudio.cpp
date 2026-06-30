@@ -48,13 +48,16 @@ class AudioOutputCoreAudio final : public IAudioOutput
                                AudioQueueBufferRef buffer);
 };
 
-IAudioOutput* CreateAudioOutputCoreAudio() { return new AudioOutputCoreAudio(); }
+IAudioOutput* CreateAudioOutputCoreAudio()
+{
+    return new AudioOutputCoreAudio();
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
 AudioOutputCoreAudio::AudioOutputCoreAudio()
-    : m_queue(nullptr), m_next_buffer(0), m_buffer_size(AUDIO_OUTPUT_BUFFER_SIZE),
-      m_started(false)
+    : m_queue(nullptr), m_next_buffer(0),
+      m_buffer_size(AUDIO_OUTPUT_BUFFER_SIZE), m_started(false)
 {
     for (unsigned int i = 0; i < AUDIO_OUTPUT_BUFFER_COUNT; ++i)
     {
@@ -175,8 +178,7 @@ void AudioOutputCoreAudio::Write(char* data, unsigned int size)
 void AudioOutputCoreAudio::OutputCallback(void* userData, AudioQueueRef,
                                           AudioQueueBufferRef buffer)
 {
-    AudioOutputCoreAudio* output =
-        static_cast<AudioOutputCoreAudio*>(userData);
+    AudioOutputCoreAudio* output = static_cast<AudioOutputCoreAudio*>(userData);
     if (output == nullptr)
         return;
 
