@@ -995,12 +995,11 @@ int Mesh::DrawSubset(uint attributeID)
         m_device->SetIndices(m_index_buffer.get());
         m_device->SetVertexDeclaration(&m_vertex_declaration);
         // m_device->SetTexture(0, m_texture.get());
-        m_device->DrawIndexedPrimitive(m_primitive_type, 0,
-                                       m_attribtab[attributeID].VertexStart,
-                                       m_attribtab[attributeID].VertexCount,
-                                       m_attribtab[attributeID].FaceStart *
-                                           indexStride,
-                                       m_attribtab[attributeID].FaceCount);
+        m_device->DrawIndexedPrimitive(
+            m_primitive_type, 0, m_attribtab[attributeID].VertexStart,
+            m_attribtab[attributeID].VertexCount,
+            m_attribtab[attributeID].FaceStart * indexStride,
+            m_attribtab[attributeID].FaceCount);
     }
 
     return FORG_OK;

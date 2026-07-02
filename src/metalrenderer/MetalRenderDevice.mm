@@ -620,7 +620,7 @@ int MetalRenderDevice::Present()
             NSUInteger captureBytes = captureRowBytes * captureHeight;
             captureBuffer = [m_impl->device
                 newBufferWithLength:captureBytes
-                             options:MTLResourceStorageModeShared];
+                            options:MTLResourceStorageModeShared];
 
             if (captureBuffer != nil)
             {
@@ -629,14 +629,14 @@ int MetalRenderDevice::Present()
                 MTLOrigin origin = MTLOriginMake(0, 0, 0);
                 MTLSize size = MTLSizeMake(captureWidth, captureHeight, 1);
                 [blit copyFromTexture:texture
-                           sourceSlice:0
-                           sourceLevel:0
-                          sourceOrigin:origin
-                            sourceSize:size
-                              toBuffer:captureBuffer
-                     destinationOffset:0
-                destinationBytesPerRow:captureRowBytes
-              destinationBytesPerImage:captureRowBytes * captureHeight];
+                                 sourceSlice:0
+                                 sourceLevel:0
+                                sourceOrigin:origin
+                                  sourceSize:size
+                                    toBuffer:captureBuffer
+                           destinationOffset:0
+                      destinationBytesPerRow:captureRowBytes
+                    destinationBytesPerImage:captureRowBytes * captureHeight];
                 [blit endEncoding];
             }
         }
@@ -780,9 +780,9 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
 
     // --- pipeline (cached per vertex declaration + shader variant)
     // -----------------------------
-    uint64_t key = DeclarationFingerprint(m_vdecl) ^
-                   (useLitPipeline ? 0x9e3779b185ebca87ULL
-                                   : 0xc2b2ae3d27d4eb4fULL);
+    uint64_t key =
+        DeclarationFingerprint(m_vdecl) ^
+        (useLitPipeline ? 0x9e3779b185ebca87ULL : 0xc2b2ae3d27d4eb4fULL);
     id<MTLRenderPipelineState> pipeline = nil;
     std::unordered_map<uint64_t, id<MTLRenderPipelineState>>::iterator found =
         m_impl->pipelines.find(key);
@@ -866,9 +866,7 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     u.materialAmbient[2] = m_material.Ambient.b;
     u.materialAmbient[3] = m_material.Ambient.a;
     u.lightingEnabled =
-        (useLitPipeline && m_lighting && m_light_enabled[0])
-            ? 1u
-            : 0u;
+        (useLitPipeline && m_lighting && m_light_enabled[0]) ? 1u : 0u;
 
     // --- buffers + draw
     // -------------------------------------------------------

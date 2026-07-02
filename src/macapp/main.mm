@@ -137,19 +137,8 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
                                               fontPath)
             ? fontPath.string()
             : std::string();
-    forg::FontDescription fd = {20,
-                                0,
-                                0,
-                                1,
-                                false,
-                                0,
-                                0,
-                                0,
-                                0,
-                                (""),
-                                ("")};
-    std::snprintf(fd.FontPath, sizeof(fd.FontPath), "%s",
-                  fontPathText.c_str());
+    forg::FontDescription fd = {20, 0, 0, 1, false, 0, 0, 0, 0, (""), ("")};
+    std::snprintf(fd.FontPath, sizeof(fd.FontPath), "%s", fontPathText.c_str());
     m_font = forg::Font::CreateIndirect(m_engine.Device(), &fd);
 #endif
 

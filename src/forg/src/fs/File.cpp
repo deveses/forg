@@ -92,8 +92,8 @@ bool Filesystem::HasMount(std::string_view name) const
     return m_mounts.find(NormalizeMountName(name)) != m_mounts.end();
 }
 
-bool Filesystem::ResolveMountedReadPath(
-    std::string_view path, std::filesystem::path& nativePath) const
+bool Filesystem::ResolveMountedReadPath(std::string_view path,
+                                        std::filesystem::path& nativePath) const
 {
     std::string mountName;
     std::string_view relative;
@@ -143,9 +143,9 @@ bool Filesystem::ResolveReadPathRelative(
             return true;
         }
 
-        nativePath = std::filesystem::path(std::string(basePath))
-                         .parent_path() /
-                     childNative;
+        nativePath =
+            std::filesystem::path(std::string(basePath)).parent_path() /
+            childNative;
         return true;
     }
 

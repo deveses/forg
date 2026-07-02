@@ -117,19 +117,8 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
                                                fontPath)
             ? fontPath.string()
             : std::string();
-    forg::FontDescription fd = {12,
-                                0,
-                                0,
-                                1,
-                                false,
-                                0,
-                                0,
-                                0,
-                                0,
-                                (""),
-                                ("")};
-    std::snprintf(fd.FontPath, sizeof(fd.FontPath), "%s",
-                  fontPathText.c_str());
+    forg::FontDescription fd = {12, 0, 0, 1, false, 0, 0, 0, 0, (""), ("")};
+    std::snprintf(fd.FontPath, sizeof(fd.FontPath), "%s", fontPathText.c_str());
     m_font = forg::Font::CreateIndirect(m_device, &fd);
 #endif
 

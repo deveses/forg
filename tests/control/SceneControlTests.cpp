@@ -99,8 +99,9 @@ TEST_CASE("render.capture saves the backbuffer through the render device",
     SceneControlContext ctx = scene.context(&device);
 
     std::string r = DispatchCommand(
-        ctx, CommandFromRequest("/render/capture",
-                                (std::string("path=") + path.string()).c_str()));
+        ctx,
+        CommandFromRequest("/render/capture",
+                           (std::string("path=") + path.string()).c_str()));
 
     REQUIRE(r == "{\"ok\":true}");
 

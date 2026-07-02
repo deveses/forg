@@ -277,9 +277,8 @@ bool Scene::LoadResources(const fs::Filesystem& filesystem,
             (meshNode->GetModel().MeshType() != ModelMeshType::None ||
              meshNode->GetModel().SourcePath().length() != 0))
         {
-            loaded =
-                meshNode->GetModel().LoadResources(filesystem, device) &&
-                loaded;
+            loaded = meshNode->GetModel().LoadResources(filesystem, device) &&
+                     loaded;
         }
 
         ui::GuiNode* guiNode = dynamic_cast<ui::GuiNode*>(node.get());

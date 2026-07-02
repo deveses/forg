@@ -141,10 +141,8 @@ bool SavePpm(std::string_view filename, const Color4b* pixels, uint width,
     out << "P6\n" << width << " " << height << "\n255\n";
     for (uint y = 0; y < height; ++y)
     {
-        const Color4b* row =
-            reinterpret_cast<const Color4b*>(
-                reinterpret_cast<const unsigned char*>(pixels) +
-                y * rowPitchBytes);
+        const Color4b* row = reinterpret_cast<const Color4b*>(
+            reinterpret_cast<const unsigned char*>(pixels) + y * rowPitchBytes);
         for (uint x = 0; x < width; ++x)
         {
             const char rgb[3] = {static_cast<char>(row[x].r),

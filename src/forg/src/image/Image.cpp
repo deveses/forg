@@ -320,13 +320,15 @@ bool Image::Save(std::string_view filename) const
 
     if (has_extension(filename, ".ppm"))
     {
-        return SavePpm(filename, reinterpret_cast<const Color4b*>(m_data[0].data()),
+        return SavePpm(filename,
+                       reinterpret_cast<const Color4b*>(m_data[0].data()),
                        m_width, m_height, m_width * sizeof(Color4b));
     }
 
     if (has_extension(filename, ".bmp"))
     {
-        return SaveBmp(filename, reinterpret_cast<const Color4b*>(m_data[0].data()),
+        return SaveBmp(filename,
+                       reinterpret_cast<const Color4b*>(m_data[0].data()),
                        m_width, m_height, m_width * sizeof(Color4b));
     }
 

@@ -1124,10 +1124,7 @@ const audio::AudioEngine& Engine::Audio() const { return m_impl->audio; }
 
 fs::Filesystem& Engine::Filesystem() { return m_impl->filesystem; }
 
-const fs::Filesystem& Engine::Filesystem() const
-{
-    return m_impl->filesystem;
-}
+const fs::Filesystem& Engine::Filesystem() const { return m_impl->filesystem; }
 
 forg::Camera& Engine::Camera() { return m_impl->ControlledCamera(); }
 

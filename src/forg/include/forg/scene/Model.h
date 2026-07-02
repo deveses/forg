@@ -111,8 +111,7 @@ class FORG_API Model
     bool Load(const fs::Filesystem& filesystem, const char* filename,
               IRenderDevice* device, uint options = 0);
     bool LoadResources(IRenderDevice* device);
-    bool LoadResources(const fs::Filesystem& filesystem,
-                       IRenderDevice* device);
+    bool LoadResources(const fs::Filesystem& filesystem, IRenderDevice* device);
     void SetMesh(geometry::Mesh::MeshPtr mesh);
     void Clear();
 

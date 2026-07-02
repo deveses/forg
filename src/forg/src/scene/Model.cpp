@@ -106,9 +106,9 @@ bool serializeMeshParams(io::ISerializer& serializer, ModelMeshType type,
         ok = serializeValue(serializer, "radius", "sphere_radius",
                             params.Sphere.Radius) &&
              serializeValue(serializer, "slices", "sphere_slices",
-                             params.Sphere.Slices) &&
+                            params.Sphere.Slices) &&
              serializeValue(serializer, "stacks", "sphere_stacks",
-                             params.Sphere.Stacks) &&
+                            params.Sphere.Stacks) &&
              serializeOptionalValue(serializer, "color", params.Sphere.Color);
         break;
     case ModelMeshType::Cylinder:
@@ -122,8 +122,7 @@ bool serializeMeshParams(io::ISerializer& serializer, ModelMeshType type,
                             params.Cylinder.Slices) &&
              serializeValue(serializer, "stacks", "cylinder_stacks",
                             params.Cylinder.Stacks) &&
-             serializeOptionalValue(serializer, "color",
-                                    params.Cylinder.Color);
+             serializeOptionalValue(serializer, "color", params.Cylinder.Color);
         break;
     case ModelMeshType::Pyramid:
         ok = serializeValue(serializer, "num_angles", "pyramid_num_angles",
@@ -260,8 +259,8 @@ int PrimitiveColor(ModelMeshType type, const ModelMeshParams& params)
     return -1;
 }
 
-geometry::Mesh::ExtendedMaterialVec CreatePrimitiveMaterials(
-    ModelMeshType type, const ModelMeshParams& params)
+geometry::Mesh::ExtendedMaterialVec
+CreatePrimitiveMaterials(ModelMeshType type, const ModelMeshParams& params)
 {
     geometry::Mesh::ExtendedMaterialVec materials;
     if (type == ModelMeshType::None || type == ModelMeshType::File)
@@ -380,8 +379,7 @@ bool Model::LoadResources(const fs::Filesystem& filesystem,
         if (mesh)
         {
             m_mesh = std::move(mesh);
-            m_materials =
-                CreatePrimitiveMaterials(m_mesh_type, m_mesh_params);
+            m_materials = CreatePrimitiveMaterials(m_mesh_type, m_mesh_params);
             m_textures.clear();
             loaded = true;
         }

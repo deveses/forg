@@ -42,8 +42,8 @@ TEST_CASE("Filesystem rejects unknown mounts and traversal", "[fs]")
     std::filesystem::path resolved;
     REQUIRE_FALSE(filesystem.ResolveReadPath("missing:file.txt", resolved));
     REQUIRE_FALSE(filesystem.ResolveReadPath("data:../secret.txt", resolved));
-    REQUIRE_FALSE(filesystem.ResolveReadPath("data:models/../secret.txt",
-                                             resolved));
+    REQUIRE_FALSE(
+        filesystem.ResolveReadPath("data:models/../secret.txt", resolved));
 }
 
 TEST_CASE("Filesystem resolves children relative to mounted base paths", "[fs]")
@@ -58,12 +58,10 @@ TEST_CASE("Filesystem resolves children relative to mounted base paths", "[fs]")
                                                "wood.png", resolved));
     REQUIRE(resolved == root / "models/wood.png");
 
-    REQUIRE(filesystem.ResolveReadPathRelative("data:models/cube.gltf",
-                                               "data:textures/wood.png",
-                                               resolved));
+    REQUIRE(filesystem.ResolveReadPathRelative(
+        "data:models/cube.gltf", "data:textures/wood.png", resolved));
     REQUIRE(resolved == root / "textures/wood.png");
 
     REQUIRE_FALSE(filesystem.ResolveReadPathRelative("data:models/cube.gltf",
-                                                     "../wood.png",
-                                                     resolved));
+                                                     "../wood.png", resolved));
 }

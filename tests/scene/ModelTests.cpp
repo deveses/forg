@@ -71,8 +71,8 @@ TEST_CASE("Model loads a mounted glTF mesh", "[scene][model][fs]")
     REQUIRE(filesystem.Mount("data:", FORG_TEST_DATA_DIR));
 
     forg::scene::Model model;
-    REQUIRE(model.Load(filesystem, "data:gltf/triangle_external.gltf",
-                       &device));
+    REQUIRE(
+        model.Load(filesystem, "data:gltf/triangle_external.gltf", &device));
 
     REQUIRE(model.IsLoaded());
     REQUIRE(model.GetMesh() != nullptr);

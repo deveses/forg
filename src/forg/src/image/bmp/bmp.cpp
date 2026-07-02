@@ -80,8 +80,7 @@ bool ReadU32Le(std::istream& in, u32& value)
     if (!ReadBytes(in, bytes.data(), bytes.size()))
         return false;
 
-    value = static_cast<u32>(bytes[0]) |
-            (static_cast<u32>(bytes[1]) << 8) |
+    value = static_cast<u32>(bytes[0]) | (static_cast<u32>(bytes[1]) << 8) |
             (static_cast<u32>(bytes[2]) << 16) |
             (static_cast<u32>(bytes[3]) << 24);
     return true;
@@ -148,8 +147,7 @@ bool CheckedImageSize(uint width, uint height, uint bpp, u32& rowPitch,
     if (!CheckedRowPitch(width, bpp, rowPitch))
         return false;
 
-    const std::uint64_t size =
-        static_cast<std::uint64_t>(rowPitch) * height;
+    const std::uint64_t size = static_cast<std::uint64_t>(rowPitch) * height;
     if (size > std::numeric_limits<u32>::max())
         return false;
 
@@ -188,12 +186,10 @@ bool ReadInfoHeader(std::istream& in, u32 headerSize, BmpHeader& header)
     u32 unusedClrImportant = 0;
     if (!ReadI32Le(in, width) || !ReadI32Le(in, height) ||
         !ReadU16Le(in, planes) || !ReadU16Le(in, header.bpp) ||
-        !ReadU32Le(in, header.compression) ||
-        !ReadU32Le(in, unusedImageSize) ||
+        !ReadU32Le(in, header.compression) || !ReadU32Le(in, unusedImageSize) ||
         !ReadI32Le(in, unusedPelsPerMeter) ||
         !ReadI32Le(in, unusedPelsPerMeter) ||
-        !ReadU32Le(in, header.colorsUsed) ||
-        !ReadU32Le(in, unusedClrImportant))
+        !ReadU32Le(in, header.colorsUsed) || !ReadU32Le(in, unusedClrImportant))
     {
         return false;
     }
@@ -290,9 +286,9 @@ bool ReadRows(std::istream& in, const BmpHeader& header, u32 rowPitch,
     {
         const uint dstRow =
             header.topDown ? fileRow : header.height - fileRow - 1;
-        if (!ReadBytes(in, rows.data() +
-                               static_cast<std::size_t>(dstRow) * rowPitch,
-                       rowPitch))
+        if (!ReadBytes(
+                in, rows.data() + static_cast<std::size_t>(dstRow) * rowPitch,
+                rowPitch))
         {
             return false;
         }
@@ -404,15 +400,12 @@ bool WriteBmpHeader(std::ostream& out, uint width, uint height, u32 imageSize)
 
     return WriteU16Le(out, BmpSignature) && WriteU32Le(out, fileSize) &&
            WriteU16Le(out, 0) && WriteU16Le(out, 0) &&
-           WriteU32Le(out, pixelOffset) &&
-           WriteU32Le(out, BmpInfoHeaderSize) &&
+           WriteU32Le(out, pixelOffset) && WriteU32Le(out, BmpInfoHeaderSize) &&
            WriteI32Le(out, static_cast<i32>(width)) &&
-           WriteI32Le(out, static_cast<i32>(height)) &&
-           WriteU16Le(out, 1) && WriteU16Le(out, SaveBpp) &&
-           WriteU32Le(out, BmpCompressionRgb) &&
+           WriteI32Le(out, static_cast<i32>(height)) && WriteU16Le(out, 1) &&
+           WriteU16Le(out, SaveBpp) && WriteU32Le(out, BmpCompressionRgb) &&
            WriteU32Le(out, imageSize) && WriteI32Le(out, 0) &&
-           WriteI32Le(out, 0) && WriteU32Le(out, 0) &&
-           WriteU32Le(out, 0);
+           WriteI32Le(out, 0) && WriteU32Le(out, 0) && WriteU32Le(out, 0);
 }
 
 bool WriteBmpPixels(std::ostream& out, const Color4b* pixels, uint width,
@@ -424,9 +417,8 @@ bool WriteBmpPixels(std::ostream& out, const Color4b* pixels, uint width,
     for (uint row = 0; row < height; ++row)
     {
         const uint srcY = height - row - 1;
-        const Color4b* src =
-            reinterpret_cast<const Color4b*>(
-                reinterpret_cast<const u8*>(pixels) + srcY * rowPitchBytes);
+        const Color4b* src = reinterpret_cast<const Color4b*>(
+            reinterpret_cast<const u8*>(pixels) + srcY * rowPitchBytes);
 
         for (uint x = 0; x < width; ++x)
         {
@@ -435,8 +427,7 @@ bool WriteBmpPixels(std::ostream& out, const Color4b* pixels, uint width,
                 return false;
         }
 
-        if (paddingSize > 0 &&
-            !WriteBytes(out, padding.data(), paddingSize))
+        if (paddingSize > 0 && !WriteBytes(out, padding.data(), paddingSize))
         {
             return false;
         }
@@ -464,8 +455,7 @@ Color4b* LoadBmp(const char* filename, ImageDescription* bmp_info)
         bmp_info->Bpp = header.bpp;
     }
 
-    if (header.width >
-        std::numeric_limits<std::size_t>::max() / header.height)
+    if (header.width > std::numeric_limits<std::size_t>::max() / header.height)
     {
         return nullptr;
     }
@@ -506,9 +496,8 @@ bool SaveBmp(std::string_view filename, const Color4b* pixels, uint width,
     if (!CheckedImageSize(width, height, SaveBpp, dstRowPitch, imageSize))
         return false;
 
-    if (imageSize >
-        std::numeric_limits<u32>::max() -
-            (BmpFileHeaderSize + BmpInfoHeaderSize))
+    if (imageSize > std::numeric_limits<u32>::max() -
+                        (BmpFileHeaderSize + BmpInfoHeaderSize))
     {
         return false;
     }
