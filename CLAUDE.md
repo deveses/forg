@@ -29,7 +29,7 @@ Run the sample with `./build/<preset>/src/macapp/macapp` (a post-build step puts
 - `build/` is generated (not tracked). If a build tree's cache references a stale checkout path, delete that tree and reconfigure.
 - CMake uses the host default macOS architecture. Pass `-DCMAKE_OSX_ARCHITECTURES=x86_64` or `-DCMAKE_OSX_ARCHITECTURES=arm64` at configure time when you need a specific architecture.
 - Options `FORG_USE_OPENCL` and `FORG_USE_ZLIB` default to OFF; `FORG_USE_FREETYPE` defaults to ON. `extern/CMakeLists.txt` wires the header-only `cgltf` glTF parser (`extern/cgltf/`) into the build, linked privately into `forg`; `FORG_USE_FREETYPE` and `FORG_USE_ZLIB` are also wired in via `extern/CMakeLists.txt`, using a system install when found or fetching from source otherwise. OpenCL/OpenGL headers are still not wired in.
-- Only Windows and Apple platforms configure; anything else hits a `FATAL_ERROR`. Platform macros: `FORG_PLATFORM_WINDOWS`, `FORG_PLATFORM_OSX`, `FORG_PLATFORM_IOS`.
+- Windows, Apple, and Linux platforms are supported; anything else hits a `FATAL_ERROR`. Platform macros: `FORG_PLATFORM_WINDOWS`, `FORG_PLATFORM_OSX`, `FORG_PLATFORM_IOS`, `FORG_PLATFORM_LINUX`.
 - GitHub Actions covers debug and release CMake configure/build/test presets on macOS and Windows.
 
 ## What the CMake build actually covers
