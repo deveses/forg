@@ -884,8 +884,6 @@ void SWRenderDevice::ProcessPixel(PSInput& _input, PSOutput& _output,
 // points must be in CCW order
 void SWRenderDevice::DrawTriangle(const Vector3* pos)
 {
-    uint* colorBuffer = m_frame_buffer.get();
-
     // 28.4 fixed-point coordinates
 
     const int Y1 = iround(16.0f * pos[0].Y);
@@ -939,9 +937,6 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
     minx &= ~(q - 1);
     miny &= ~(q - 1);
 
-    unsigned char* colorBufferRow =
-        reinterpret_cast<unsigned char*>(colorBuffer) + miny * m_fb_stride;
-
     // Half-edge constants
     int C1 = DY12 * X1 - DX12 * Y1;
     int C2 = DY23 * X2 - DX23 * Y2;
@@ -992,8 +987,6 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
             if (a == 0x0 || b == 0x0 || c == 0x0)
                 continue;
 
-            unsigned char* bufferRow = colorBufferRow;
-
             // Accept whole block when totally covered
 
             if (a == 0xF && b == 0xF && c == 0xF)
@@ -1005,8 +998,6 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
                         // buffer[ix] = 0xFF007F00; // Green
                         SetPixel(ix, y + iy, 0.0f, 0xFF007F00);
                     }
-
-                    bufferRow += m_fb_stride;
                 }
             }
             else // Partially covered block
@@ -1037,13 +1028,9 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
                     CY1 += FDX12;
                     CY2 += FDX23;
                     CY3 += FDX31;
-
-                    bufferRow += m_fb_stride;
                 }
             }
         }
-
-        colorBufferRow += q * m_fb_stride;
     }
 }
 
