@@ -107,7 +107,7 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
             continue;
         }
 
-        FT_Glyph glyph;
+        FT_Glyph glyph = nullptr;
         if (FT_Get_Glyph(face->glyph, &glyph) == 0)
         {
             FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
@@ -121,13 +121,17 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
             font->m_metrics[i].advance = face->glyph->advance.x >> 6;
             font->m_metrics[i].offset = cur_off;
 
-            memcpy(font->m_bitmap.data() + cur_off, bitmap_glyph->bitmap.buffer,
-                   font->m_metrics[i].width * font->m_metrics[i].rows);
+            const int bytes =
+                font->m_metrics[i].width * font->m_metrics[i].rows;
+            if (bytes > 0)
+            {
+                memcpy(font->m_bitmap.data() + cur_off,
+                       bitmap_glyph->bitmap.buffer, bytes);
+            }
 
-            cur_off += font->m_metrics[i].width * font->m_metrics[i].rows;
+            cur_off += bytes;
+            FT_Done_Glyph(glyph);
         }
-
-        FT_Done_Glyph(glyph);
     }
 
     FT_Done_Face(face);
