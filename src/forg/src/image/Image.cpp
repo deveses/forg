@@ -10,7 +10,9 @@
 
 #include <cctype>
 #include <cstdio>
+#include <cstdint>
 #include <cstring>
+#include <limits>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -26,7 +28,7 @@ enum class ImageMagic : uint
     Dds = 0x20534444,
 };
 
-enum class ImageFileType
+enum class ImageFileType : std::int8_t
 {
     NotFound = -1,
     Unknown = 0,
@@ -170,17 +172,17 @@ static void Resize_NearestNeighbor(Color4b* src, uint src_width,
                                    uint src_height, Color4b* dst,
                                    uint dst_width, uint dst_height)
 {
-    float sx = (float)src_width / dst_width;
-    float sy = (float)src_height / dst_height;
-
     for (uint h = 0; h < dst_height; h++)
     {
-        uint dst_off = h * dst_width;
-        uint src_off = h * sy * src_width;
+        const std::size_t dst_off = static_cast<std::size_t>(h) * dst_width;
+        const uint src_y = static_cast<uint>(
+            (static_cast<std::uint64_t>(h) * src_height) / dst_height);
+        const std::size_t src_off = static_cast<std::size_t>(src_y) * src_width;
 
         for (uint w = 0; w < dst_width; w++)
         {
-            uint x = w * sx;
+            const uint x = static_cast<uint>(
+                (static_cast<std::uint64_t>(w) * src_width) / dst_width);
 
             dst[dst_off + w] = src[src_off + x];
         }
@@ -299,10 +301,25 @@ bool Image::Load(std::string_view filename)
 
     if (img_data)
     {
+        if (img_info.Height != 0 &&
+            img_info.Width >
+                std::numeric_limits<std::size_t>::max() / img_info.Height)
+        {
+            return false;
+        }
+
+        const std::size_t pixel_count =
+            static_cast<std::size_t>(img_info.Width) * img_info.Height;
+        if (pixel_count >
+            std::numeric_limits<std::size_t>::max() / sizeof(Color4b))
+        {
+            return false;
+        }
+
+        const std::size_t size = pixel_count * sizeof(Color4b);
         m_width = img_info.Width;
         m_height = img_info.Height;
 
-        const uint size = GetWidth() * GetHeight() * sizeof(Color4b);
         m_data.resize(m_num_mipmaps);
         m_data[0].resize(size);
         std::memcpy(m_data[0].data(), img_data.get(), size);
@@ -364,10 +381,10 @@ uint Image::GenerateMipmaps()
     uint w = m_width;
     uint h = m_height;
 
-    int num_w = Math::bit_log2(m_width);
-    int num_h = Math::bit_log2(m_height);
+    const uint num_w = Math::bit_log2(m_width);
+    const uint num_h = Math::bit_log2(m_height);
 
-    uint levels = Math::bit_max(num_w, num_h) + 1;
+    const uint levels = (num_w > num_h ? num_w : num_h) + 1U;
 
     std::vector<std::vector<char>> new_data(levels);
 
@@ -381,10 +398,11 @@ uint Image::GenerateMipmaps()
         w |= (-(w == 0)) & 1;
         h |= (-(h == 0)) & 1;
 
-        new_data[l].resize(w * h * 4);
+        new_data[l].resize(static_cast<std::size_t>(w) * h * sizeof(Color4b));
 
-        Resize_NearestNeighbor((Color4b*)new_data[0].data(), m_width, m_height,
-                               (Color4b*)new_data[l].data(), w, h);
+        Resize_NearestNeighbor(
+            reinterpret_cast<Color4b*>(new_data[0].data()), m_width, m_height,
+            reinterpret_cast<Color4b*>(new_data[l].data()), w, h);
         // memset(new_data[l], l*10, w*h*4);
     }
 

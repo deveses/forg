@@ -46,12 +46,26 @@ struct BmpHeader
 
 bool ReadBytes(std::istream& in, void* data, std::size_t size)
 {
-    return static_cast<bool>(in.read(static_cast<char*>(data), size));
+    if (size >
+        static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max()))
+    {
+        return false;
+    }
+
+    return static_cast<bool>(
+        in.read(static_cast<char*>(data), static_cast<std::streamsize>(size)));
 }
 
 bool WriteBytes(std::ostream& out, const void* data, std::size_t size)
 {
-    return static_cast<bool>(out.write(static_cast<const char*>(data), size));
+    if (size >
+        static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max()))
+    {
+        return false;
+    }
+
+    return static_cast<bool>(out.write(static_cast<const char*>(data),
+                                       static_cast<std::streamsize>(size)));
 }
 
 bool ReadU8(std::istream& in, u8& value)
@@ -418,7 +432,8 @@ bool WriteBmpPixels(std::ostream& out, const Color4b* pixels, uint width,
     {
         const uint srcY = height - row - 1;
         const Color4b* src = reinterpret_cast<const Color4b*>(
-            reinterpret_cast<const u8*>(pixels) + srcY * rowPitchBytes);
+            reinterpret_cast<const u8*>(pixels) +
+            static_cast<std::size_t>(srcY) * rowPitchBytes);
 
         for (uint x = 0; x < width; ++x)
         {
