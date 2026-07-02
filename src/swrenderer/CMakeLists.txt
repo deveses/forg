@@ -4,7 +4,7 @@ target_sources(swrenderer
     PRIVATE
     SWRenderer.cpp
     $<$<BOOL:${APPLE}>:SWRenderDevice_osx.mm>
-    $<$<BOOL:${WIN32}>:SWRenderDevice.cpp>
+    $<$<BOOL:${WIN32}>:SWRenderDevice_win32.cpp>
     $<$<BOOL:${WIN32}>:main.cpp>
     $<$<BOOL:${FORG_PLATFORM_LINUX}>:SWRenderDevice_sdl.cpp>
 )
