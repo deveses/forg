@@ -19,9 +19,15 @@
 #ifndef _FORG_BASE_H_
 #define _FORG_BASE_H_
 
-#if _MSC_VER > 1000
+#if defined(_MSC_VER) && _MSC_VER > 1000
 #pragma once
 #endif
+
+#include <algorithm>
+#include <bit>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
 
 #include "forg/api.h"
 
@@ -42,48 +48,39 @@ namespace forg {
 // Base functions (maybe should go to base_func.h?)
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename T> T max(T l, T r) { return (l > r ? l : r); }
+template <typename T> constexpr T max(T l, T r) { return std::max(l, r); }
 
-template <typename T> T min(T a, T b) { return (((a) < (b)) ? (a) : (b)); }
+template <typename T> constexpr T min(T a, T b) { return std::min(a, b); }
 
-template <typename T> T clamp(T v, T min, T max)
+template <typename T> constexpr T clamp(T v, T min, T max)
 {
-    if (v > max)
-        return max;
-
-    if (v < min)
-        return min;
-
-    return v;
+    return std::clamp(v, min, max);
 }
 
 // little-endian
-inline int first_bit(unsigned int x)
+constexpr int first_bit(unsigned int x)
 {
-    int ret;
-
-    ret = (x & 0x0000ffffUL) ? 0 : 16;
-    ret += (x & 0x00ff00ffUL) ? 0 : 8; // 0xff = 11111111
-    ret += (x & 0x0f0f0f0fUL) ? 0 : 4; // 0x0f = 00001111
-    ret += (x & 0x33333333UL) ? 0 : 2; // 0x33 = 00110011
-    ret += (x & 0x55555555UL) ? 0 : 1; // 0x55 = 01010101
-
-    return ret;
+    return x == 0 ? 31 : std::countr_zero(x);
 }
 
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
-typedef unsigned char byte;
-typedef unsigned int uint32;
+using u8 = std::uint8_t;
+using u16 = std::uint16_t;
+using u32 = std::uint32_t;
+using u64 = std::uint64_t;
+using i64 = std::int64_t;
 
-#ifdef FORG_MSVC
-typedef unsigned __int64 uint64;
-typedef signed __int64 int64;
-#else
-typedef unsigned long long uint64;
-typedef signed long long int64;
-#endif
+using ushort = u16;
+using uint = unsigned int;
+using ulong = unsigned long;
+using byte = u8;
+using uint32 = u32;
+using uint64 = unsigned long long;
+using int64 = signed long long;
+
+static_assert(sizeof(ushort) == 2);
+static_assert(sizeof(uint32) == 4);
+static_assert(sizeof(uint64) == 8);
+static_assert(sizeof(int64) == 8);
 
 // typedef forg::core::string string;
 
@@ -92,7 +89,7 @@ typedef signed long long int64;
 #define OUT
 #define IN
 
-#define _clear(target, size, type) memset(target, 0, (size) * sizeof(type))
+#define _clear(target, size, type) std::memset(target, 0, (size) * sizeof(type))
 #define null 0
 
 #define _fget(state, arg) (((arg)) == ((state) & ((arg))))
