@@ -116,17 +116,15 @@ bool RenderEngineFrame(forg::Engine& engine, void* userData)
         if (rendererName.empty())
             rendererName = "Unknown Renderer";
 
-        std::snprintf(text, sizeof(text),
-                      "%u fps   renderer: %.*s   camera pos: %.3f %.3f "
-                      "%.3f  dir: %.3f %.3f %.3f",
-                      engine.FrameStats().FPS,
-                      static_cast<int>(rendererName.size()),
-                      rendererName.data(), engine.Camera().get_Position().X,
-                      engine.Camera().get_Position().Y,
-                      engine.Camera().get_Position().Z,
-                      engine.Camera().get_Target().X,
-                      engine.Camera().get_Target().Y,
-                      engine.Camera().get_Target().Z);
+        std::snprintf(
+            text, sizeof(text),
+            "%u fps   renderer: %.*s   camera pos: %.3f %.3f "
+            "%.3f  dir: %.3f %.3f %.3f",
+            engine.FrameStats().FPS, static_cast<int>(rendererName.size()),
+            rendererName.data(), engine.Camera().get_Position().X,
+            engine.Camera().get_Position().Y, engine.Camera().get_Position().Z,
+            engine.Camera().get_Target().X, engine.Camera().get_Target().Y,
+            engine.Camera().get_Target().Z);
 
         state->Font->DrawText2(text, -1, &r, 0,
                                forg::Color4b(255, 255, 255, 255));
@@ -204,13 +202,12 @@ bool InitializeEngine(AppState& state, SDL_Window* window,
 #ifdef FORG_USE_FREETYPE
     std::filesystem::path fontPath;
     const std::string fontPathText =
-        state.Engine.Filesystem().ResolveReadPath("data:fonts/Roboto-Regular.ttf",
-                                                  fontPath)
+        state.Engine.Filesystem().ResolveReadPath(
+            "data:fonts/Roboto-Regular.ttf", fontPath)
             ? fontPath.string()
             : std::string();
     forg::FontDescription fd = {20, 0, 0, 1, false, 0, 0, 0, 0, (""), ("")};
-    std::snprintf(fd.FontPath, sizeof(fd.FontPath), "%s",
-                  fontPathText.c_str());
+    std::snprintf(fd.FontPath, sizeof(fd.FontPath), "%s", fontPathText.c_str());
     state.Font = forg::Font::CreateIndirect(state.Engine.Device(), &fd);
 #endif
 
@@ -219,8 +216,8 @@ bool InitializeEngine(AppState& state, SDL_Window* window,
         if (!state.Engine.StartControlServer("127.0.0.1", config.ControlPort))
         {
             std::cerr << "Control server failed to start on port "
-                      << config.ControlPort << ": "
-                      << state.Engine.LastError() << "\n";
+                      << config.ControlPort << ": " << state.Engine.LastError()
+                      << "\n";
         }
         else
         {
@@ -312,10 +309,9 @@ int main(int, char*[])
         return 1;
     }
 
-    SDL_Window* window = SDL_CreateWindow("View", config.X, config.Y,
-                                          config.Width, config.Height,
-                                          SDL_WINDOW_SHOWN |
-                                              SDL_WINDOW_RESIZABLE);
+    SDL_Window* window = SDL_CreateWindow(
+        "View", config.X, config.Y, config.Width, config.Height,
+        SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
     if (window == nullptr)
     {
         std::cerr << "SDL_CreateWindow failed: " << SDL_GetError() << "\n";

@@ -67,10 +67,9 @@ struct SWRenderDevice::Impl
         }
 
         DestroyTexture();
-        texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
-                                    SDL_TEXTUREACCESS_STREAMING,
-                                    static_cast<int>(width),
-                                    static_cast<int>(height));
+        texture = SDL_CreateTexture(
+            renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+            static_cast<int>(width), static_cast<int>(height));
         if (texture == nullptr)
             return false;
 
