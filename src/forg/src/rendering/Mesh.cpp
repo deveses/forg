@@ -151,7 +151,7 @@ Mesh::UniqueMeshPtr Mesh::MakeBox(IRenderDevice* device, float width,
         m->UnlockVertexBuffer();
     }
 
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     if (m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
@@ -231,7 +231,7 @@ Mesh::UniqueMeshPtr Mesh::MakeSphere(IRenderDevice* device, float radius,
                                      int slices, int stacks)
 {
     PositionNormalTextured* buffer = 0;
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     // 2 poles + slices x stacks
     uint vertices = 2 + (slices - 1) * stacks;
@@ -352,7 +352,7 @@ Mesh::UniqueMeshPtr Mesh::MakeCylinder(IRenderDevice* device, float radius1,
                                        int stacks)
 {
     PositionNormalTextured* buffer = 0;
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     uint vertices = (slices + 1) * stacks + 2;
     uint primitives = 2 * stacks + 2 * slices * stacks;
@@ -478,7 +478,7 @@ Mesh::UniqueMeshPtr Mesh::MakeLandscape(IRenderDevice* _device,
                                         unsigned int _sizey)
 {
     PositionNormalTextured* buffer = 0;
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     uint vertices = _sizex * _sizey;
     uint primitives = 2 * (_sizex - 1) * (_sizey - 1);
@@ -518,10 +518,10 @@ Mesh::UniqueMeshPtr Mesh::MakeLandscape(IRenderDevice* _device,
             {
                 // v0-v1
                 // v2-v3
-                ushort v0 = (iy - 1) * _sizex + ix - 1;
-                ushort v1 = (iy - 1) * _sizex + ix;
-                ushort v2 = (iy)*_sizex + ix - 1;
-                ushort v3 = (iy)*_sizex + ix;
+                u16 v0 = (iy - 1) * _sizex + ix - 1;
+                u16 v1 = (iy - 1) * _sizex + ix;
+                u16 v2 = (iy)*_sizex + ix - 1;
+                u16 v3 = (iy)*_sizex + ix;
 
                 ibuffer[3 * fcount + 0] = v0;
                 ibuffer[3 * fcount + 1] = v2;
@@ -712,7 +712,7 @@ Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, uint numAngles,
         m.reset();
     }
 
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     if (m && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
@@ -813,14 +813,14 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
         m.reset();
     }
 
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     if (m && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
         uint ioff = 0;
         for (uint line = 0; line < lines; ++line)
         {
-            const ushort voff = static_cast<ushort>(line * 4);
+            const u16 voff = static_cast<u16>(line * 4);
             ibuffer[ioff + 0] = voff + 0;
             ibuffer[ioff + 1] = voff + 2;
             ibuffer[ioff + 2] = voff + 1;
@@ -1009,7 +1009,7 @@ int Mesh::DrawSubset(uint attributeID)
 void Mesh::ComputeTangentFrame(uint)
 {
     char* vbuffer = 0;
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     uint stride = m_vertex_declaration.GetVertexSize();
     int p_off = -1;
@@ -1048,7 +1048,7 @@ void Mesh::ComputeTangentFrame(uint)
         }
 
         uint* ib32 = (uint*)ibuffer;
-        ushort* ib16 = (ushort*)ibuffer;
+        u16* ib16 = (u16*)ibuffer;
         for (uint j = 0; j < primitives; j++)
         {
             uint idx0, idx1, idx2;

@@ -44,15 +44,15 @@ namespace forg {
  */
 struct FORG_API VertexElement
 {
-    ushort Stream;
-    ushort Offset;
+    u16 Stream;
+    u16 Offset;
     byte Type;
     byte Usage;
     byte UsageIndex;
 
     static const VertexElement VertexDeclarationEnd;
 
-    // IVertexElement(ushort stream, ushort offset, DeclarationType declType,
+    // IVertexElement(u16 stream, u16 offset, DeclarationType declType,
     // DeclarationUsage declUsage, byte usageIndex);
 
     bool operator!=(const VertexElement elem) const;
@@ -62,13 +62,13 @@ struct FORG_API VertexElement
 
 static_assert(std::is_standard_layout_v<VertexElement>);
 static_assert(sizeof(VertexElement) == 8);
-static_assert(alignof(VertexElement) == alignof(ushort));
-static_assert(offsetof(VertexElement, Offset) == sizeof(ushort));
-static_assert(offsetof(VertexElement, Type) == sizeof(ushort) * 2);
+static_assert(alignof(VertexElement) == alignof(u16));
+static_assert(offsetof(VertexElement, Offset) == sizeof(u16));
+static_assert(offsetof(VertexElement, Type) == sizeof(u16) * 2);
 static_assert(offsetof(VertexElement, Usage) ==
-              sizeof(ushort) * 2 + sizeof(byte));
+              sizeof(u16) * 2 + sizeof(byte));
 static_assert(offsetof(VertexElement, UsageIndex) ==
-              sizeof(ushort) * 2 + sizeof(byte) * 2);
+              sizeof(u16) * 2 + sizeof(byte) * 2);
 
 } // namespace forg
 

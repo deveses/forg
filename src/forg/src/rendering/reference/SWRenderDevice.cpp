@@ -536,7 +536,7 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
     }
 
     const uint* indices32 = (const uint*)indexData;
-    const ushort* indices16 = (const ushort*)indexData;
+    const u16* indices16 = (const u16*)indexData;
 
     VSInput vs_input[3];
     VSOutput vs_output[3];

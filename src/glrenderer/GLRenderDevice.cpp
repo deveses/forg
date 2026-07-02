@@ -497,7 +497,7 @@ int GLRenderDevice::DrawIndexedUserPrimitives_Slow(
         uint vindex = 0;
 
         if (sixteenBitIndices)
-            vindex = *((ushort*)((char*)indexData + idx * 2));
+            vindex = *((u16*)((char*)indexData + idx * 2));
         else
             vindex = *((uint*)((char*)indexData + idx * 4));
 

@@ -45,7 +45,7 @@ static uint _type_counts[] = {
     0  // DeclarationType_Unused = 0x11
 };
 
-// IVertexElement::IVertexElement(ushort stream, ushort offset, DeclarationType
+// IVertexElement::IVertexElement(u16 stream, u16 offset, DeclarationType
 // declType, DeclarationUsage declUsage, byte usageIndex)
 //{
 //	Stream = stream;

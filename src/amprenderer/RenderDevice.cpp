@@ -753,7 +753,7 @@ namespace forg
         }
 
         const uint* indices32 = (const uint*)indexData;
-        const ushort* indices16 = (const ushort*)indexData;
+        const u16* indices16 = (const u16*)indexData;
 
         VSOutput vs_batch[MAX_VERTEX_BATCH_SIZE];
         VSInput vs_input[3];
