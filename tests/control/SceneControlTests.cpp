@@ -105,19 +105,20 @@ TEST_CASE("render.capture saves the backbuffer through the render device",
 
     REQUIRE(r == "{\"ok\":true}");
 
-    std::ifstream in(path, std::ios::binary);
-    REQUIRE(in.good());
+    {
+        std::ifstream in(path, std::ios::binary);
+        REQUIRE(in.good());
 
-    std::string magic;
-    std::string size;
-    std::string maxValue;
-    std::getline(in, magic);
-    std::getline(in, size);
-    std::getline(in, maxValue);
-    REQUIRE(magic == "P6");
-    REQUIRE(size == "2 2");
-    REQUIRE(maxValue == "255");
-
+        std::string magic;
+        std::string size;
+        std::string maxValue;
+        std::getline(in, magic);
+        std::getline(in, size);
+        std::getline(in, maxValue);
+        REQUIRE(magic == "P6");
+        REQUIRE(size == "2 2");
+        REQUIRE(maxValue == "255");
+    }
     std::filesystem::remove(path);
 }
 

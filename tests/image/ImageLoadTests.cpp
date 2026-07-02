@@ -99,7 +99,7 @@ TEST_CASE("Image saves and loads BMP files", "[image][bmp]")
 
     const forg::Color4b* loaded =
         reinterpret_cast<const forg::Color4b*>(copy.GetData(0));
-    for (uint i = 0; i < 6; ++i)
+    for (unsigned int i = 0; i < 6; ++i)
     {
         REQUIRE(loaded[i].r == pixels[i].r);
         REQUIRE(loaded[i].g == pixels[i].g);
