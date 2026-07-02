@@ -6,13 +6,14 @@ FORG is a C++20 rendering-API abstraction library. It defines a common set of re
 
 - **macOS** — primary CMake target
 - **Windows** — CMake/MSVC build with OpenGL and software renderer plugins plus the Win32 sample app
+- **Linux** — CMake build with SDL2 windowing and the software renderer plugin plus the SDL sample app
 - iOS platform macros exist (`FORG_PLATFORM_IOS`) but there is no app target yet
 
 Any other platform fails CMake configuration with a fatal error.
 
 ## Building
 
-Requires CMake >= 3.21, Ninja, and a C++20 compiler. `CMakePresets.json` defines `debug` and `release` presets with output in `build/debug` and `build/release`:
+Requires CMake >= 3.21, Ninja, and a C++20 compiler. Linux builds also require SDL2 and FreeType development headers/libraries, for example `libsdl2-dev libfreetype-dev` on Debian/Ubuntu or `SDL2-devel freetype-devel` on Fedora. `CMakePresets.json` defines `debug` and `release` presets with output in `build/debug` and `build/release`:
 
 ```sh
 cmake --preset release
@@ -27,9 +28,10 @@ The CMake build produces these main targets:
 - **`swrenderer`** (macOS) — the software-renderer plugin, built as `libswrenderer.dylib`
 - **`metalrenderer`** (macOS) — the native Apple Metal backend, built as `libmetalrenderer.dylib`; the default `config.yml` driver
 - **`macapp`** (macOS) — the Cocoa sample app (`src/macapp/`): reads `config.yml` for window geometry, control-server settings, and the renderer driver, loads the plugin with `dlopen`, and renders the demo scene
+- **`linuxapp`** (Linux) — the SDL2 sample app (`src/linuxapp/`): reads `config.yml`, loads `libswrenderer.so`, and renders the same demo scene through the software renderer
 - **`forg_tests`** — Catch2-based unit tests, built when CMake testing is enabled
 
-Run the sample with:
+Run the macOS sample with:
 
 ```sh
 ./build/release/src/macapp/macapp
@@ -39,6 +41,19 @@ A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`,
 `src/macapp/config.yml`, `src/macapp/scene.yml`, and the shared `data/` assets
 next to the binary. `config.yml` selects which plugin `macapp` loads (default:
 `libmetalrenderer.dylib`; switch to `libswrenderer.dylib` to compare).
+
+On Linux, build and run the SDL sample with:
+
+```sh
+cmake --preset debug -DBUILD_TESTING=OFF
+cmake --build --preset debug --target linuxapp
+./build/debug/src/linuxapp/linuxapp
+```
+
+A post-build step copies `libswrenderer.so`, `src/linuxapp/config.yml`,
+`src/linuxapp/scene.yml`, and the shared `data/` assets next to the binary.
+The Linux v1 path intentionally uses SDL2 plus the software renderer only;
+Metal remains macOS-only, and the OpenGL plugin is still Windows/WGL-oriented.
 
 If `controlserver.enabled` is `true` in `config.yml`, the sample starts a
 local HTTP control endpoint. It accepts scene/camera commands plus normalized
@@ -50,9 +65,11 @@ the same `forg::InputEvent` path through `Engine::HandleInput`.
 Notes:
 
 - CMake uses the host default macOS architecture. Pass `-DCMAKE_OSX_ARCHITECTURES=x86_64` or `-DCMAKE_OSX_ARCHITECTURES=arm64` at configure time when you need a specific architecture.
-- The options `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB`
-  default to `OFF`. Enabling `FORG_USE_FREETYPE` fetches FreeType and enables
-  `forg::Font` text overlays in the sample apps. Enabling `FORG_USE_ZLIB`
+- The options `FORG_USE_OPENCL` and `FORG_USE_ZLIB` default to `OFF`.
+  `FORG_USE_FREETYPE` defaults to `ON`, uses system FreeType when available
+  and falls back to a fetched copy, and enables `forg::Font` text overlays in
+  the sample apps. Disable it with `-DFORG_USE_FREETYPE=OFF` for a minimal
+  dependency build. Enabling `FORG_USE_ZLIB`
   enables compressed DirectX `.x` mesh support using CMake's zlib package or a
   fetched fallback. The header-only `cgltf` parser in `extern/cgltf/` is always
   wired in (`extern/CMakeLists.txt`) and linked into `forg` for glTF mesh
@@ -93,7 +110,7 @@ Supported compiler configurations are AppleClang through the macOS presets and
 MSVC 2022 through the Windows presets. `FORG_WARNINGS_AS_ERRORS`,
 `FORG_ENABLE_CLANG_TIDY`, and `FORG_ENABLE_PCH` control local quality checks.
 `FORG_USE_OPENCL`, `FORG_USE_FREETYPE`, and `FORG_USE_ZLIB` are project feature
-switches and default to `OFF`. On Windows, `Forg::forg` publishes the
+switches; FreeType defaults to `ON`, while OpenCL and zlib default to `OFF`. On Windows, `Forg::forg` publishes the
 `FORG_STATIC`, `NOMINMAX`, and `WIN32_LEAN_AND_MEAN` definitions required by
 consumers of the static library.
 
@@ -154,11 +171,12 @@ src/forg/include/forg/   Public headers and root APIs such as Engine.h/Input.h,
                          math, rendering, audio, core, fs, os, script,
                          image, mesh, nn, ui, cpu, opencl, debug
 src/forg/src/            Private implementation, mirroring the module layout;
-                         OS-specific code under os/{win32,osx}/
+                         OS-specific code under os/{win32,osx,linux}/
 src/macapp/              Cocoa sample app (CMake)
+src/linuxapp/            SDL2 Linux sample app (CMake)
 src/winapp/              Direct Win32 sample app (CMake)
 src/swrenderer/          Software-renderer plugin (CMake dylib on macOS,
-                         CMake DLL on Windows)
+                         CMake DLL on Windows, shared object on Linux)
 src/metalrenderer/       Native Apple Metal renderer plugin (CMake dylib, macOS)
 src/glrenderer/          OpenGL renderer plugin (CMake DLL on Windows)
 src/{cl,amp}renderer/    Unsupported legacy renderer sources
@@ -197,7 +215,7 @@ Beyond rendering, the library includes math types, audio output, XML and YAML pa
 
 ## CI
 
-GitHub Actions runs canonical debug and release CMake workflows on macOS and Windows. Linux remains unsupported and fails configuration explicitly.
+GitHub Actions runs canonical debug and release CMake workflows on macOS and Windows, plus debug and release Linux builds for the SDL2 software-renderer sample app.
 
 ## License
 

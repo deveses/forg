@@ -6,6 +6,7 @@
 #undef max
 #undef min
 #include <algorithm>
+#include <cstring>
 #include <functional>
 #include <iostream>
 #include <sstream>

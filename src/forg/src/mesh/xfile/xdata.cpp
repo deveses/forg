@@ -4,6 +4,8 @@
 #include "mesh/xfile/xdata.h"
 #include "mesh/xfile/xtemplatesmgr.h"
 
+#include <cstring>
+
 namespace forg::xfile {
 
 //////////////////////////////////////////////////////////////////////////

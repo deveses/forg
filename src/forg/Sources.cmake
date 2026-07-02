@@ -77,6 +77,7 @@ list(TRANSFORM os_includes PREPEND "include/forg/os/")
 set(os_sources
     $<${FORG_PLATFORM_OSX}:osx/File.cpp>
     $<${FORG_PLATFORM_WINDOWS}:win32/File.cpp>
+    $<${FORG_PLATFORM_LINUX}:linux/File.cpp>
 )
 list(TRANSFORM os_sources PREPEND "src/os/")
 

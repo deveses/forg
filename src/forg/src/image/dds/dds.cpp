@@ -251,7 +251,11 @@ Color4b* LoadDds(const char* filename, ImageDescription* bmp_info)
     std::unique_ptr<char[]> file_data = std::make_unique<char[]>(file_size);
 
     fseek(f, 0, SEEK_SET);
-    fread(file_data.get(), 1, file_size, f);
+    if (fread(file_data.get(), 1, file_size, f) != file_size)
+    {
+        fclose(f);
+        return NULL;
+    }
     fclose(f);
 
     DWORD dwMagicNumber = *(DWORD*)(file_data.get());

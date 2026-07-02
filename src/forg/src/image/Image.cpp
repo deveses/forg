@@ -201,8 +201,11 @@ static ImageFileType detect_file_type(std::string_view filename)
         uint magic_number = 0;
         uint magic_lword = 0;
 
-        std::fread(&magic_number, 4, 1, f);
+        const bool read_magic = std::fread(&magic_number, 4, 1, f) == 1;
         std::fclose(f);
+
+        if (!read_magic)
+            return ImageFileType::Unknown;
 
         magic_lword = magic_number & 0xffff;
 

@@ -11,19 +11,35 @@ if(FORG_USE_FREETYPE)
     # FreeType is used by forg::Font. Keep optional image/font compression
     # integrations disabled so enabling text rendering does not pull extra
     # third-party dependencies into the build.
-    set(FT_DISABLE_ZLIB ON CACHE BOOL "" FORCE)
-    set(FT_DISABLE_BZIP2 ON CACHE BOOL "" FORCE)
-    set(FT_DISABLE_PNG ON CACHE BOOL "" FORCE)
-    set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "" FORCE)
-    set(FT_DISABLE_BROTLI ON CACHE BOOL "" FORCE)
+    find_package(Freetype QUIET)
 
-    FetchContent_Declare(
-        freetype
-        GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
-        GIT_TAG VER-2-13-3
-        GIT_SHALLOW TRUE
-    )
-    FetchContent_MakeAvailable(freetype)
+    if(FREETYPE_FOUND)
+        if(TARGET Freetype::Freetype)
+            set_property(TARGET Freetype::Freetype PROPERTY IMPORTED_GLOBAL TRUE)
+            set(FORG_FREETYPE_LINK_TARGET Freetype::Freetype PARENT_SCOPE)
+        else()
+            add_library(Freetype::Freetype UNKNOWN IMPORTED GLOBAL)
+            set_target_properties(Freetype::Freetype PROPERTIES
+                IMPORTED_LOCATION "${FREETYPE_LIBRARIES}"
+                INTERFACE_INCLUDE_DIRECTORIES "${FREETYPE_INCLUDE_DIRS}")
+            set(FORG_FREETYPE_LINK_TARGET Freetype::Freetype PARENT_SCOPE)
+        endif()
+    else()
+        set(FT_DISABLE_ZLIB ON CACHE BOOL "" FORCE)
+        set(FT_DISABLE_BZIP2 ON CACHE BOOL "" FORCE)
+        set(FT_DISABLE_PNG ON CACHE BOOL "" FORCE)
+        set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "" FORCE)
+        set(FT_DISABLE_BROTLI ON CACHE BOOL "" FORCE)
+
+        FetchContent_Declare(
+            freetype
+            GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype.git
+            GIT_TAG VER-2-13-3
+            GIT_SHALLOW TRUE
+        )
+        FetchContent_MakeAvailable(freetype)
+        set(FORG_FREETYPE_LINK_TARGET freetype PARENT_SCOPE)
+    endif()
 endif()
 
 if(FORG_USE_ZLIB)

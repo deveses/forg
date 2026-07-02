@@ -100,6 +100,28 @@ jobs:
       - name: Test
         run: ctest --preset debug-asan
 
+  linux:
+    name: linux-${{ matrix.preset }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [debug, release]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y ninja-build libsdl2-dev libfreetype-dev
+
+      - name: Configure
+        run: cmake --preset ${{ matrix.preset }} -DBUILD_TESTING=OFF
+
+      - name: Build linuxapp
+        run: cmake --build --preset ${{ matrix.preset }} --target linuxapp
+
   windows:
     name: ${{ matrix.preset }}
     runs-on: windows-2022

@@ -92,7 +92,7 @@ FORG_API void DbgOutputString<char>(const char* lpOutputString, ...)
 
 #define REMIND(strLiteral) DBG_TRACE_MSG(strLiteral)
 #define ASSERT(bCondition)                                                     \
-    if (bCondition == 0)                                                       \
+    if ((bCondition) == 0)                                                     \
     {                                                                          \
         DBG_TRACE_MSG("Assertion failed!");                                    \
         DBG_BREAK();                                                           \

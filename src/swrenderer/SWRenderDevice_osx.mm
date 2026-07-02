@@ -10,7 +10,7 @@ namespace forg {
 /////////////////////////////////////////////////////////////////////////////////////
 // SWRenderDevice (macOS presentation: HWIN carries a layer-backed NSView*)
 /////////////////////////////////////////////////////////////////////////////////////
-SWRenderDevice::SWRenderDevice(HWIN handle) : super(handle) {}
+SWRenderDevice::SWRenderDevice(HWIN handle) : super(handle), m_impl(nullptr) {}
 
 SWRenderDevice::~SWRenderDevice() {}
 

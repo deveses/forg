@@ -25,6 +25,7 @@
 
 #include <base.h>
 
+#include <cstring>
 #include <list>
 #include <string>
 #include <vector>

@@ -30,8 +30,8 @@ bool SendAll(PlatformSocketServer& sockets, SocketHandle client,
 
 struct HttpControlServer::Impl
 {
-    Impl(const std::string& bindAddr, int port, CommandQueue& queue)
-        : addr(bindAddr), port(port), queue(queue),
+    Impl(const std::string& bindAddr, int bindPort, CommandQueue& commandQueue)
+        : addr(bindAddr), port(bindPort), queue(commandQueue),
           sockets(CreatePlatformSocketServer())
     {
     }

@@ -62,10 +62,10 @@ ValuePtr operator+(const ValuePtr& lhs, const ValuePtr& rhs)
     std::weak_ptr<Value> weak_out = out;
     out->m_backward = [lhs, rhs, weak_out]()
     {
-        if (auto out = weak_out.lock())
+        if (auto locked = weak_out.lock())
         {
-            lhs->m_grad += out->m_grad;
-            rhs->m_grad += out->m_grad;
+            lhs->m_grad += locked->m_grad;
+            rhs->m_grad += locked->m_grad;
         }
     };
     return out;
@@ -80,9 +80,9 @@ ValuePtr operator+(const ValuePtr& lhs, double rhs)
     std::weak_ptr<Value> weak_out = out;
     out->m_backward = [lhs, weak_out]()
     {
-        if (auto out = weak_out.lock())
+        if (auto locked = weak_out.lock())
         {
-            lhs->m_grad += out->m_grad;
+            lhs->m_grad += locked->m_grad;
         }
     };
     return out;
@@ -111,10 +111,10 @@ ValuePtr operator*(const ValuePtr& lhs, const ValuePtr& rhs)
     std::weak_ptr<Value> weak_out = out;
     out->m_backward = [lhs, rhs, weak_out]()
     {
-        if (auto out = weak_out.lock())
+        if (auto locked = weak_out.lock())
         {
-            lhs->m_grad += rhs->m_data * out->m_grad;
-            rhs->m_grad += lhs->m_data * out->m_grad;
+            lhs->m_grad += rhs->m_data * locked->m_grad;
+            rhs->m_grad += lhs->m_data * locked->m_grad;
         }
     };
     return out;
@@ -129,9 +129,9 @@ ValuePtr operator*(const ValuePtr& lhs, double rhs)
     std::weak_ptr<Value> weak_out = out;
     out->m_backward = [lhs, rhs, weak_out]()
     {
-        if (auto out = weak_out.lock())
+        if (auto locked = weak_out.lock())
         {
-            lhs->m_grad += rhs * out->m_grad;
+            lhs->m_grad += rhs * locked->m_grad;
         }
     };
     return out;
@@ -164,11 +164,11 @@ ValuePtr Pow(const ValuePtr& value, double exponent)
     std::weak_ptr<Value> weak_out = out;
     out->m_backward = [value, exponent, weak_out]()
     {
-        if (auto out = weak_out.lock())
+        if (auto locked = weak_out.lock())
         {
             value->m_grad += exponent *
                              std::pow(value->m_data, exponent - 1.0) *
-                             out->m_grad;
+                             locked->m_grad;
         }
     };
     return out;
@@ -184,9 +184,10 @@ ValuePtr Relu(const ValuePtr& value)
     std::weak_ptr<Value> weak_out = out;
     out->m_backward = [value, weak_out]()
     {
-        if (auto out = weak_out.lock())
+        if (auto locked = weak_out.lock())
         {
-            value->m_grad += (out->m_data > 0.0 ? 1.0 : 0.0) * out->m_grad;
+            value->m_grad +=
+                (locked->m_data > 0.0 ? 1.0 : 0.0) * locked->m_grad;
         }
     };
     return out;
@@ -202,9 +203,9 @@ ValuePtr Exp(const ValuePtr& value)
     std::weak_ptr<Value> weak_out = out;
     out->m_backward = [value, weak_out]()
     {
-        if (auto out = weak_out.lock())
+        if (auto locked = weak_out.lock())
         {
-            value->m_grad += out->m_data * out->m_grad;
+            value->m_grad += locked->m_data * locked->m_grad;
         }
     };
     return out;
@@ -219,9 +220,9 @@ ValuePtr Log(const ValuePtr& value)
     std::weak_ptr<Value> weak_out = out;
     out->m_backward = [value, weak_out]()
     {
-        if (auto out = weak_out.lock())
+        if (auto locked = weak_out.lock())
         {
-            value->m_grad += out->m_grad / value->m_data;
+            value->m_grad += locked->m_grad / value->m_data;
         }
     };
     return out;
@@ -240,9 +241,10 @@ ValuePtr Sigmoid(const ValuePtr& value)
     std::weak_ptr<Value> weak_out = out;
     out->m_backward = [value, weak_out]()
     {
-        if (auto out = weak_out.lock())
+        if (auto locked = weak_out.lock())
         {
-            value->m_grad += out->m_data * (1.0 - out->m_data) * out->m_grad;
+            value->m_grad +=
+                locked->m_data * (1.0 - locked->m_data) * locked->m_grad;
         }
     };
     return out;

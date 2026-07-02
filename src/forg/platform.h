@@ -35,4 +35,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define PLATFORM_WIN64
 #endif
 
+#ifdef __linux__
+#define PLATFORM_LINUX
+#endif
+
 #endif //_FORG_PLATFORM_H_

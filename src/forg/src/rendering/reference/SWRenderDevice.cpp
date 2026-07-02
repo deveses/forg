@@ -3,6 +3,8 @@
 #include "rendering/reference/SWBuffers.h"
 #include "rendering/reference/SWRenderDevice.h"
 
+#include <cmath>
+
 namespace forg::rendering::reference {
 
 int bit_set(int v, int b) { return v | (1 << b); }
@@ -57,16 +59,16 @@ struct TriangleInterpolator
     float bary12;
     float bary20;
 
-    float bary_a;
-    float bary_b;
-    float bary_c;
+    float bary_a = 0.0f;
+    float bary_b = 0.0f;
+    float bary_c = 0.0f;
 
-    bool ext01;
-    bool ext12;
-    bool ext20;
+    bool ext01 = false;
+    bool ext12 = false;
+    bool ext20 = false;
 
-    bool draw;
-    bool valid;
+    bool draw = false;
+    bool valid = false;
 
     void Initialize(const Vector4& pos0, const Vector4& pos1,
                     const Vector4& pos2)
@@ -937,7 +939,8 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
     minx &= ~(q - 1);
     miny &= ~(q - 1);
 
-    (char*&)colorBuffer += miny * m_fb_stride;
+    unsigned char* colorBufferRow =
+        reinterpret_cast<unsigned char*>(colorBuffer) + miny * m_fb_stride;
 
     // Half-edge constants
     int C1 = DY12 * X1 - DX12 * Y1;
@@ -989,7 +992,7 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
             if (a == 0x0 || b == 0x0 || c == 0x0)
                 continue;
 
-            unsigned int* buffer = colorBuffer;
+            unsigned char* bufferRow = colorBufferRow;
 
             // Accept whole block when totally covered
 
@@ -1003,7 +1006,7 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
                         SetPixel(ix, y + iy, 0.0f, 0xFF007F00);
                     }
 
-                    (char*&)buffer += m_fb_stride;
+                    bufferRow += m_fb_stride;
                 }
             }
             else // Partially covered block
@@ -1035,12 +1038,12 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
                     CY2 += FDX23;
                     CY3 += FDX31;
 
-                    (char*&)buffer += m_fb_stride;
+                    bufferRow += m_fb_stride;
                 }
             }
         }
 
-        (char*&)colorBuffer += q * m_fb_stride;
+        colorBufferRow += q * m_fb_stride;
     }
 }
 

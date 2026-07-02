@@ -13,6 +13,7 @@
 #include "debug/dbg.h"
 
 #include <algorithm>
+#include <cstring>
 
 namespace forg {
 

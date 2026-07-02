@@ -16,7 +16,14 @@ void OutputDebugStringA(const char* text) { printf("%s\n", text); }
 
 void OutputDebugStringW(const wchar_t* text) { wprintf(L"%ls\n", text); }
 
-void DebugBreak() { __builtin_debugtrap(); }
+void DebugBreak()
+{
+#if defined(__clang__) && __has_builtin(__builtin_debugtrap)
+    __builtin_debugtrap();
+#else
+    __builtin_trap();
+#endif
+}
 
 #define _vsnprintf vsnprintf
 #define _vsnwprintf vswprintf
