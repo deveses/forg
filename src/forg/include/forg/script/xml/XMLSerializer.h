@@ -45,11 +45,11 @@ class XMLSerializer : public ISerializer
     bool BeginObject(std::string_view _name) override;
     bool EndObject() override;
 
-    bool BeginArray(std::string_view _name, uint& _count) override;
+    bool BeginArray(std::string_view _name, u32& _count) override;
     bool EndArray() override;
 
     bool Value(std::string_view _name, int& _value) override;
-    bool Value(std::string_view _name, uint& _value) override;
+    bool Value(std::string_view _name, u32& _value) override;
     bool Value(std::string_view _name, float& _value) override;
     bool Value(std::string_view _name, core::string& _value) override;
 };

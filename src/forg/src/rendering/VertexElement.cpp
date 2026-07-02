@@ -7,7 +7,7 @@ namespace forg {
 const VertexElement VertexElement::VertexDeclarationEnd = {
     0xff, 0, DeclarationType_Unused, DeclarationUsage_Position, 0};
 
-static uint _type_sizes[] = {
+static u32 _type_sizes[] = {
     4,  // DeclarationType_Float1
     8,  // DeclarationType_Float2
     12, // DeclarationType_Float3
@@ -24,7 +24,7 @@ static uint _type_sizes[] = {
     0,  // DeclarationType_Unused = 0x11
 };
 
-static uint _type_counts[] = {
+static u32 _type_counts[] = {
     1, // DeclarationType_Float1 = 0,
     2, // DeclarationType_Float2 = 1,
     3, // DeclarationType_Float3 = 2,
@@ -62,8 +62,8 @@ bool VertexElement::operator!=(VertexElement elem) const
             UsageIndex != elem.UsageIndex);
 }
 
-uint VertexElement::GetTypeSize(byte type) { return _type_sizes[type]; }
+u32 VertexElement::GetTypeSize(byte type) { return _type_sizes[type]; }
 
-uint VertexElement::GetTypeCount(byte type) { return _type_counts[type]; }
+u32 VertexElement::GetTypeCount(byte type) { return _type_counts[type]; }
 
 } // namespace forg

@@ -41,7 +41,7 @@ void XDataMgr::PrintInfo(const XDataObject* data, int indent) const
              data->GetSubdataSize());
     DBG_MSG("%s", buff);
 
-    for (uint i = 0; i < data->GetSubdataSize(); i++)
+    for (u32 i = 0; i < data->GetSubdataSize(); i++)
     {
         const IData* subd = data->GetSubdata(i);
         PrintInfo(subd, indent + 1);
@@ -120,7 +120,7 @@ void XDataMgr::PrintInfo() const
     snprintf(buff, sizeof(buff), "//data (%zu):\n", m_data.size());
     DBG_MSG("%s", buff);
 
-    for (uint i = 0; i < m_data.size(); i++)
+    for (u32 i = 0; i < m_data.size(); i++)
     {
         const XDataObject* dobj = m_data[i];
 
@@ -130,9 +130,9 @@ void XDataMgr::PrintInfo() const
     DBG_MSG("//===================================================\n");
 }
 
-uint XDataMgr::GetDataObjectsCount() const { return (uint)m_data.size(); }
+u32 XDataMgr::GetDataObjectsCount() const { return (u32)m_data.size(); }
 
-const XDataObject* XDataMgr::GetDataObject(uint nIndex) const
+const XDataObject* XDataMgr::GetDataObject(u32 nIndex) const
 {
     if (nIndex < m_data.size())
         return m_data[nIndex];

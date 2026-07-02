@@ -15,7 +15,7 @@ namespace {
 int NodeIndex(const std::vector<std::unique_ptr<SceneNode>>& nodes,
               const SceneNode* node)
 {
-    for (uint i = 0; i < nodes.size(); ++i)
+    for (u32 i = 0; i < nodes.size(); ++i)
     {
         if (nodes[i].get() == node)
             return static_cast<int>(i);
@@ -103,14 +103,14 @@ ui::GuiNode& Scene::CreateGuiNode()
     return ref;
 }
 
-uint Scene::NodeCount() const { return static_cast<uint>(m_nodes.size()); }
+u32 Scene::NodeCount() const { return static_cast<u32>(m_nodes.size()); }
 
-SceneNode* Scene::Node(uint index)
+SceneNode* Scene::Node(u32 index)
 {
     return index < m_nodes.size() ? m_nodes[index].get() : nullptr;
 }
 
-const SceneNode* Scene::Node(uint index) const
+const SceneNode* Scene::Node(u32 index) const
 {
     return index < m_nodes.size() ? m_nodes[index].get() : nullptr;
 }
@@ -155,7 +155,7 @@ bool Scene::Save(io::ISerializer& serializer) const
     if (!serializer.Value("version", version))
         return false;
 
-    uint count = static_cast<uint>(m_nodes.size());
+    u32 count = static_cast<u32>(m_nodes.size());
     if (!serializer.BeginArray("nodes", count))
         return false;
 
@@ -194,7 +194,7 @@ bool Scene::Load(io::ISerializer& serializer)
     if (!serializer.Value("version", version) || version != 1)
         return false;
 
-    uint count = 0;
+    u32 count = 0;
     if (!serializer.BeginArray("nodes", count))
         return false;
 
@@ -203,7 +203,7 @@ bool Scene::Load(io::ISerializer& serializer)
     parents.reserve(count);
     temp.m_nodes.reserve(count);
 
-    for (uint i = 0; i < count; ++i)
+    for (u32 i = 0; i < count; ++i)
     {
         if (!serializer.BeginObject("node"))
             return false;
@@ -227,7 +227,7 @@ bool Scene::Load(io::ISerializer& serializer)
     if (!serializer.EndArray() || !serializer.EndObject())
         return false;
 
-    for (uint i = 0; i < count; ++i)
+    for (u32 i = 0; i < count; ++i)
     {
         const int parent = parents[i];
         bool attached = false;
@@ -235,8 +235,8 @@ bool Scene::Load(io::ISerializer& serializer)
         {
             attached = temp.AddChild(*temp.m_nodes[i]);
         }
-        else if (parent >= 0 && static_cast<uint>(parent) < count &&
-                 static_cast<uint>(parent) != i)
+        else if (parent >= 0 && static_cast<u32>(parent) < count &&
+                 static_cast<u32>(parent) != i)
         {
             attached = temp.m_nodes[parent]->AddChild(*temp.m_nodes[i]);
         }

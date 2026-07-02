@@ -170,18 +170,18 @@ static void Unpack565(WORD packed, Color4b& _color)
     _color.a = 0xff;
 }
 
-void DecodeDXT1(Color4b* _output, uint width, uint height, char* _input)
+void DecodeDXT1(Color4b* _output, u32 width, u32 height, char* _input)
 {
-    uint hblocks = width >> 2;
-    uint vblocks = height >> 2;
+    u32 hblocks = width >> 2;
+    u32 vblocks = height >> 2;
 
     DXT1BLOCK* block = (DXT1BLOCK*)_input;
 
     Color4b color_table[4];
 
-    for (uint v = 0; v < vblocks; v++)
+    for (u32 v = 0; v < vblocks; v++)
     {
-        for (uint h = 0; h < hblocks; h++)
+        for (u32 h = 0; h < hblocks; h++)
         {
             Unpack565(block->color_0, color_table[0]);
             Unpack565(block->color_1, color_table[1]);
@@ -246,7 +246,7 @@ Color4b* LoadDds(const char* filename, ImageDescription* bmp_info)
         return NULL;
 
     fseek(f, 0, SEEK_END);
-    uint file_size = ftell(f);
+    u32 file_size = ftell(f);
 
     std::unique_ptr<char[]> file_data = std::make_unique<char[]>(file_size);
 
@@ -265,12 +265,12 @@ Color4b* LoadDds(const char* filename, ImageDescription* bmp_info)
     // setup the pointers in the process request
     DDS_HEADER* pSurfDesc = (DDS_HEADER*)(file_data.get() + sizeof(DWORD));
     char* pBitData = file_data.get() + sizeof(DWORD) + sizeof(DDS_HEADER);
-    // uint pBitSize   = file_size - sizeof(DWORD) - sizeof(DDS_HEADER);
+    // u32 pBitSize   = file_size - sizeof(DWORD) - sizeof(DDS_HEADER);
 
     bmp_info->Width = pSurfDesc->dwWidth;
     bmp_info->Height = pSurfDesc->dwHeight;
 
-    uint num_pixels = bmp_info->Width * bmp_info->Height;
+    u32 num_pixels = bmp_info->Width * bmp_info->Height;
     std::unique_ptr<Color4b[]> aBitmapBits =
         std::make_unique<Color4b[]>(num_pixels);
     int dxt = 0;
@@ -295,16 +295,16 @@ Color4b* LoadDds(const char* filename, ImageDescription* bmp_info)
     }
     else if (pSurfDesc->ddpf.dwFlags & DDPF_RGB)
     {
-        uint pix_size = (pSurfDesc->ddpf.dwRGBBitCount >> 3);
+        u32 pix_size = (pSurfDesc->ddpf.dwRGBBitCount >> 3);
         char* dds_data = pBitData;
         int off_r = first_bit_num(pSurfDesc->ddpf.dwRBitMask);
         int off_g = first_bit_num(pSurfDesc->ddpf.dwGBitMask);
         int off_b = first_bit_num(pSurfDesc->ddpf.dwBBitMask);
         int off_a = first_bit_num(pSurfDesc->ddpf.dwRGBAlphaBitMask);
 
-        for (uint i = 0; i < num_pixels; i++)
+        for (u32 i = 0; i < num_pixels; i++)
         {
-            uint pix = *((uint*)dds_data);
+            u32 pix = *((u32*)dds_data);
 
             aBitmapBits[i].b =
                 byte((pix & pSurfDesc->ddpf.dwRBitMask) >> off_r);

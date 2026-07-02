@@ -146,9 +146,9 @@ class XTemplate
 
     bool IsRestricted() const { return (m_options.size() > 0); }
 
-    uint GetMembersCount() const { return (uint)m_members.size(); }
+    u32 GetMembersCount() const { return (u32)m_members.size(); }
 
-    uint GetOptionsCount() const { return (uint)m_options.size(); }
+    u32 GetOptionsCount() const { return (u32)m_options.size(); }
 
     int Load(xreader& treader);
 
@@ -156,11 +156,11 @@ class XTemplate
 
     void AddOption(const xstring& name, const xguid& guid);
 
-    const XTemplateMember* GetMember(uint idx) const;
+    const XTemplateMember* GetMember(u32 idx) const;
 
-    const XTemplateOption& GetOption(uint idx) const;
+    const XTemplateOption& GetOption(u32 idx) const;
 
-    uint GetMemberIndex(const xstring& name) const;
+    u32 GetMemberIndex(const xstring& name) const;
 
     const XTemplateMember* FindMemberByName(const xstring& name) const;
 

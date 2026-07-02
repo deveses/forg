@@ -41,8 +41,8 @@ struct Command;
 struct EngineConfig
 {
     std::string RendererDriver;
-    uint BackBufferWidth = 100;
-    uint BackBufferHeight = 100;
+    u32 BackBufferWidth = 100;
+    u32 BackBufferHeight = 100;
 };
 
 struct EngineFrameStats
@@ -50,7 +50,7 @@ struct EngineFrameStats
     uint64 FrameIndex = 0;
     double DeltaSeconds = 0.0;
     double ElapsedSeconds = 0.0;
-    uint FPS = 0;
+    u32 FPS = 0;
     uint64 LastRenderTimeUs = 0;
 };
 
@@ -71,16 +71,16 @@ class FORG_API Engine
     bool Initialize(HWIN window);
     bool Initialize(HWIN window, std::string_view configFilename);
     bool LoadScene(std::string_view filename);
-    bool LoadScene(std::string_view filename, uint sceneIndex);
+    bool LoadScene(std::string_view filename, u32 sceneIndex);
     bool StartControlServer(std::string_view bindAddr, int port);
     void StopControlServer();
     bool ControlServerRunning() const;
-    uint PumpControlCommands();
+    u32 PumpControlCommands();
 
     bool Update(double deltaSeconds);
     bool Render();
     bool Frame();
-    void Resize(uint width, uint height);
+    void Resize(u32 width, u32 height);
     bool HandleInput(const InputEvent& event);
     void SetClearColor(const Color& color);
     const Color& ClearColor() const;
@@ -90,10 +90,10 @@ class FORG_API Engine
     void SetRenderCallback(EngineRenderCallback callback, void* userData);
 
     static Light DefaultLight();
-    bool SetLight(uint index, const Light& light);
-    bool EnableLight(uint index, bool enabled);
-    Light* GetLight(uint index);
-    const Light* GetLight(uint index) const;
+    bool SetLight(u32 index, const Light& light);
+    bool EnableLight(u32 index, bool enabled);
+    Light* GetLight(u32 index);
+    const Light* GetLight(u32 index) const;
 
     void SetActiveModel(scene::Model* model);
     scene::Model* ActiveModel() const;
@@ -101,9 +101,9 @@ class FORG_API Engine
 
     scene::Scene& Scene();
     const scene::Scene& Scene() const;
-    scene::Scene& Scene(uint sceneIndex);
-    const scene::Scene& Scene(uint sceneIndex) const;
-    uint SceneCount() const;
+    scene::Scene& Scene(u32 sceneIndex);
+    const scene::Scene& Scene(u32 sceneIndex) const;
+    u32 SceneCount() const;
     audio::AudioEngine& Audio();
     const audio::AudioEngine& Audio() const;
     fs::Filesystem& Filesystem();

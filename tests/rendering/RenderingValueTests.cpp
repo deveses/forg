@@ -38,7 +38,7 @@ TEST_CASE("Rendering value layouts remain stable", "[rendering][layout]")
 
     STATIC_REQUIRE_FALSE(std::is_standard_layout_v<forg::VertexDeclaration>);
     STATIC_REQUIRE(sizeof(forg::VertexDeclaration) >=
-                   sizeof(forg::VertexElement) * 256 + sizeof(forg::uint) * 2);
+                   sizeof(forg::VertexElement) * 256 + sizeof(forg::u32) * 2);
 
     STATIC_REQUIRE(std::is_standard_layout_v<forg::Material>);
     STATIC_REQUIRE(offsetof(forg::Material, Diffuse) == 0);
@@ -47,7 +47,7 @@ TEST_CASE("Rendering value layouts remain stable", "[rendering][layout]")
 
     STATIC_REQUIRE(std::is_standard_layout_v<forg::Light>);
     STATIC_REQUIRE(offsetof(forg::Light, Type) == 0);
-    STATIC_REQUIRE(offsetof(forg::Light, Diffuse) >= sizeof(forg::uint));
+    STATIC_REQUIRE(offsetof(forg::Light, Diffuse) >= sizeof(forg::u32));
     STATIC_REQUIRE(offsetof(forg::Light, Direction) >
                    offsetof(forg::Light, Position));
 }
@@ -61,7 +61,7 @@ TEST_CASE("Color converts between ARGB integers and float channels",
     REQUIRE(color.r == Approx(64.0f / 255.0f));
     REQUIRE(color.g == Approx(32.0f / 255.0f));
     REQUIRE(color.b == Approx(16.0f / 255.0f));
-    REQUIRE(static_cast<forg::uint>(color) == 0x80402010u);
+    REQUIRE(static_cast<forg::u32>(color) == 0x80402010u);
 }
 
 TEST_CASE("Color conversion clamps invalid channels", "[rendering][color]")
@@ -69,7 +69,7 @@ TEST_CASE("Color conversion clamps invalid channels", "[rendering][color]")
     const forg::Color color(-1.0f, 2.0f,
                             std::numeric_limits<float>::quiet_NaN(), 1.0f);
 
-    REQUIRE(static_cast<forg::uint>(color) == 0xff00ff00U);
+    REQUIRE(static_cast<forg::u32>(color) == 0xff00ff00U);
 }
 
 TEST_CASE("Color component values are constexpr and const-correct",

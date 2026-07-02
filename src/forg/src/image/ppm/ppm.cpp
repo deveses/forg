@@ -49,7 +49,7 @@ bool ReadToken(std::istream& in, std::string& token)
     return !token.empty();
 }
 
-bool ReadUInt(std::istream& in, uint& value)
+bool ReadUInt(std::istream& in, u32& value)
 {
     std::string token;
     if (!ReadToken(in, token))
@@ -66,10 +66,10 @@ bool ReadUInt(std::istream& in, uint& value)
         return false;
     }
 
-    if (pos != token.size() || parsed > std::numeric_limits<uint>::max())
+    if (pos != token.size() || parsed > std::numeric_limits<u32>::max())
         return false;
 
-    value = static_cast<uint>(parsed);
+    value = static_cast<u32>(parsed);
     return true;
 }
 
@@ -82,13 +82,13 @@ Color4b* LoadPpm(const char* filename, ImageDescription* ppm_info)
         return nullptr;
 
     std::string magic;
-    uint width = 0;
-    uint height = 0;
-    uint maxValue = 0;
+    u32 width = 0;
+    u32 height = 0;
+    u32 maxValue = 0;
     if (!ReadToken(in, magic) || magic != "P6" || !ReadUInt(in, width) ||
         !ReadUInt(in, height) || !ReadUInt(in, maxValue) || maxValue != 255 ||
         width == 0 || height == 0 ||
-        width > std::numeric_limits<uint>::max() / height)
+        width > std::numeric_limits<u32>::max() / height)
     {
         return nullptr;
     }
@@ -101,7 +101,7 @@ Color4b* LoadPpm(const char* filename, ImageDescription* ppm_info)
     }
 
     std::unique_ptr<Color4b[]> pixels(new Color4b[width * height]);
-    for (uint i = 0; i < width * height; ++i)
+    for (u32 i = 0; i < width * height; ++i)
     {
         char rgb[3] = {};
         if (!in.read(rgb, sizeof(rgb)))
@@ -123,8 +123,8 @@ Color4b* LoadPpm(const char* filename, ImageDescription* ppm_info)
     return pixels.release();
 }
 
-bool SavePpm(std::string_view filename, const Color4b* pixels, uint width,
-             uint height, uint rowPitchBytes)
+bool SavePpm(std::string_view filename, const Color4b* pixels, u32 width,
+             u32 height, u32 rowPitchBytes)
 {
     if (filename.empty() || pixels == nullptr || width == 0 || height == 0)
         return false;
@@ -139,11 +139,11 @@ bool SavePpm(std::string_view filename, const Color4b* pixels, uint width,
         return false;
 
     out << "P6\n" << width << " " << height << "\n255\n";
-    for (uint y = 0; y < height; ++y)
+    for (u32 y = 0; y < height; ++y)
     {
         const Color4b* row = reinterpret_cast<const Color4b*>(
             reinterpret_cast<const unsigned char*>(pixels) + y * rowPitchBytes);
-        for (uint x = 0; x < width; ++x)
+        for (u32 x = 0; x < width; ++x)
         {
             const char rgb[3] = {static_cast<char>(row[x].r),
                                  static_cast<char>(row[x].g),

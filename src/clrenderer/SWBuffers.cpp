@@ -21,12 +21,12 @@ namespace forg {
         }
     }
 
-    uint SWTexture::GetLevelCount()
+    u32 SWTexture::GetLevelCount()
     {
         return m_Levels;
     }
 
-    int SWTexture::GetLevelDesc(uint Level, SurfaceDescription* Description) const
+    int SWTexture::GetLevelDesc(u32 Level, SurfaceDescription* Description) const
     {
         Description->Width = m_Width;
         Description->Height = m_Height;
@@ -35,14 +35,14 @@ namespace forg {
         return FORG_OK;
     }
 
-    void* SWTexture::LockRect(uint Level, uint Flags)
+    void* SWTexture::LockRect(u32 Level, u32 Flags)
     {
         return m_data;
     }
 
-    int SWTexture::UnlockRect(uint Level)
+    int SWTexture::UnlockRect(u32 Level)
     {
-        uint stride = m_Width * 4;
+        u32 stride = m_Width * 4;
         size_t origin[3] = { 0, 0, 0 };
         size_t region[3] = { m_Width, m_Height, 1 };
         m_queue.EnqueueWriteImage(m_buffer.GetMemObject(), CL_TRUE, origin, region, stride, 0, m_data);
@@ -50,7 +50,7 @@ namespace forg {
         return FORG_OK;
     }
 
-    int SWTexture::Create(OpenCL::CLContext& context, OpenCL::CLCommandQueue& queue, uint Width, uint Height, uint Levels, uint Usage, uint Format, uint Pool)
+    int SWTexture::Create(OpenCL::CLContext& context, OpenCL::CLCommandQueue& queue, u32 Width, u32 Height, u32 Levels, u32 Usage, u32 Format, u32 Pool)
     {
         m_Levels = 1;
         m_Width = Width;
@@ -61,8 +61,8 @@ namespace forg {
 
         m_queue.Create(queue);
 
-        uint stride = Width*4;
-        uint size = stride * Height;
+        u32 stride = Width*4;
+        u32 size = stride * Height;
 
         m_data = new char[size];
 
@@ -78,14 +78,14 @@ namespace forg {
         return FORG_OK;
     }
 
-    uint SWTexture::Sample(float u, float v)
+    u32 SWTexture::Sample(float u, float v)
     {
-        uint x = uint(u*m_Width);
-        uint y = uint(v*m_Height);
+        u32 x = u32(u*m_Width);
+        u32 y = u32(v*m_Height);
 
         if (x < m_Width && y < m_Height)
         {
-            uint* buf_argb = (uint*)m_data;
+            u32* buf_argb = (u32*)m_data;
 
             return buf_argb[y*m_Width + x];
         }
@@ -110,7 +110,7 @@ namespace forg {
         delete [] m_data;
     }
 
-    int SWVertexBuffer::Create(uint length, uint usage, uint pool)
+    int SWVertexBuffer::Create(u32 length, u32 usage, u32 pool)
     {
         m_length = length;
         m_usage = usage;
@@ -121,7 +121,7 @@ namespace forg {
         return FORG_OK;
     }
 
-	int SWVertexBuffer::Lock(uint offsetToLock, uint sizeToLock, void ** ppbData, uint flags)
+	int SWVertexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void ** ppbData, u32 flags)
     {
         *ppbData = m_data;
 
@@ -152,7 +152,7 @@ namespace forg {
         delete [] m_data;
     }
 
-    int SWIndexBuffer::Create(uint length, uint usage, bool sixteenBitIndices, uint pool)
+    int SWIndexBuffer::Create(u32 length, u32 usage, bool sixteenBitIndices, u32 pool)
     {
         m_length = length;
         m_usage = usage;
@@ -164,7 +164,7 @@ namespace forg {
         return FORG_OK;
     }
 
-	int SWIndexBuffer::Lock(uint offsetToLock, uint sizeToLock, void ** ppbData, uint flags)
+	int SWIndexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void ** ppbData, u32 flags)
     {
         *ppbData = m_data;
 

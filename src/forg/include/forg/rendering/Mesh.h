@@ -38,11 +38,11 @@ namespace forg::geometry {
 
 struct AttributeRange
 {
-    uint AttribId;
-    uint FaceStart;
-    uint FaceCount;
-    uint VertexStart;
-    uint VertexCount;
+    u32 AttribId;
+    u32 FaceStart;
+    u32 FaceCount;
+    u32 VertexStart;
+    u32 VertexCount;
 };
 
 /// Mesh class
@@ -72,7 +72,7 @@ class FORG_API Mesh
     // 'structors
     //////////////////////////////////////////////////////////////////////
   public:
-    Mesh(uint NumFaces, uint NumVertices, uint Options,
+    Mesh(u32 NumFaces, u32 NumVertices, u32 Options,
          const VertexElement* pDeclaration, LPRENDERDEVICE pDevice);
     virtual ~Mesh(void);
 
@@ -85,10 +85,10 @@ class FORG_API Mesh
     VertexDeclaration m_vertex_declaration;
     AttributeRangeVec m_attribtab;
 
-    uint m_num_faces;
-    uint m_num_vertices;
-    uint m_stride_size;
-    uint m_options;
+    u32 m_num_faces;
+    u32 m_num_vertices;
+    u32 m_stride_size;
+    u32 m_options;
     PrimitiveType m_primitive_type = PrimitiveType_TriangleList;
 
     //////////////////////////////////////////////////////////////////////////
@@ -136,15 +136,15 @@ class FORG_API Mesh
     static MeshPtr Torus(IRenderDevice* device, float innerRadius,
                          float outerRadius, int sides, int rings);
 
-    static MeshPtr Pyramid(IRenderDevice* device, uint numAngles, float radius,
+    static MeshPtr Pyramid(IRenderDevice* device, u32 numAngles, float radius,
                            float height);
-    static UniqueMeshPtr MakePyramid(IRenderDevice* device, uint numAngles,
+    static UniqueMeshPtr MakePyramid(IRenderDevice* device, u32 numAngles,
                                      float radius, float height);
 
     static MeshPtr Grid(IRenderDevice* device, float sizeX, float sizeY,
-                        int color, uint subgrid);
+                        int color, u32 subgrid);
     static UniqueMeshPtr MakeGrid(IRenderDevice* device, float sizeX,
-                                  float sizeY, int color, uint subgrid);
+                                  float sizeY, int color, u32 subgrid);
 
     static MeshPtr Landscape(IRenderDevice* _device, const Vector3& _span,
                              const float* _hmap, unsigned int _sizex,
@@ -154,15 +154,15 @@ class FORG_API Mesh
                                        unsigned int _sizex,
                                        unsigned int _sizey);
 
-    static MeshPtr FromFile(const char* filename, uint options,
+    static MeshPtr FromFile(const char* filename, u32 options,
                             IRenderDevice* device);
-    static UniqueMeshPtr LoadFromFile(const char* filename, uint options,
+    static UniqueMeshPtr LoadFromFile(const char* filename, u32 options,
                                       IRenderDevice* device);
 
-    static MeshPtr FromFile(const char* filename, uint options,
+    static MeshPtr FromFile(const char* filename, u32 options,
                             IRenderDevice* device,
                             ExtendedMaterialVec& materials);
-    static UniqueMeshPtr LoadFromFile(const char* filename, uint options,
+    static UniqueMeshPtr LoadFromFile(const char* filename, u32 options,
                                       IRenderDevice* device,
                                       ExtendedMaterialVec& materials);
 
@@ -172,13 +172,13 @@ class FORG_API Mesh
 
     const VertexDeclaration* GetVertexDeclaration() const;
 
-    uint GetNumVertices() const;
+    u32 GetNumVertices() const;
 
-    uint GetNumFaces() const;
+    u32 GetNumFaces() const;
 
-    uint GetNumBytesPerVertex() const;
+    u32 GetNumBytesPerVertex() const;
 
-    uint GetOptions() const;
+    u32 GetOptions() const;
 
     void SetPrimitiveType(PrimitiveType primitiveType);
     PrimitiveType GetPrimitiveType() const;
@@ -190,19 +190,19 @@ class FORG_API Mesh
      * the table.
      */
     int SetAttributeTable(const AttributeRange* pAttribTable,
-                          uint cAttribTableSize);
+                          u32 cAttribTableSize);
 
     /// Locks a vertex buffer and obtains a pointer to the vertex buffer memory.
     /**
      * Locks a vertex buffer and obtains a pointer to the vertex buffer memory.
      */
-    int LockVertexBuffer(uint Flags, void** ppData);
+    int LockVertexBuffer(u32 Flags, void** ppData);
 
     /// Locks an index buffer and obtains a pointer to the index buffer memory.
     /**
      * Locks an index buffer and obtains a pointer to the index buffer memory.
      */
-    int LockIndexBuffer(uint Flags, void** ppData);
+    int LockIndexBuffer(u32 Flags, void** ppData);
 
     /// Unlocks a vertex buffer.
     /**
@@ -220,24 +220,24 @@ class FORG_API Mesh
     /**
      * Draws a subset of a mesh.
      */
-    int DrawSubset(uint attributeID);
+    int DrawSubset(u32 attributeID);
 
     /**
      * Performs tangent frame computations on a mesh. Tangent, binormal, and
      * optionally normal vectors are generated. Singularities are handled as
      * required by grouping edges and splitting vertices.
      */
-    void ComputeTangentFrame(uint options);
+    void ComputeTangentFrame(u32 options);
 
     //////////////////////////////////////////////////////////////////////////
     // Helpers
     //////////////////////////////////////////////////////////////////////////
   private:
-    static MeshPtr FromPly(const char* filename, uint options,
+    static MeshPtr FromPly(const char* filename, u32 options,
                            IRenderDevice* device);
-    static MeshPtr FromX(const char* filename, uint options,
+    static MeshPtr FromX(const char* filename, u32 options,
                          IRenderDevice* device, ExtendedMaterialVec& materials);
-    static MeshPtr FromGltf(const char* filename, uint options,
+    static MeshPtr FromGltf(const char* filename, u32 options,
                             IRenderDevice* device,
                             ExtendedMaterialVec& materials);
 };

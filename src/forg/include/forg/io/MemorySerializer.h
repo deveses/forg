@@ -27,11 +27,11 @@ class FORG_API MemorySerializer : public ISerializer
     bool BeginObject(std::string_view name) override;
     bool EndObject() override;
 
-    bool BeginArray(std::string_view name, uint& count) override;
+    bool BeginArray(std::string_view name, u32& count) override;
     bool EndArray() override;
 
     bool Value(std::string_view name, int& value) override;
-    bool Value(std::string_view name, uint& value) override;
+    bool Value(std::string_view name, u32& value) override;
     bool Value(std::string_view name, float& value) override;
     bool Value(std::string_view name, core::string& value) override;
 
@@ -55,7 +55,7 @@ class FORG_API MemorySerializer : public ISerializer
     struct Frame
     {
         Node* node = nullptr;
-        uint nextChild = 0;
+        u32 nextChild = 0;
     };
 
     Node* FindChild(Node& node, std::string_view name) const;

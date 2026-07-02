@@ -21,7 +21,7 @@ using namespace forg::math;
 
 namespace forg {
 
-enum class ImageMagic : uint
+enum class ImageMagic : u32
 {
     Bmp = 0x4d42,
     Ppm = 0x3650,
@@ -95,20 +95,20 @@ int mode)
     }
 }
 
-static inline vec4 sample_cubic(CTexture2D* tex, uint pos_x, uint pos_y, uint
-dst_width, uint dst_height)
+static inline vec4 sample_cubic(CTexture2D* tex, u32 pos_x, u32 pos_y, u32
+dst_width, u32 dst_height)
 {
     // bicubic filter
     vec4 p;
-    uint tex_width = tex->GetWidth();
-    uint tex_height = tex->GetHeight();
+    u32 tex_width = tex->GetWidth();
+    u32 tex_height = tex->GetHeight();
     float sx = (float)tex_width / dst_width;
     float sy = (float)tex_height / dst_height;
 
     float x = pos_x*sx;
     float y = pos_y*sy;
-    float dx = x - (uint)x;
-    float dy = y - (uint)y;
+    float dx = x - (u32)x;
+    float dy = y - (u32)y;
 
     vec4 new_pix(0.0f);
 
@@ -149,8 +149,8 @@ dst_width, uint dst_height)
     return p;
 }
 
-static inline vec4 sample_point(CTexture2D* tex, uint pos_x, uint pos_y, uint
-dst_width, uint dst_height)
+static inline vec4 sample_point(CTexture2D* tex, u32 pos_x, u32 pos_y, u32
+dst_width, u32 dst_height)
 {
     vec4 p;
 
@@ -168,20 +168,20 @@ dst_width, uint dst_height)
 }
 */
 
-static void Resize_NearestNeighbor(Color4b* src, uint src_width,
-                                   uint src_height, Color4b* dst,
-                                   uint dst_width, uint dst_height)
+static void Resize_NearestNeighbor(Color4b* src, u32 src_width,
+                                   u32 src_height, Color4b* dst,
+                                   u32 dst_width, u32 dst_height)
 {
-    for (uint h = 0; h < dst_height; h++)
+    for (u32 h = 0; h < dst_height; h++)
     {
         const std::size_t dst_off = static_cast<std::size_t>(h) * dst_width;
-        const uint src_y = static_cast<uint>(
+        const u32 src_y = static_cast<u32>(
             (static_cast<std::uint64_t>(h) * src_height) / dst_height);
         const std::size_t src_off = static_cast<std::size_t>(src_y) * src_width;
 
-        for (uint w = 0; w < dst_width; w++)
+        for (u32 w = 0; w < dst_width; w++)
         {
-            const uint x = static_cast<uint>(
+            const u32 x = static_cast<u32>(
                 (static_cast<std::uint64_t>(w) * src_width) / dst_width);
 
             dst[dst_off + w] = src[src_off + x];
@@ -198,8 +198,8 @@ static ImageFileType detect_file_type(std::string_view filename)
 
     if (f != NULL)
     {
-        uint magic_number = 0;
-        uint magic_lword = 0;
+        u32 magic_number = 0;
+        u32 magic_lword = 0;
 
         const bool read_magic = std::fread(&magic_number, 4, 1, f) == 1;
         std::fclose(f);
@@ -357,7 +357,7 @@ bool Image::Save(std::string_view filename) const
     return false;
 }
 
-const char* Image::GetData(uint _level) const
+const char* Image::GetData(u32 _level) const
 {
     if (_level < m_data.size())
         return m_data[_level].data();
@@ -365,10 +365,10 @@ const char* Image::GetData(uint _level) const
     return NULL;
 }
 
-uint Image::GetSize(uint _level) const
+u32 Image::GetSize(u32 _level) const
 {
-    uint w = m_width >> _level;
-    uint h = m_height >> _level;
+    u32 w = m_width >> _level;
+    u32 h = m_height >> _level;
 
     w |= (-(w == 0)) & 1;
     h |= (-(h == 0)) & 1;
@@ -376,24 +376,24 @@ uint Image::GetSize(uint _level) const
     return w * h * 4;
 }
 
-uint Image::GenerateMipmaps()
+u32 Image::GenerateMipmaps()
 {
     if (m_data.empty())
         return 0;
 
-    uint w = m_width;
-    uint h = m_height;
+    u32 w = m_width;
+    u32 h = m_height;
 
-    const uint num_w = Math::bit_log2(m_width);
-    const uint num_h = Math::bit_log2(m_height);
+    const u32 num_w = Math::bit_log2(m_width);
+    const u32 num_h = Math::bit_log2(m_height);
 
-    const uint levels = (num_w > num_h ? num_w : num_h) + 1U;
+    const u32 levels = (num_w > num_h ? num_w : num_h) + 1U;
 
     std::vector<std::vector<char>> new_data(levels);
 
     new_data[0] = std::move(m_data[0]);
 
-    for (uint l = 1; l < levels; l++)
+    for (u32 l = 1; l < levels; l++)
     {
         w >>= 1;
         h >>= 1;

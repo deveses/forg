@@ -184,8 +184,8 @@ bool InitializeEngine(AppState& state, SDL_Window* window,
     int width = 0;
     int height = 0;
     SDL_GetWindowSize(window, &width, &height);
-    state.Engine.Resize(static_cast<forg::uint>(width),
-                        static_cast<forg::uint>(height));
+    state.Engine.Resize(static_cast<forg::u32>(width),
+                        static_cast<forg::u32>(height));
 
     if (!state.Engine.LoadScene("scene.yml"))
     {
@@ -268,8 +268,8 @@ int Run(AppState& state)
                     int height = event.window.data2;
                     if (width > 0 && height > 0)
                     {
-                        state.Engine.Resize(static_cast<forg::uint>(width),
-                                            static_cast<forg::uint>(height));
+                        state.Engine.Resize(static_cast<forg::u32>(width),
+                                            static_cast<forg::u32>(height));
                     }
                 }
                 break;

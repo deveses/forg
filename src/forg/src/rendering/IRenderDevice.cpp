@@ -29,11 +29,11 @@ int IRenderDevice::WriteBackBufferToFile(std::string_view filename,
     }
 
     std::vector<Color4b> pixels(backBuffer.Width * backBuffer.Height);
-    for (uint y = 0; y < backBuffer.Height; ++y)
+    for (u32 y = 0; y < backBuffer.Height; ++y)
     {
         const unsigned char* row =
             backBuffer.Pixels.data() + y * backBuffer.RowPitch;
-        for (uint x = 0; x < backBuffer.Width; ++x)
+        for (u32 x = 0; x < backBuffer.Width; ++x)
         {
             Color4b& pixel = pixels[y * backBuffer.Width + x];
             pixel.r = row[x * 4 + 0];

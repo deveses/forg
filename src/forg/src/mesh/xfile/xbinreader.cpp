@@ -292,7 +292,7 @@ int xbinreader::ReadString(xstring& str)
     }
     else
     {
-        char_array[(uint)count] = 0;
+        char_array[(u32)count] = 0;
         str = char_array.data();
     }
 

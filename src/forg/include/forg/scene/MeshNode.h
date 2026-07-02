@@ -23,8 +23,8 @@ class FORG_API MeshNode : public SceneNode
     void SetSphere(float radius, int slices, int stacks);
     void SetCylinder(float radius1, float radius2, float length, int slices,
                      int stacks);
-    void SetPyramid(uint numAngles, float radius, float height);
-    void SetGrid(float sizeX, float sizeY, int color, uint subgrid);
+    void SetPyramid(u32 numAngles, float radius, float height);
+    void SetGrid(float sizeX, float sizeY, int color, u32 subgrid);
 
     const char* TypeName() const override;
     bool Save(io::ISerializer& serializer) const override;

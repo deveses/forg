@@ -33,16 +33,16 @@ class GLTexture
 {
     // Nested
   public:
-    typedef void* (GLTexture::*PFNLOCKRECT)(uint, uint);
-    typedef int (GLTexture::*PFNUNLOCKRECT)(uint);
+    typedef void* (GLTexture::*PFNLOCKRECT)(u32, u32);
+    typedef int (GLTexture::*PFNUNLOCKRECT)(u32);
 
     typedef void (GLTexture::*PFNCREATETEXTURE)(void);
     typedef void (GLTexture::*PFNRELEASETEXTURE)(void);
 
     // 'structors
   public:
-    GLTexture(IRenderDevice* device, uint width, uint height, uint numLevels,
-              uint usage, uint format, uint pool);
+    GLTexture(IRenderDevice* device, u32 width, u32 height, u32 numLevels,
+              u32 usage, u32 format, u32 pool);
 
     ~GLTexture(void);
 
@@ -50,15 +50,15 @@ class GLTexture
   private:
     IRenderDevice* m_device;
 
-    uint m_width;
-    uint m_height;
-    uint m_levels;
-    uint m_usage;
-    uint m_format;
-    uint m_pool;
+    u32 m_width;
+    u32 m_height;
+    u32 m_levels;
+    u32 m_usage;
+    u32 m_format;
+    u32 m_pool;
     byte** m_data;
-    uint m_id;
-    uint* m_buffers;
+    u32 m_id;
+    u32* m_buffers;
 
     PFNCREATETEXTURE Create;
     PFNRELEASETEXTURE Release;
@@ -68,29 +68,29 @@ class GLTexture
 
     // Properties
   public:
-    uint get_TextureID() const { return m_id; }
+    u32 get_TextureID() const { return m_id; }
 
     // Helpers
   private:
     void CreateSysMem();
     void ReleaseSysMem();
-    void* LockRectSysMem(uint Level, uint Flags);
-    int UnlockRectSysMem(uint Level);
+    void* LockRectSysMem(u32 Level, u32 Flags);
+    int UnlockRectSysMem(u32 Level);
 
     void CreatePBO();
     void ReleasePBO();
-    void* LockRectPBO(uint Level, uint Flags);
-    int UnlockRectPBO(uint Level);
+    void* LockRectPBO(u32 Level, u32 Flags);
+    int UnlockRectPBO(u32 Level);
 
     // ITexture implementation
   public:
-    uint GetLevelCount() { return m_levels; };
+    u32 GetLevelCount() { return m_levels; };
 
-    int GetLevelDesc(uint Level, SurfaceDescription* Description) const;
+    int GetLevelDesc(u32 Level, SurfaceDescription* Description) const;
 
-    void* LockRect(uint Level, uint Flags);
+    void* LockRect(u32 Level, u32 Flags);
 
-    int UnlockRect(uint Level);
+    int UnlockRect(u32 Level);
 };
 
 class ITextureGLImpl : public ITexture
@@ -101,33 +101,33 @@ class ITextureGLImpl : public ITexture
     ~ITextureGLImpl();
 
   public:
-    static ITextureGLImpl* Create(IRenderDevice* device, uint width,
-                                  uint height, uint numLevels, uint usage,
-                                  uint format, uint pool);
+    static ITextureGLImpl* Create(IRenderDevice* device, u32 width,
+                                  u32 height, u32 numLevels, u32 usage,
+                                  u32 format, u32 pool);
 
     // Attributes
   private:
     GLTexture* m_texture;
-    uint m_refCount;
+    u32 m_refCount;
 
   public:
     GLTexture* get_Texture() { return m_texture; }
 
     // ITexture implementation
   public:
-    uint GetLevelCount() { return m_texture->GetLevelCount(); };
+    u32 GetLevelCount() { return m_texture->GetLevelCount(); };
 
-    int GetLevelDesc(uint Level, SurfaceDescription* Description) const
+    int GetLevelDesc(u32 Level, SurfaceDescription* Description) const
     {
         return m_texture->GetLevelDesc(Level, Description);
     };
 
-    void* LockRect(uint Level, uint Flags)
+    void* LockRect(u32 Level, u32 Flags)
     {
         return m_texture->LockRect(Level, Flags);
     };
 
-    int UnlockRect(uint Level) { return m_texture->UnlockRect(Level); };
+    int UnlockRect(u32 Level) { return m_texture->UnlockRect(Level); };
 };
 
 } // namespace forg

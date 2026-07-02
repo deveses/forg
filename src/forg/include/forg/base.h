@@ -70,7 +70,7 @@ using u64 = std::uint64_t;
 using i64 = std::int64_t;
 
 using ushort [[deprecated("Use forg::u16 instead.")]] = u16;
-using uint = unsigned int;
+using uint [[deprecated("Use forg::u32 instead.")]] = u32;
 using ulong = unsigned long;
 using byte = u8;
 using uint32 = u32;
@@ -78,7 +78,7 @@ using uint64 = unsigned long long;
 using int64 = signed long long;
 
 static_assert(sizeof(u16) == 2);
-static_assert(sizeof(uint32) == 4);
+static_assert(sizeof(u32) == 4);
 static_assert(sizeof(uint64) == 8);
 static_assert(sizeof(int64) == 8);
 

@@ -35,9 +35,9 @@ void File::Close()
     }
 }
 
-uint File::Read(void* _buffer, uint _size)
+u32 File::Read(void* _buffer, u32 _size)
 {
-    uint num_read = 0;
+    u32 num_read = 0;
 
     if (m_handle)
     {
@@ -51,7 +51,7 @@ uint File::Read(void* _buffer, uint _size)
     return num_read;
 }
 
-bool File::GetSize(uint& _out_size)
+bool File::GetSize(u32& _out_size)
 {
     if (m_handle)
     {

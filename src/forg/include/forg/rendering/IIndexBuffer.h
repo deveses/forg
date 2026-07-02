@@ -44,8 +44,8 @@ class IIndexBuffer : public core::RefCounter
     virtual ~IIndexBuffer() {}
 
   public:
-    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
-                     uint flags) = 0;
+    virtual int Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData,
+                     u32 flags) = 0;
 
     virtual int Unlock() = 0;
 };

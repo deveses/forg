@@ -197,7 +197,7 @@ void SWSampler::SetTexture(ITexture* _texture)
     texture = _texture;
 }
 
-uint SWSampler::Sample(float u, float v)
+u32 SWSampler::Sample(float u, float v)
 {
     if (texture)
     {
@@ -232,7 +232,7 @@ SWRenderDevice::~SWRenderDevice()
         SetStreamSource(i, 0, 0, 0);
 }
 
-int SWRenderDevice::Initialize(uint _width, uint _height)
+int SWRenderDevice::Initialize(u32 _width, u32 _height)
 {
     /*
     RECT rcClient;
@@ -254,7 +254,7 @@ int SWRenderDevice::Initialize(uint _width, uint _height)
 void SWRenderDevice::CreateBuffers()
 {
     m_fb_stride = m_width * 4;
-    m_frame_buffer = std::make_unique<uint[]>(m_width * m_height);
+    m_frame_buffer = std::make_unique<u32[]>(m_width * m_height);
     m_depth_buffer = std::make_unique<float[]>(m_width * m_height);
 }
 
@@ -274,8 +274,8 @@ int SWRenderDevice::Reset()
     return FORG_OK;
 }
 
-LPVERTEXBUFFER SWRenderDevice::CreateVertexBuffer(uint length, uint usage,
-                                                  uint pool)
+LPVERTEXBUFFER SWRenderDevice::CreateVertexBuffer(u32 length, u32 usage,
+                                                  u32 pool)
 {
     forg::rendering::reference::SWVertexBuffer* vb =
         new forg::rendering::reference::SWVertexBuffer();
@@ -285,9 +285,9 @@ LPVERTEXBUFFER SWRenderDevice::CreateVertexBuffer(uint length, uint usage,
     return vb;
 }
 
-LPINDEXBUFFER SWRenderDevice::CreateIndexBuffer(uint length, uint usage,
+LPINDEXBUFFER SWRenderDevice::CreateIndexBuffer(u32 length, u32 usage,
                                                 bool sixteenBitIndices,
-                                                uint pool)
+                                                u32 pool)
 {
     forg::rendering::reference::SWIndexBuffer* ib =
         new forg::rendering::reference::SWIndexBuffer();
@@ -297,8 +297,8 @@ LPINDEXBUFFER SWRenderDevice::CreateIndexBuffer(uint length, uint usage,
     return ib;
 }
 
-LPTEXTURE SWRenderDevice::CreateTexture(uint Width, uint Height, uint Levels,
-                                        uint Usage, uint Format, uint Pool)
+LPTEXTURE SWRenderDevice::CreateTexture(u32 Width, u32 Height, u32 Levels,
+                                        u32 Usage, u32 Format, u32 Pool)
 {
     forg::rendering::reference::SWTexture* tex =
         new forg::rendering::reference::SWTexture();
@@ -348,7 +348,7 @@ int SWRenderDevice::SetIndices(IIndexBuffer* pIndexData)
     return FORG_OK;
 }
 
-int SWRenderDevice::SetTexture(uint Sampler, ITexture* pTexture)
+int SWRenderDevice::SetTexture(u32 Sampler, ITexture* pTexture)
 {
     if (Sampler < NUM_SAMPLERS)
     {
@@ -409,7 +409,7 @@ int SWRenderDevice::SetVertexDeclaration(const VertexDeclaration* pDecl)
     return FORG_OK;
 }
 
-int SWRenderDevice::SetViewport(uint X, uint Y, uint Width, uint Height,
+int SWRenderDevice::SetViewport(u32 X, u32 Y, u32 Width, u32 Height,
                                 float MinZ, float MaxZ)
 {
     m_vp_x = X;
@@ -442,7 +442,7 @@ int SWRenderDevice::GetViewport(Viewport* viewport)
     return FORG_OK;
 }
 
-int SWRenderDevice::SetLight(uint Index, const Light* pLight)
+int SWRenderDevice::SetLight(u32 Index, const Light* pLight)
 {
     if (Index < NUM_LIGHTS)
     {
@@ -467,14 +467,14 @@ enum
     V_UV0_FLOAT2 = 4,
 };
 
-int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
-                                              uint, uint primitiveCount,
+int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, u32,
+                                              u32, u32 primitiveCount,
                                               const void* indexData,
                                               bool sixteenBitIndices,
                                               const void* vertexStreamZeroData,
-                                              uint)
+                                              u32)
 {
-    uint stride = m_vdecl.GetVertexSize();
+    u32 stride = m_vdecl.GetVertexSize();
     char* position_ptr = 0;
     char* normal_ptr = 0;
     char* texcoord_ptr = 0;
@@ -482,7 +482,7 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
     int vertex_usage = 0;
 
     const VertexElement* elements = m_vdecl.GetDeclaration();
-    for (uint i = 0; i < m_vdecl.GetElementsCount(); i++)
+    for (u32 i = 0; i < m_vdecl.GetElementsCount(); i++)
     {
         vertex_usage |= (1 << elements[i].Usage);
 
@@ -504,8 +504,8 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
         }
     }
 
-    [[maybe_unused]] uint num_indices = primitiveCount;
-    uint indices_step = 3;
+    [[maybe_unused]] u32 num_indices = primitiveCount;
+    u32 indices_step = 3;
     /// swap indices for even triangles
     bool swap_even = false;
 
@@ -535,15 +535,15 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
         break;
     }
 
-    const uint* indices32 = (const uint*)indexData;
+    const u32* indices32 = (const u32*)indexData;
     const u16* indices16 = (const u16*)indexData;
 
     VSInput vs_input[3];
     VSOutput vs_output[3];
 
-    for (uint i = 0; i < primitiveCount; i++)
+    for (u32 i = 0; i < primitiveCount; i++)
     {
-        uint idx[3];
+        u32 idx[3];
 
         if (sixteenBitIndices)
         {
@@ -564,7 +564,7 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
 
         if (swap_even && i % 2 != 0)
         {
-            uint ti = idx[0];
+            u32 ti = idx[0];
             idx[0] = idx[1];
             idx[1] = ti;
         }
@@ -614,7 +614,7 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
 
             if (color_ptr)
             {
-                uint argb = 0;
+                u32 argb = 0;
                 std::memcpy(&argb, color_ptr + idx[k] * stride, sizeof(argb));
                 vs_input[k].color = static_cast<Vector4>(Color(argb));
             }
@@ -668,13 +668,13 @@ int SWRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType, int, int,
         ib->IsIndexShort(), vb->GetData(), m_vdecl.GetVertexSize());
 }
 
-int SWRenderDevice::Clear(uint flags, Color color, float zdepth, int)
+int SWRenderDevice::Clear(u32 flags, Color color, float zdepth, int)
 {
-    uint c = color;
+    u32 c = color;
 
     if (flags & forg::ClearFlags_Target)
     {
-        for (uint p = 0; p < m_width * m_height; p++)
+        for (u32 p = 0; p < m_width * m_height; p++)
         {
             m_frame_buffer[p] = c;
         }
@@ -682,7 +682,7 @@ int SWRenderDevice::Clear(uint flags, Color color, float zdepth, int)
 
     if (flags & forg::ClearFlags_ZBuffer)
     {
-        for (uint p = 0; p < m_width * m_height; p++)
+        for (u32 p = 0; p < m_width * m_height; p++)
         {
             m_depth_buffer[p] = zdepth;
         }
@@ -728,8 +728,8 @@ int SWRenderDevice::Present()
     HBITMAP hBitmap = CreateDIBSection(hMemDC, &bi, DIB_RGB_COLORS, &pvBits,
     nullptr, 0x0); HGDIOBJ hOldBitmap = SelectObject(hMemDC, hBitmap);
 
-    //for (uint y = 0; y < ulWindowHeight; y++)
-    //for (uint x = 0; x < ulWindowWidth; x++)
+    //for (u32 y = 0; y < ulWindowHeight; y++)
+    //for (u32 x = 0; x < ulWindowWidth; x++)
     //    ((UINT32 *)pvBits)[x + y * ulWindowWidth] = 0xff0000ff;
 
     memcpy(pvBits, m_frame_buffer.get(), ulWindowWidth * ulWindowHeight * 4);
@@ -762,13 +762,13 @@ int SWRenderDevice::GetBackBuffer(BackBuffer& backBuffer)
     backBuffer.RowPitch = m_width * 4;
     backBuffer.Format = BackBufferPixelFormat::RGBA8;
     backBuffer.Pixels.resize(backBuffer.RowPitch * m_height);
-    for (uint y = 0; y < m_height; ++y)
+    for (u32 y = 0; y < m_height; ++y)
     {
-        const uint* row = m_frame_buffer.get() + y * m_width;
+        const u32* row = m_frame_buffer.get() + y * m_width;
         unsigned char* dst = backBuffer.Pixels.data() + y * backBuffer.RowPitch;
-        for (uint x = 0; x < m_width; ++x)
+        for (u32 x = 0; x < m_width; ++x)
         {
-            uint argb = row[x];
+            u32 argb = row[x];
             dst[x * 4 + 0] = static_cast<unsigned char>((argb >> 16) & 0xff);
             dst[x * 4 + 1] = static_cast<unsigned char>((argb >> 8) & 0xff);
             dst[x * 4 + 2] = static_cast<unsigned char>(argb & 0xff);
@@ -779,9 +779,9 @@ int SWRenderDevice::GetBackBuffer(BackBuffer& backBuffer)
     return FORG_OK;
 }
 
-uint blend_color(uint _src, uint _dst)
+u32 blend_color(u32 _src, u32 _dst)
 {
-    uint out = _src;
+    u32 out = _src;
 
     int a = _src >> 24;
 
@@ -814,25 +814,25 @@ uint blend_color(uint _src, uint _dst)
     return out;
 }
 
-float SWRenderDevice::GetDepth(uint _x, uint _y)
+float SWRenderDevice::GetDepth(u32 _x, u32 _y)
 {
     _y = m_height - 1 - _y;
 
-    uint index = _y * m_width + _x;
+    u32 index = _y * m_width + _x;
 
     float d = m_depth_buffer[index];
 
     return d;
 }
 
-void SWRenderDevice::SetPixel(uint _x, uint _y, float _z, uint _c)
+void SWRenderDevice::SetPixel(u32 _x, u32 _y, float _z, u32 _c)
 {
     _x += m_vp_x;
     _y += m_vp_y;
 
     _y = m_height - 1 - _y;
 
-    uint index = _y * m_width + _x;
+    u32 index = _y * m_width + _x;
 
     float& d = m_depth_buffer[index];
 
@@ -840,7 +840,7 @@ void SWRenderDevice::SetPixel(uint _x, uint _y, float _z, uint _c)
     {
         d = _z;
 
-        uint& p = m_frame_buffer[index];
+        u32& p = m_frame_buffer[index];
 
         // Color colz(_z, _z, _z);
         //_c = colz;
@@ -1182,10 +1182,10 @@ void SWRenderDevice::DrawTriangle(const VSOutput* vertices, int usage)
                       vertices[2].position.Z * w2;
 
             if (d >= m_vp_minz && d <= m_vp_maxz &&
-                d <= GetDepth(static_cast<uint>(ix), static_cast<uint>(iy)))
+                d <= GetDepth(static_cast<u32>(ix), static_cast<u32>(iy)))
             {
                 Color col = ps_output.color;
-                SetPixel(static_cast<uint>(ix), static_cast<uint>(iy), d, col);
+                SetPixel(static_cast<u32>(ix), static_cast<u32>(iy), d, col);
             }
         }
     }

@@ -8,7 +8,7 @@
 
 #ifdef FORG_PLATFORM_LINUX
 
-static std::optional<uint> getFileSize(FILE* f)
+static std::optional<forg::u32> getFileSize(FILE* f)
 {
     int err = fseeko(f, 0, SEEK_END);
     if (err)
@@ -20,7 +20,7 @@ static std::optional<uint> getFileSize(FILE* f)
 
     fseeko(f, 0, SEEK_SET);
 
-    return static_cast<uint>(pos);
+    return static_cast<forg::u32>(pos);
 }
 
 namespace forg::os {
@@ -53,15 +53,15 @@ void File::Close()
     }
 }
 
-uint File::Read(void* _buffer, uint _size)
+u32 File::Read(void* _buffer, u32 _size)
 {
     if (!m_handle)
         return 0;
 
-    return static_cast<uint>(fread(_buffer, 1, _size, (FILE*)m_handle));
+    return static_cast<u32>(fread(_buffer, 1, _size, (FILE*)m_handle));
 }
 
-bool File::GetSize(uint& _out_size)
+bool File::GetSize(u32& _out_size)
 {
     if (!m_handle)
         return false;

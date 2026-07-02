@@ -115,9 +115,9 @@ int XFile::ReadHeader()
 
 void XFile::GetDataObjects(XDataPtrVec& data_vec)
 {
-    uint c = m_data_mgr.GetDataObjectsCount();
+    u32 c = m_data_mgr.GetDataObjectsCount();
 
-    for (uint i = 0; i < c; i++)
+    for (u32 i = 0; i < c; i++)
     {
         data_vec.push_back(m_data_mgr.GetDataObject(i));
     }

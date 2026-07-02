@@ -66,19 +66,19 @@ class FORG_API ITexture : public core::RefCounter
 
     static ITexture* FromFile(IRenderDevice* device, const char* srcFile);
 
-    virtual int GetLevelDesc(uint Level,
+    virtual int GetLevelDesc(u32 Level,
                              SurfaceDescription* Description) const = 0;
 
-    ISurface* GetSurfaceLevel(uint Level);
+    ISurface* GetSurfaceLevel(u32 Level);
 
     /// Locks a rectangle on a texture resource.
-    virtual void* LockRect(uint Level, uint Flags) = 0;
+    virtual void* LockRect(u32 Level, u32 Flags) = 0;
 
     /// Unlocks a rectangle on a texture resource.
-    virtual int UnlockRect(uint Level) = 0;
+    virtual int UnlockRect(u32 Level) = 0;
 
     /// Returns the number of texture levels in a multilevel texture.
-    virtual uint GetLevelCount() = 0;
+    virtual u32 GetLevelCount() = 0;
 
   private:
 };

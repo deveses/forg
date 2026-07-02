@@ -31,8 +31,8 @@ const VertexElement* VertexDeclaration::GetDeclaration() const
     return elements;
 }
 
-uint VertexDeclaration::GetElementsCount() const { return m_nElementsCount; }
+u32 VertexDeclaration::GetElementsCount() const { return m_nElementsCount; }
 
-uint VertexDeclaration::GetVertexSize() const { return m_nVertexSize; }
+u32 VertexDeclaration::GetVertexSize() const { return m_nVertexSize; }
 
 } // namespace forg

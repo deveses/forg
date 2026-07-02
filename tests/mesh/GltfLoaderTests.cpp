@@ -87,7 +87,7 @@ TEST_CASE("GltfLoader computes normals when missing", "[mesh][gltf]")
     REQUIRE(Flatten("no_normals.gltf", m));
 
     REQUIRE(m.vertices.size() == 3);
-    for (forg::uint i = 0; i < m.vertices.size(); ++i)
+    for (forg::u32 i = 0; i < m.vertices.size(); ++i)
     {
         const forg::Vector3& n = m.vertices[i].Normal;
         // Triangle lies in the XY plane, so the computed normal is unit-length

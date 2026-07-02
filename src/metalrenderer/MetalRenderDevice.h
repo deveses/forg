@@ -47,13 +47,13 @@ class MetalRenderDevice : public IRenderDevice
 
     // Brings up the Metal device, command queue, shaders and presentation
     // layer.
-    int Initialize(uint width, uint height);
+    int Initialize(u32 width, u32 height);
 
     // IRenderDevice implementation
   public:
     virtual int BeginScene(void);
     virtual int EndScene(void);
-    virtual int Clear(uint flags, Color color, float zdepth, int stencil);
+    virtual int Clear(u32 flags, Color color, float zdepth, int stencil);
     virtual int Present();
     virtual int SaveBackBuffer(std::string_view filename);
     virtual int GetBackBuffer(BackBuffer& backBuffer);
@@ -61,24 +61,24 @@ class MetalRenderDevice : public IRenderDevice
 
     virtual LPVERTEXDECLARATION
     CreateVertexDeclaration(const VertexElement* pVertexElements);
-    virtual LPVERTEXBUFFER CreateVertexBuffer(uint length, uint usage,
-                                              uint pool);
-    virtual LPINDEXBUFFER CreateIndexBuffer(uint length, uint usage,
-                                            bool sixteenBitIndices, uint pool);
-    virtual LPTEXTURE CreateTexture(uint Width, uint Height, uint Levels,
-                                    uint Usage, uint Format, uint Pool);
-    virtual LPTEXTURE CreateTextureFromFile(const char* filename, uint Width,
-                                            uint Height, uint Levels,
-                                            uint Usage, uint Format, uint Pool);
+    virtual LPVERTEXBUFFER CreateVertexBuffer(u32 length, u32 usage,
+                                              u32 pool);
+    virtual LPINDEXBUFFER CreateIndexBuffer(u32 length, u32 usage,
+                                            bool sixteenBitIndices, u32 pool);
+    virtual LPTEXTURE CreateTexture(u32 Width, u32 Height, u32 Levels,
+                                    u32 Usage, u32 Format, u32 Pool);
+    virtual LPTEXTURE CreateTextureFromFile(const char* filename, u32 Width,
+                                            u32 Height, u32 Levels,
+                                            u32 Usage, u32 Format, u32 Pool);
 
     virtual int DrawIndexedPrimitive(PrimitiveType primitiveType,
                                      int baseVertex, int minVertexIndex,
                                      int numVertices, int startIndex,
                                      int primCount);
     virtual int DrawIndexedUserPrimitives(
-        PrimitiveType primitiveType, uint minVertexIndex, uint numVertexIndices,
-        uint primitiveCount, const void* indexData, bool sixteenBitIndices,
-        const void* vertexStreamZeroData, uint vertexStreamZeroStride);
+        PrimitiveType primitiveType, u32 minVertexIndex, u32 numVertexIndices,
+        u32 primitiveCount, const void* indexData, bool sixteenBitIndices,
+        const void* vertexStreamZeroData, u32 vertexStreamZeroStride);
 
     virtual void SetTransform(TransformType state, const Matrix4& matrix);
     virtual void GetTransform(TransformType state, Matrix4& matrix);
@@ -86,13 +86,13 @@ class MetalRenderDevice : public IRenderDevice
     virtual int SetStreamSource(int streamNumber, IVertexBuffer* streamData,
                                 int offsetInBytes, int stride);
     virtual int SetIndices(IIndexBuffer* pIndexData);
-    virtual int SetViewport(uint X, uint Y, uint Width, uint Height,
+    virtual int SetViewport(u32 X, u32 Y, u32 Width, u32 Height,
                             float MinZ = 0.0f, float MaxZ = 1.0f);
     virtual int GetViewport(Viewport* viewport);
-    virtual int SetRenderState(uint state, uint value);
-    virtual int SetTexture(uint Sampler, ITexture* pTexture);
-    virtual int SetLight(uint Index, const Light* pLight);
-    virtual int LightEnable(uint LightIndex, bool bEnable);
+    virtual int SetRenderState(u32 state, u32 value);
+    virtual int SetTexture(u32 Sampler, ITexture* pTexture);
+    virtual int SetLight(u32 Index, const Light* pLight);
+    virtual int LightEnable(u32 LightIndex, bool bEnable);
     virtual int SetMaterial(const Material* pMaterial);
 
     HWIN GetHWIN() { return m_window; }
@@ -106,8 +106,8 @@ class MetalRenderDevice : public IRenderDevice
     MetalImpl* m_impl;
 
     // Backing-store (pixel) dimensions of the drawable / depth buffer.
-    uint m_width;
-    uint m_height;
+    u32 m_width;
+    u32 m_height;
 
     Matrix4 m_world;
     Matrix4 m_view;
@@ -117,7 +117,7 @@ class MetalRenderDevice : public IRenderDevice
     // Recorded by Clear(); consumed when the render pass begins.
     Color m_clear_color;
     float m_clear_z;
-    uint m_clear_flags;
+    u32 m_clear_flags;
 
     enum
     {
@@ -134,8 +134,8 @@ class MetalRenderDevice : public IRenderDevice
     int m_stream0_stride;
     IIndexBuffer* m_indices;
 
-    uint m_cull;
-    uint m_fill;
+    u32 m_cull;
+    u32 m_fill;
     bool m_lighting;
     std::string m_capture_path;
     BackBuffer m_last_back_buffer;

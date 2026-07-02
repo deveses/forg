@@ -66,7 +66,7 @@ struct Uniforms {
     float4 lightAmbient;
     float4 materialDiffuse;
     float4 materialAmbient;
-    uint lightingEnabled;
+    u32 lightingEnabled;
 };
 
 struct LitVSIn {
@@ -231,8 +231,8 @@ static bool DeclarationHasUsage(const VertexDeclaration& declaration,
                                 byte usage)
 {
     const VertexElement* elements = declaration.GetDeclaration();
-    const uint count = declaration.GetElementsCount();
-    for (uint i = 0; i < count; ++i)
+    const u32 count = declaration.GetElementsCount();
+    for (u32 i = 0; i < count; ++i)
     {
         if (elements[i].Usage == usage)
             return true;
@@ -245,9 +245,9 @@ static uint64_t DeclarationFingerprint(const VertexDeclaration& decl)
     // FNV-1a over the element layout - one pipeline per distinct declaration.
     uint64_t h = 1469598103934665603ULL;
     const VertexElement* els = decl.GetDeclaration();
-    uint n = decl.GetElementsCount();
+    u32 n = decl.GetElementsCount();
     h = (h ^ decl.GetVertexSize()) * 1099511628211ULL;
-    for (uint i = 0; i < n; i++)
+    for (u32 i = 0; i < n; i++)
     {
         h = (h ^ els[i].Usage) * 1099511628211ULL;
         h = (h ^ els[i].Type) * 1099511628211ULL;
@@ -256,7 +256,7 @@ static uint64_t DeclarationFingerprint(const VertexDeclaration& decl)
     return h;
 }
 
-static MTLCullMode CullModeToMetal(uint cull)
+static MTLCullMode CullModeToMetal(u32 cull)
 {
     switch (cull)
     {
@@ -285,7 +285,7 @@ class MetalTexture : public ITexture
         m_texture = nil;
     }
 
-    bool Create(id<MTLDevice> device, uint width, uint height, uint format)
+    bool Create(id<MTLDevice> device, u32 width, u32 height, u32 format)
     {
         if (device == nil || width == 0 || height == 0)
             return false;
@@ -315,7 +315,7 @@ class MetalTexture : public ITexture
 
     id<MTLTexture> GetMTLTexture() const { return m_texture; }
 
-    int GetLevelDesc(uint level, SurfaceDescription* description) const override
+    int GetLevelDesc(u32 level, SurfaceDescription* description) const override
     {
         if (level != 0 || description == nullptr)
             return FORG_INVALID_CALL;
@@ -326,7 +326,7 @@ class MetalTexture : public ITexture
         return FORG_OK;
     }
 
-    void* LockRect(uint level, uint /*flags*/) override
+    void* LockRect(u32 level, u32 /*flags*/) override
     {
         if (level != 0 || m_pixels.empty())
             return nullptr;
@@ -334,7 +334,7 @@ class MetalTexture : public ITexture
         return m_pixels.data();
     }
 
-    int UnlockRect(uint level) override
+    int UnlockRect(u32 level) override
     {
         if (level != 0 || m_texture == nil || m_pixels.empty())
             return FORG_INVALID_CALL;
@@ -347,13 +347,13 @@ class MetalTexture : public ITexture
         return FORG_OK;
     }
 
-    uint GetLevelCount() override { return 1; }
+    u32 GetLevelCount() override { return 1; }
 
   private:
     id<MTLTexture> m_texture;
-    uint m_width;
-    uint m_height;
-    uint m_format;
+    u32 m_width;
+    u32 m_height;
+    u32 m_format;
     std::vector<char> m_pixels;
 };
 
@@ -415,7 +415,7 @@ MetalRenderDevice::~MetalRenderDevice()
     }
 }
 
-int MetalRenderDevice::Initialize(uint /*width*/, uint /*height*/)
+int MetalRenderDevice::Initialize(u32 /*width*/, u32 /*height*/)
 {
     m_impl->device = MTLCreateSystemDefaultDevice();
     if (m_impl->device == nil)
@@ -498,8 +498,8 @@ void MetalRenderDevice::EnsureSurfaces()
 
     m_impl->layer.contentsScale = scale;
     m_impl->layer.drawableSize = CGSizeMake((CGFloat)pw, (CGFloat)ph);
-    m_width = (uint)pw;
-    m_height = (uint)ph;
+    m_width = (u32)pw;
+    m_height = (u32)ph;
 
     if (m_impl->depthTexture == nil || m_impl->depthW != pw ||
         m_impl->depthH != ph)
@@ -527,7 +527,7 @@ int MetalRenderDevice::Reset()
     return FORG_OK;
 }
 
-int MetalRenderDevice::Clear(uint flags, Color color, float zdepth,
+int MetalRenderDevice::Clear(u32 flags, Color color, float zdepth,
                              int /*stencil*/)
 {
     // No GPU work here - the render pass applies these as load actions in
@@ -647,8 +647,8 @@ int MetalRenderDevice::Present()
         if (captureBuffer != nil)
         {
             [m_impl->cmd waitUntilCompleted];
-            m_last_back_buffer.Width = static_cast<uint>(captureWidth);
-            m_last_back_buffer.Height = static_cast<uint>(captureHeight);
+            m_last_back_buffer.Width = static_cast<u32>(captureWidth);
+            m_last_back_buffer.Height = static_cast<u32>(captureHeight);
             m_last_back_buffer.RowPitch = m_last_back_buffer.Width * 4;
             m_last_back_buffer.Format = BackBufferPixelFormat::RGBA8;
             m_last_back_buffer.Pixels.resize(m_last_back_buffer.RowPitch *
@@ -656,12 +656,12 @@ int MetalRenderDevice::Present()
 
             const unsigned char* src =
                 static_cast<const unsigned char*>([captureBuffer contents]);
-            for (uint y = 0; y < m_last_back_buffer.Height; ++y)
+            for (u32 y = 0; y < m_last_back_buffer.Height; ++y)
             {
                 const unsigned char* srcRow = src + captureRowBytes * y;
                 unsigned char* dstRow = m_last_back_buffer.Pixels.data() +
                                         m_last_back_buffer.RowPitch * y;
-                for (uint x = 0; x < m_last_back_buffer.Width; ++x)
+                for (u32 x = 0; x < m_last_back_buffer.Width; ++x)
                 {
                     const unsigned char* bgra = srcRow + x * 4;
                     dstRow[x * 4 + 0] = bgra[2];
@@ -711,27 +711,27 @@ MetalRenderDevice::CreateVertexDeclaration(const VertexElement* pVertexElements)
     return new VertexDeclaration(pVertexElements);
 }
 
-LPVERTEXBUFFER MetalRenderDevice::CreateVertexBuffer(uint length,
-                                                     uint /*usage*/,
-                                                     uint /*pool*/)
+LPVERTEXBUFFER MetalRenderDevice::CreateVertexBuffer(u32 length,
+                                                     u32 /*usage*/,
+                                                     u32 /*pool*/)
 {
     MetalVertexBuffer* vb = new MetalVertexBuffer();
     vb->Create((void*)m_impl->device, length);
     return vb;
 }
 
-LPINDEXBUFFER MetalRenderDevice::CreateIndexBuffer(uint length, uint /*usage*/,
+LPINDEXBUFFER MetalRenderDevice::CreateIndexBuffer(u32 length, u32 /*usage*/,
                                                    bool sixteenBitIndices,
-                                                   uint /*pool*/)
+                                                   u32 /*pool*/)
 {
     MetalIndexBuffer* ib = new MetalIndexBuffer();
     ib->Create((void*)m_impl->device, length, sixteenBitIndices);
     return ib;
 }
 
-LPTEXTURE MetalRenderDevice::CreateTexture(uint Width, uint Height,
-                                           uint /*Levels*/, uint /*Usage*/,
-                                           uint Format, uint /*Pool*/)
+LPTEXTURE MetalRenderDevice::CreateTexture(u32 Width, u32 Height,
+                                           u32 /*Levels*/, u32 /*Usage*/,
+                                           u32 Format, u32 /*Pool*/)
 {
     MetalTexture* texture = new MetalTexture();
     if (!texture->Create(m_impl->device, Width, Height, Format))
@@ -743,8 +743,8 @@ LPTEXTURE MetalRenderDevice::CreateTexture(uint Width, uint Height,
 }
 
 LPTEXTURE MetalRenderDevice::CreateTextureFromFile(
-    const char* /*filename*/, uint /*Width*/, uint /*Height*/, uint /*Levels*/,
-    uint /*Usage*/, uint /*Format*/, uint /*Pool*/)
+    const char* /*filename*/, u32 /*Width*/, u32 /*Height*/, u32 /*Levels*/,
+    u32 /*Usage*/, u32 /*Format*/, u32 /*Pool*/)
 {
     return 0;
 }
@@ -794,8 +794,8 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     {
         MTLVertexDescriptor* vd = [MTLVertexDescriptor vertexDescriptor];
         const VertexElement* els = m_vdecl.GetDeclaration();
-        uint n = m_vdecl.GetElementsCount();
-        for (uint i = 0; i < n; i++)
+        u32 n = m_vdecl.GetElementsCount();
+        for (u32 i = 0; i < n; i++)
         {
             int attr = AttributeForUsage(els[i].Usage);
             if (attr < 0)
@@ -898,9 +898,9 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
 }
 
 int MetalRenderDevice::DrawIndexedUserPrimitives(
-    PrimitiveType primitiveType, uint /*minVertexIndex*/, uint numVertexIndices,
-    uint /*primitiveCount*/, const void* indexData, bool sixteenBitIndices,
-    const void* vertexStreamZeroData, uint vertexStreamZeroStride)
+    PrimitiveType primitiveType, u32 /*minVertexIndex*/, u32 numVertexIndices,
+    u32 /*primitiveCount*/, const void* indexData, bool sixteenBitIndices,
+    const void* vertexStreamZeroData, u32 vertexStreamZeroStride)
 {
     if (m_impl->encoder == nil || m_texture0 == 0 || indexData == nullptr ||
         vertexStreamZeroData == nullptr || vertexStreamZeroStride == 0)
@@ -963,7 +963,7 @@ int MetalRenderDevice::DrawIndexedUserPrimitives(
     std::vector<char> ordered(static_cast<std::size_t>(numVertexIndices) *
                               vertexStreamZeroStride);
 
-    for (uint i = 0; i < numVertexIndices; ++i)
+    for (u32 i = 0; i < numVertexIndices; ++i)
     {
         std::memcpy(ordered.data() + i * vertexStreamZeroStride,
                     vertices + indices[i] * vertexStreamZeroStride,
@@ -1073,8 +1073,8 @@ int MetalRenderDevice::SetIndices(IIndexBuffer* pIndexData)
     return FORG_OK;
 }
 
-int MetalRenderDevice::SetViewport(uint /*X*/, uint /*Y*/, uint /*Width*/,
-                                   uint /*Height*/, float /*MinZ*/,
+int MetalRenderDevice::SetViewport(u32 /*X*/, u32 /*Y*/, u32 /*Width*/,
+                                   u32 /*Height*/, float /*MinZ*/,
                                    float /*MaxZ*/)
 {
     // The actual viewport always covers the full drawable (set in BeginScene
@@ -1096,7 +1096,7 @@ int MetalRenderDevice::GetViewport(Viewport* viewport)
     return FORG_OK;
 }
 
-int MetalRenderDevice::SetRenderState(uint state, uint value)
+int MetalRenderDevice::SetRenderState(u32 state, u32 value)
 {
     switch (state)
     {
@@ -1123,7 +1123,7 @@ int MetalRenderDevice::SetRenderState(uint state, uint value)
     return FORG_OK;
 }
 
-int MetalRenderDevice::SetTexture(uint Sampler, ITexture* pTexture)
+int MetalRenderDevice::SetTexture(u32 Sampler, ITexture* pTexture)
 {
     if (Sampler != 0)
         return FORG_OK;
@@ -1139,7 +1139,7 @@ int MetalRenderDevice::SetTexture(uint Sampler, ITexture* pTexture)
     return FORG_OK;
 }
 
-int MetalRenderDevice::SetLight(uint Index, const Light* pLight)
+int MetalRenderDevice::SetLight(u32 Index, const Light* pLight)
 {
     if (Index < NUM_LIGHTS && pLight != 0)
     {
@@ -1149,7 +1149,7 @@ int MetalRenderDevice::SetLight(uint Index, const Light* pLight)
     return FORG_INVALID_CALL;
 }
 
-int MetalRenderDevice::LightEnable(uint LightIndex, bool bEnable)
+int MetalRenderDevice::LightEnable(u32 LightIndex, bool bEnable)
 {
     if (LightIndex < NUM_LIGHTS)
         m_light_enabled[LightIndex] = bEnable;

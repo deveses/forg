@@ -68,8 +68,8 @@ extern int GLErrorCheck(int line, LPCSTR file, LPCSTR func);
 
 struct SRenderStates
 {
-    uint SourceBlend;
-    uint DestinationBlend;
+    u32 SourceBlend;
+    u32 DestinationBlend;
 };
 
 class IVertexShader
@@ -121,19 +121,19 @@ class GLRenderDevice : public IRenderDevice
     int BeginScene(void);
     int EndScene(void);
 
-    int Clear(uint flags, Color color, float zdepth, int stencil);
+    int Clear(u32 flags, Color color, float zdepth, int stencil);
     int Present();
     int Reset();
 
     LPVERTEXDECLARATION
     CreateVertexDeclaration(const VertexElement* pVertexElements);
 
-    LPVERTEXBUFFER CreateVertexBuffer(uint length, uint usage, uint pool
+    LPVERTEXBUFFER CreateVertexBuffer(u32 length, u32 usage, u32 pool
                                       // IVertexBuffer** ppVertexBuffer
     );
 
-    LPINDEXBUFFER CreateIndexBuffer(uint length, uint usage,
-                                    bool sixteenBitIndices, uint pool
+    LPINDEXBUFFER CreateIndexBuffer(u32 length, u32 usage,
+                                    bool sixteenBitIndices, u32 pool
                                     // IIndexBuffer** ppIndexBuffer
     );
 
@@ -145,27 +145,27 @@ class GLRenderDevice : public IRenderDevice
                                     // IDirect3DVertexShader9 **ppShader
     );
 
-    LPTEXTURE CreateTexture(uint Width, uint Height, uint Levels, uint Usage,
-                            uint Format, uint Pool);
+    LPTEXTURE CreateTexture(u32 Width, u32 Height, u32 Levels, u32 Usage,
+                            u32 Format, u32 Pool);
 
-    LPTEXTURE CreateTextureFromFile(const char* filename, uint Width,
-                                    uint Height, uint Levels, uint Usage,
-                                    uint Format, uint Pool);
+    LPTEXTURE CreateTextureFromFile(const char* filename, u32 Width,
+                                    u32 Height, u32 Levels, u32 Usage,
+                                    u32 Format, u32 Pool);
 
     int DrawIndexedPrimitive(PrimitiveType primitiveType, int baseVertex,
                              int minVertexIndex, int numVertices,
                              int startIndex, int primCount);
 
     int DrawIndexedUserPrimitives(PrimitiveType primitiveType,
-                                  uint minVertexIndex, uint numVertexIndices,
-                                  uint primitiveCount, const void* indexData,
+                                  u32 minVertexIndex, u32 numVertexIndices,
+                                  u32 primitiveCount, const void* indexData,
                                   bool sixteenBitIndices,
                                   const void* vertexStreamZeroData,
-                                  uint VertexStreamZeroStride);
+                                  u32 VertexStreamZeroStride);
 
-    int SetRenderState(uint state, uint value);
+    int SetRenderState(u32 state, u32 value);
 
-    int SetViewport(uint X, uint Y, uint Width, uint Height, float MinZ = 0.0f,
+    int SetViewport(u32 X, u32 Y, u32 Width, u32 Height, float MinZ = 0.0f,
                     float MaxZ = 1.0f);
 
     int GetViewport(Viewport* viewport);
@@ -185,11 +185,11 @@ class GLRenderDevice : public IRenderDevice
 
     int SetIndices(IIndexBuffer* pIndexData);
 
-    int SetTexture(uint Sampler, ITexture* pTexture);
+    int SetTexture(u32 Sampler, ITexture* pTexture);
 
-    int SetLight(uint Index, const Light* pLight);
+    int SetLight(u32 Index, const Light* pLight);
 
-    int LightEnable(uint LightIndex, bool bEnable);
+    int LightEnable(u32 LightIndex, bool bEnable);
 
     int SetMaterial(const Material* pMaterial);
 
@@ -199,14 +199,14 @@ class GLRenderDevice : public IRenderDevice
     // Helpers
     //////////////////////////////////////////////////////////////////////////
   private:
-    int SetRenderState_CullMode(uint value);
-    int SetRenderState_ShadeMode(uint value);
-    int SetRenderState_FillMode(uint value);
+    int SetRenderState_CullMode(u32 value);
+    int SetRenderState_ShadeMode(u32 value);
+    int SetRenderState_FillMode(u32 value);
 
     int DrawIndexedUserPrimitives_Slow(
-        PrimitiveType primitiveType, uint minVertexIndex, uint numVertexIndices,
-        uint primitiveCount, const void* indexData, bool sixteenBitIndices,
-        const void* vertexStreamZeroData, uint VertexStreamZeroStride);
+        PrimitiveType primitiveType, u32 minVertexIndex, u32 numVertexIndices,
+        u32 primitiveCount, const void* indexData, bool sixteenBitIndices,
+        const void* vertexStreamZeroData, u32 VertexStreamZeroStride);
 };
 
 } // namespace forg

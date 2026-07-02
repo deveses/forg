@@ -29,9 +29,9 @@ class FORG_API TreeNode
     const TreeNode* Parent() const;
     bool IsRoot() const;
 
-    uint ChildCount() const;
-    TreeNode* Child(uint index);
-    const TreeNode* Child(uint index) const;
+    u32 ChildCount() const;
+    TreeNode* Child(u32 index);
+    const TreeNode* Child(u32 index) const;
     const std::vector<TreeNode*>& Children() const;
 
     bool AddChild(TreeNode& child);

@@ -75,7 +75,7 @@ struct SWSampler
     ~SWSampler();
 
     void SetTexture(ITexture* _texture);
-    uint Sample(float u, float v);
+    u32 Sample(float u, float v);
 };
 
 class SWRenderDevice
@@ -154,18 +154,18 @@ class SWRenderDevice
     OpenCL::CLKernel m_kInitializeInterpolators;
 
     // Frame buffer: ARGB, each component is an uint8 (32bits per pixel)
-    uint* m_frame_buffer;
+    u32* m_frame_buffer;
     float* m_depth_buffer;
-    uint m_fb_size;
-    uint m_fb_pitch;
-    uint m_zb_pitch;
-    uint m_width;
-    uint m_height;
+    u32 m_fb_size;
+    u32 m_fb_pitch;
+    u32 m_zb_pitch;
+    u32 m_width;
+    u32 m_height;
 
-    uint m_vp_x;
-    uint m_vp_y;
-    uint m_vp_width;
-    uint m_vp_height;
+    u32 m_vp_x;
+    u32 m_vp_y;
+    u32 m_vp_width;
+    u32 m_vp_height;
     float m_vp_minz;
     float m_vp_maxz;
 
@@ -186,7 +186,7 @@ public:
     SWRenderDevice(HWIN handle);
 	virtual ~SWRenderDevice();
 
-    int Initialize(uint _width, uint _height);
+    int Initialize(u32 _width, u32 _height);
     
     // Helpers
 private:
@@ -196,55 +196,55 @@ private:
     int ProcessVertex(VSInput& _input, VSOutput& _output, int _usage);
     void ProcessPixel(PSInput& _input, PSOutput& _output, int _usage);
 
-    float GetDepth(uint _x, uint _y);
+    float GetDepth(u32 _x, u32 _y);
     // Rasterisation
-    void SetPixel(uint _x, uint _y, float _z, uint _c);
+    void SetPixel(u32 _x, u32 _y, float _z, u32 _c);
     void DrawTriangle(const Vector3* pos);
     void DrawTriangle(const VSOutput* vertices, int usage);
-    void DrawTriangleArray(const VSOutput* vertices, uint num_triangles, int usage);
-    void DrawTriangleArrayCL(const VSOutput* vertices, uint num_triangles, int usage);
-    void DrawTriangleArrayCLPreInt(const VSOutput* vertices, uint num_triangles, int usage);
-    void DrawTriangleArrayCLTest(VSOutput* vertices, uint num_triangles, int usage);
+    void DrawTriangleArray(const VSOutput* vertices, u32 num_triangles, int usage);
+    void DrawTriangleArrayCL(const VSOutput* vertices, u32 num_triangles, int usage);
+    void DrawTriangleArrayCLPreInt(const VSOutput* vertices, u32 num_triangles, int usage);
+    void DrawTriangleArrayCLTest(VSOutput* vertices, u32 num_triangles, int usage);
     void DrawTriangleCL(const VSOutput* vertices, int usage);
 
     // IRenderDevice implementation
 public:
     virtual int BeginScene(void);
     virtual int EndScene(void);
-    virtual int Clear(uint flags, Color color, float zdepth, int stencil);
+    virtual int Clear(u32 flags, Color color, float zdepth, int stencil);
     virtual int Present();
     virtual int Reset();
     
     virtual LPVERTEXDECLARATION CreateVertexDeclaration(const VertexElement* pVertexElements) { return 0; }
 	virtual LPVERTEXBUFFER CreateVertexBuffer(
-		uint length,
-		uint usage,
-		uint pool
+		u32 length,
+		u32 usage,
+		u32 pool
         );
 	virtual	LPINDEXBUFFER CreateIndexBuffer(
-			uint length,
-			uint usage,
+			u32 length,
+			u32 usage,
 			bool sixteenBitIndices,
-			uint pool
+			u32 pool
             );
 
 	virtual LPTEXTURE CreateTexture(
-		uint Width,
-		uint Height,
-		uint Levels,
-		uint Usage,
-		uint Format,
-		uint Pool
+		u32 Width,
+		u32 Height,
+		u32 Levels,
+		u32 Usage,
+		u32 Format,
+		u32 Pool
         );
 
 	virtual LPTEXTURE CreateTextureFromFile(
 		const char* filename,
-		uint Width,
-		uint Height,
-		uint Levels,
-		uint Usage,
-		uint Format,
-		uint Pool
+		u32 Width,
+		u32 Height,
+		u32 Levels,
+		u32 Usage,
+		u32 Format,
+		u32 Pool
         ) { return 0; }
 
 	virtual int DrawIndexedPrimitive(
@@ -257,13 +257,13 @@ public:
 
 	virtual int DrawIndexedUserPrimitives(
 		PrimitiveType primitiveType,
-		uint minVertexIndex,
-		uint numVertexIndices,
-		uint primitiveCount,
+		u32 minVertexIndex,
+		u32 numVertexIndices,
+		u32 primitiveCount,
 		const void* indexData,
 		bool sixteenBitIndices,
 		const void* vertexStreamZeroData,
-        uint vertexStreamZeroStride);
+        u32 vertexStreamZeroStride);
 
     virtual void SetTransform(TransformType state, const Matrix4& matrix);
 
@@ -281,18 +281,18 @@ public:
 		IIndexBuffer* pIndexData
         );
 
-    virtual int SetViewport(uint X, uint Y, uint Width, uint Height, float MinZ = 0.0f, float MaxZ = 1.0f);
+    virtual int SetViewport(u32 X, u32 Y, u32 Width, u32 Height, float MinZ = 0.0f, float MaxZ = 1.0f);
 
     virtual int GetViewport(Viewport* viewport);
 
-    virtual int SetRenderState(uint state, uint value) { return 0; };
+    virtual int SetRenderState(u32 state, u32 value) { return 0; };
 
-	virtual int SetTexture(uint Sampler, ITexture* pTexture);
+	virtual int SetTexture(u32 Sampler, ITexture* pTexture);
 
-    virtual int SetLight(uint Index, const Light* pLight);
+    virtual int SetLight(u32 Index, const Light* pLight);
 
     virtual int LightEnable(
-        uint LightIndex,
+        u32 LightIndex,
         bool bEnable
         ) { return 0; };
 

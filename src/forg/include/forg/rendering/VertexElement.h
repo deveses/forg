@@ -56,8 +56,8 @@ struct FORG_API VertexElement
     // DeclarationUsage declUsage, byte usageIndex);
 
     bool operator!=(const VertexElement elem) const;
-    static uint GetTypeSize(byte type);
-    static uint GetTypeCount(byte type);
+    static u32 GetTypeSize(byte type);
+    static u32 GetTypeCount(byte type);
 };
 
 static_assert(std::is_standard_layout_v<VertexElement>);

@@ -30,12 +30,12 @@ void MeshNode::SetCylinder(float radius1, float radius2, float length,
     m_model.SetCylinder(radius1, radius2, length, slices, stacks);
 }
 
-void MeshNode::SetPyramid(uint numAngles, float radius, float height)
+void MeshNode::SetPyramid(u32 numAngles, float radius, float height)
 {
     m_model.SetPyramid(numAngles, radius, height);
 }
 
-void MeshNode::SetGrid(float sizeX, float sizeY, int color, uint subgrid)
+void MeshNode::SetGrid(float sizeX, float sizeY, int color, u32 subgrid)
 {
     m_model.SetGrid(sizeX, sizeY, color, subgrid);
 }

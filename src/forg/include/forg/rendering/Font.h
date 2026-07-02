@@ -40,13 +40,13 @@ struct FontDescription
     /// Height, in logical units, of the font's character cell or character.
     int Height;
     /// Width, in logical units, of characters in the font.
-    uint Width;
+    u32 Width;
     /// Weight of the font in the range from 0 through 1000.
-    uint Weight;
+    u32 Weight;
     /// Number of mip levels requested. If this value is zero, a complete mipmap
     /// chain is created. If the value is 1, the texture space is mapped
     /// identically to the screen space.
-    uint MipLevels;
+    u32 MipLevels;
     /// Set to TRUE for an Italic font.
     bool Italic;
     /// Character set.
@@ -126,10 +126,10 @@ class Font
   private:
     std::unique_ptr<Sprite> m_sprite;
     core::RefPtr<ITexture> m_texture;
-    uint m_tex_width;
-    uint m_tex_height;
+    u32 m_tex_width;
+    u32 m_tex_height;
     std::vector<char> m_bitmap;
-    uint m_size;
+    u32 m_size;
 
     CharMetrics m_metrics[256];
 
@@ -153,7 +153,7 @@ class Font
      */
     FORG_API int DrawText2(
         // Sprite* pSprite
-        LPCTSTR pString, int count, Rectangle* pRect, uint format,
+        LPCTSTR pString, int count, Rectangle* pRect, u32 format,
         Color4b color);
 };
 

@@ -34,9 +34,9 @@ class FORG_API Scene : public TreeNode
     CameraNode& CreateCameraNode();
     MeshNode& CreateMeshNode();
     ui::GuiNode& CreateGuiNode();
-    uint NodeCount() const;
-    SceneNode* Node(uint index);
-    const SceneNode* Node(uint index) const;
+    u32 NodeCount() const;
+    SceneNode* Node(u32 index);
+    const SceneNode* Node(u32 index) const;
     bool DestroyNode(SceneNode& node);
     void ClearNodes();
 

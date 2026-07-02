@@ -42,7 +42,7 @@ class FORG_API TokenParserBase : public FileParserBase
     Lexer m_lexer;
     TokenVec m_tokens;
     SParserState m_state;
-    uint m_current_token;
+    u32 m_current_token;
 
   public:
     TokenParserBase();
@@ -54,8 +54,8 @@ class FORG_API TokenParserBase : public FileParserBase
     SToken* GetNextToken();
     SToken* PeekNextToken();
 
-    uint GetNextTokenIndex() const { return m_current_token; }
-    void SetNextTokenIndex(uint _index) { m_current_token = _index; }
+    u32 GetNextTokenIndex() const { return m_current_token; }
+    void SetNextTokenIndex(u32 _index) { m_current_token = _index; }
 
     virtual int GetSymbol(int _ch) = 0;
 };
@@ -63,7 +63,7 @@ class FORG_API TokenParserBase : public FileParserBase
 class FORG_API TokenBackup
 {
     TokenParserBase* m_parser;
-    uint m_token_index;
+    u32 m_token_index;
 
   public:
     TokenBackup(TokenParserBase* _parser);

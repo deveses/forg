@@ -31,7 +31,7 @@ static unsigned int bit_log2(unsigned int v)
 
 static int bit_max(int x, int y) { return (x - ((x - y) & -(x < y))); }
 
-static uint get_internal_format(uint format)
+static u32 get_internal_format(u32 format)
 {
     switch (format)
     {
@@ -44,7 +44,7 @@ static uint get_internal_format(uint format)
     return GL_RGBA;
 }
 
-static uint get_pixel_format(uint format)
+static u32 get_pixel_format(u32 format)
 {
     switch (format)
     {
@@ -57,7 +57,7 @@ static uint get_pixel_format(uint format)
     return GL_BGRA;
 }
 
-static uint get_bpp(uint format)
+static u32 get_bpp(u32 format)
 {
     switch (format)
     {
@@ -71,12 +71,12 @@ static uint get_bpp(uint format)
     return 4;
 }
 
-static uint compute_data_size(uint width, uint height, uint format)
+static u32 compute_data_size(u32 width, u32 height, u32 format)
 {
     return width * height * get_bpp(format);
 }
 
-static uint get_mipmap_size(uint mmap, uint value)
+static u32 get_mipmap_size(u32 mmap, u32 value)
 {
     value >>= mmap;
 
@@ -91,9 +91,9 @@ static uint get_mipmap_size(uint mmap, uint value)
 // =============================================================================
 ITextureGLImpl::~ITextureGLImpl() {}
 
-ITextureGLImpl* ITextureGLImpl::Create(IRenderDevice* device, uint width,
-                                       uint height, uint numLevels, uint usage,
-                                       uint format, uint pool)
+ITextureGLImpl* ITextureGLImpl::Create(IRenderDevice* device, u32 width,
+                                       u32 height, u32 numLevels, u32 usage,
+                                       u32 format, u32 pool)
 {
     ITextureGLImpl* timpl = new ITextureGLImpl();
 
@@ -108,8 +108,8 @@ ITextureGLImpl* ITextureGLImpl::Create(IRenderDevice* device, uint width,
 // GLTexture
 // =============================================================================
 
-GLTexture::GLTexture(IRenderDevice* device, uint width, uint height,
-                     uint numLevels, uint usage, uint format, uint pool)
+GLTexture::GLTexture(IRenderDevice* device, u32 width, u32 height,
+                     u32 numLevels, u32 usage, u32 format, u32 pool)
 {
     m_device = device;
     m_width = width;
@@ -148,17 +148,17 @@ GLTexture::GLTexture(IRenderDevice* device, uint width, uint height,
 
 GLTexture::~GLTexture(void) { (this->*Release)(); }
 
-void* GLTexture::LockRect(uint Level, uint Flags)
+void* GLTexture::LockRect(u32 Level, u32 Flags)
 {
     return (this->*LockRectInternal)(Level, Flags);
 }
 
-int GLTexture::UnlockRect(uint Level)
+int GLTexture::UnlockRect(u32 Level)
 {
     return (this->*UnlockRectInternal)(Level);
 }
 
-int GLTexture::GetLevelDesc(uint Level, SurfaceDescription* Description) const
+int GLTexture::GetLevelDesc(u32 Level, SurfaceDescription* Description) const
 {
     if (Description)
     {
@@ -179,16 +179,16 @@ void GLTexture::CreateSysMem()
     GLV(glGenTextures(1, &m_id));
     GLV(glBindTexture(GL_TEXTURE_2D, m_id));
 
-    uint internal_format = get_internal_format(m_format);
-    uint pixel_format = get_pixel_format(m_format);
+    u32 internal_format = get_internal_format(m_format);
+    u32 pixel_format = get_pixel_format(m_format);
 
-    uint data_size = compute_data_size(m_width, m_height, m_format);
+    u32 data_size = compute_data_size(m_width, m_height, m_format);
 
     m_data = new byte*[m_levels];
 
-    uint width = m_width;
-    uint height = m_height;
-    for (uint i = 0; i < m_levels; i++)
+    u32 width = m_width;
+    u32 height = m_height;
+    for (u32 i = 0; i < m_levels; i++)
     {
         m_data[i] = new byte[data_size];
 
@@ -234,7 +234,7 @@ void GLTexture::CreateSysMem()
 
 void GLTexture::ReleaseSysMem()
 {
-    for (uint i = 0; i < m_levels; i++)
+    for (u32 i = 0; i < m_levels; i++)
     {
         delete[] m_data[i];
     }
@@ -244,12 +244,12 @@ void GLTexture::ReleaseSysMem()
     GLV(glDeleteTextures(1, &m_id));
 }
 
-void* GLTexture::LockRectSysMem(uint Level, uint Flags)
+void* GLTexture::LockRectSysMem(u32 Level, u32 Flags)
 {
     return m_data[Level];
 }
 
-int GLTexture::UnlockRectSysMem(uint Level)
+int GLTexture::UnlockRectSysMem(u32 Level)
 {
     GLV(glBindTexture(GL_TEXTURE_2D, m_id));
     GLV(glTexSubImage2D(GL_TEXTURE_2D,
@@ -272,16 +272,16 @@ void GLTexture::CreatePBO()
 {
     GLV(glGenTextures(1, &m_id));
 
-    uint internal_format = get_internal_format(m_format);
-    uint pixel_format = get_pixel_format(m_format);
+    u32 internal_format = get_internal_format(m_format);
+    u32 pixel_format = get_pixel_format(m_format);
 
-    uint data_size = compute_data_size(m_width, m_height, m_format);
+    u32 data_size = compute_data_size(m_width, m_height, m_format);
 
-    uint width = m_width;
-    uint height = m_height;
+    u32 width = m_width;
+    u32 height = m_height;
 
     // m_levels = 1;
-    m_buffers = new uint[m_levels];
+    m_buffers = new u32[m_levels];
 
     GLV(glGenBuffersARB(m_levels, m_buffers));
     GLV(glBindTexture(GL_TEXTURE_2D, m_id));
@@ -293,7 +293,7 @@ void GLTexture::CreatePBO()
         glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
     }
 
-    for (uint i = 0; i < m_levels; i++)
+    for (u32 i = 0; i < m_levels; i++)
     {
         GLV(glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_buffers[i]));
         GLV(glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, data_size, 0,
@@ -348,7 +348,7 @@ void GLTexture::ReleasePBO()
     delete[] m_buffers;
 }
 
-void* GLTexture::LockRectPBO(uint Level, uint Flags)
+void* GLTexture::LockRectPBO(u32 Level, u32 Flags)
 {
     GLenum glFlags = GL_WRITE_ONLY_ARB;
 
@@ -358,7 +358,7 @@ void* GLTexture::LockRectPBO(uint Level, uint Flags)
     }
 
     GLV(glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_buffers[Level]));
-    // uint data_size = compute_data_size(m_width, m_height, m_format);
+    // u32 data_size = compute_data_size(m_width, m_height, m_format);
     // GLV(glBufferDataARB(GL_PIXEL_UNPACK_BUFFER_ARB, data_size, 0,
     // GL_STREAM_DRAW_ARB));
     GLubyte* ptr =
@@ -367,7 +367,7 @@ void* GLTexture::LockRectPBO(uint Level, uint Flags)
     return ptr;
 }
 
-int GLTexture::UnlockRectPBO(uint Level)
+int GLTexture::UnlockRectPBO(u32 Level)
 {
     GLV(glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, m_buffers[Level]));
     GLV(glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB));

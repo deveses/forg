@@ -36,9 +36,9 @@ class FORG_API File
     bool Open(const char* _filename);
     void Close();
 
-    bool GetSize(uint& _out_size);
+    bool GetSize(u32& _out_size);
 
-    uint Read(void* _buffer, uint _size);
+    u32 Read(void* _buffer, u32 _size);
 
     template <class T> bool ReadT(T& _v)
     {
@@ -47,7 +47,7 @@ class FORG_API File
 
   private:
     void* m_handle = nullptr;
-    uint m_size = 0;
+    u32 m_size = 0;
 };
 
 } // namespace forg::os

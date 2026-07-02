@@ -12,9 +12,9 @@ SWTexture::SWTexture() { m_refCount = 1; }
 
 SWTexture::~SWTexture() = default;
 
-uint SWTexture::GetLevelCount() { return m_Levels; }
+u32 SWTexture::GetLevelCount() { return m_Levels; }
 
-int SWTexture::GetLevelDesc(uint level, SurfaceDescription* description) const
+int SWTexture::GetLevelDesc(u32 level, SurfaceDescription* description) const
 {
     if (level >= m_Levels || description == nullptr)
         return FORG_INVALID_CALL;
@@ -26,18 +26,18 @@ int SWTexture::GetLevelDesc(uint level, SurfaceDescription* description) const
     return FORG_OK;
 }
 
-void* SWTexture::LockRect(uint level, uint)
+void* SWTexture::LockRect(u32 level, u32)
 {
     return level < m_Levels ? m_data.get() : nullptr;
 }
 
-int SWTexture::UnlockRect(uint level)
+int SWTexture::UnlockRect(u32 level)
 {
     return level < m_Levels ? FORG_OK : FORG_INVALID_CALL;
 }
 
-int SWTexture::Create(uint Width, uint Height, uint, uint Usage, uint Format,
-                      uint Pool)
+int SWTexture::Create(u32 Width, u32 Height, u32, u32 Usage, u32 Format,
+                      u32 Pool)
 {
     m_Levels = 1;
     m_Width = Width;
@@ -46,22 +46,22 @@ int SWTexture::Create(uint Width, uint Height, uint, uint Usage, uint Format,
     m_Format = Format;
     m_Pool = Pool;
 
-    uint stride = Width * 4;
-    uint size = stride * Height;
+    u32 stride = Width * 4;
+    u32 size = stride * Height;
 
     m_data = std::make_unique<char[]>(size);
 
     return FORG_OK;
 }
 
-uint SWTexture::Sample(float u, float v)
+u32 SWTexture::Sample(float u, float v)
 {
-    uint x = u * m_Width;
-    uint y = v * m_Height;
+    u32 x = u * m_Width;
+    u32 y = v * m_Height;
 
     if (x < m_Width && y < m_Height)
     {
-        uint* buf_argb = reinterpret_cast<uint*>(m_data.get());
+        u32* buf_argb = reinterpret_cast<u32*>(m_data.get());
 
         return buf_argb[y * m_Width + x];
     }
@@ -82,7 +82,7 @@ SWVertexBuffer::SWVertexBuffer()
 
 SWVertexBuffer::~SWVertexBuffer() = default;
 
-int SWVertexBuffer::Create(uint length, uint usage, uint pool)
+int SWVertexBuffer::Create(u32 length, u32 usage, u32 pool)
 {
     m_length = length;
     m_usage = usage;
@@ -93,8 +93,8 @@ int SWVertexBuffer::Create(uint length, uint usage, uint pool)
     return FORG_OK;
 }
 
-int SWVertexBuffer::Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
-                         uint)
+int SWVertexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData,
+                         u32)
 {
     if (ppbData == nullptr || offsetToLock > m_length ||
         (sizeToLock != 0 && sizeToLock > m_length - offsetToLock))
@@ -121,8 +121,8 @@ SWIndexBuffer::SWIndexBuffer()
 
 SWIndexBuffer::~SWIndexBuffer() = default;
 
-int SWIndexBuffer::Create(uint length, uint usage, bool sixteenBitIndices,
-                          uint pool)
+int SWIndexBuffer::Create(u32 length, u32 usage, bool sixteenBitIndices,
+                          u32 pool)
 {
     m_length = length;
     m_usage = usage;
@@ -134,8 +134,8 @@ int SWIndexBuffer::Create(uint length, uint usage, bool sixteenBitIndices,
     return FORG_OK;
 }
 
-int SWIndexBuffer::Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
-                        uint)
+int SWIndexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData,
+                        u32)
 {
     if (ppbData == nullptr || offsetToLock > m_length ||
         (sizeToLock != 0 && sizeToLock > m_length - offsetToLock))

@@ -340,7 +340,7 @@ TEST_CASE("Scene Load failure leaves existing scene unchanged",
     REQUIRE(serializer.BeginObject("scene"));
     int version = 1;
     REQUIRE(serializer.Value("version", version));
-    forg::uint count = 1;
+    forg::u32 count = 1;
     REQUIRE(serializer.BeginArray("nodes", count));
     REQUIRE(serializer.BeginObject("node"));
     forg::core::string type("SceneNode");

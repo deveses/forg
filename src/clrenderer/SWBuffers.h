@@ -40,12 +40,12 @@ namespace forg {
     {
         int m_refCount;
         char* m_data;
-        uint m_Width;
-        uint m_Height;
-        uint m_Levels;
-        uint m_Usage;
-        uint m_Format;
-        uint m_Pool;
+        u32 m_Width;
+        u32 m_Height;
+        u32 m_Levels;
+        u32 m_Usage;
+        u32 m_Format;
+        u32 m_Pool;
 
         OpenCL::CLMemObject m_buffer;
         OpenCL::CLCommandQueue m_queue;
@@ -54,21 +54,21 @@ namespace forg {
         SWTexture();
         virtual ~SWTexture();
 
-        int Create(OpenCL::CLContext& context, OpenCL::CLCommandQueue& queue, uint Width, uint Height, uint Levels, uint Usage, uint Format, uint Pool);
+        int Create(OpenCL::CLContext& context, OpenCL::CLCommandQueue& queue, u32 Width, u32 Height, u32 Levels, u32 Usage, u32 Format, u32 Pool);
 
-        uint Sample(float u, float v);
+        u32 Sample(float u, float v);
 
         OpenCL::CLMemObject& GetBuffer() { return m_buffer; }
 
     // ITexture implementation
     public:
-        uint GetLevelCount();
+        u32 GetLevelCount();
 
-        int GetLevelDesc(uint Level, SurfaceDescription* Description) const;
+        int GetLevelDesc(u32 Level, SurfaceDescription* Description) const;
 
-        void* LockRect(uint Level, uint Flags);
+        void* LockRect(u32 Level, u32 Flags);
 
-        int UnlockRect(uint Level);
+        int UnlockRect(u32 Level);
     };
 
 
@@ -79,9 +79,9 @@ namespace forg {
     {
         char* m_data;
 
-        uint m_length;
-        uint m_usage;
-        uint m_pool;
+        u32 m_length;
+        u32 m_usage;
+        u32 m_pool;
 
     public:
         SWVertexBuffer();
@@ -89,10 +89,10 @@ namespace forg {
 
         char* GetData() { return m_data; }
 
-        int Create(uint length, uint usage, uint pool);
+        int Create(u32 length, u32 usage, u32 pool);
 
     public:
-	    virtual int Lock(uint offsetToLock, uint sizeToLock, void ** ppbData, uint flags);
+	    virtual int Lock(u32 offsetToLock, u32 sizeToLock, void ** ppbData, u32 flags);
 
 	    virtual int Unlock();
     };
@@ -106,10 +106,10 @@ namespace forg {
     {
         char* m_data;
 
-        uint m_length;
-        uint m_usage;
+        u32 m_length;
+        u32 m_usage;
         bool m_short;
-        uint m_pool;
+        u32 m_pool;
 
 	public:
         SWIndexBuffer();
@@ -117,16 +117,16 @@ namespace forg {
 
         char* GetData() { return m_data; }
 
-        uint GetLength() const { return m_length; }
+        u32 GetLength() const { return m_length; }
 
         int GetIndexSize() const { return (m_short ? 2 : 4); }
 
         bool IsIndexShort() const { return m_short; }
 
-        int Create(uint length, uint usage, bool sixteenBitIndices, uint pool);
+        int Create(u32 length, u32 usage, bool sixteenBitIndices, u32 pool);
 
 	public:
-		virtual int Lock(uint offsetToLock, uint sizeToLock, void ** ppbData, uint flags);
+		virtual int Lock(u32 offsetToLock, u32 sizeToLock, void ** ppbData, u32 flags);
 
 		virtual int Unlock();
     };

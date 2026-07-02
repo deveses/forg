@@ -95,7 +95,7 @@ template <> void DbgOutputString<wchar_t>(const wchar_t* lpOutputString, ...)
     va_end(args);
 }
 
-int DbgTrace(LPCTSTR strFile, uint dwLine, int iResult, LPCTSTR strMsg)
+int DbgTrace(LPCTSTR strFile, u32 dwLine, int iResult, LPCTSTR strMsg)
 {
     static TCHAR dmsg[1024];
 
@@ -114,7 +114,7 @@ int DbgTrace(LPCTSTR strFile, uint dwLine, int iResult, LPCTSTR strMsg)
     return iResult;
 }
 
-int DbgTraceOnlyNonZero(LPCTSTR strFile, uint dwLine, int iResult,
+int DbgTraceOnlyNonZero(LPCTSTR strFile, u32 dwLine, int iResult,
                         LPCTSTR strMsg)
 {
     TCHAR dmsg[1024];
@@ -130,7 +130,7 @@ int DbgTraceOnlyNonZero(LPCTSTR strFile, uint dwLine, int iResult,
     return iResult;
 }
 
-void DbgTrap(LPCTSTR strFile, uint dwLine, LPCTSTR strMsg)
+void DbgTrap(LPCTSTR strFile, u32 dwLine, LPCTSTR strMsg)
 {
     TCHAR dmsg[1024];
 

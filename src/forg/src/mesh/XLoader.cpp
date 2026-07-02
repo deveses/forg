@@ -19,10 +19,10 @@ struct mesh_data
     std::vector<Vector3> points;
     std::vector<Vector3> normals;
     std::vector<Vector2> tverts;
-    std::vector<uint> indices;
+    std::vector<u32> indices;
 
-    uint num_vertices = 0;
-    uint num_faces = 0;
+    u32 num_vertices = 0;
+    u32 num_faces = 0;
 };
 
 using MeshDataVec = std::vector<mesh_data>;
@@ -34,8 +34,8 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out,
     // Extract vertices and indices
     //////////////////////////////////////////////////////////////////////////
 
-    uint nVertices = 0;
-    uint nFaces = 0;
+    u32 nVertices = 0;
+    u32 nFaces = 0;
 
     xdata->GetSubdata(0)->ToByteArray(&nVertices, sizeof(nVertices));
     xdata->GetSubdata(2)->ToByteArray(&nFaces, sizeof(nFaces));
@@ -53,19 +53,19 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out,
     // extract indices
     {
         const xfile::IData* faces = xdata->GetSubdata(3);
-        uint fsize = faces->GetSize(); // size of byte buffer
-        uint icount = fsize >> 2;      // number of uints
+        u32 fsize = faces->GetSize(); // size of byte buffer
+        u32 icount = fsize >> 2;      // number of uints
 
-        std::vector<uint> face_data(icount);
-        uint* iarr = face_data.data();
+        std::vector<u32> face_data(icount);
+        u32* iarr = face_data.data();
 
         faces->ToByteArray(face_data.data(), fsize);
         // TODO: check if there are 3 indices per face
 
         // copy indices to our index buffer
         // we assume 4 uints per MeshFace
-        uint findex = 0;
-        for (uint i = 0; i < icount; i += 4, findex++)
+        u32 findex = 0;
+        for (u32 i = 0; i < icount; i += 4, findex++)
         {
             // ASSERT(iarr[i] == 3);
             ASSERT(findex < nFaces);
@@ -101,8 +101,8 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out,
         //         array Vector normals[nNormals];
         //         DWORD nFaceNormals;
         //         array MeshFace faceNormals[nFaceNormals];
-        uint num_normals = 0;
-        uint num_face_normals = 0;
+        u32 num_normals = 0;
+        u32 num_face_normals = 0;
         xdata->GetSubdata(0)->ToByteArray(&num_normals, sizeof(num_normals));
         xdata->GetSubdata(2)->ToByteArray(&num_face_normals,
                                           sizeof(num_face_normals));
@@ -113,12 +113,12 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out,
 
         out->normals.resize(out->num_vertices);
         const xfile::IData* faces = xdata->GetSubdata(3);
-        uint icount = faces->GetSize() >> 2;
-        std::vector<uint> face_normals(icount);
+        u32 icount = faces->GetSize() >> 2;
+        std::vector<u32> face_normals(icount);
         faces->ToByteArray(face_normals.data(), icount * 4);
 
-        uint findex = 0;
-        for (uint i = 0; i < icount; i += 4, findex++)
+        u32 findex = 0;
+        for (u32 i = 0; i < icount; i += 4, findex++)
         {
             ASSERT(findex < num_face_normals);
 
@@ -142,7 +142,7 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out,
     const IData* xtcoords = xdata->FindObject(XTemplateMeshTextureCoords::GUID);
     if (xtcoords)
     {
-        uint tc_count = 0;
+        u32 tc_count = 0;
 
         xtcoords->GetSubdata(0)->ToByteArray(&tc_count, sizeof(tc_count));
 
@@ -162,8 +162,8 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out,
         //         array DWORD faceIndexes[nFaceIndexes];
         //         [Material <3D82AB4D-62DA-11CF-AB39-0020AF71E433>]
 
-        uint nMaterials = 0;
-        uint nFaceIndexes = 0;
+        u32 nMaterials = 0;
+        u32 nFaceIndexes = 0;
 
         xmat_list->GetSubdata(0)->ToByteArray(&nMaterials, sizeof(nMaterials));
         xmat_list->GetSubdata(1)->ToByteArray(&nFaceIndexes,
@@ -196,7 +196,7 @@ bool ExtractMesh(const xfile::IData* xdata, mesh_data* out,
                     xmat->FindObject(xfile::XTemplateTextureFilename::GUID);
                 if (xtexfilename)
                 {
-                    uint ssize = xtexfilename->GetSize();
+                    u32 ssize = xtexfilename->GetSize();
                     mesh_emat.TextureFilename.resize(ssize);
                     xtexfilename->ToByteArray(&mesh_emat.TextureFilename[0],
                                               ssize);
@@ -214,10 +214,10 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
 {
     Mesh::MeshPtr m;
     std::vector<AttributeRange> attribs;
-    uint vert_total = 0;
-    uint faces_total = 0;
+    u32 vert_total = 0;
+    u32 faces_total = 0;
 
-    for (uint i = 0; i < data.size(); i++)
+    for (u32 i = 0; i < data.size(); i++)
     {
         vert_total += data[i].num_vertices;
         faces_total += data[i].num_faces;
@@ -234,7 +234,7 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
                                PositionNormalTextured::Declaration, device));
 
     PositionNormalTextured* vbuffer = 0;
-    uint* ibuffer = 0;
+    u32* ibuffer = 0;
     if (!m || m->LockVertexBuffer(0, (void**)&vbuffer) != FORG_OK)
         return nullptr;
     if (m->LockIndexBuffer(0, (void**)&ibuffer) != FORG_OK)
@@ -243,10 +243,10 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
         return nullptr;
     }
 
-    uint voff = 0;
-    uint foff = 0;
+    u32 voff = 0;
+    u32 foff = 0;
 
-    for (uint i = 0; i < data.size(); i++)
+    for (u32 i = 0; i < data.size(); i++)
     {
         attribs[i].AttribId = i;
         attribs[i].FaceStart = foff;
@@ -254,14 +254,14 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
         attribs[i].VertexStart = voff;
         attribs[i].VertexCount = data[i].num_vertices;
 
-        uint* ib32 = ibuffer + foff * 3;
+        u32* ib32 = ibuffer + foff * 3;
         // faces first to add correct vertex offset
-        for (uint j = 0; j < data[i].num_faces * 3; j++)
+        for (u32 j = 0; j < data[i].num_faces * 3; j++)
         {
             ib32[j] = data[i].indices[j] + voff;
         }
 
-        for (uint j = 0; j < data[i].num_vertices; j++)
+        for (u32 j = 0; j < data[i].num_vertices; j++)
         {
             vbuffer[voff].Position = data[i].points[j];
 
@@ -283,15 +283,15 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
     if (!data.empty() && data[0].normals.empty())
     {
 
-        for (uint j = 0; j < vert_total; j++)
+        for (u32 j = 0; j < vert_total; j++)
         {
             vbuffer[j].Normal.Zero();
         }
 
-        uint* ib32 = (uint*)ibuffer;
-        for (uint j = 0; j < faces_total; j++)
+        u32* ib32 = (u32*)ibuffer;
+        for (u32 j = 0; j < faces_total; j++)
         {
-            uint idx0, idx1, idx2;
+            u32 idx0, idx1, idx2;
 
             idx0 = ib32[j * 3];
             idx1 = ib32[j * 3 + 1];
@@ -309,7 +309,7 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
             vbuffer[idx2].Normal += normal;
         }
 
-        for (uint j = 0; j < vert_total; j++)
+        for (u32 j = 0; j < vert_total; j++)
         {
             vbuffer[j].Normal.Normalize();
         }
@@ -318,12 +318,12 @@ Mesh::MeshPtr BuildMesh(IRenderDevice* device, MeshDataVec& data)
     m->UnlockVertexBuffer();
     m->UnlockIndexBuffer();
 
-    m->SetAttributeTable(attribs.data(), static_cast<uint>(attribs.size()));
+    m->SetAttributeTable(attribs.data(), static_cast<u32>(attribs.size()));
 
     return m;
 }
 
-Mesh::MeshPtr XLoader::Load(const char* filename, uint /*options*/,
+Mesh::MeshPtr XLoader::Load(const char* filename, u32 /*options*/,
                             IRenderDevice* device,
                             Mesh::ExtendedMaterialVec& materials)
 {
@@ -363,7 +363,7 @@ Mesh::MeshPtr XLoader::Load(const char* filename, uint /*options*/,
             }
 
             // push child nodes on our fifo queue
-            for (uint sub = 0; sub < xobj->GetSubdataSize(); sub++)
+            for (u32 sub = 0; sub < xobj->GetSubdataSize(); sub++)
             {
                 const xfile::IData* xchild = xobj->GetSubdata(sub);
 

@@ -60,8 +60,8 @@ class FORG_API BitArray
      * @param length
      * The number of bit values in the new BitArray
      */
-    explicit BitArray(uint length = 32);
-    BitArray(uint length, bool defaultValue);
+    explicit BitArray(u32 length = 32);
+    BitArray(u32 length, bool defaultValue);
     BitArray(const BitArray& bits);
 
     // Destructor
@@ -70,7 +70,7 @@ class FORG_API BitArray
 
     // Operators
     BitArray& operator=(const BitArray& bits);
-    bool operator[](uint index) const;
+    bool operator[](u32 index) const;
     BitArray operator&(const BitArray& arg) const;
     BitArray operator|(const BitArray& arg) const;
     BitArray operator^(const BitArray& arg) const;
@@ -84,7 +84,7 @@ class FORG_API BitArray
     // Attributes
   private:
     IntArray m_array;
-    uint m_length;
+    u32 m_length;
 
     // Attributes Properties
   public:
@@ -93,14 +93,14 @@ class FORG_API BitArray
      * Gets the number of elements contained in the BitArray.
      * @return Number of elements.
      */
-    uint get_Count() const;
+    u32 get_Count() const;
 
     /// Gets the number of elements contained in the BitArray.
     /**
      * Gets the number of elements contained in the BitArray.
      * @return Number of elements.
      */
-    uint get_Length() const;
+    u32 get_Length() const;
 
     /// Sets the number of elements contained in the BitArray.
     /**
@@ -108,7 +108,7 @@ class FORG_API BitArray
      * @param value
      * Number of elements
      */
-    void set_Length(uint value);
+    void set_Length(u32 value);
 
     // Class Methods (public)
   public:
@@ -164,7 +164,7 @@ class FORG_API BitArray
      * The zero-based index of the value to get.
      * @return The value of the bit at position index.
      */
-    bool Get(uint index) const;
+    bool Get(u32 index) const;
 
     /// Sets the bit at a specific position in the BitArray to the specified
     /// value.
@@ -176,7 +176,7 @@ class FORG_API BitArray
      * @param value
      * The Boolean value to assign to the bit.
      */
-    void Set(uint index, bool value = true);
+    void Set(u32 index, bool value = true);
 
     // CORELIB_API void Set(int index, int value); //do zrobienia
 

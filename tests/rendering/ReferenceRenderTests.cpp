@@ -4,10 +4,10 @@
 
 namespace {
 
-unsigned int BufferChecksum(const forg::uint* buffer, forg::uint count)
+unsigned int BufferChecksum(const forg::u32* buffer, forg::u32 count)
 {
     unsigned int checksum = 2166136261u;
-    for (forg::uint i = 0; i < count; ++i)
+    for (forg::u32 i = 0; i < count; ++i)
     {
         checksum ^= buffer[i];
         checksum *= 16777619u;
@@ -34,7 +34,7 @@ TEST_CASE("Reference renderer produces stable headless triangle output",
     };
     device.DrawTriangle(triangle);
 
-    const forg::uint* buffer = device.GetBuffer();
+    const forg::u32* buffer = device.GetBuffer();
     REQUIRE(buffer[0] == 0xff000000u);
     REQUIRE(buffer[8 * 16 + 4] == 0xff00007fu);
     REQUIRE(buffer[13 * 16 + 13] == 0xff000000u);

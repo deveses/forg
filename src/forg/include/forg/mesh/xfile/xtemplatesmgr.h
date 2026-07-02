@@ -36,8 +36,8 @@ class XTemplatesMgr
   public:
     typedef std::vector<XTemplate*> XTemplateVec;
     typedef XTemplateVec::iterator XTemplateVectorI;
-    typedef std::map<xstring, uint> XStringTemplateIndexMap;
-    typedef std::map<xguid, uint> XGuidTemplateIndexMap;
+    typedef std::map<xstring, u32> XStringTemplateIndexMap;
+    typedef std::map<xguid, u32> XGuidTemplateIndexMap;
 
     typedef std::map<xstring, XTemplate*> XStringTemplateMap;
     typedef XStringTemplateMap::iterator XStringTemplateMapI;

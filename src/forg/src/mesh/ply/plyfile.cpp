@@ -48,7 +48,7 @@ bool from_string<int>(int& t,
 }
 
 template <>
-bool from_string<uint>(uint& t,
+bool from_string<u32>(u32& t,
                       const std::string& s,
                       std::ios_base& (*f)(std::ios_base&))
 {
@@ -332,7 +332,7 @@ void plyfile::GetProperty(const char* elem_name, const char* prop_name,
 void GetAsciiItem(char* item_ptr, int in_type, int out_type, std::string& item)
 {
     int v_int = 0;
-    uint v_uint = 0;
+    u32 v_uint = 0;
     double v_double = 0.0;
 
     switch (in_type)
@@ -364,7 +364,7 @@ void GetAsciiItem(char* item_ptr, int in_type, int out_type, std::string& item)
         from_string(v_double, item);
         if (in_type != out_type)
         {
-            v_uint = (uint)v_double;
+            v_uint = (u32)v_double;
             v_int = (int)v_double;
         }
         break;
@@ -431,7 +431,7 @@ void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap,
                    std::ifstream& item)
 {
     int v_int = 0;
-    uint v_uint = 0;
+    u32 v_uint = 0;
     double v_double = 0.0;
     float v_float = 0.0f;
     int size_in = ply_type_size[in_type];
@@ -471,7 +471,7 @@ void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap,
         if (in_type != out_type)
         {
             v_double = v_float;
-            v_uint = (uint)v_float;
+            v_uint = (u32)v_float;
             v_int = (int)v_float;
         }
         break;
@@ -481,7 +481,7 @@ void GetBinaryItem(char* item_ptr, int in_type, int out_type, bool swap,
             SwapEndian((char*)&v_double, size_in);
         if (in_type != out_type)
         {
-            v_uint = (uint)v_double;
+            v_uint = (u32)v_double;
             v_int = (int)v_double;
         }
         break;

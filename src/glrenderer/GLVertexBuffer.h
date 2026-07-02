@@ -31,24 +31,24 @@ namespace forg {
 class GLVertexBuffer : public IVertexBuffer
 {
   public:
-    GLVertexBuffer(GLRenderDevice* device, uint sizeOfBufferInBytes, uint usage,
-                   uint pool);
+    GLVertexBuffer(GLRenderDevice* device, u32 sizeOfBufferInBytes, u32 usage,
+                   u32 pool);
     ~GLVertexBuffer(void);
 
   public:
-    int Lock(uint offsetToLock, uint sizeToLock, void** ppbData, uint flags);
+    int Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData, u32 flags);
 
     int Unlock();
 
-    uint m_buffer_id;
+    u32 m_buffer_id;
 
   private:
     GLRenderDevice* m_device;
     const GLDeviceCaps* m_caps;
 
-    uint m_usage;
-    uint m_pool;
-    uint m_type;
+    u32 m_usage;
+    u32 m_pool;
+    u32 m_type;
     bool m_created;
 };
 

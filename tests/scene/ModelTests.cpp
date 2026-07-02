@@ -165,8 +165,8 @@ TEST_CASE("Model failed load preserves the previous mesh", "[scene][model]")
     forg::rendering::reference::SWRenderDevice device(nullptr);
     forg::scene::Model model;
     model.SetMesh(forg::geometry::Mesh::Box(&device, 1.0f, 2.0f, 3.0f));
-    const forg::uint vertices = model.GetMesh()->GetNumVertices();
-    const forg::uint faces = model.GetMesh()->GetNumFaces();
+    const forg::u32 vertices = model.GetMesh()->GetNumVertices();
+    const forg::u32 faces = model.GetMesh()->GetNumFaces();
 
     REQUIRE_FALSE(model.Load("missing-model.gltf", &device));
 

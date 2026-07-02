@@ -72,7 +72,7 @@ struct SWSampler
     ~SWSampler();
 
     void SetTexture(ITexture* _texture);
-    uint Sample(float u, float v);
+    u32 Sample(float u, float v);
 };
 
 class FORG_API SWRenderDevice : public IRenderDevice
@@ -133,16 +133,16 @@ class FORG_API SWRenderDevice : public IRenderDevice
     int m_refCount;
     HWIN m_window;
 
-    std::unique_ptr<uint[]> m_frame_buffer;
+    std::unique_ptr<u32[]> m_frame_buffer;
     std::unique_ptr<float[]> m_depth_buffer;
-    uint m_fb_stride;
-    uint m_width;
-    uint m_height;
+    u32 m_fb_stride;
+    u32 m_width;
+    u32 m_height;
 
-    uint m_vp_x;
-    uint m_vp_y;
-    uint m_vp_width;
-    uint m_vp_height;
+    u32 m_vp_x;
+    u32 m_vp_y;
+    u32 m_vp_width;
+    u32 m_vp_height;
     float m_vp_minz;
     float m_vp_maxz;
 
@@ -163,34 +163,34 @@ class FORG_API SWRenderDevice : public IRenderDevice
     SWRenderDevice(HWIN handle);
     virtual ~SWRenderDevice();
 
-    int Initialize(uint _width, uint _height);
+    int Initialize(u32 _width, u32 _height);
     void CreateBuffers();
 
     int ProcessVertex(VSInput& _input, VSOutput& _output, int _usage);
     void ProcessPixel(PSInput& _input, PSOutput& _output, int _usage);
 
-    float GetDepth(uint _x, uint _y);
+    float GetDepth(u32 _x, u32 _y);
     // Rasterisation
-    void SetPixel(uint _x, uint _y, float _z, uint _c);
+    void SetPixel(u32 _x, u32 _y, float _z, u32 _c);
     void DrawTriangle(const Vector3* pos);
     void DrawTriangle(const VSOutput* vertices, int usage);
 
-    uint* GetBuffer() { return m_frame_buffer.get(); }
-    void SetBufferSize(uint _width, uint _height)
+    u32* GetBuffer() { return m_frame_buffer.get(); }
+    void SetBufferSize(u32 _width, u32 _height)
     {
         m_width = _width;
         m_height = _height;
     }
 
     HWIN GetHWIN() { return m_window; }
-    uint GetWidth() { return m_width; }
-    uint GetHeight() { return m_height; }
+    u32 GetWidth() { return m_width; }
+    u32 GetHeight() { return m_height; }
 
     // IRenderDevice implementation
   public:
     virtual int BeginScene(void);
     virtual int EndScene(void);
-    virtual int Clear(uint flags, Color color, float zdepth, int stencil);
+    virtual int Clear(u32 flags, Color color, float zdepth, int stencil);
     virtual int Present();
     virtual int GetBackBuffer(BackBuffer& backBuffer);
     virtual int Reset();
@@ -200,18 +200,18 @@ class FORG_API SWRenderDevice : public IRenderDevice
     {
         return 0;
     }
-    virtual LPVERTEXBUFFER CreateVertexBuffer(uint length, uint usage,
-                                              uint pool);
-    virtual LPINDEXBUFFER CreateIndexBuffer(uint length, uint usage,
-                                            bool sixteenBitIndices, uint pool);
+    virtual LPVERTEXBUFFER CreateVertexBuffer(u32 length, u32 usage,
+                                              u32 pool);
+    virtual LPINDEXBUFFER CreateIndexBuffer(u32 length, u32 usage,
+                                            bool sixteenBitIndices, u32 pool);
 
-    virtual LPTEXTURE CreateTexture(uint Width, uint Height, uint Levels,
-                                    uint Usage, uint Format, uint Pool);
+    virtual LPTEXTURE CreateTexture(u32 Width, u32 Height, u32 Levels,
+                                    u32 Usage, u32 Format, u32 Pool);
 
     virtual LPTEXTURE CreateTextureFromFile(const char* /*filename*/,
-                                            uint /*Width*/, uint /*Height*/,
-                                            uint /*Levels*/, uint /*Usage*/,
-                                            uint /*Format*/, uint /*Pool*/
+                                            u32 /*Width*/, u32 /*Height*/,
+                                            u32 /*Levels*/, u32 /*Usage*/,
+                                            u32 /*Format*/, u32 /*Pool*/
     )
     {
         return 0;
@@ -223,9 +223,9 @@ class FORG_API SWRenderDevice : public IRenderDevice
                                      int primCount);
 
     virtual int DrawIndexedUserPrimitives(
-        PrimitiveType primitiveType, uint minVertexIndex, uint numVertexIndices,
-        uint primitiveCount, const void* indexData, bool sixteenBitIndices,
-        const void* vertexStreamZeroData, uint vertexStreamZeroStride);
+        PrimitiveType primitiveType, u32 minVertexIndex, u32 numVertexIndices,
+        u32 primitiveCount, const void* indexData, bool sixteenBitIndices,
+        const void* vertexStreamZeroData, u32 vertexStreamZeroStride);
 
     virtual void SetTransform(TransformType state, const Matrix4& matrix);
 
@@ -238,18 +238,18 @@ class FORG_API SWRenderDevice : public IRenderDevice
 
     virtual int SetIndices(IIndexBuffer* pIndexData);
 
-    virtual int SetViewport(uint X, uint Y, uint Width, uint Height,
+    virtual int SetViewport(u32 X, u32 Y, u32 Width, u32 Height,
                             float MinZ = 0.0f, float MaxZ = 1.0f);
 
     virtual int GetViewport(Viewport* viewport);
 
-    virtual int SetRenderState(uint /*state*/, uint /*value*/) { return 0; };
+    virtual int SetRenderState(u32 /*state*/, u32 /*value*/) { return 0; };
 
-    virtual int SetTexture(uint Sampler, ITexture* pTexture);
+    virtual int SetTexture(u32 Sampler, ITexture* pTexture);
 
-    virtual int SetLight(uint Index, const Light* pLight);
+    virtual int SetLight(u32 Index, const Light* pLight);
 
-    virtual int LightEnable(uint /*LightIndex*/, bool /*bEnable*/
+    virtual int LightEnable(u32 /*LightIndex*/, bool /*bEnable*/
     )
     {
         return 0;

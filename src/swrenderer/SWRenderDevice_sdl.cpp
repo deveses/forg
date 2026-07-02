@@ -13,8 +13,8 @@ struct SWRenderDevice::Impl
 {
     SDL_Renderer* renderer = nullptr;
     SDL_Texture* texture = nullptr;
-    uint textureWidth = 0;
-    uint textureHeight = 0;
+    u32 textureWidth = 0;
+    u32 textureHeight = 0;
 
     ~Impl() { DestroyPresentationResources(); }
 
@@ -41,8 +41,8 @@ struct SWRenderDevice::Impl
         }
     }
 
-    bool EnsurePresentationResources(SDL_Window* window, uint width,
-                                     uint height)
+    bool EnsurePresentationResources(SDL_Window* window, u32 width,
+                                     u32 height)
     {
         if (window == nullptr)
             return false;
@@ -98,7 +98,7 @@ int SWRenderDevice::Reset()
     if (height < 1)
         height = 1;
 
-    SetBufferSize(static_cast<uint>(width), static_cast<uint>(height));
+    SetBufferSize(static_cast<u32>(width), static_cast<u32>(height));
     m_impl->DestroyTexture();
 
     return super::Reset();
@@ -106,9 +106,9 @@ int SWRenderDevice::Reset()
 
 int SWRenderDevice::Present()
 {
-    uint width = GetWidth();
-    uint height = GetHeight();
-    uint* buffer = GetBuffer();
+    u32 width = GetWidth();
+    u32 height = GetHeight();
+    u32* buffer = GetBuffer();
 
     if (buffer == nullptr || width == 0 || height == 0)
         return FORG_OK;
@@ -125,7 +125,7 @@ int SWRenderDevice::Present()
     const size_t rowBytes = static_cast<size_t>(width) * 4;
     auto* dst = static_cast<unsigned char*>(pixels);
     auto* src = reinterpret_cast<const unsigned char*>(buffer);
-    for (uint row = 0; row < height; ++row)
+    for (u32 row = 0; row < height; ++row)
     {
         std::memcpy(dst + static_cast<size_t>(row) * pitch,
                     src + static_cast<size_t>(height - 1 - row) * rowBytes,

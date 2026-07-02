@@ -96,7 +96,7 @@ int XDataObject::ReadMembers(xreader& reader, XTemplatesMgr& tmpl_mgr)
         return 1;
     }
 
-    for (uint i = 0; i < m_template->GetMembersCount(); i++)
+    for (u32 i = 0; i < m_template->GetMembersCount(); i++)
     {
         const XTemplateMember* field = m_template->GetMember(i);
 
@@ -209,7 +209,7 @@ int XDataObject::ReadSubObject(xreader& reader, XTemplatesMgr& tmpl_mgr,
     return rval;
 }
 
-int XDataObject::ReadPrimitive(xreader& reader, int primitive_type, uint count)
+int XDataObject::ReadPrimitive(xreader& reader, int primitive_type, u32 count)
 {
     int rval = 0;
     static StringList aStrings;
@@ -321,20 +321,20 @@ int XDataObject::ReadPrimitive(xreader& reader, int primitive_type, uint count)
 int XDataObject::ReadArray(xreader& reader, XTemplatesMgr& tmpl_mgr,
                            const XTemplateArray* xarray)
 {
-    // uint dim_count = xarray->GetDimensionListSize();
+    // u32 dim_count = xarray->GetDimensionListSize();
     const XArrayDimension* dim = xarray->GetDimension(0);
-    uint array_size = 0;
+    u32 array_size = 0;
     int rval = 0;
 
     if (dim->IsConstant())
     {
-        array_size = (uint)dim->GetValue();
+        array_size = (u32)dim->GetValue();
     }
     else
     {
         xstring var = dim->GetVariableName();
 
-        uint idx = m_template->GetMemberIndex(var);
+        u32 idx = m_template->GetMemberIndex(var);
 
         if (idx < m_template->GetMembersCount() && idx < m_subdata.size())
         {
@@ -372,7 +372,7 @@ int XDataObject::ReadArray(xreader& reader, XTemplatesMgr& tmpl_mgr,
         xstring arr_type = xarray->GetArrayTypeName();
         std::unique_ptr<XDataObjectList> aptr_data(new XDataObjectList());
 
-        for (uint i = 0; i < array_size; i++)
+        for (u32 i = 0; i < array_size; i++)
         {
             std::unique_ptr<XDataObject> aptr_object(new XDataObject());
 
@@ -525,7 +525,7 @@ xguid XDataObject::GetGUID() const
     return m_template->GetGUID();
 }
 
-const IData* XDataObject::GetSubdata(uint index) const
+const IData* XDataObject::GetSubdata(u32 index) const
 {
     if (index < m_subdata.size())
         return m_subdata[index];
@@ -533,9 +533,9 @@ const IData* XDataObject::GetSubdata(uint index) const
     return 0;
 }
 
-void XDataObject::ToByteArray(void* buffer, uint buffer_size) const
+void XDataObject::ToByteArray(void* buffer, u32 buffer_size) const
 {
-    uint bleft = buffer_size;
+    u32 bleft = buffer_size;
     char* bytes = (char*)buffer;
 
     for (XDataVectorCI iter = m_subdata.begin();
@@ -543,7 +543,7 @@ void XDataObject::ToByteArray(void* buffer, uint buffer_size) const
     {
         (*iter)->ToByteArray(bytes, bleft);
 
-        uint subs = (*iter)->GetSize();
+        u32 subs = (*iter)->GetSize();
 
         if (subs > bleft)
         {
@@ -605,9 +605,9 @@ int XDataIdentifier::Load(xreader& reader)
 //////////////////////////////////////////////////////////////////////////
 // XDataIntegerList
 //////////////////////////////////////////////////////////////////////////
-void XDataIntegerList::ToByteArray(void* buffer, uint buffer_size) const
+void XDataIntegerList::ToByteArray(void* buffer, u32 buffer_size) const
 {
-    uint bsize = (buffer_size >>
+    u32 bsize = (buffer_size >>
                   2); // divide buffer size by int(4) size, this gives int count
     // DWORD* ints = (DWORD*)buffer;
 
@@ -632,9 +632,9 @@ void XDataIntegerList::ToByteArray(void* buffer, uint buffer_size) const
 //////////////////////////////////////////////////////////////////////////
 // XDataFloatList
 //////////////////////////////////////////////////////////////////////////
-void XDataFloatList::ToByteArray(void* buffer, uint buffer_size) const
+void XDataFloatList::ToByteArray(void* buffer, u32 buffer_size) const
 {
-    uint bsize = (buffer_size >> 2); // divide buffer size by float(4) size
+    u32 bsize = (buffer_size >> 2); // divide buffer size by float(4) size
 
     if (bsize > m_aFloats.size())
     {
@@ -659,7 +659,7 @@ void XDataFloatList::ToByteArray(void* buffer, uint buffer_size) const
 //////////////////////////////////////////////////////////////////////////
 // XDataPrimitive
 //////////////////////////////////////////////////////////////////////////
-void XDataPrimitive::ToByteArray(void* buffer, uint buffer_size) const
+void XDataPrimitive::ToByteArray(void* buffer, u32 buffer_size) const
 {
     if (buffer_size < m_size)
         return;
@@ -697,10 +697,10 @@ void XDataPrimitive::ToByteArray(void* buffer, uint buffer_size) const
 //////////////////////////////////////////////////////////////////////////
 // XDataObjectList
 //////////////////////////////////////////////////////////////////////////
-void XDataObjectList::ToByteArray(void* buffer, uint buffer_size) const
+void XDataObjectList::ToByteArray(void* buffer, u32 buffer_size) const
 {
     char* bytes = (char*)buffer;
-    uint bleft = buffer_size;
+    u32 bleft = buffer_size;
 
     for (XDataVectorCI it = m_objects.begin();
          (bleft > 0) && (it != m_objects.end()); ++it)
@@ -709,7 +709,7 @@ void XDataObjectList::ToByteArray(void* buffer, uint buffer_size) const
 
         obj->ToByteArray(bytes, bleft);
 
-        uint subs = obj->GetSize();
+        u32 subs = obj->GetSize();
 
         if (subs > bleft)
         {

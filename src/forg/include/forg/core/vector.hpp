@@ -326,20 +326,20 @@ template <class _Type> class vector
     }
 
   private:
-    void _construct_n(uint _off, uint _count)
+    void _construct_n(u32 _off, u32 _count)
     {
         _Type* arr = (_Type*)m_data;
 
-        for (uint i = 0; i < _count; i++)
+        for (u32 i = 0; i < _count; i++)
         {
             new (&arr[_off + i]) _Type;
         }
     }
 
-    void _destruct_n(uint _off, uint _count)
+    void _destruct_n(u32 _off, u32 _count)
     {
         _Type* arr = (_Type*)m_data;
-        for (uint i = 0; i < _count; i++)
+        for (u32 i = 0; i < _count; i++)
         {
             arr[_off + i].~_Type();
         }

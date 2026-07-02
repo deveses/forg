@@ -15,7 +15,7 @@ std::string DataPath(const char* filename)
 
 forg::ui::GuiNode* GuiRoot(forg::scene::Scene& scene)
 {
-    for (forg::uint i = 0; i < scene.NodeCount(); ++i)
+    for (forg::u32 i = 0; i < scene.NodeCount(); ++i)
     {
         forg::ui::GuiNode* node =
             dynamic_cast<forg::ui::GuiNode*>(scene.Node(i));
