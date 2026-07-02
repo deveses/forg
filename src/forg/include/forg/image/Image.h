@@ -16,8 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_IMAGE_H_
-#define _FORG_IMAGE_H_
+#ifndef FORG_IMAGE_IMAGE_H_
+#define FORG_IMAGE_IMAGE_H_
 
 #if _MSC_VER > 1000
 #pragma once
@@ -25,6 +25,7 @@
 
 #include "base.h"
 
+#include <string_view>
 #include <vector>
 
 namespace forg {
@@ -53,7 +54,8 @@ class Image
 
     // Public Methods
   public:
-    bool Load(const char* _filename);
+    bool Load(std::string_view filename);
+    bool Save(std::string_view filename) const;
 
     const char* GetData(uint _level = 0) const;
 
@@ -86,4 +88,4 @@ class Image
 
 } // namespace forg
 
-#endif //_FORG_IMAGE_H_
+#endif // FORG_IMAGE_IMAGE_H_

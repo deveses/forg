@@ -15,6 +15,10 @@ namespace forg::io {
 class ISerializer;
 }
 
+namespace forg::fs {
+class Filesystem;
+}
+
 namespace forg::ui {
 class GuiNode;
 }
@@ -39,6 +43,7 @@ class FORG_API Scene : public TreeNode
     bool Save(forg::io::ISerializer& serializer) const;
     bool Load(forg::io::ISerializer& serializer);
     bool LoadResources(IRenderDevice* device);
+    bool LoadResources(const fs::Filesystem& filesystem, IRenderDevice* device);
     CameraNode* ActiveCameraNode();
     const CameraNode* ActiveCameraNode() const;
 

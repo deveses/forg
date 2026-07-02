@@ -62,6 +62,10 @@ if(WIN32)
     target_link_libraries(forg PRIVATE winmm ws2_32)
 endif()
 
+if(APPLE)
+    target_link_libraries(forg PRIVATE "$<LINK_LIBRARY:FRAMEWORK,AudioToolbox>")
+endif()
+
 set_target_properties(forg PROPERTIES EXPORT_NAME forg)
 install(TARGETS forg
     EXPORT ForgTargets

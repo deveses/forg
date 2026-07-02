@@ -10,11 +10,13 @@
 #include <unistd.h>
 
 #include <cstdio>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <string_view>
 
 #include "forg.h"
+#include "forg/fs/Filesystem.h"
 #include "forg/script/yaml/YAMLParser.h"
 
 struct AppSettings
@@ -93,6 +95,9 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
     [m_view setWantsLayer:YES];
     [m_view setPostsFrameChangedNotifications:YES];
 
+    m_engine.Filesystem().Mount("data:", "data",
+                                forg::fs::MountPermissions::ReadOnly);
+
     if (!m_engine.Initialize((forg::HWIN)m_view, "config.yml"))
     {
         std::cerr << m_engine.LastError() << "\n";
@@ -126,21 +131,18 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
     }
 
 #ifdef FORG_USE_FREETYPE
-    forg::FontDescription fd = {20,
-                                0,
-                                0,
-                                1,
-                                false,
-                                0,
-                                0,
-                                0,
-                                0,
-                                (""),
-                                ("data/fonts/Roboto-Regular.ttf")};
+    std::filesystem::path fontPath;
+    const std::string fontPathText =
+        m_engine.Filesystem().ResolveReadPath("data:fonts/Roboto-Regular.ttf",
+                                              fontPath)
+            ? fontPath.string()
+            : std::string();
+    forg::FontDescription fd = {20, 0, 0, 1, false, 0, 0, 0, 0, (""), ("")};
+    std::snprintf(fd.FontPath, sizeof(fd.FontPath), "%s", fontPathText.c_str());
     m_font = forg::Font::CreateIndirect(m_engine.Device(), &fd);
 #endif
 
-    if (!m_engine.LoadScene("data/ui/dialog.yml", 1))
+    if (!m_engine.LoadScene("data:ui/dialog.yml", 1))
     {
         std::cerr << m_engine.LastError() << "\n";
         [NSApp terminate:nil];

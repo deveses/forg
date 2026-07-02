@@ -25,6 +25,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -46,6 +47,8 @@ struct MetalUniforms
     float lightPos[4];
     float lightDiffuse[4];
     float lightAmbient[4];
+    float materialDiffuse[4];
+    float materialAmbient[4];
     uint32_t lightingEnabled;
     uint32_t _pad[3];
 };
@@ -61,19 +64,28 @@ struct Uniforms {
     float4 lightPos;
     float4 lightDiffuse;
     float4 lightAmbient;
+    float4 materialDiffuse;
+    float4 materialAmbient;
     uint lightingEnabled;
 };
 
-struct VSIn {
+struct LitVSIn {
     float3 position [[attribute(0)]];
     float3 normal   [[attribute(1)]];
-    float2 uv       [[attribute(2)]];
 };
 
-struct VSOut {
+struct LitVSOut {
     float4 position [[position]];
     float3 worldPos;
     float3 worldNormal;
+};
+
+struct FlatVSIn {
+    float3 position [[attribute(0)]];
+};
+
+struct FlatVSOut {
+    float4 position [[position]];
 };
 
 struct SpriteVSIn {
@@ -88,33 +100,45 @@ struct SpriteVSOut {
     float4 color;
 };
 
-vertex VSOut vs_main(VSIn in [[stage_in]],
-                     constant Uniforms& u [[buffer(1)]])
+vertex LitVSOut vs_main(LitVSIn in [[stage_in]],
+                        constant Uniforms& u [[buffer(1)]])
 {
-    VSOut out;
-    out.position    = u.mvp * float4(in.position, 1.0);
-    out.worldPos    = (u.world * float4(in.position, 1.0)).xyz;
+    LitVSOut out;
+    out.position = u.mvp * float4(in.position, 1.0);
+    out.worldPos = (u.world * float4(in.position, 1.0)).xyz;
     out.worldNormal = (u.world * float4(in.normal, 0.0)).xyz;
     return out;
 }
 
-fragment float4 fs_main(VSOut in [[stage_in]],
+fragment float4 fs_main(LitVSOut in [[stage_in]],
                         constant Uniforms& u [[buffer(0)]])
 {
     if (u.lightingEnabled == 0) {
-        return float4(1.0, 1.0, 1.0, 1.0);
+        return u.materialDiffuse;
     }
 
     float3 N = normalize(in.worldNormal);
     float3 L = normalize(u.lightPos.xyz - in.worldPos);
-
-    // Match the reference software renderer's shading so the two backends look
-    // identical: half-Lambert (dot+1)*0.5 modulated by Diffuse*Ambient. The demo
-    // sets a white Ambient and a yellow Diffuse, which this reproduces. For a
-    // physically-correct Lambert instead, use: max(0, dot(N, L)).
     float d = (dot(N, L) + 1.0) * 0.5;
-    float3 color = d * u.lightDiffuse.rgb * u.lightAmbient.rgb;
-    return float4(color, 1.0);
+    float lightIntensity = max(max(u.lightDiffuse.r, u.lightDiffuse.g),
+                               u.lightDiffuse.b);
+    float3 color = d * lightIntensity * u.lightAmbient.rgb *
+                   u.materialDiffuse.rgb * u.materialAmbient.rgb;
+    return float4(color, u.materialDiffuse.a);
+}
+
+vertex FlatVSOut vs_flat(FlatVSIn in [[stage_in]],
+                         constant Uniforms& u [[buffer(1)]])
+{
+    FlatVSOut out;
+    out.position = u.mvp * float4(in.position, 1.0);
+    return out;
+}
+
+fragment float4 fs_flat(FlatVSOut in [[stage_in]],
+                        constant Uniforms& u [[buffer(0)]])
+{
+    return u.materialDiffuse;
 }
 
 vertex SpriteVSOut vs_sprite(SpriteVSIn in [[stage_in]],
@@ -147,6 +171,8 @@ struct MetalImpl
     id<MTLLibrary> library = nil;
     id<MTLFunction> vfn = nil;
     id<MTLFunction> ffn = nil;
+    id<MTLFunction> flatVfn = nil;
+    id<MTLFunction> flatFfn = nil;
     id<MTLFunction> spriteVfn = nil;
     id<MTLFunction> spriteFfn = nil;
     id<MTLDepthStencilState> depthState = nil;
@@ -155,7 +181,8 @@ struct MetalImpl
     NSUInteger depthW = 0;
     NSUInteger depthH = 0;
 
-    // Render pipelines keyed by a (vertex declaration) fingerprint.
+    // Render pipelines keyed by a vertex declaration fingerprint plus shader
+    // variant.
     std::unordered_map<uint64_t, id<MTLRenderPipelineState>> pipelines;
     id<MTLRenderPipelineState> spritePipeline = nil;
 
@@ -198,6 +225,19 @@ static MTLVertexFormat FormatForType(byte type)
     default:
         return MTLVertexFormatFloat3;
     }
+}
+
+static bool DeclarationHasUsage(const VertexDeclaration& declaration,
+                                byte usage)
+{
+    const VertexElement* elements = declaration.GetDeclaration();
+    const uint count = declaration.GetElementsCount();
+    for (uint i = 0; i < count; ++i)
+    {
+        if (elements[i].Usage == usage)
+            return true;
+    }
+    return false;
 }
 
 static uint64_t DeclarationFingerprint(const VertexDeclaration& decl)
@@ -326,11 +366,17 @@ MetalRenderDevice::MetalRenderDevice(HWIN handle)
       m_clear_flags(ClearFlags_Target | ClearFlags_ZBuffer),
       m_vdecl(&VertexElement::VertexDeclarationEnd), m_stream0(0),
       m_stream0_offset(0), m_stream0_stride(0), m_indices(0), m_cull(Cull_None),
-      m_fill(FillMode_Solid), m_lighting(true)
+      m_fill(FillMode_Solid), m_lighting(true), m_has_back_buffer(false)
 {
     memset(m_lights, 0, sizeof(m_lights));
     for (int i = 0; i < NUM_LIGHTS; i++)
         m_light_enabled[i] = false;
+
+    m_material.Diffuse = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    m_material.Ambient = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    m_material.Specular = Color(0.0f, 0.0f, 0.0f, 1.0f);
+    m_material.Emissive = Color(0.0f, 0.0f, 0.0f, 1.0f);
+    m_material.Power = 0.0f;
 }
 
 MetalRenderDevice::~MetalRenderDevice()
@@ -355,6 +401,8 @@ MetalRenderDevice::~MetalRenderDevice()
         [m_impl->depthState release];
         [m_impl->spriteFfn release];
         [m_impl->spriteVfn release];
+        [m_impl->flatFfn release];
+        [m_impl->flatVfn release];
         [m_impl->ffn release];
         [m_impl->vfn release];
         [m_impl->library release];
@@ -389,6 +437,8 @@ int MetalRenderDevice::Initialize(uint /*width*/, uint /*height*/)
 
     m_impl->vfn = [m_impl->library newFunctionWithName:@"vs_main"];
     m_impl->ffn = [m_impl->library newFunctionWithName:@"fs_main"];
+    m_impl->flatVfn = [m_impl->library newFunctionWithName:@"vs_flat"];
+    m_impl->flatFfn = [m_impl->library newFunctionWithName:@"fs_flat"];
     m_impl->spriteVfn = [m_impl->library newFunctionWithName:@"vs_sprite"];
     m_impl->spriteFfn = [m_impl->library newFunctionWithName:@"fs_sprite"];
 
@@ -554,8 +604,77 @@ int MetalRenderDevice::Present()
 {
     if (m_impl->cmd != nil && m_impl->drawable != nil)
     {
+        std::string capturePath;
+        capturePath.swap(m_capture_path);
+        id<MTLBuffer> captureBuffer = nil;
+        NSUInteger captureWidth = 0;
+        NSUInteger captureHeight = 0;
+        NSUInteger captureRowBytes = 0;
+
+        if (!capturePath.empty())
+        {
+            id<MTLTexture> texture = m_impl->drawable.texture;
+            captureWidth = texture.width;
+            captureHeight = texture.height;
+            captureRowBytes = ((captureWidth * 4 + 255) / 256) * 256;
+            NSUInteger captureBytes = captureRowBytes * captureHeight;
+            captureBuffer = [m_impl->device
+                newBufferWithLength:captureBytes
+                            options:MTLResourceStorageModeShared];
+
+            if (captureBuffer != nil)
+            {
+                id<MTLBlitCommandEncoder> blit =
+                    [m_impl->cmd blitCommandEncoder];
+                MTLOrigin origin = MTLOriginMake(0, 0, 0);
+                MTLSize size = MTLSizeMake(captureWidth, captureHeight, 1);
+                [blit copyFromTexture:texture
+                                 sourceSlice:0
+                                 sourceLevel:0
+                                sourceOrigin:origin
+                                  sourceSize:size
+                                    toBuffer:captureBuffer
+                           destinationOffset:0
+                      destinationBytesPerRow:captureRowBytes
+                    destinationBytesPerImage:captureRowBytes * captureHeight];
+                [blit endEncoding];
+            }
+        }
+
         [m_impl->cmd presentDrawable:m_impl->drawable];
         [m_impl->cmd commit];
+
+        if (captureBuffer != nil)
+        {
+            [m_impl->cmd waitUntilCompleted];
+            m_last_back_buffer.Width = static_cast<uint>(captureWidth);
+            m_last_back_buffer.Height = static_cast<uint>(captureHeight);
+            m_last_back_buffer.RowPitch = m_last_back_buffer.Width * 4;
+            m_last_back_buffer.Format = BackBufferPixelFormat::RGBA8;
+            m_last_back_buffer.Pixels.resize(m_last_back_buffer.RowPitch *
+                                             m_last_back_buffer.Height);
+
+            const unsigned char* src =
+                static_cast<const unsigned char*>([captureBuffer contents]);
+            for (uint y = 0; y < m_last_back_buffer.Height; ++y)
+            {
+                const unsigned char* srcRow = src + captureRowBytes * y;
+                unsigned char* dstRow = m_last_back_buffer.Pixels.data() +
+                                        m_last_back_buffer.RowPitch * y;
+                for (uint x = 0; x < m_last_back_buffer.Width; ++x)
+                {
+                    const unsigned char* bgra = srcRow + x * 4;
+                    dstRow[x * 4 + 0] = bgra[2];
+                    dstRow[x * 4 + 1] = bgra[1];
+                    dstRow[x * 4 + 2] = bgra[0];
+                    dstRow[x * 4 + 3] = bgra[3];
+                }
+            }
+
+            m_has_back_buffer = true;
+            WriteBackBufferToFile(capturePath, m_last_back_buffer);
+            [captureBuffer release];
+        }
     }
 
     [m_impl->encoder release];
@@ -565,6 +684,24 @@ int MetalRenderDevice::Present()
     [m_impl->drawable release];
     m_impl->drawable = nil;
 
+    return FORG_OK;
+}
+
+int MetalRenderDevice::SaveBackBuffer(std::string_view filename)
+{
+    if (filename.empty())
+        return FORG_INVALID_CALL;
+
+    m_capture_path.assign(filename.data(), filename.size());
+    return FORG_OK;
+}
+
+int MetalRenderDevice::GetBackBuffer(BackBuffer& backBuffer)
+{
+    if (!m_has_back_buffer)
+        return FORG_INVALID_CALL;
+
+    backBuffer = m_last_back_buffer;
     return FORG_OK;
 }
 
@@ -621,12 +758,31 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     if (m_impl->encoder == nil || m_stream0 == 0 || m_indices == 0)
         return FORG_OK;
 
-    if (primitiveType != PrimitiveType_TriangleList)
-        return FORG_OK; // only triangle lists in the first pass
+    MTLPrimitiveType metalPrimitiveType = MTLPrimitiveTypeTriangle;
+    NSUInteger indicesPerPrimitive = 3;
+    switch (primitiveType)
+    {
+    case PrimitiveType_TriangleList:
+        metalPrimitiveType = MTLPrimitiveTypeTriangle;
+        indicesPerPrimitive = 3;
+        break;
+    case PrimitiveType_LineList:
+        metalPrimitiveType = MTLPrimitiveTypeLine;
+        indicesPerPrimitive = 2;
+        break;
+    default:
+        return FORG_OK;
+    }
 
-    // --- pipeline (cached per vertex declaration)
+    const bool useLitPipeline =
+        primitiveType == PrimitiveType_TriangleList &&
+        DeclarationHasUsage(m_vdecl, DeclarationUsage_Normal);
+
+    // --- pipeline (cached per vertex declaration + shader variant)
     // -----------------------------
-    uint64_t key = DeclarationFingerprint(m_vdecl);
+    uint64_t key =
+        DeclarationFingerprint(m_vdecl) ^
+        (useLitPipeline ? 0x9e3779b185ebca87ULL : 0xc2b2ae3d27d4eb4fULL);
     id<MTLRenderPipelineState> pipeline = nil;
     std::unordered_map<uint64_t, id<MTLRenderPipelineState>>::iterator found =
         m_impl->pipelines.find(key);
@@ -653,8 +809,8 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
 
         MTLRenderPipelineDescriptor* pd =
             [[MTLRenderPipelineDescriptor alloc] init];
-        pd.vertexFunction = m_impl->vfn;
-        pd.fragmentFunction = m_impl->ffn;
+        pd.vertexFunction = useLitPipeline ? m_impl->vfn : m_impl->flatVfn;
+        pd.fragmentFunction = useLitPipeline ? m_impl->ffn : m_impl->flatFfn;
         pd.vertexDescriptor = vd;
         pd.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
         pd.depthAttachmentPixelFormat = MTLPixelFormatDepth32Float;
@@ -673,6 +829,8 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     }
 
     [m_impl->encoder setRenderPipelineState:pipeline];
+    if (!useLitPipeline)
+        [m_impl->encoder setCullMode:MTLCullModeNone];
 
     // --- uniforms
     // -------------------------------------------------------------
@@ -699,7 +857,16 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     u.lightAmbient[1] = light.Ambient.g;
     u.lightAmbient[2] = light.Ambient.b;
     u.lightAmbient[3] = light.Ambient.a;
-    u.lightingEnabled = (m_lighting && m_light_enabled[0]) ? 1u : 0u;
+    u.materialDiffuse[0] = m_material.Diffuse.r;
+    u.materialDiffuse[1] = m_material.Diffuse.g;
+    u.materialDiffuse[2] = m_material.Diffuse.b;
+    u.materialDiffuse[3] = m_material.Diffuse.a;
+    u.materialAmbient[0] = m_material.Ambient.r;
+    u.materialAmbient[1] = m_material.Ambient.g;
+    u.materialAmbient[2] = m_material.Ambient.b;
+    u.materialAmbient[3] = m_material.Ambient.a;
+    u.lightingEnabled =
+        (useLitPipeline && m_lighting && m_light_enabled[0]) ? 1u : 0u;
 
     // --- buffers + draw
     // -------------------------------------------------------
@@ -712,17 +879,20 @@ int MetalRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     [m_impl->encoder setVertexBytes:&u length:sizeof(u) atIndex:1];
     [m_impl->encoder setFragmentBytes:&u length:sizeof(u) atIndex:0];
 
-    NSUInteger indexCount = (NSUInteger)primCount * 3;
+    NSUInteger indexCount = (NSUInteger)primCount * indicesPerPrimitive;
     NSUInteger indexSize = ib->IsIndexShort() ? 2 : 4;
     MTLIndexType indexType =
         ib->IsIndexShort() ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32;
     NSUInteger indexOffset = (NSUInteger)startIndex * indexSize;
 
-    [m_impl->encoder drawIndexedPrimitives:MTLPrimitiveTypeTriangle
+    [m_impl->encoder drawIndexedPrimitives:metalPrimitiveType
                                 indexCount:indexCount
                                  indexType:indexType
                                indexBuffer:(id<MTLBuffer>)ib->GetMTLBuffer()
                          indexBufferOffset:indexOffset];
+
+    if (!useLitPipeline)
+        [m_impl->encoder setCullMode:CullModeToMetal(m_cull)];
 
     return FORG_OK;
 }
@@ -986,10 +1156,10 @@ int MetalRenderDevice::LightEnable(uint LightIndex, bool bEnable)
     return FORG_OK;
 }
 
-int MetalRenderDevice::SetMaterial(const Material* /*pMaterial*/)
+int MetalRenderDevice::SetMaterial(const Material* pMaterial)
 {
-    // Material is unused by the demo shading path (lighting reads the Light
-    // only).
+    if (pMaterial != nullptr)
+        m_material = *pMaterial;
     return FORG_OK;
 }
 

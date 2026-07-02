@@ -7,7 +7,11 @@
 
 #include <commdlg.h>
 #include <cstdio>
+#include <filesystem>
+#include <string>
 #include <string_view>
+
+#include "forg/fs/Filesystem.h"
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -103,21 +107,18 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
     if (!m_engine->LoadScene("scene.yml"))
         return 1;
 
-    if (!m_engine->LoadScene("data/ui/dialog.yml", 1))
+    if (!m_engine->LoadScene("data:ui/dialog.yml", 1))
         return 1;
 
 #ifdef FORG_USE_FREETYPE
-    forg::FontDescription fd = {12,
-                                0,
-                                0,
-                                1,
-                                false,
-                                0,
-                                0,
-                                0,
-                                0,
-                                (""),
-                                ("data/fonts/Roboto-Regular.ttf")};
+    std::filesystem::path fontPath;
+    const std::string fontPathText =
+        m_engine->Filesystem().ResolveReadPath("data:fonts/Roboto-Regular.ttf",
+                                               fontPath)
+            ? fontPath.string()
+            : std::string();
+    forg::FontDescription fd = {12, 0, 0, 1, false, 0, 0, 0, 0, (""), ("")};
+    std::snprintf(fd.FontPath, sizeof(fd.FontPath), "%s", fontPathText.c_str());
     m_font = forg::Font::CreateIndirect(m_device, &fd);
 #endif
 

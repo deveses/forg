@@ -19,6 +19,9 @@
 #ifndef _METAL_RENDER_DEVICE_H_
 #define _METAL_RENDER_DEVICE_H_
 
+#include <string>
+#include <string_view>
+
 #include "base.h"
 #include "rendering/IRenderDevice.h"
 #include "rendering/VertexDeclaration.h"
@@ -52,6 +55,8 @@ class MetalRenderDevice : public IRenderDevice
     virtual int EndScene(void);
     virtual int Clear(uint flags, Color color, float zdepth, int stencil);
     virtual int Present();
+    virtual int SaveBackBuffer(std::string_view filename);
+    virtual int GetBackBuffer(BackBuffer& backBuffer);
     virtual int Reset();
 
     virtual LPVERTEXDECLARATION
@@ -120,6 +125,7 @@ class MetalRenderDevice : public IRenderDevice
     };
     Light m_lights[NUM_LIGHTS];
     bool m_light_enabled[NUM_LIGHTS];
+    Material m_material;
 
     VertexDeclaration m_vdecl;
 
@@ -131,6 +137,9 @@ class MetalRenderDevice : public IRenderDevice
     uint m_cull;
     uint m_fill;
     bool m_lighting;
+    std::string m_capture_path;
+    BackBuffer m_last_back_buffer;
+    bool m_has_back_buffer;
 };
 
 } // namespace forg

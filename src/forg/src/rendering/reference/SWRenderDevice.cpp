@@ -729,6 +729,33 @@ int SWRenderDevice::Present()
     return FORG_OK;
 }
 
+int SWRenderDevice::GetBackBuffer(BackBuffer& backBuffer)
+{
+    if (m_frame_buffer == nullptr || m_width == 0 || m_height == 0)
+        return FORG_INVALID_CALL;
+
+    backBuffer.Width = m_width;
+    backBuffer.Height = m_height;
+    backBuffer.RowPitch = m_width * 4;
+    backBuffer.Format = BackBufferPixelFormat::RGBA8;
+    backBuffer.Pixels.resize(backBuffer.RowPitch * m_height);
+    for (uint y = 0; y < m_height; ++y)
+    {
+        const uint* row = m_frame_buffer.get() + y * m_width;
+        unsigned char* dst = backBuffer.Pixels.data() + y * backBuffer.RowPitch;
+        for (uint x = 0; x < m_width; ++x)
+        {
+            uint argb = row[x];
+            dst[x * 4 + 0] = static_cast<unsigned char>((argb >> 16) & 0xff);
+            dst[x * 4 + 1] = static_cast<unsigned char>((argb >> 8) & 0xff);
+            dst[x * 4 + 2] = static_cast<unsigned char>(argb & 0xff);
+            dst[x * 4 + 3] = static_cast<unsigned char>((argb >> 24) & 0xff);
+        }
+    }
+
+    return FORG_OK;
+}
+
 uint blend_color(uint _src, uint _dst)
 {
     uint out = _src;

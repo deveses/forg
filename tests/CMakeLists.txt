@@ -12,11 +12,14 @@ endif()
 
 add_executable(forg_tests
     EngineTests.cpp
+    audio/AudioEngineTests.cpp
+    audio/AudioMixerTests.cpp
     math/MathTests.cpp
     audio/WaveFileTests.cpp
     core/BitArrayTests.cpp
     core/RefCounterTests.cpp
     core/StringTests.cpp
+    fs/FilesystemTests.cpp
     image/ImageLoadTests.cpp
     nn/NeuralNetworkTests.cpp
     script/XMLParserTests.cpp

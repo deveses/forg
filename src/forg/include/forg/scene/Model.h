@@ -18,6 +18,10 @@ namespace forg::io {
 class ISerializer;
 }
 
+namespace forg::fs {
+class Filesystem;
+}
+
 namespace forg::scene {
 
 using math::Matrix4;
@@ -38,6 +42,7 @@ struct ModelBoxParams
     float Width;
     float Height;
     float Depth;
+    int Color;
 };
 
 struct ModelSphereParams
@@ -45,6 +50,7 @@ struct ModelSphereParams
     float Radius;
     int Slices;
     int Stacks;
+    int Color;
 };
 
 struct ModelCylinderParams
@@ -54,6 +60,7 @@ struct ModelCylinderParams
     float Length;
     int Slices;
     int Stacks;
+    int Color;
 };
 
 struct ModelPyramidParams
@@ -61,6 +68,7 @@ struct ModelPyramidParams
     uint NumAngles;
     float Radius;
     float Height;
+    int Color;
 };
 
 struct ModelGridParams
@@ -82,7 +90,7 @@ struct ModelMeshParams
         ModelGridParams Grid;
     };
 
-    ModelMeshParams() : Box{1.0f, 1.0f, 1.0f} {}
+    ModelMeshParams() : Box{1.0f, 1.0f, 1.0f, -1} {}
 };
 
 class FORG_API Model
@@ -100,7 +108,10 @@ class FORG_API Model
     Model();
 
     bool Load(const char* filename, IRenderDevice* device, uint options = 0);
+    bool Load(const fs::Filesystem& filesystem, const char* filename,
+              IRenderDevice* device, uint options = 0);
     bool LoadResources(IRenderDevice* device);
+    bool LoadResources(const fs::Filesystem& filesystem, IRenderDevice* device);
     void SetMesh(geometry::Mesh::MeshPtr mesh);
     void Clear();
 

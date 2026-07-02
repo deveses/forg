@@ -5,22 +5,37 @@
 #include "debug/dbg.h"
 #include "image/bmp/bmp.h"
 #include "image/dds/dds.h"
+#include "image/ppm/ppm.h"
 #include "math/Math.h"
 
+#include <cctype>
+#include <cstdio>
+#include <cstdint>
+#include <cstring>
+#include <limits>
 #include <memory>
+#include <string>
+#include <string_view>
 
 using namespace forg::math;
 
 namespace forg {
 
-#define MAGIC_BMP 0x4d42
+enum class ImageMagic : uint
+{
+    Bmp = 0x4d42,
+    Ppm = 0x3650,
+    Dds = 0x20534444,
+};
 
-#define MAGIC_DDS 0x20534444
-
-#define IMAGE_NOT_FOUND -1
-#define IMAGE_UNKNOWN 0
-#define IMAGE_BMP 1
-#define IMAGE_DDS 2
+enum class ImageFileType : std::int8_t
+{
+    NotFound = -1,
+    Unknown = 0,
+    Bmp,
+    Dds,
+    Ppm,
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -157,17 +172,17 @@ static void Resize_NearestNeighbor(Color4b* src, uint src_width,
                                    uint src_height, Color4b* dst,
                                    uint dst_width, uint dst_height)
 {
-    float sx = (float)src_width / dst_width;
-    float sy = (float)src_height / dst_height;
-
     for (uint h = 0; h < dst_height; h++)
     {
-        uint dst_off = h * dst_width;
-        uint src_off = h * sy * src_width;
+        const std::size_t dst_off = static_cast<std::size_t>(h) * dst_width;
+        const uint src_y = static_cast<uint>(
+            (static_cast<std::uint64_t>(h) * src_height) / dst_height);
+        const std::size_t src_off = static_cast<std::size_t>(src_y) * src_width;
 
         for (uint w = 0; w < dst_width; w++)
         {
-            uint x = w * sx;
+            const uint x = static_cast<uint>(
+                (static_cast<std::uint64_t>(w) * src_width) / dst_width);
 
             dst[dst_off + w] = src[src_off + x];
         }
@@ -176,36 +191,64 @@ static void Resize_NearestNeighbor(Color4b* src, uint src_width,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static int detect_file_type(const char* _filename)
+static ImageFileType detect_file_type(std::string_view filename)
 {
-    FILE* f = fopen(_filename, "r+b");
+    const std::string path(filename);
+    FILE* f = std::fopen(path.c_str(), "rb");
 
     if (f != NULL)
     {
         uint magic_number = 0;
         uint magic_lword = 0;
 
-        fread(&magic_number, 4, 1, f);
-        fclose(f);
+        std::fread(&magic_number, 4, 1, f);
+        std::fclose(f);
 
         magic_lword = magic_number & 0xffff;
 
-        switch (magic_lword)
+        switch (static_cast<ImageMagic>(magic_lword))
         {
-        case MAGIC_BMP:
-            return IMAGE_BMP;
+        case ImageMagic::Bmp:
+            return ImageFileType::Bmp;
+        case ImageMagic::Ppm:
+            return ImageFileType::Ppm;
+        default:
+            break;
         }
 
-        switch (magic_number)
+        switch (static_cast<ImageMagic>(magic_number))
         {
-        case MAGIC_DDS:
-            return IMAGE_DDS;
+        case ImageMagic::Dds:
+            return ImageFileType::Dds;
+        default:
+            break;
         }
 
-        return IMAGE_UNKNOWN;
+        return ImageFileType::Unknown;
     }
 
-    return IMAGE_NOT_FOUND;
+    return ImageFileType::NotFound;
+}
+
+//////////////////////////////////////////////////////////////////////////
+
+static bool has_extension(std::string_view filename, std::string_view extension)
+{
+    if (filename.size() < extension.size())
+        return false;
+
+    filename = filename.substr(filename.size() - extension.size());
+    for (std::string_view::size_type i = 0; i < extension.size(); ++i)
+    {
+        const char a = static_cast<char>(
+            std::tolower(static_cast<unsigned char>(filename[i])));
+        const char b = static_cast<char>(
+            std::tolower(static_cast<unsigned char>(extension[i])));
+        if (a != b)
+            return false;
+    }
+
+    return true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -220,48 +263,94 @@ void Image::Clean()
     m_num_mipmaps = 1;
 }
 
-bool Image::Load(const char* _filename)
+bool Image::Load(std::string_view filename)
 {
     Clean();
 
     ImageDescription img_info{};
     std::unique_ptr<Color4b[]> img_data;
+    const std::string path(filename);
 
-    switch (detect_file_type(_filename))
+    switch (detect_file_type(filename))
     {
-    case IMAGE_BMP:
+    case ImageFileType::Bmp:
     {
-        img_data.reset(LoadBmp(_filename, &img_info));
+        img_data.reset(LoadBmp(path.c_str(), &img_info));
     }
     break;
 
-    case IMAGE_DDS:
+    case ImageFileType::Dds:
     {
-        img_data.reset(LoadDds(_filename, &img_info));
+        img_data.reset(LoadDds(path.c_str(), &img_info));
     }
     break;
 
-    case IMAGE_NOT_FOUND:
-        DBG_MSG("[Image] <%s>: File not found!\n", _filename);
+    case ImageFileType::Ppm:
+    {
+        img_data.reset(LoadPpm(path.c_str(), &img_info));
+    }
+    break;
+
+    case ImageFileType::NotFound:
+        DBG_MSG("[Image] <%s>: File not found!\n", path.c_str());
         break;
 
     default:
-        DBG_MSG("[Image] <%s>: Unsupported image format!\n", _filename);
+        DBG_MSG("[Image] <%s>: Unsupported image format!\n", path.c_str());
     }
 
     if (img_data)
     {
+        if (img_info.Height != 0 &&
+            img_info.Width >
+                std::numeric_limits<std::size_t>::max() / img_info.Height)
+        {
+            return false;
+        }
+
+        const std::size_t pixel_count =
+            static_cast<std::size_t>(img_info.Width) * img_info.Height;
+        if (pixel_count >
+            std::numeric_limits<std::size_t>::max() / sizeof(Color4b))
+        {
+            return false;
+        }
+
+        const std::size_t size = pixel_count * sizeof(Color4b);
         m_width = img_info.Width;
         m_height = img_info.Height;
 
-        const uint size = GetWidth() * GetHeight() * sizeof(Color4b);
         m_data.resize(m_num_mipmaps);
         m_data[0].resize(size);
-        memcpy(m_data[0].data(), img_data.get(), size);
+        std::memcpy(m_data[0].data(), img_data.get(), size);
 
         return true;
     }
 
+    return false;
+}
+
+bool Image::Save(std::string_view filename) const
+{
+    if (m_data.empty() || m_data[0].empty())
+        return false;
+
+    if (has_extension(filename, ".ppm"))
+    {
+        return SavePpm(filename,
+                       reinterpret_cast<const Color4b*>(m_data[0].data()),
+                       m_width, m_height, m_width * sizeof(Color4b));
+    }
+
+    if (has_extension(filename, ".bmp"))
+    {
+        return SaveBmp(filename,
+                       reinterpret_cast<const Color4b*>(m_data[0].data()),
+                       m_width, m_height, m_width * sizeof(Color4b));
+    }
+
+    DBG_MSG("[Image] <%s>: Unsupported image format!\n",
+            std::string(filename).c_str());
     return false;
 }
 
@@ -292,10 +381,10 @@ uint Image::GenerateMipmaps()
     uint w = m_width;
     uint h = m_height;
 
-    int num_w = Math::bit_log2(m_width);
-    int num_h = Math::bit_log2(m_height);
+    const uint num_w = Math::bit_log2(m_width);
+    const uint num_h = Math::bit_log2(m_height);
 
-    uint levels = Math::bit_max(num_w, num_h) + 1;
+    const uint levels = (num_w > num_h ? num_w : num_h) + 1U;
 
     std::vector<std::vector<char>> new_data(levels);
 
@@ -309,10 +398,11 @@ uint Image::GenerateMipmaps()
         w |= (-(w == 0)) & 1;
         h |= (-(h == 0)) & 1;
 
-        new_data[l].resize(w * h * 4);
+        new_data[l].resize(static_cast<std::size_t>(w) * h * sizeof(Color4b));
 
-        Resize_NearestNeighbor((Color4b*)new_data[0].data(), m_width, m_height,
-                               (Color4b*)new_data[l].data(), w, h);
+        Resize_NearestNeighbor(
+            reinterpret_cast<Color4b*>(new_data[0].data()), m_width, m_height,
+            reinterpret_cast<Color4b*>(new_data[l].data()), w, h);
         // memset(new_data[l], l*10, w*h*4);
     }
 

@@ -1,6 +1,6 @@
 /*******************************************************************************
     This source file is part of FORG library (http://forg.googlecode.com)
-    Copyright (C) 2007  Slawomir Strumecki
+    Copyright (C) 2026  Slawomir Strumecki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -16,12 +16,24 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_H_
-#define _FORG_AUDIO_H_
+#ifndef _FORG_PPM_H_
+#define _FORG_PPM_H_
 
-#include "audio/AudioEngine.h"
-#include "audio/AudioManager.h"
-#include "audio/AudioMixer.h"
-#include "audio/WaveFile.h"
-
+#if _MSC_VER > 1000
+#pragma once
 #endif
+
+#include "image/Image.h"
+#include "rendering/Color.h"
+
+#include <string_view>
+
+namespace forg {
+
+FORG_API Color4b* LoadPpm(const char* filename, ImageDescription* ppm_info);
+FORG_API bool SavePpm(std::string_view filename, const Color4b* pixels,
+                      uint width, uint height, uint rowPitchBytes);
+
+} // namespace forg
+
+#endif //_FORG_PPM_H_

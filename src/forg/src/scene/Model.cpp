@@ -1,32 +1,17 @@
 #include "forg_pch.h"
 
 #include "debug/dbg.h"
+#include "forg/fs/Filesystem.h"
 #include "forg/io/ISerializer.h"
 #include "scene/Model.h"
 
+#include <filesystem>
 #include <string>
 #include <string_view>
 #include <utility>
 
 namespace forg::scene {
 namespace {
-
-std::string BaseDirectory(const char* filename)
-{
-    if (filename == nullptr)
-        return {};
-
-    std::string baseDir(filename);
-    std::string::size_type lastSlash = baseDir.find_last_of('/');
-    if (lastSlash == std::string::npos)
-        lastSlash = baseDir.find_last_of('\\');
-
-    if (lastSlash == std::string::npos)
-        return {};
-
-    baseDir.erase(lastSlash + 1);
-    return baseDir;
-}
 
 bool serializeMatrix(io::ISerializer& serializer, Matrix4& transform)
 {
@@ -58,25 +43,39 @@ bool serializeValue(io::ISerializer& serializer, std::string_view name,
            (!legacyName.empty() && serializer.Value(legacyName, value));
 }
 
+template <typename T>
+bool serializeOptionalValue(io::ISerializer& serializer, std::string_view name,
+                            T& value)
+{
+    if (serializer.IsWriting())
+        return serializer.Value(name, value);
+
+    T parsed = value;
+    if (serializer.Value(name, parsed))
+        value = parsed;
+
+    return true;
+}
+
 ModelMeshParams DefaultMeshParams(ModelMeshType type)
 {
     ModelMeshParams params;
     switch (type)
     {
     case ModelMeshType::Box:
-        params.Box = {1.0f, 1.0f, 1.0f};
+        params.Box = {1.0f, 1.0f, 1.0f, -1};
         break;
     case ModelMeshType::Sphere:
-        params.Sphere = {1.0f, 16, 16};
+        params.Sphere = {1.0f, 16, 16, -23296};
         break;
     case ModelMeshType::Cylinder:
-        params.Cylinder = {1.0f, 1.0f, 2.0f, 16, 1};
+        params.Cylinder = {1.0f, 1.0f, 2.0f, 16, 1, -16776961};
         break;
     case ModelMeshType::Pyramid:
-        params.Pyramid = {4, 1.0f, 1.0f};
+        params.Pyramid = {4, 1.0f, 1.0f, -1};
         break;
     case ModelMeshType::Grid:
-        params.Grid = {1.0f, 1.0f, -1, 1};
+        params.Grid = {1.0f, 1.0f, -16777216, 1};
         break;
     case ModelMeshType::None:
     case ModelMeshType::File:
@@ -99,7 +98,9 @@ bool serializeMeshParams(io::ISerializer& serializer, ModelMeshType type,
                             params.Box.Width) &&
              serializeValue(serializer, "height", "box_height",
                             params.Box.Height) &&
-             serializeValue(serializer, "depth", "box_depth", params.Box.Depth);
+             serializeValue(serializer, "depth", "box_depth",
+                            params.Box.Depth) &&
+             serializeOptionalValue(serializer, "color", params.Box.Color);
         break;
     case ModelMeshType::Sphere:
         ok = serializeValue(serializer, "radius", "sphere_radius",
@@ -107,7 +108,8 @@ bool serializeMeshParams(io::ISerializer& serializer, ModelMeshType type,
              serializeValue(serializer, "slices", "sphere_slices",
                             params.Sphere.Slices) &&
              serializeValue(serializer, "stacks", "sphere_stacks",
-                            params.Sphere.Stacks);
+                            params.Sphere.Stacks) &&
+             serializeOptionalValue(serializer, "color", params.Sphere.Color);
         break;
     case ModelMeshType::Cylinder:
         ok = serializeValue(serializer, "radius1", "cylinder_radius1",
@@ -119,7 +121,8 @@ bool serializeMeshParams(io::ISerializer& serializer, ModelMeshType type,
              serializeValue(serializer, "slices", "cylinder_slices",
                             params.Cylinder.Slices) &&
              serializeValue(serializer, "stacks", "cylinder_stacks",
-                            params.Cylinder.Stacks);
+                            params.Cylinder.Stacks) &&
+             serializeOptionalValue(serializer, "color", params.Cylinder.Color);
         break;
     case ModelMeshType::Pyramid:
         ok = serializeValue(serializer, "num_angles", "pyramid_num_angles",
@@ -127,7 +130,8 @@ bool serializeMeshParams(io::ISerializer& serializer, ModelMeshType type,
              serializeValue(serializer, "radius", "pyramid_radius",
                             params.Pyramid.Radius) &&
              serializeValue(serializer, "height", "pyramid_height",
-                            params.Pyramid.Height);
+                            params.Pyramid.Height) &&
+             serializeOptionalValue(serializer, "color", params.Pyramid.Color);
         break;
     case ModelMeshType::Grid:
         ok = serializeValue(serializer, "size_x", "grid_size_x",
@@ -234,6 +238,45 @@ geometry::Mesh::MeshPtr CreatePrimitiveMesh(ModelMeshType type,
     return nullptr;
 }
 
+int PrimitiveColor(ModelMeshType type, const ModelMeshParams& params)
+{
+    switch (type)
+    {
+    case ModelMeshType::Box:
+        return params.Box.Color;
+    case ModelMeshType::Sphere:
+        return params.Sphere.Color;
+    case ModelMeshType::Cylinder:
+        return params.Cylinder.Color;
+    case ModelMeshType::Pyramid:
+        return params.Pyramid.Color;
+    case ModelMeshType::Grid:
+        return params.Grid.Color;
+    case ModelMeshType::None:
+    case ModelMeshType::File:
+        return -1;
+    }
+    return -1;
+}
+
+geometry::Mesh::ExtendedMaterialVec
+CreatePrimitiveMaterials(ModelMeshType type, const ModelMeshParams& params)
+{
+    geometry::Mesh::ExtendedMaterialVec materials;
+    if (type == ModelMeshType::None || type == ModelMeshType::File)
+        return materials;
+
+    ExtendedMaterial material = {};
+    const Color color(static_cast<uint>(PrimitiveColor(type, params)));
+    material.Material3D.Diffuse = color;
+    material.Material3D.Ambient = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    material.Material3D.Specular = Color(0.0f, 0.0f, 0.0f, 1.0f);
+    material.Material3D.Emissive = Color(0.0f, 0.0f, 0.0f, 1.0f);
+    material.Material3D.Power = 0.0f;
+    materials.push_back(material);
+    return materials;
+}
+
 } // namespace
 
 Model::Model()
@@ -244,18 +287,30 @@ Model::Model()
 
 bool Model::Load(const char* filename, IRenderDevice* device, uint options)
 {
+    fs::Filesystem filesystem;
+    filesystem.Mount("data:", "data", fs::MountPermissions::ReadOnly);
+    return Load(filesystem, filename, device, options);
+}
+
+bool Model::Load(const fs::Filesystem& filesystem, const char* filename,
+                 IRenderDevice* device, uint options)
+{
     if (filename == nullptr || device == nullptr)
         return false;
 
     const std::string filenameText(filename);
+    std::filesystem::path nativePath;
+    if (!filesystem.ResolveReadPath(filenameText, nativePath))
+        return false;
+
+    const std::string nativeFilenameText = nativePath.string();
     geometry::Mesh::ExtendedMaterialVec materials;
     geometry::Mesh::MeshPtr mesh = geometry::Mesh::FromFile(
-        filenameText.c_str(), options, device, materials);
+        nativeFilenameText.c_str(), options, device, materials);
 
     if (!mesh || mesh->GetNumVertices() == 0)
         return false;
 
-    const std::string baseDir = BaseDirectory(filenameText.c_str());
     std::vector<core::RefPtr<ITexture>> textures;
     textures.reserve(materials.size());
 
@@ -268,7 +323,11 @@ bool Model::Load(const char* filename, IRenderDevice* device, uint options)
             continue;
         }
 
-        const std::string fullPath = baseDir + textureFilename;
+        std::filesystem::path texturePath;
+        const bool resolved = filesystem.ResolveReadPathRelative(
+            filenameText, textureFilename, texturePath);
+        const std::string fullPath =
+            resolved ? texturePath.string() : std::string(textureFilename);
         core::RefPtr<ITexture> texture(
             ITexture::FromFile(device, fullPath.c_str()));
         textures.push_back(std::move(texture));
@@ -294,6 +353,14 @@ bool Model::Load(const char* filename, IRenderDevice* device, uint options)
 
 bool Model::LoadResources(IRenderDevice* device)
 {
+    fs::Filesystem filesystem;
+    filesystem.Mount("data:", "data", fs::MountPermissions::ReadOnly);
+    return LoadResources(filesystem, device);
+}
+
+bool Model::LoadResources(const fs::Filesystem& filesystem,
+                          IRenderDevice* device)
+{
     if (device == nullptr)
         return false;
 
@@ -302,7 +369,8 @@ bool Model::LoadResources(IRenderDevice* device)
 
     if (m_mesh_type == ModelMeshType::File && m_source_path.length() != 0)
     {
-        loaded = Load(m_source_path.c_str(), device, m_load_options);
+        loaded =
+            Load(filesystem, m_source_path.c_str(), device, m_load_options);
     }
     else
     {
@@ -311,7 +379,7 @@ bool Model::LoadResources(IRenderDevice* device)
         if (mesh)
         {
             m_mesh = std::move(mesh);
-            m_materials.clear();
+            m_materials = CreatePrimitiveMaterials(m_mesh_type, m_mesh_params);
             m_textures.clear();
             loaded = true;
         }
@@ -388,26 +456,36 @@ void Model::SetPrimitive(ModelMeshType type)
 void Model::SetBox(float width, float height, float depth)
 {
     SetPrimitive(ModelMeshType::Box);
-    m_mesh_params.Box = {width, height, depth};
+    m_mesh_params.Box.Width = width;
+    m_mesh_params.Box.Height = height;
+    m_mesh_params.Box.Depth = depth;
 }
 
 void Model::SetSphere(float radius, int slices, int stacks)
 {
     SetPrimitive(ModelMeshType::Sphere);
-    m_mesh_params.Sphere = {radius, slices, stacks};
+    m_mesh_params.Sphere.Radius = radius;
+    m_mesh_params.Sphere.Slices = slices;
+    m_mesh_params.Sphere.Stacks = stacks;
 }
 
 void Model::SetCylinder(float radius1, float radius2, float length, int slices,
                         int stacks)
 {
     SetPrimitive(ModelMeshType::Cylinder);
-    m_mesh_params.Cylinder = {radius1, radius2, length, slices, stacks};
+    m_mesh_params.Cylinder.Radius1 = radius1;
+    m_mesh_params.Cylinder.Radius2 = radius2;
+    m_mesh_params.Cylinder.Length = length;
+    m_mesh_params.Cylinder.Slices = slices;
+    m_mesh_params.Cylinder.Stacks = stacks;
 }
 
 void Model::SetPyramid(uint numAngles, float radius, float height)
 {
     SetPrimitive(ModelMeshType::Pyramid);
-    m_mesh_params.Pyramid = {numAngles, radius, height};
+    m_mesh_params.Pyramid.NumAngles = numAngles;
+    m_mesh_params.Pyramid.Radius = radius;
+    m_mesh_params.Pyramid.Height = height;
 }
 
 void Model::SetGrid(float sizeX, float sizeY, int color, uint subgrid)

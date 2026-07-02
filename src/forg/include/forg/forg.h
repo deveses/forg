@@ -38,6 +38,8 @@
 
 #include "cpu/atomic.h"
 
+#include "fs/Filesystem.h"
+
 #include "os/os.h"
 
 #include "ui/gui.h"

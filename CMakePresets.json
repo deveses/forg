@@ -14,6 +14,7 @@
             "cacheVariables": {
                 "BUILD_TESTING": "ON",
                 "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "FORG_WARNINGS_AS_ERRORS": "ON"
             }
         },
@@ -44,6 +45,7 @@
             "cacheVariables": {
                 "BUILD_TESTING": "ON",
                 "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "FORG_WARNINGS_AS_ERRORS": "ON",
                 "CMAKE_CXX_FLAGS": "-fsanitize=address,undefined -fno-omit-frame-pointer",
                 "CMAKE_EXE_LINKER_FLAGS": "-fsanitize=address,undefined",
@@ -58,6 +60,7 @@
             "cacheVariables": {
                 "BUILD_TESTING": "ON",
                 "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
                 "FORG_WARNINGS_AS_ERRORS": "ON"
             }
         },
