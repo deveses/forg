@@ -12,38 +12,14 @@
 namespace forg::ui {
 namespace {
 
-#define FORG_UI_BUTTON_RECT_BG                                                 \
-    {                                                                          \
-        128, 0, 128 + 50, 17                                                   \
-    }
-#define FORG_UI_BUTTON_RECT_FG                                                 \
-    {                                                                          \
-        178, 0, 178 + 50, 17                                                   \
-    }
-#define FORG_UI_SLIDER_BG_RECT                                                 \
-    {                                                                          \
-        10, 191, 10 + 92, 191 + 41                                             \
-    }
-#define FORG_UI_SLIDER_FG_RECT                                                 \
-    {                                                                          \
-        161, 197, 161 + 41, 197 + 41                                           \
-    }
-#define FORG_UI_KNOB_BG_RECT                                                   \
-    {                                                                          \
-        128, 19, 128 + 35, 19 + 35                                             \
-    }
-#define FORG_UI_KNOB_FG_RECT                                                   \
-    {                                                                          \
-        163, 19, 163 + 35, 19 + 35                                             \
-    }
-#define FORG_UI_RECT_COMBOBOX_BG                                               \
-    {                                                                          \
-        15, 85, 15 + 240, 85 + 42                                              \
-    }
-#define FORG_UI_RECT_COMBOBOX_BUTTON                                           \
-    {                                                                          \
-        106, 193, 106 + 53, 193 + 49                                           \
-    }
+#define FORG_UI_BUTTON_RECT_BG {128, 0, 128 + 50, 17}
+#define FORG_UI_BUTTON_RECT_FG {178, 0, 178 + 50, 17}
+#define FORG_UI_SLIDER_BG_RECT {10, 191, 10 + 92, 191 + 41}
+#define FORG_UI_SLIDER_FG_RECT {161, 197, 161 + 41, 197 + 41}
+#define FORG_UI_KNOB_BG_RECT {128, 19, 128 + 35, 19 + 35}
+#define FORG_UI_KNOB_FG_RECT {163, 19, 163 + 35, 19 + 35}
+#define FORG_UI_RECT_COMBOBOX_BG {15, 85, 15 + 240, 85 + 42}
+#define FORG_UI_RECT_COMBOBOX_BUTTON {106, 193, 106 + 53, 193 + 49}
 
 bool StringEquals(const core::string& lhs, const char* rhs)
 {

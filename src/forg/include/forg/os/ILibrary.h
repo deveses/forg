@@ -30,7 +30,7 @@ namespace forg::os {
 class ILibrary
 {
   public:
-    virtual ~ILibrary(){};
+    virtual ~ILibrary() {};
 
     virtual int Open(LPCTSTR szName, int nFlags) = 0;
     virtual void Close() = 0;
