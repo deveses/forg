@@ -71,7 +71,8 @@ using i64 = std::int64_t;
 
 using ushort [[deprecated("Use forg::u16 instead.")]] = u16;
 using uint [[deprecated("Use forg::u32 instead.")]] = u32;
-using ulong = unsigned long;
+using ulong [[deprecated("Use a fixed-width type such as forg::u32 or forg::u64 instead.")]] =
+    unsigned long;
 using byte = u8;
 using uint32 = u32;
 using uint64 = unsigned long long;
