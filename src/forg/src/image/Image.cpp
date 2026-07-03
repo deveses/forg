@@ -170,6 +170,45 @@ dst_width, u32 dst_height)
 }
 */
 
+static u32 ClampImageCoord(int value, u32 limit)
+{
+    if (value < 0)
+        return 0;
+
+    const u32 coord = static_cast<u32>(value);
+    return coord < limit ? coord : limit - 1;
+}
+
+template <class T> class ImageBufferHelper
+{
+  public:
+    ImageBufferHelper(T* data, u32 width, u32 height)
+        : m_data(data), m_width(width), m_height(height)
+    {
+    }
+
+    T* Pixel(u32 x, u32 y) const
+    {
+        if (x >= m_width || y >= m_height)
+            return nullptr;
+
+        return &m_data[static_cast<size_t>(y) * m_width + x];
+    }
+
+    T* PixelClamped(int x, int y) const
+    {
+        const size_t clamped_x = ClampImageCoord(x, m_width);
+        const size_t clamped_y = ClampImageCoord(y, m_height);
+
+        return &m_data[clamped_y * m_width + clamped_x];
+    }
+
+  private:
+    T* m_data;
+    u32 m_width;
+    u32 m_height;
+};
+
 static void Resize_NearestNeighbor(Color4b* src, u32 src_width, u32 src_height,
                                    Color4b* dst, u32 dst_width, u32 dst_height)
 {
@@ -198,15 +237,6 @@ static std::optional<std::size_t> CalculatePixelCount(u32 width, u32 height)
     }
 
     return static_cast<std::size_t>(width) * height;
-}
-
-static u32 ClampImageCoord(int value, u32 limit)
-{
-    if (value < 0)
-        return 0;
-
-    const u32 coord = static_cast<u32>(value);
-    return coord < limit ? coord : limit - 1;
 }
 
 static byte FloatToByte(float value)
@@ -450,6 +480,12 @@ bool Image::ApplyConvolution(std::span<const float> _kernel, u32 _kernel_width,
     std::vector<char> filtered(data_size);
     Color4b* dst = reinterpret_cast<Color4b*>(filtered.data());
 
+    ImageBufferHelper<Color4b> src_helper(const_cast<Color4b*>(src), m_width,
+                                          m_height);
+    ImageBufferHelper<Color4b> dst_helper(dst, m_width, m_height);
+    ImageBufferHelper<const float> kernel_helper(_kernel.data(), _kernel_width,
+                                                 _kernel_height);
+
     const int kernel_center_x = static_cast<int>(_kernel_width / 2);
     const int kernel_center_y = static_cast<int>(_kernel_height / 2);
 
@@ -463,19 +499,16 @@ bool Image::ApplyConvolution(std::span<const float> _kernel, u32 _kernel_width,
             {
                 const int sample_y = static_cast<int>(y) +
                                      static_cast<int>(ky) - kernel_center_y;
-                const u32 clamped_y = ClampImageCoord(sample_y, m_height);
 
                 for (u32 kx = 0; kx < _kernel_width; ++kx)
                 {
                     const int sample_x = static_cast<int>(x) +
                                          static_cast<int>(kx) - kernel_center_x;
-                    const u32 clamped_x = ClampImageCoord(sample_x, m_width);
+
                     const Color4b& sample =
-                        src[static_cast<std::size_t>(clamped_y) * m_width +
-                            clamped_x];
-                    const float weight =
-                        _kernel[static_cast<std::size_t>(ky) * _kernel_width +
-                                kx];
+                        *src_helper.PixelClamped(sample_x, sample_y);
+
+                    const float weight = *kernel_helper.Pixel(kx, ky);
 
                     color.r += sample.r * weight;
                     color.g += sample.g * weight;
@@ -484,15 +517,13 @@ bool Image::ApplyConvolution(std::span<const float> _kernel, u32 _kernel_width,
                 }
             }
 
-            const std::size_t dst_index =
-                static_cast<std::size_t>(y) * m_width + x;
-            Color4b& pixel = dst[dst_index];
+            Color4b* pixel = dst_helper.Pixel(x, y);
             Color4f scaled = color * _scale + Color4f(_bias);
-            pixel.r = FloatToByte(scaled.r);
-            pixel.g = FloatToByte(scaled.g);
-            pixel.b = FloatToByte(scaled.b);
-            pixel.a = _preserve_alpha ? src[dst_index].a
-                                      : FloatToByte(scaled.a);
+            pixel->r = FloatToByte(scaled.r);
+            pixel->g = FloatToByte(scaled.g);
+            pixel->b = FloatToByte(scaled.b);
+            pixel->a = _preserve_alpha ? src_helper.Pixel(x, y)->a
+                                       : FloatToByte(scaled.a);
         }
     }
 
