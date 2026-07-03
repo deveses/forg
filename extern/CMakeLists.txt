@@ -39,6 +39,10 @@ if(FORG_USE_FREETYPE)
         )
         FetchContent_MakeAvailable(freetype)
         set(FORG_FREETYPE_LINK_TARGET freetype PARENT_SCOPE)
+        set(FORG_FREETYPE_INCLUDE_DIRS
+            ${freetype_SOURCE_DIR}/include
+            ${freetype_BINARY_DIR}/include
+            PARENT_SCOPE)
     endif()
 endif()
 

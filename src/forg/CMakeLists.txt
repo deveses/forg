@@ -38,7 +38,17 @@ if(FORG_USE_FREETYPE)
     endif()
 
     target_compile_definitions(forg PRIVATE FORG_USE_FREETYPE)
-    target_link_libraries(forg PRIVATE ${FORG_FREETYPE_LINK_TARGET})
+    if(FORG_FREETYPE_INCLUDE_DIRS)
+        target_include_directories(forg PRIVATE ${FORG_FREETYPE_INCLUDE_DIRS})
+    endif()
+
+    if(FORG_FREETYPE_LINK_TARGET STREQUAL "Freetype::Freetype")
+        target_link_libraries(forg PRIVATE Freetype::Freetype)
+    else()
+        add_dependencies(forg ${FORG_FREETYPE_LINK_TARGET})
+        target_link_libraries(forg PRIVATE
+            "$<BUILD_INTERFACE:$<TARGET_FILE:${FORG_FREETYPE_LINK_TARGET}>>$<INSTALL_INTERFACE:Freetype::Freetype>")
+    endif()
 endif()
 
 if(FORG_USE_ZLIB)
