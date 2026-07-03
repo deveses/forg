@@ -56,7 +56,7 @@ struct FORG_API PositionTextured
     static const int StrideSize;
     static VertexElement Declaration[];
 
-    PositionTextured() {};
+    PositionTextured(){};
     PositionTextured(const Vector3& pos, float u, float v);
     PositionTextured(float xvalue, float yvalue, float zvalue, float u,
                      float v);

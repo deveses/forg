@@ -65,8 +65,7 @@ static_assert(sizeof(VertexElement) == 8);
 static_assert(alignof(VertexElement) == alignof(u16));
 static_assert(offsetof(VertexElement, Offset) == sizeof(u16));
 static_assert(offsetof(VertexElement, Type) == sizeof(u16) * 2);
-static_assert(offsetof(VertexElement, Usage) ==
-              sizeof(u16) * 2 + sizeof(byte));
+static_assert(offsetof(VertexElement, Usage) == sizeof(u16) * 2 + sizeof(byte));
 static_assert(offsetof(VertexElement, UsageIndex) ==
               sizeof(u16) * 2 + sizeof(byte) * 2);
 

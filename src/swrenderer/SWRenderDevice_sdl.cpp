@@ -41,8 +41,7 @@ struct SWRenderDevice::Impl
         }
     }
 
-    bool EnsurePresentationResources(SDL_Window* window, u32 width,
-                                     u32 height)
+    bool EnsurePresentationResources(SDL_Window* window, u32 width, u32 height)
     {
         if (window == nullptr)
             return false;

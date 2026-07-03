@@ -13,8 +13,8 @@ namespace forg {
 class GLRenderer : public IRenderer
 {
   public:
-    GLRenderer() {};
-    virtual ~GLRenderer() {};
+    GLRenderer(){};
+    virtual ~GLRenderer(){};
 
     LPCTSTR get_Name() { return _T("OpenGL renderer"); }
 

@@ -475,10 +475,9 @@ LPTEXTURE GLRenderDevice::CreateTexture(u32 Width, u32 Height, u32 Levels,
                                    Pool));
 }
 
-LPTEXTURE GLRenderDevice::CreateTextureFromFile(const char* filename,
-                                                u32 Width, u32 Height,
-                                                u32 Levels, u32 Usage,
-                                                u32 Format, u32 Pool)
+LPTEXTURE GLRenderDevice::CreateTextureFromFile(const char* filename, u32 Width,
+                                                u32 Height, u32 Levels,
+                                                u32 Usage, u32 Format, u32 Pool)
 {
     return 0;
 }
@@ -918,8 +917,8 @@ int GLRenderDevice::SetIndices(IIndexBuffer* pIndexData)
     return 0;
 }
 
-int GLRenderDevice::SetViewport(u32 X, u32 Y, u32 Width, u32 Height,
-                                float MinZ, float MaxZ)
+int GLRenderDevice::SetViewport(u32 X, u32 Y, u32 Width, u32 Height, float MinZ,
+                                float MaxZ)
 {
     GLV(glViewport(X, Y, Width, Height));
     GLV(glDepthRange(MinZ, MaxZ));

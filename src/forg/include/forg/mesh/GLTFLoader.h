@@ -53,7 +53,7 @@ class GltfLoader
     struct CpuMesh
     {
         std::vector<PositionNormalTextured> vertices;
-        std::vector<u32> indices;           // triangle list, global, 32-bit
+        std::vector<u32> indices;            // triangle list, global, 32-bit
         Mesh::AttributeRangeVec subsets;     // one per triangle primitive
         Mesh::ExtendedMaterialVec materials; // parallel to subsets
         bool use32bit;

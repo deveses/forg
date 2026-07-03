@@ -97,13 +97,13 @@ class ITextureGLImpl : public ITexture
 {
     // 'structors
   private:
-    ITextureGLImpl() {};
+    ITextureGLImpl(){};
     ~ITextureGLImpl();
 
   public:
-    static ITextureGLImpl* Create(IRenderDevice* device, u32 width,
-                                  u32 height, u32 numLevels, u32 usage,
-                                  u32 format, u32 pool);
+    static ITextureGLImpl* Create(IRenderDevice* device, u32 width, u32 height,
+                                  u32 numLevels, u32 usage, u32 format,
+                                  u32 pool);
 
     // Attributes
   private:

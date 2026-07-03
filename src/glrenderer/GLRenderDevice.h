@@ -148,9 +148,9 @@ class GLRenderDevice : public IRenderDevice
     LPTEXTURE CreateTexture(u32 Width, u32 Height, u32 Levels, u32 Usage,
                             u32 Format, u32 Pool);
 
-    LPTEXTURE CreateTextureFromFile(const char* filename, u32 Width,
-                                    u32 Height, u32 Levels, u32 Usage,
-                                    u32 Format, u32 Pool);
+    LPTEXTURE CreateTextureFromFile(const char* filename, u32 Width, u32 Height,
+                                    u32 Levels, u32 Usage, u32 Format,
+                                    u32 Pool);
 
     int DrawIndexedPrimitive(PrimitiveType primitiveType, int baseVertex,
                              int minVertexIndex, int numVertices,

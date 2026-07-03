@@ -608,7 +608,7 @@ int XDataIdentifier::Load(xreader& reader)
 void XDataIntegerList::ToByteArray(void* buffer, u32 buffer_size) const
 {
     u32 bsize = (buffer_size >>
-                  2); // divide buffer size by int(4) size, this gives int count
+                 2); // divide buffer size by int(4) size, this gives int count
     // DWORD* ints = (DWORD*)buffer;
 
     if (bsize > m_aIntegers.size())

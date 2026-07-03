@@ -46,8 +46,7 @@ namespace forg::debug {
 FORG_API void DbgOutputStringW(const wchar_t* lpOutputString, va_list args);
 FORG_API void DbgOutputStringA(LPCTSTR lpOutputString, va_list args)
     FORG_PRINTF_FORMAT(1, 0);
-FORG_API int DbgTrace(LPCTSTR strFile, u32 dwLine, int iResult,
-                      LPCTSTR strMsg);
+FORG_API int DbgTrace(LPCTSTR strFile, u32 dwLine, int iResult, LPCTSTR strMsg);
 FORG_API int DbgTraceOnlyNonZero(LPCTSTR strFile, u32 dwLine, int iResult,
                                  LPCTSTR strMsg);
 FORG_API void DbgTrap(LPCTSTR strFile, u32 dwLine, LPCTSTR strMsg);

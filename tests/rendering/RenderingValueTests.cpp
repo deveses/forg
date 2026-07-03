@@ -29,8 +29,7 @@ TEST_CASE("Rendering value layouts remain stable", "[rendering][layout]")
     STATIC_REQUIRE(std::is_standard_layout_v<forg::VertexElement>);
     STATIC_REQUIRE(sizeof(forg::VertexElement) == 8);
     STATIC_REQUIRE(offsetof(forg::VertexElement, Stream) == 0);
-    STATIC_REQUIRE(offsetof(forg::VertexElement, Offset) ==
-                   sizeof(forg::u16));
+    STATIC_REQUIRE(offsetof(forg::VertexElement, Offset) == sizeof(forg::u16));
     STATIC_REQUIRE(offsetof(forg::VertexElement, Type) ==
                    sizeof(forg::u16) * 2);
     STATIC_REQUIRE(offsetof(forg::VertexElement, UsageIndex) ==

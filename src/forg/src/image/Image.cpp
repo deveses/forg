@@ -168,9 +168,8 @@ dst_width, u32 dst_height)
 }
 */
 
-static void Resize_NearestNeighbor(Color4b* src, u32 src_width,
-                                   u32 src_height, Color4b* dst,
-                                   u32 dst_width, u32 dst_height)
+static void Resize_NearestNeighbor(Color4b* src, u32 src_width, u32 src_height,
+                                   Color4b* dst, u32 dst_width, u32 dst_height)
 {
     for (u32 h = 0; h < dst_height; h++)
     {

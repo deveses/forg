@@ -244,10 +244,7 @@ void GLTexture::ReleaseSysMem()
     GLV(glDeleteTextures(1, &m_id));
 }
 
-void* GLTexture::LockRectSysMem(u32 Level, u32 Flags)
-{
-    return m_data[Level];
-}
+void* GLTexture::LockRectSysMem(u32 Level, u32 Flags) { return m_data[Level]; }
 
 int GLTexture::UnlockRectSysMem(u32 Level)
 {

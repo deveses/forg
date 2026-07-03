@@ -93,8 +93,7 @@ int SWVertexBuffer::Create(u32 length, u32 usage, u32 pool)
     return FORG_OK;
 }
 
-int SWVertexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData,
-                         u32)
+int SWVertexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData, u32)
 {
     if (ppbData == nullptr || offsetToLock > m_length ||
         (sizeToLock != 0 && sizeToLock > m_length - offsetToLock))
@@ -134,8 +133,7 @@ int SWIndexBuffer::Create(u32 length, u32 usage, bool sixteenBitIndices,
     return FORG_OK;
 }
 
-int SWIndexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData,
-                        u32)
+int SWIndexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData, u32)
 {
     if (ppbData == nullptr || offsetToLock > m_length ||
         (sizeToLock != 0 && sizeToLock > m_length - offsetToLock))

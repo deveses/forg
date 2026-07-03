@@ -711,8 +711,7 @@ MetalRenderDevice::CreateVertexDeclaration(const VertexElement* pVertexElements)
     return new VertexDeclaration(pVertexElements);
 }
 
-LPVERTEXBUFFER MetalRenderDevice::CreateVertexBuffer(u32 length,
-                                                     u32 /*usage*/,
+LPVERTEXBUFFER MetalRenderDevice::CreateVertexBuffer(u32 length, u32 /*usage*/,
                                                      u32 /*pool*/)
 {
     MetalVertexBuffer* vb = new MetalVertexBuffer();

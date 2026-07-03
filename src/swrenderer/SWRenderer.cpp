@@ -11,8 +11,8 @@ namespace forg {
 class SWRenderer : public IRenderer
 {
   public:
-    SWRenderer() {};
-    virtual ~SWRenderer() {};
+    SWRenderer(){};
+    virtual ~SWRenderer(){};
 
     LPCTSTR get_Name() { return _T("Software renderer"); }
 

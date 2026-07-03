@@ -122,10 +122,9 @@ int Sprite::Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
         {0.0f, absh, 0.0f, 0xffffffff, u0, v0}  // top-left
     };
     */
-    const u32 vertex_color = (static_cast<u32>(color.a) << 24) |
-                              (static_cast<u32>(color.r) << 16) |
-                              (static_cast<u32>(color.g) << 8) |
-                              static_cast<u32>(color.b);
+    const u32 vertex_color =
+        (static_cast<u32>(color.a) << 24) | (static_cast<u32>(color.r) << 16) |
+        (static_cast<u32>(color.g) << 8) | static_cast<u32>(color.b);
 
     forg::geometry::PositionColoredTextured points[4] = {
         {0.0f, 0.0f, 0.0f, static_cast<int>(vertex_color), u0, v0},

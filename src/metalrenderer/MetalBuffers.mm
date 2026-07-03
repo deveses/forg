@@ -97,8 +97,8 @@ int MetalIndexBuffer::Create(void* mtlDevice, u32 length,
     return (buf != nil) ? FORG_OK : FORG_INVALID_CALL;
 }
 
-int MetalIndexBuffer::Lock(u32 offsetToLock, u32 /*sizeToLock*/,
-                           void** ppbData, u32 /*flags*/)
+int MetalIndexBuffer::Lock(u32 offsetToLock, u32 /*sizeToLock*/, void** ppbData,
+                           u32 /*flags*/)
 {
     if (m_buffer == 0 || ppbData == 0)
         return FORG_INVALID_CALL;

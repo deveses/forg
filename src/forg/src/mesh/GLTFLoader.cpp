@@ -123,8 +123,8 @@ ExtendedMaterial MapMaterial(const cgltf_material* mat)
 // Recompute per-vertex normals over the vertex range [vStart, vStart+vCount)
 // using the faces [fStart, fStart+fCount). Each glTF primitive owns a disjoint
 // vertex range, so this is self-contained per primitive.
-void ComputeNormals(GltfLoader::CpuMesh& m, u32 vStart, u32 vCount,
-                    u32 fStart, u32 fCount)
+void ComputeNormals(GltfLoader::CpuMesh& m, u32 vStart, u32 vCount, u32 fStart,
+                    u32 fCount)
 {
     for (u32 i = 0; i < vCount; ++i)
         m.vertices[vStart + i].Normal.Zero();

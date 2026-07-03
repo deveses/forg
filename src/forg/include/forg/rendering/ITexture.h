@@ -45,7 +45,7 @@ class FORG_API ITexture : public core::RefCounter
 {
     // 'structors
   public:
-    virtual ~ITexture(void) {};
+    virtual ~ITexture(void){};
 
   public:
     // Public methods

@@ -82,7 +82,7 @@ class IRenderDevice : public core::RefCounter
   public:
     // Construction / Deconstruction
   public:
-    virtual ~IRenderDevice() {};
+    virtual ~IRenderDevice(){};
 
     // Public Methods
   public:
@@ -213,9 +213,8 @@ class IRenderDevice : public core::RefCounter
                                     u32 Usage, u32 Format, u32 Pool) = 0;
 
     virtual LPTEXTURE CreateTextureFromFile(const char* filename, u32 Width,
-                                            u32 Height, u32 Levels,
-                                            u32 Usage, u32 Format,
-                                            u32 Pool) = 0;
+                                            u32 Height, u32 Levels, u32 Usage,
+                                            u32 Format, u32 Pool) = 0;
 
     /// Based on indexing, renders the specified geometric primitive into an
     /// array of vertices.

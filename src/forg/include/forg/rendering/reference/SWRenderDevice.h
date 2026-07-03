@@ -200,8 +200,7 @@ class FORG_API SWRenderDevice : public IRenderDevice
     {
         return 0;
     }
-    virtual LPVERTEXBUFFER CreateVertexBuffer(u32 length, u32 usage,
-                                              u32 pool);
+    virtual LPVERTEXBUFFER CreateVertexBuffer(u32 length, u32 usage, u32 pool);
     virtual LPINDEXBUFFER CreateIndexBuffer(u32 length, u32 usage,
                                             bool sixteenBitIndices, u32 pool);
 

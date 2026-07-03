@@ -61,15 +61,14 @@ class MetalRenderDevice : public IRenderDevice
 
     virtual LPVERTEXDECLARATION
     CreateVertexDeclaration(const VertexElement* pVertexElements);
-    virtual LPVERTEXBUFFER CreateVertexBuffer(u32 length, u32 usage,
-                                              u32 pool);
+    virtual LPVERTEXBUFFER CreateVertexBuffer(u32 length, u32 usage, u32 pool);
     virtual LPINDEXBUFFER CreateIndexBuffer(u32 length, u32 usage,
                                             bool sixteenBitIndices, u32 pool);
     virtual LPTEXTURE CreateTexture(u32 Width, u32 Height, u32 Levels,
                                     u32 Usage, u32 Format, u32 Pool);
     virtual LPTEXTURE CreateTextureFromFile(const char* filename, u32 Width,
-                                            u32 Height, u32 Levels,
-                                            u32 Usage, u32 Format, u32 Pool);
+                                            u32 Height, u32 Levels, u32 Usage,
+                                            u32 Format, u32 Pool);
 
     virtual int DrawIndexedPrimitive(PrimitiveType primitiveType,
                                      int baseVertex, int minVertexIndex,

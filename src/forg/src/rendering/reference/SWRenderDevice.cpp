@@ -409,8 +409,8 @@ int SWRenderDevice::SetVertexDeclaration(const VertexDeclaration* pDecl)
     return FORG_OK;
 }
 
-int SWRenderDevice::SetViewport(u32 X, u32 Y, u32 Width, u32 Height,
-                                float MinZ, float MaxZ)
+int SWRenderDevice::SetViewport(u32 X, u32 Y, u32 Width, u32 Height, float MinZ,
+                                float MaxZ)
 {
     m_vp_x = X;
     m_vp_y = Y;
@@ -893,8 +893,8 @@ void SWRenderDevice::ProcessPixel(PSInput& _input, PSOutput& _output,
 
     if (hasTexture)
     {
-        cout = Color(m_samplers[0].Sample(_input.texcoord0.X,
-                                          _input.texcoord0.Y));
+        cout =
+            Color(m_samplers[0].Sample(_input.texcoord0.X, _input.texcoord0.Y));
     }
 
     if (hasColor)
@@ -1102,9 +1102,8 @@ void SWRenderDevice::DrawTriangle(const VSOutput* vertices, int usage)
     interpolator.Initialize(vertices[0].position, vertices[1].position,
                             vertices[2].position);
 
-    auto edge = [](const Vector4& a, const Vector4& b, float x, float y) {
-        return (x - a.X) * (b.Y - a.Y) - (y - a.Y) * (b.X - a.X);
-    };
+    auto edge = [](const Vector4& a, const Vector4& b, float x, float y)
+    { return (x - a.X) * (b.Y - a.Y) - (y - a.Y) * (b.X - a.X); };
 
     float minxf = vertices[0].position.X;
     float maxxf = vertices[0].position.X;
@@ -1132,9 +1131,8 @@ void SWRenderDevice::DrawTriangle(const VSOutput* vertices, int usage)
     if (simpleMaxY > static_cast<int>(m_height))
         simpleMaxY = static_cast<int>(m_height);
 
-    const float area =
-        edge(vertices[0].position, vertices[1].position,
-             vertices[2].position.X, vertices[2].position.Y);
+    const float area = edge(vertices[0].position, vertices[1].position,
+                            vertices[2].position.X, vertices[2].position.Y);
     if (fabs(area) < 1e-5f)
         return;
 
@@ -1145,14 +1143,12 @@ void SWRenderDevice::DrawTriangle(const VSOutput* vertices, int usage)
         {
             const float sampleX = static_cast<float>(ix) + 0.5f;
             const float sampleY = static_cast<float>(iy) + 0.5f;
-            const float w0 =
-                edge(vertices[1].position, vertices[2].position, sampleX,
-                     sampleY) /
-                area;
-            const float w1 =
-                edge(vertices[2].position, vertices[0].position, sampleX,
-                     sampleY) /
-                area;
+            const float w0 = edge(vertices[1].position, vertices[2].position,
+                                  sampleX, sampleY) /
+                             area;
+            const float w1 = edge(vertices[2].position, vertices[0].position,
+                                  sampleX, sampleY) /
+                             area;
             const float w2 = 1.0f - w0 - w1;
 
             if (w0 < epsilon || w1 < epsilon || w2 < epsilon)
@@ -1178,8 +1174,7 @@ void SWRenderDevice::DrawTriangle(const VSOutput* vertices, int usage)
             ProcessPixel(ps_input, ps_output, usage);
 
             float d = vertices[0].position.Z * w0 +
-                      vertices[1].position.Z * w1 +
-                      vertices[2].position.Z * w2;
+                      vertices[1].position.Z * w1 + vertices[2].position.Z * w2;
 
             if (d >= m_vp_minz && d <= m_vp_maxz &&
                 d <= GetDepth(static_cast<u32>(ix), static_cast<u32>(iy)))
@@ -1189,7 +1184,6 @@ void SWRenderDevice::DrawTriangle(const VSOutput* vertices, int usage)
             }
         }
     }
-
 }
 
 } // namespace forg::rendering::reference
