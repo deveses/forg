@@ -9,11 +9,13 @@
 #include "math/Math.h"
 
 #include <cctype>
+#include <cmath>
 #include <cstdio>
 #include <cstdint>
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -188,6 +190,36 @@ static void Resize_NearestNeighbor(Color4b* src, u32 src_width, u32 src_height,
     }
 }
 
+static std::optional<std::size_t> CalculatePixelCount(u32 width, u32 height)
+{
+    if (height != 0 && width > std::numeric_limits<std::size_t>::max() / height)
+    {
+        return std::nullopt;
+    }
+
+    return static_cast<std::size_t>(width) * height;
+}
+
+static u32 ClampImageCoord(int value, u32 limit)
+{
+    if (value < 0)
+        return 0;
+
+    const u32 coord = static_cast<u32>(value);
+    return coord < limit ? coord : limit - 1;
+}
+
+static byte FloatToByte(float value)
+{
+    if (value <= 0.0f)
+        return 0;
+
+    if (value >= 255.0f)
+        return 255;
+
+    return static_cast<byte>(std::lround(value));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static ImageFileType detect_file_type(std::string_view filename)
@@ -303,22 +335,16 @@ bool Image::Load(std::string_view filename)
 
     if (img_data)
     {
-        if (img_info.Height != 0 &&
-            img_info.Width >
-                std::numeric_limits<std::size_t>::max() / img_info.Height)
+        const std::optional<std::size_t> pixel_count =
+            CalculatePixelCount(img_info.Width, img_info.Height);
+        if (!pixel_count ||
+            *pixel_count >
+                std::numeric_limits<std::size_t>::max() / sizeof(Color4b))
         {
             return false;
         }
 
-        const std::size_t pixel_count =
-            static_cast<std::size_t>(img_info.Width) * img_info.Height;
-        if (pixel_count >
-            std::numeric_limits<std::size_t>::max() / sizeof(Color4b))
-        {
-            return false;
-        }
-
-        const std::size_t size = pixel_count * sizeof(Color4b);
+        const std::size_t size = *pixel_count * sizeof(Color4b);
         m_width = img_info.Width;
         m_height = img_info.Height;
 
@@ -373,6 +399,144 @@ u32 Image::GetSize(u32 _level) const
     h |= (-(h == 0)) & 1;
 
     return w * h * 4;
+}
+
+bool Image::ApplyConvolution(std::span<const float> _kernel, u32 _kernel_width,
+                             u32 _kernel_height, float _scale, float _bias,
+                             bool _preserve_alpha)
+{
+    if (_kernel.empty() || _kernel_width == 0 || _kernel_height == 0 ||
+        (_kernel_width % 2) == 0 || (_kernel_height % 2) == 0 ||
+        m_data.empty() || m_data[0].empty() || m_width == 0 || m_height == 0)
+    {
+        return false;
+    }
+
+    if (_kernel_height > std::numeric_limits<u32>::max() / _kernel_width)
+    {
+        return false;
+    }
+
+    const std::size_t kernel_size =
+        static_cast<std::size_t>(_kernel_width) * _kernel_height;
+    if (_kernel.size() != kernel_size)
+    {
+        return false;
+    }
+
+    if (m_width > static_cast<u32>(std::numeric_limits<int>::max()) ||
+        m_height > static_cast<u32>(std::numeric_limits<int>::max()) ||
+        _kernel_width > static_cast<u32>(std::numeric_limits<int>::max()) ||
+        _kernel_height > static_cast<u32>(std::numeric_limits<int>::max()))
+    {
+        return false;
+    }
+
+    const std::optional<std::size_t> pixel_count =
+        CalculatePixelCount(m_width, m_height);
+    if (!pixel_count || *pixel_count > std::numeric_limits<std::size_t>::max() /
+                                           sizeof(Color4b))
+    {
+        return false;
+    }
+
+    const std::size_t data_size = *pixel_count * sizeof(Color4b);
+    if (m_data[0].size() < data_size)
+    {
+        return false;
+    }
+
+    const Color4b* src = reinterpret_cast<const Color4b*>(m_data[0].data());
+    std::vector<char> filtered(data_size);
+    Color4b* dst = reinterpret_cast<Color4b*>(filtered.data());
+
+    const int kernel_center_x = static_cast<int>(_kernel_width / 2);
+    const int kernel_center_y = static_cast<int>(_kernel_height / 2);
+
+    for (u32 y = 0; y < m_height; ++y)
+    {
+        for (u32 x = 0; x < m_width; ++x)
+        {
+            Color4f color(0.0f, 0.0f, 0.0f, 0.0f);
+
+            for (u32 ky = 0; ky < _kernel_height; ++ky)
+            {
+                const int sample_y = static_cast<int>(y) +
+                                     static_cast<int>(ky) - kernel_center_y;
+                const u32 clamped_y = ClampImageCoord(sample_y, m_height);
+
+                for (u32 kx = 0; kx < _kernel_width; ++kx)
+                {
+                    const int sample_x = static_cast<int>(x) +
+                                         static_cast<int>(kx) - kernel_center_x;
+                    const u32 clamped_x = ClampImageCoord(sample_x, m_width);
+                    const Color4b& sample =
+                        src[static_cast<std::size_t>(clamped_y) * m_width +
+                            clamped_x];
+                    const float weight =
+                        _kernel[static_cast<std::size_t>(ky) * _kernel_width +
+                                kx];
+
+                    color.r += sample.r * weight;
+                    color.g += sample.g * weight;
+                    color.b += sample.b * weight;
+                    color.a += sample.a * weight;
+                }
+            }
+
+            const std::size_t dst_index =
+                static_cast<std::size_t>(y) * m_width + x;
+            Color4b& pixel = dst[dst_index];
+            Color4f scaled = color * _scale + Color4f(_bias);
+            pixel.r = FloatToByte(scaled.r);
+            pixel.g = FloatToByte(scaled.g);
+            pixel.b = FloatToByte(scaled.b);
+            pixel.a = _preserve_alpha ? src[dst_index].a
+                                      : FloatToByte(scaled.a);
+        }
+    }
+
+    m_data.resize(1);
+    m_data[0] = std::move(filtered);
+    m_num_mipmaps = 1;
+
+    return true;
+}
+
+bool Image::ApplyBoxBlur()
+{
+    static constexpr float kernel[] = {
+        1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,
+    };
+
+    return ApplyConvolution(kernel, 3, 3, 1.0f / 9.0f);
+}
+
+bool Image::ApplyGaussianBlur()
+{
+    static constexpr float kernel[] = {
+        1.0f, 2.0f, 1.0f, 2.0f, 4.0f, 2.0f, 1.0f, 2.0f, 1.0f,
+    };
+
+    return ApplyConvolution(kernel, 3, 3, 1.0f / 16.0f);
+}
+
+bool Image::ApplySharpen()
+{
+    static constexpr float kernel[] = {
+        0.0f, -1.0f, 0.0f, -1.0f, 5.0f, -1.0f, 0.0f, -1.0f, 0.0f,
+    };
+
+    return ApplyConvolution(kernel, 3, 3);
+}
+
+bool Image::ApplyEdgeDetect()
+{
+    static constexpr float kernel[] = {
+        -1.0f, -1.0f, -1.0f, -1.0f, 8.0f, -1.0f, -1.0f, -1.0f, -1.0f,
+    };
+
+    return ApplyConvolution(kernel, 3, 3);
 }
 
 u32 Image::GenerateMipmaps()
