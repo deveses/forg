@@ -32,9 +32,9 @@ namespace forg {
 
 struct ImageDescription
 {
-    uint Width;
-    uint Height;
-    uint Bpp;
+    u32 Width;
+    u32 Height;
+    u32 Bpp;
 };
 
 /// Raw image with mipmaps
@@ -48,39 +48,39 @@ class Image
     // Attributes
   private:
     std::vector<std::vector<char>> m_data; ///< array of mipmaps
-    uint m_width;
-    uint m_height;
-    uint m_num_mipmaps;
+    u32 m_width;
+    u32 m_height;
+    u32 m_num_mipmaps;
 
     // Public Methods
   public:
     bool Load(std::string_view filename);
     bool Save(std::string_view filename) const;
 
-    const char* GetData(uint _level = 0) const;
+    const char* GetData(u32 _level = 0) const;
 
-    uint GetSize(uint _level = 0) const;
+    u32 GetSize(u32 _level = 0) const;
 
-    uint GetWidth() const { return m_width; };
+    u32 GetWidth() const { return m_width; };
 
-    uint GetHeight() const { return m_height; };
+    u32 GetHeight() const { return m_height; };
 
-    uint GetWidth(uint _level) const;
+    u32 GetWidth(u32 _level) const;
 
-    uint GetHeight(uint _level) const;
+    u32 GetHeight(u32 _level) const;
 
     /// Change image size
     /**
      * @param _width new width, 0 - no change
      * @param _height new height, 0 - no change
      */
-    void Resize(uint _width, uint _height);
+    void Resize(u32 _width, u32 _height);
 
     /**
      * Generates mipmaps chain
      * @return Number of mipmaps
      */
-    uint GenerateMipmaps();
+    u32 GenerateMipmaps();
 
   private:
     void Clean();

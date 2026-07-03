@@ -34,7 +34,7 @@ using namespace forg::geometry;
 class XLoader
 {
   public:
-    static Mesh::MeshPtr Load(const char* filename, uint options,
+    static Mesh::MeshPtr Load(const char* filename, u32 options,
                               IRenderDevice* device,
                               Mesh::ExtendedMaterialVec& materials);
 };

@@ -155,7 +155,7 @@ class FORG_API Lexer
     TokenDefVec m_token_defs;
 
     char m_text[MAX_TOKEN_LENGTH];
-    uint m_text_lenght;
+    u32 m_text_lenght;
 
   public:
     Lexer();

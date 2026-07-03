@@ -123,17 +123,17 @@ ExtendedMaterial MapMaterial(const cgltf_material* mat)
 // Recompute per-vertex normals over the vertex range [vStart, vStart+vCount)
 // using the faces [fStart, fStart+fCount). Each glTF primitive owns a disjoint
 // vertex range, so this is self-contained per primitive.
-void ComputeNormals(GltfLoader::CpuMesh& m, uint vStart, uint vCount,
-                    uint fStart, uint fCount)
+void ComputeNormals(GltfLoader::CpuMesh& m, u32 vStart, u32 vCount, u32 fStart,
+                    u32 fCount)
 {
-    for (uint i = 0; i < vCount; ++i)
+    for (u32 i = 0; i < vCount; ++i)
         m.vertices[vStart + i].Normal.Zero();
 
-    for (uint f = 0; f < fCount; ++f)
+    for (u32 f = 0; f < fCount; ++f)
     {
-        uint i0 = m.indices[(fStart + f) * 3 + 0];
-        uint i1 = m.indices[(fStart + f) * 3 + 1];
-        uint i2 = m.indices[(fStart + f) * 3 + 2];
+        u32 i0 = m.indices[(fStart + f) * 3 + 0];
+        u32 i1 = m.indices[(fStart + f) * 3 + 1];
+        u32 i2 = m.indices[(fStart + f) * 3 + 2];
 
         Vector3 e0 = m.vertices[i1].Position - m.vertices[i0].Position;
         Vector3 e1 = m.vertices[i2].Position - m.vertices[i0].Position;
@@ -146,7 +146,7 @@ void ComputeNormals(GltfLoader::CpuMesh& m, uint vStart, uint vCount,
         m.vertices[i2].Normal += normal;
     }
 
-    for (uint i = 0; i < vCount; ++i)
+    for (u32 i = 0; i < vCount; ++i)
         m.vertices[vStart + i].Normal.Normalize();
 }
 
@@ -173,10 +173,10 @@ void AppendPrimitive(const cgltf_primitive* prim, const float* world,
     const cgltf_accessor* uv =
         FindAttribute(prim, cgltf_attribute_type_texcoord, 0);
 
-    const uint vStart = out.vertices.size();
-    const uint vCount = (uint)pos->count;
+    const u32 vStart = out.vertices.size();
+    const u32 vCount = (u32)pos->count;
 
-    for (uint i = 0; i < vCount; ++i)
+    for (u32 i = 0; i < vCount; ++i)
     {
         PositionNormalTextured v;
 
@@ -212,27 +212,27 @@ void AppendPrimitive(const cgltf_primitive* prim, const float* world,
         out.vertices.push_back(v);
     }
 
-    const uint fStart = out.indices.size() / 3;
+    const u32 fStart = out.indices.size() / 3;
 
     if (prim->indices != 0 && prim->indices->count > 0)
     {
         const cgltf_size ic = prim->indices->count;
 
-        std::vector<uint> tmp(ic);
-        cgltf_accessor_unpack_indices(prim->indices, tmp.data(), sizeof(uint),
+        std::vector<u32> tmp(ic);
+        cgltf_accessor_unpack_indices(prim->indices, tmp.data(), sizeof(u32),
                                       ic);
 
         for (cgltf_size k = 0; k < ic; ++k)
-            out.indices.push_back(tmp[(uint)k] + vStart);
+            out.indices.push_back(tmp[(u32)k] + vStart);
     }
     else
     {
         // Non-indexed primitive: emit a sequential triangle list.
-        for (uint k = 0; k < vCount; ++k)
+        for (u32 k = 0; k < vCount; ++k)
             out.indices.push_back(vStart + k);
     }
 
-    const uint fCount = (out.indices.size() / 3) - fStart;
+    const u32 fCount = (out.indices.size() / 3) - fStart;
 
     if (nor == 0)
         ComputeNormals(out, vStart, vCount, fStart, fCount);
@@ -315,7 +315,7 @@ bool GltfLoader::Flatten(const char* filename, CpuMesh& out)
     return true;
 }
 
-Mesh::MeshPtr GltfLoader::Load(const char* filename, uint /*options*/,
+Mesh::MeshPtr GltfLoader::Load(const char* filename, u32 /*options*/,
                                IRenderDevice* device,
                                Mesh::ExtendedMaterialVec& materials)
 {
@@ -323,8 +323,8 @@ Mesh::MeshPtr GltfLoader::Load(const char* filename, uint /*options*/,
     if (!Flatten(filename, cpu))
         return nullptr;
 
-    const uint numFaces = cpu.indices.size() / 3;
-    const uint numVerts = cpu.vertices.size();
+    const u32 numFaces = cpu.indices.size() / 3;
+    const u32 numVerts = cpu.vertices.size();
 
     Mesh::MeshPtr m(new Mesh(numFaces, numVerts,
                              cpu.use32bit ? MeshFlags::Use32Bit : 0,
@@ -343,22 +343,22 @@ Mesh::MeshPtr GltfLoader::Load(const char* filename, uint /*options*/,
     {
         if (cpu.use32bit)
         {
-            std::memcpy(ib, cpu.indices.data(), numFaces * 3 * sizeof(uint));
+            std::memcpy(ib, cpu.indices.data(), numFaces * 3 * sizeof(u32));
         }
         else
         {
             unsigned short* dst = (unsigned short*)ib;
-            for (uint i = 0; i < numFaces * 3; ++i)
+            for (u32 i = 0; i < numFaces * 3; ++i)
                 dst[i] = (unsigned short)cpu.indices[i];
         }
         m->UnlockIndexBuffer();
     }
 
     m->SetAttributeTable(cpu.subsets.data(),
-                         static_cast<uint>(cpu.subsets.size()));
+                         static_cast<u32>(cpu.subsets.size()));
 
     materials.clear();
-    for (uint i = 0; i < cpu.materials.size(); ++i)
+    for (u32 i = 0; i < cpu.materials.size(); ++i)
         materials.push_back(cpu.materials[i]);
 
     return m;

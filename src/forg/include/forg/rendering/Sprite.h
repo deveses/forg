@@ -78,12 +78,12 @@ class Sprite
   private:
     IRenderDevice* m_device;
     Matrix4 m_transform;
-    uint m_Flags;
+    u32 m_Flags;
 
     // Public methods
   public:
     /// Prepares a device for drawing sprites.
-    FORG_API int Begin(uint Flags);
+    FORG_API int Begin(u32 Flags);
 
     /// Adds a sprite to the list of batched sprites.
     FORG_API int Flush();

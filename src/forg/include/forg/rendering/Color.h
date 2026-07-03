@@ -133,7 +133,7 @@ struct FORG_API Color
     //////////////////////////////////////////////////////////////////////////
     // Construction
     //////////////////////////////////////////////////////////////////////////
-    Color(uint argb);
+    Color(u32 argb);
     Color(const Color& c) = default;
     constexpr Color() noexcept : r(1.0f), g(1.0f), b(1.0f), a(1.0f) {}
 
@@ -158,11 +158,11 @@ struct FORG_API Color
     // D3DXCOLOR( CONST D3DCOLORVALUE& );
 
     //// casting
-    operator uint() const;
+    operator u32() const;
 
     operator math::Vector4() const { return math::Vector4(r, g, b, a); }
 
-    Color& operator=(uint argb);
+    Color& operator=(u32 argb);
     Color& operator=(const Color& c) = default;
 
     constexpr void BlendTo(const Color& arg) noexcept

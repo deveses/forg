@@ -33,9 +33,9 @@ namespace forg {
 
 struct RENDER_PARAMETERS
 {
-    uint BackBufferWidth;
-    uint BackBufferHeight;
-    uint PresentationInterval;
+    u32 BackBufferWidth;
+    u32 BackBufferHeight;
+    u32 PresentationInterval;
 };
 
 class IRenderer

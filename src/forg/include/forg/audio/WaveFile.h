@@ -57,17 +57,17 @@ struct SWaveChunk
     unsigned int offset;
 };
 
-#define RiffID 'FFIR'
-#define ListID 'TSIL'
-#define WaveID 'EVAW'
-#define FormatID ' tmf'
-#define DataID 'atad'
+#define RiffID 0x46464952u   // 'FFIR'
+#define ListID 0x5453494Cu   // 'TSIL'
+#define WaveID 0x45564157u   // 'EVAW'
+#define FormatID 0x20746D66u // ' tmf'
+#define DataID 0x61746164u   // 'atad'
 
 // xaudio2/xma2
-#define XWmaID 'AMWX'
-#define DpdsID 'sdpd'
-#define XMA2ID '2AMX'
-#define SeekID 'kees'
+#define XWmaID 0x414D5758u // 'AMWX'
+#define DpdsID 0x73647064u // 'sdpd'
+#define XMA2ID 0x32414D58u // '2AMX'
+#define SeekID 0x6B656573u // 'kees'
 
 class FORG_API WaveFile
 {

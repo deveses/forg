@@ -33,8 +33,22 @@ target_include_directories(forg PRIVATE ${PROJECT_SOURCE_DIR}/extern/cgltf)
 forg_configure_target(forg)
 
 if(FORG_USE_FREETYPE)
+    if(NOT FORG_FREETYPE_LINK_TARGET)
+        message(FATAL_ERROR "FORG_USE_FREETYPE is enabled, but no FreeType target was configured")
+    endif()
+
     target_compile_definitions(forg PRIVATE FORG_USE_FREETYPE)
-    target_link_libraries(forg PRIVATE freetype)
+    if(FORG_FREETYPE_INCLUDE_DIRS)
+        target_include_directories(forg PRIVATE ${FORG_FREETYPE_INCLUDE_DIRS})
+    endif()
+
+    if(FORG_FREETYPE_LINK_TARGET STREQUAL "Freetype::Freetype")
+        target_link_libraries(forg PRIVATE Freetype::Freetype)
+    else()
+        add_dependencies(forg ${FORG_FREETYPE_LINK_TARGET})
+        target_link_libraries(forg PRIVATE
+            "$<BUILD_INTERFACE:$<TARGET_FILE:${FORG_FREETYPE_LINK_TARGET}>>$<INSTALL_INTERFACE:Freetype::Freetype>")
+    endif()
 endif()
 
 if(FORG_USE_ZLIB)
@@ -64,6 +78,11 @@ endif()
 
 if(APPLE)
     target_link_libraries(forg PRIVATE "$<LINK_LIBRARY:FRAMEWORK,AudioToolbox>")
+endif()
+
+if(FORG_PLATFORM_LINUX)
+    set_target_properties(forg PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(forg PRIVATE ${CMAKE_DL_LIBS})
 endif()
 
 set_target_properties(forg PROPERTIES EXPORT_NAME forg)

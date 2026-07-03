@@ -48,11 +48,11 @@ class ISerializer
     virtual bool BeginObject(std::string_view _name) = 0;
     virtual bool EndObject() = 0;
 
-    virtual bool BeginArray(std::string_view _name, uint& _count) = 0;
+    virtual bool BeginArray(std::string_view _name, u32& _count) = 0;
     virtual bool EndArray() = 0;
 
     virtual bool Value(std::string_view _name, int& _value) = 0;
-    virtual bool Value(std::string_view _name, uint& _value) = 0;
+    virtual bool Value(std::string_view _name, u32& _value) = 0;
     virtual bool Value(std::string_view _name, float& _value) = 0;
     virtual bool Value(std::string_view _name, core::string& _value) = 0;
 };

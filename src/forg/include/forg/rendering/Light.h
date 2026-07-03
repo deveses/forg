@@ -44,7 +44,7 @@ struct Light
     // Attributes
     ////////////////////////////////////////////////////////////////////////////////
 
-    uint Type;
+    u32 Type;
     Color Diffuse;
     Color Specular;
     Color Ambient;
@@ -73,7 +73,7 @@ struct Light
 
 static_assert(std::is_standard_layout_v<Light>);
 static_assert(offsetof(Light, Type) == 0);
-static_assert(offsetof(Light, Diffuse) >= sizeof(uint));
+static_assert(offsetof(Light, Diffuse) >= sizeof(u32));
 static_assert(offsetof(Light, Direction) > offsetof(Light, Position));
 static_assert(offsetof(Light, Phi) > offsetof(Light, Theta));
 } // namespace forg

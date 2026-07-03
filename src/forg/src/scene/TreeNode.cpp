@@ -20,17 +20,14 @@ const TreeNode* TreeNode::Parent() const { return m_parent; }
 
 bool TreeNode::IsRoot() const { return m_parent == nullptr; }
 
-uint TreeNode::ChildCount() const
-{
-    return static_cast<uint>(m_children.size());
-}
+u32 TreeNode::ChildCount() const { return static_cast<u32>(m_children.size()); }
 
-TreeNode* TreeNode::Child(uint index)
+TreeNode* TreeNode::Child(u32 index)
 {
     return index < m_children.size() ? m_children[index] : nullptr;
 }
 
-const TreeNode* TreeNode::Child(uint index) const
+const TreeNode* TreeNode::Child(u32 index) const
 {
     return index < m_children.size() ? m_children[index] : nullptr;
 }

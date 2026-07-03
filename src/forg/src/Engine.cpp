@@ -37,12 +37,12 @@ namespace forg {
 
 namespace {
 
-bool ParsePositiveUint(std::string_view text, uint& value)
+bool ParsePositiveUint(std::string_view text, u32& value)
 {
     if (text.empty())
         return false;
 
-    uint parsed = 0;
+    u32 parsed = 0;
     const char* begin = text.data();
     const char* end = begin + text.size();
     const auto [ptr, ec] = std::from_chars(begin, end, parsed);
@@ -270,7 +270,7 @@ struct Engine::Impl
     Light light = Engine::DefaultLight();
     bool lightEnabled = true;
     scene::Model* activeModel = nullptr;
-    uint fpsFrameCounter = 0;
+    u32 fpsFrameCounter = 0;
     EngineUpdateCallback updateCallback = nullptr;
     void* updateUserData = nullptr;
     EngineRenderCallback renderCallback = nullptr;
@@ -291,7 +291,7 @@ struct Engine::Impl
         EnsureScene(0);
     }
 
-    scene::Scene& EnsureScene(uint sceneIndex)
+    scene::Scene& EnsureScene(u32 sceneIndex)
     {
         scenes.reserve(sceneIndex + 1);
 
@@ -300,7 +300,7 @@ struct Engine::Impl
         return *scenes[sceneIndex];
     }
 
-    const scene::Scene& GetScene(uint sceneIndex) const
+    const scene::Scene& GetScene(u32 sceneIndex) const
     {
         if (sceneIndex < scenes.size() && scenes[sceneIndex])
             return *scenes[sceneIndex];
@@ -314,7 +314,7 @@ struct Engine::Impl
             if (!scene)
                 continue;
 
-            for (uint i = 0; i < scene->NodeCount(); ++i)
+            for (u32 i = 0; i < scene->NodeCount(); ++i)
             {
                 scene::CameraNode* cameraNode =
                     dynamic_cast<scene::CameraNode*>(scene->Node(i));
@@ -566,7 +566,7 @@ struct Engine::Impl
         return true;
     }
 
-    bool LoadScene(std::string_view filename, uint sceneIndex)
+    bool LoadScene(std::string_view filename, u32 sceneIndex)
     {
         if (!RequireInitialized())
             return false;
@@ -666,12 +666,12 @@ struct Engine::Impl
 
     bool ControlServerRunning() const { return controlServer != nullptr; }
 
-    uint PumpControlCommands()
+    u32 PumpControlCommands()
     {
         if (!controlQueue)
             return 0;
 
-        uint count = 0;
+        u32 count = 0;
         net::QueueItem item;
         while (controlQueue->TryPop(item))
         {
@@ -683,7 +683,7 @@ struct Engine::Impl
         return count;
     }
 
-    void ApplyFallbackSceneTransforms(uint sceneIndex)
+    void ApplyFallbackSceneTransforms(u32 sceneIndex)
     {
         IRenderDevice* renderDevice = device.Get();
         if (renderDevice == nullptr)
@@ -715,7 +715,7 @@ struct Engine::Impl
         renderDevice->SetTransform(TransformType_World, Matrix4::Identity);
     }
 
-    void ApplySceneTransforms(uint sceneIndex, scene::Scene& scene)
+    void ApplySceneTransforms(u32 sceneIndex, scene::Scene& scene)
     {
         scene::CameraNode* cameraNode = scene.ActiveCameraNode();
         if (cameraNode != nullptr)
@@ -769,7 +769,7 @@ struct Engine::Impl
         renderDevice->LightEnable(0, lightEnabled);
         renderDevice->SetRenderState(RenderStates_Lighting, lightEnabled);
 
-        for (uint i = 0; i < scenes.size(); ++i)
+        for (u32 i = 0; i < scenes.size(); ++i)
         {
             if (scenes[i])
             {
@@ -827,7 +827,7 @@ struct Engine::Impl
         return Update(frameStats.DeltaSeconds, engine) && Render(engine);
     }
 
-    void Resize(uint width, uint height)
+    void Resize(u32 width, u32 height)
     {
         if (device.Get() == nullptr)
         {
@@ -874,7 +874,7 @@ struct Engine::Impl
 
     void SetClearColor(const Color& color) { clearColor = color; }
 
-    bool SetLight(uint index, const Light& nextLight)
+    bool SetLight(u32 index, const Light& nextLight)
     {
         if (index != 0)
         {
@@ -893,7 +893,7 @@ struct Engine::Impl
         return true;
     }
 
-    bool EnableLight(uint index, bool enabled)
+    bool EnableLight(u32 index, bool enabled)
     {
         if (index != 0)
         {
@@ -909,14 +909,14 @@ struct Engine::Impl
         return true;
     }
 
-    Light* GetLight(uint index)
+    Light* GetLight(u32 index)
     {
         if (index != 0)
             return nullptr;
         return &light;
     }
 
-    const Light* GetLight(uint index) const
+    const Light* GetLight(u32 index) const
     {
         if (index != 0)
             return nullptr;
@@ -996,7 +996,7 @@ bool Engine::LoadScene(std::string_view filename)
     return m_impl->LoadScene(filename, 0);
 }
 
-bool Engine::LoadScene(std::string_view filename, uint sceneIndex)
+bool Engine::LoadScene(std::string_view filename, u32 sceneIndex)
 {
     return m_impl->LoadScene(filename, sceneIndex);
 }
@@ -1013,7 +1013,7 @@ bool Engine::ControlServerRunning() const
     return m_impl->ControlServerRunning();
 }
 
-uint Engine::PumpControlCommands() { return m_impl->PumpControlCommands(); }
+u32 Engine::PumpControlCommands() { return m_impl->PumpControlCommands(); }
 
 bool Engine::Update(double deltaSeconds)
 {
@@ -1024,7 +1024,7 @@ bool Engine::Render() { return m_impl->Render(*this); }
 
 bool Engine::Frame() { return m_impl->Frame(*this); }
 
-void Engine::Resize(uint width, uint height) { m_impl->Resize(width, height); }
+void Engine::Resize(u32 width, u32 height) { m_impl->Resize(width, height); }
 
 bool Engine::HandleInput(const InputEvent& event)
 {
@@ -1070,19 +1070,19 @@ Light Engine::DefaultLight()
     return light;
 }
 
-bool Engine::SetLight(uint index, const Light& light)
+bool Engine::SetLight(u32 index, const Light& light)
 {
     return m_impl->SetLight(index, light);
 }
 
-bool Engine::EnableLight(uint index, bool enabled)
+bool Engine::EnableLight(u32 index, bool enabled)
 {
     return m_impl->EnableLight(index, enabled);
 }
 
-Light* Engine::GetLight(uint index) { return m_impl->GetLight(index); }
+Light* Engine::GetLight(u32 index) { return m_impl->GetLight(index); }
 
-const Light* Engine::GetLight(uint index) const
+const Light* Engine::GetLight(u32 index) const
 {
     return m_impl->GetLight(index);
 }
@@ -1103,19 +1103,19 @@ scene::Scene& Engine::Scene() { return m_impl->EnsureScene(0); }
 
 const scene::Scene& Engine::Scene() const { return m_impl->GetScene(0); }
 
-scene::Scene& Engine::Scene(uint sceneIndex)
+scene::Scene& Engine::Scene(u32 sceneIndex)
 {
     return m_impl->EnsureScene(sceneIndex);
 }
 
-const scene::Scene& Engine::Scene(uint sceneIndex) const
+const scene::Scene& Engine::Scene(u32 sceneIndex) const
 {
     return m_impl->GetScene(sceneIndex);
 }
 
-uint Engine::SceneCount() const
+u32 Engine::SceneCount() const
 {
-    return static_cast<uint>(m_impl->scenes.size());
+    return static_cast<u32>(m_impl->scenes.size());
 }
 
 audio::AudioEngine& Engine::Audio() { return m_impl->audio; }

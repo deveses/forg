@@ -4,8 +4,8 @@
 
 namespace forg {
 
-GLIndexBuffer::GLIndexBuffer(GLRenderDevice* device, uint sizeOfBufferInBytes,
-                             uint usage, uint pool, bool sixteenBitIndices)
+GLIndexBuffer::GLIndexBuffer(GLRenderDevice* device, u32 sizeOfBufferInBytes,
+                             u32 usage, u32 pool, bool sixteenBitIndices)
     : m_device(0), m_caps(0)
 {
     m_caps = device->get_DeviceCaps();
@@ -26,8 +26,8 @@ GLIndexBuffer::~GLIndexBuffer(void)
     GLV(glDeleteBuffersARB(1, &m_buffer_id));
 }
 
-int GLIndexBuffer::Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
-                        uint flags)
+int GLIndexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData,
+                        u32 flags)
 {
     GLV(glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER, m_buffer_id));
 

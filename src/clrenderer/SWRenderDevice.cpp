@@ -19,9 +19,9 @@ namespace forg
         return v & (1 << b);
     }
 
-    uint blend_color(uint _src, uint _dst)
+    u32 blend_color(u32 _src, u32 _dst)
     {
-        uint out = _src;
+        u32 out = _src;
 
         int a = _src >> 24;
 
@@ -64,7 +64,7 @@ namespace forg
 
         if (kf.Open(_name))
         {
-            forg::uint fsize = 0;
+            forg::u32 fsize = 0;
 
             kf.GetSize(fsize);
 
@@ -298,7 +298,7 @@ namespace forg
         texture = _texture;
     }
 
-    uint SWSampler::Sample(float u, float v)
+    u32 SWSampler::Sample(float u, float v)
     {
         if (texture)
         {
@@ -347,7 +347,7 @@ namespace forg
         }
     }
 
-    int SWRenderDevice::Initialize(uint _width, uint _height)
+    int SWRenderDevice::Initialize(u32 _width, u32 _height)
     {
         /*
         RECT rcClient;
@@ -442,7 +442,7 @@ namespace forg
         m_fb_pitch = m_width * 4;
         m_zb_pitch = m_width * 4;
         m_fb_size = m_fb_pitch * m_height;
-        m_frame_buffer = new uint[m_width*m_height];
+        m_frame_buffer = new u32[m_width*m_height];
         m_depth_buffer = new float[m_width*m_height];
 
         cl_image_format img_format;
@@ -506,7 +506,7 @@ namespace forg
         return FORG_OK;
     }
 
-    LPVERTEXBUFFER SWRenderDevice::CreateVertexBuffer(uint length, uint usage, uint pool)
+    LPVERTEXBUFFER SWRenderDevice::CreateVertexBuffer(u32 length, u32 usage, u32 pool)
     {
         SWVertexBuffer* vb = new SWVertexBuffer();
 
@@ -515,7 +515,7 @@ namespace forg
         return vb;
     }
 
-    LPINDEXBUFFER SWRenderDevice::CreateIndexBuffer(uint length, uint usage, bool sixteenBitIndices, uint pool)
+    LPINDEXBUFFER SWRenderDevice::CreateIndexBuffer(u32 length, u32 usage, bool sixteenBitIndices, u32 pool)
     {
         SWIndexBuffer* ib = new SWIndexBuffer();
 
@@ -524,7 +524,7 @@ namespace forg
         return ib;
     }
 
-    LPTEXTURE SWRenderDevice::CreateTexture(uint Width, uint Height, uint Levels, uint Usage, uint Format, uint Pool)
+    LPTEXTURE SWRenderDevice::CreateTexture(u32 Width, u32 Height, u32 Levels, u32 Usage, u32 Format, u32 Pool)
     {
         SWTexture* tex = new SWTexture();
 
@@ -572,7 +572,7 @@ namespace forg
         return FORG_OK;
     }
 
-    int SWRenderDevice::SetTexture(uint Sampler, ITexture* pTexture)
+    int SWRenderDevice::SetTexture(u32 Sampler, ITexture* pTexture)
     {
         if (Sampler < NUM_SAMPLERS)
         {
@@ -627,7 +627,7 @@ namespace forg
         return FORG_OK; 
     }
     
-    int SWRenderDevice::SetViewport(uint X, uint Y, uint Width, uint Height, float MinZ, float MaxZ)
+    int SWRenderDevice::SetViewport(u32 X, u32 Y, u32 Width, u32 Height, float MinZ, float MaxZ)
     {
         m_vp_x = X;
         m_vp_y = Y;
@@ -662,7 +662,7 @@ namespace forg
         return FORG_OK;
     }
 
-    int SWRenderDevice::SetLight(uint Index, const Light* pLight)
+    int SWRenderDevice::SetLight(u32 Index, const Light* pLight)
     {
         if (Index < NUM_LIGHTS)
         {
@@ -689,24 +689,24 @@ namespace forg
 
     int SWRenderDevice::DrawIndexedUserPrimitives(
 		    PrimitiveType primitiveType,
-		    uint minVertexIndex,
-		    uint numVertexIndices,
-		    uint primitiveCount,
+		    u32 minVertexIndex,
+		    u32 numVertexIndices,
+		    u32 primitiveCount,
 		    const void* indexData,
 		    bool sixteenBitIndices,
 		    const void* vertexStreamZeroData,
-            uint vertexStreamZeroStride)
+            u32 vertexStreamZeroStride)
     {
-	    uint stride = m_vdecl.GetVertexSize();
+	    u32 stride = m_vdecl.GetVertexSize();
         char* position_ptr = 0;
-        uint position_size = 0;
+        u32 position_size = 0;
         char* normal_ptr = 0;
         char* texcoord_ptr = 0;
-        uint texcoord_size = 0;
+        u32 texcoord_size = 0;
         int vertex_usage = 0;
 
         const VertexElement* elements = m_vdecl.GetDeclaration();
-        for (uint i=0; i<m_vdecl.GetElementsCount(); i++)
+        for (u32 i=0; i<m_vdecl.GetElementsCount(); i++)
         {
             vertex_usage |= (1 << elements[i].Usage);
 
@@ -729,8 +729,8 @@ namespace forg
             }
         }
 
-        uint num_indices = primitiveCount;
-        uint indices_step = 3;
+        u32 num_indices = primitiveCount;
+        u32 indices_step = 3;
         /// swap indices for even triangles
         bool swap_even = false;
 
@@ -760,18 +760,18 @@ namespace forg
             break;
         }
 
-        const uint* indices32 = (const uint*)indexData;
-        const ushort* indices16 = (const ushort*)indexData;
+        const u32* indices32 = (const u32*)indexData;
+        const u16* indices16 = (const u16*)indexData;
 
         VSOutput vs_batch[MAX_VERTEX_BATCH_SIZE];
         VSInput vs_input[3];
         VSOutput* vs_output = vs_batch;
 
-        uint tri_count = 0;
+        u32 tri_count = 0;
 
-        for (uint i=0; i<primitiveCount; i++)
+        for (u32 i=0; i<primitiveCount; i++)
         {
-            uint idx[3];
+            u32 idx[3];
 
             if (sixteenBitIndices)
             {
@@ -791,7 +791,7 @@ namespace forg
 
             if (swap_even && i%2!=0)
             {
-                uint ti = idx[0];
+                u32 ti = idx[0];
                 idx[0] = idx[1];
                 idx[1] = ti;
             }
@@ -886,13 +886,13 @@ namespace forg
         return DrawIndexedUserPrimitives(primitiveType, 0, ib->GetLength(), primCount, ib->GetData(), ib->IsIndexShort(), vb->GetData(), m_vdecl.GetVertexSize());
     }
 
-    int SWRenderDevice::Clear(uint flags, Color color, float zdepth, int stencil)
+    int SWRenderDevice::Clear(u32 flags, Color color, float zdepth, int stencil)
     {
-        uint c = color;
+        u32 c = color;
 
         if (flags & forg::ClearFlags_Target)
         {
-            for (uint p=0; p<m_width*m_height; p++)
+            for (u32 p=0; p<m_width*m_height; p++)
             {
                 m_frame_buffer[p] = c;
             }
@@ -926,11 +926,11 @@ namespace forg
     }
 
     /// returns r where r >= v and r = x * 2^pow2
-    template <uint pow2>
-    uint next_mul(uint v)
+    template <u32 pow2>
+    u32 next_mul(u32 v)
     {
-        const uint c = (1 << pow2) - 1;
-        //uint a = (v & c) ^ c;
+        const u32 c = (1 << pow2) - 1;
+        //u32 a = (v & c) ^ c;
         //v += a + 1;
        
 
@@ -971,8 +971,8 @@ namespace forg
         HBITMAP hBitmap = CreateDIBSection(hMemDC, &bi, DIB_RGB_COLORS, &pvBits, NULL, 0x0);
         HGDIOBJ hOldBitmap = SelectObject(hMemDC, hBitmap);
 
-        //for (uint y = 0; y < ulWindowHeight; y++)
-        //for (uint x = 0; x < ulWindowWidth; x++)
+        //for (u32 y = 0; y < ulWindowHeight; y++)
+        //for (u32 x = 0; x < ulWindowWidth; x++)
         //    ((UINT32 *)pvBits)[x + y * ulWindowWidth] = 0xff0000ff; 
 
         if (USE_SOFTWARE_MODE)
@@ -1007,25 +1007,25 @@ namespace forg
         return FORG_OK;
     }
 
-    float SWRenderDevice::GetDepth(uint _x, uint _y)
+    float SWRenderDevice::GetDepth(u32 _x, u32 _y)
     {
         _y = m_height - 1 - _y;
 
-        uint index = _y*m_width + _x;
+        u32 index = _y*m_width + _x;
 
         float d = m_depth_buffer[index];
 
         return d;
     }
 
-    void SWRenderDevice::SetPixel(uint _x, uint _y, float _z, uint _c)
+    void SWRenderDevice::SetPixel(u32 _x, u32 _y, float _z, u32 _c)
     {
         _x += m_vp_x;
         _y += m_vp_y;
 
         _y = m_height - 1 - _y;
 
-        uint index = _y*m_width + _x;
+        u32 index = _y*m_width + _x;
 
         float& d = m_depth_buffer[index];
 
@@ -1033,7 +1033,7 @@ namespace forg
         {
             d = _z;
 
-            uint& p = m_frame_buffer[index];
+            u32& p = m_frame_buffer[index];
 
             p = blend_color(_c, p);
         }
@@ -1091,7 +1091,7 @@ namespace forg
     // points must be in CCW order
     void SWRenderDevice::DrawTriangle(const Vector3* pos)
     {
-        uint* colorBuffer = (uint*)m_frame_buffer;
+        u32* colorBuffer = (u32*)m_frame_buffer;
 
         // 28.4 fixed-point coordinates
 
@@ -1245,15 +1245,15 @@ namespace forg
         }
     }
 
-    void SWRenderDevice::DrawTriangleArray(const VSOutput* vertices, uint num_triangles, int usage)
+    void SWRenderDevice::DrawTriangleArray(const VSOutput* vertices, u32 num_triangles, int usage)
     {
-        for (uint i = 0; i < num_triangles; i++)
+        for (u32 i = 0; i < num_triangles; i++)
         {
             DrawTriangle(vertices + i*3, usage);
         }
     }
 
-    void SWRenderDevice::DrawTriangleArrayCL(const VSOutput* vertices, uint num_triangles, int usage)
+    void SWRenderDevice::DrawTriangleArrayCL(const VSOutput* vertices, u32 num_triangles, int usage)
     {
         if (num_triangles == 0)
             return;
@@ -1299,11 +1299,11 @@ namespace forg
 
         // Set up work groups
 
-        uint xmax = 0;
-        uint xmin = m_width;
-        uint ymax = 0;
-        uint ymin = m_height;
-        uint xtreme_found = 0;
+        u32 xmax = 0;
+        u32 xmin = m_width;
+        u32 ymax = 0;
+        u32 ymin = m_height;
+        u32 xtreme_found = 0;
 
         for (size_t i = 0; i < num_triangles * 3 && xtreme_found < 4; i++)
         {
@@ -1362,8 +1362,8 @@ namespace forg
 
         xmin &= ~7;
         ymin &= ~7;
-        uint xsize = next_mul<5>(xmax - xmin);
-        uint ysize = next_mul<5>(ymax - ymin);
+        u32 xsize = next_mul<5>(xmax - xmin);
+        u32 ysize = next_mul<5>(ymax - ymin);
 
         // Enqueue job 
 
@@ -1379,7 +1379,7 @@ namespace forg
         }
     }
 
-    void SWRenderDevice::DrawTriangleArrayCLPreInt(const VSOutput* vertices, uint num_triangles, int usage)
+    void SWRenderDevice::DrawTriangleArrayCLPreInt(const VSOutput* vertices, u32 num_triangles, int usage)
     {
         if (num_triangles == 0)
             return;
@@ -1433,11 +1433,11 @@ namespace forg
 
         // Set up work groups
 
-        uint xmax = 0;
-        uint xmin = m_width;
-        uint ymax = 0;
-        uint ymin = m_height;
-        uint xtreme_found = 0;
+        u32 xmax = 0;
+        u32 xmin = m_width;
+        u32 ymax = 0;
+        u32 ymin = m_height;
+        u32 xtreme_found = 0;
 
         for (size_t i = 0; i < num_triangles*3 && xtreme_found < 4; i++)
         {
@@ -1496,8 +1496,8 @@ namespace forg
 
         xmin &= ~7;
         ymin &= ~7;
-        uint xsize = next_mul<3>(xmax-xmin);
-        uint ysize = next_mul<3>(ymax-ymin);
+        u32 xsize = next_mul<3>(xmax-xmin);
+        u32 ysize = next_mul<3>(ymax-ymin);
 
         // Enqueue job 
 
@@ -1513,7 +1513,7 @@ namespace forg
     }
 
     /*
-    void SWRenderDevice::DrawTriangleArrayCL(VSOutput* vertices, uint num_triangles, int usage)
+    void SWRenderDevice::DrawTriangleArrayCL(VSOutput* vertices, u32 num_triangles, int usage)
     {
         if (num_triangles == 0)
             return;
@@ -1547,11 +1547,11 @@ namespace forg
 
     struct KernelTest
     {
-        uint sx;
-        uint sy;
+        u32 sx;
+        u32 sy;
 
-        uint width;
-        uint height;
+        u32 width;
+        u32 height;
 
         struct int2
         {
@@ -1563,12 +1563,12 @@ namespace forg
 
         struct uint4
         {
-            uint x;
-            uint y;
-            uint z;
-            uint w;
+            u32 x;
+            u32 y;
+            u32 z;
+            u32 w;
 
-            uint4(uint _x, uint _y, uint _z, uint _w) { x = _x; y = _y; z = _z; w = _w; }
+            uint4(u32 _x, u32 _y, u32 _z, u32 _w) { x = _x; y = _y; z = _z; w = _w; }
         };
 
 
@@ -1587,17 +1587,17 @@ namespace forg
             return max(max(a, b), c);
         }
 
-        void write_imageui(uint* buffer, int2& coords, uint4& col)
+        void write_imageui(u32* buffer, int2& coords, uint4& col)
         {
-            uint index = coords.y*width + coords.x;
+            u32 index = coords.y*width + coords.x;
 
-            uint& p = buffer[index];
+            u32& p = buffer[index];
 
             // ZYXW
             p = (col.z << 24) | (col.y << 16) | (col.x << 8) | col.w;
         }
 
-        void DrawBlock(uint* buffer, VSOutput* vertices, uint vertex_size, uint num_triangles)
+        void DrawBlock(u32* buffer, VSOutput* vertices, u32 vertex_size, u32 num_triangles)
         {
             //int width = get_image_width(buffer);
             //int height = get_image_height(buffer);
@@ -1615,7 +1615,7 @@ namespace forg
             uint4 colIn = uint4(255, 255, 255, 255);
             uint4 colEdge = uint4(255, 0, 255, 0);
 
-            for (uint t = 0; t<num_triangles; t++)
+            for (u32 t = 0; t<num_triangles; t++)
             {
                 int tri0 = t * 3 ;
                 int tri1 = t * 3  + 1;
@@ -1788,16 +1788,16 @@ namespace forg
         }
     };
 
-    void SWRenderDevice::DrawTriangleArrayCLTest(VSOutput* vertices, uint num_triangles, int usage)
+    void SWRenderDevice::DrawTriangleArrayCLTest(VSOutput* vertices, u32 num_triangles, int usage)
     {
         if (num_triangles == 0)
             return;
 
-        uint xmax = 0;
-        uint xmin = m_width;
-        uint ymax = 0;
-        uint ymin = m_height;
-        uint xtreme_found = 0;
+        u32 xmax = 0;
+        u32 xmin = m_width;
+        u32 ymax = 0;
+        u32 ymin = m_height;
+        u32 xtreme_found = 0;
 
         for (size_t i = 0; i < num_triangles * 3 && xtreme_found < 4; i++)
         {
@@ -1854,17 +1854,17 @@ namespace forg
         ymax = m_height;
         */
 
-        uint xsize = next_mul<3>(xmax);
-        uint ysize = next_mul<3>(ymax);
+        u32 xsize = next_mul<3>(xmax);
+        u32 ysize = next_mul<3>(ymax);
         const size_t globalWorkOffset[] = { xmin, ymin, 0 };
         const size_t globalWorkSize[] = { xsize, ysize, 0 };
         const size_t localWorkSize[] = { 8, 8, 0 };
 
         KernelTest kt;
 
-        for (uint sy = 0; sy < m_height; sy++)
+        for (u32 sy = 0; sy < m_height; sy++)
         {
-            for (uint sx = 0; sx < m_width; sx++)
+            for (u32 sx = 0; sx < m_width; sx++)
             {
                 kt.sx = sx;
                 kt.sy = sy;
@@ -2172,7 +2172,7 @@ namespace forg
 
                         for(int ix = x; ix < x + q && ix <maxx; ix++)
                         {
-                            uint c = 0xff007f00;    // green
+                            u32 c = 0xff007f00;    // green
 
                             interpolator.SetPixel(ix, y+iy);
                            
@@ -2221,7 +2221,7 @@ namespace forg
                         {
                             if(CX1 > 0 && CX2 > 0 && CX3 > 0)
                             {
-                                uint c = 0xff00007f;
+                                u32 c = 0xff00007f;
 
                                 interpolator.SetPixel(ix, iy);
 

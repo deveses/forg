@@ -88,7 +88,7 @@ TEST_CASE("BitArray clears individual and all bits", "[core][bitarray]")
 
     bits.SetAll(false);
 
-    for (forg::uint i = 0; i < bits.get_Length(); ++i)
+    for (forg::u32 i = 0; i < bits.get_Length(); ++i)
         REQUIRE_FALSE(bits.Get(i));
 }
 
@@ -131,6 +131,6 @@ TEST_CASE("BitArray growth initializes intermediate bits to false",
     REQUIRE(bits.get_Length() == 41);
     REQUIRE(bits.Get(40));
 
-    for (forg::uint i = 1; i < 40; ++i)
+    for (forg::u32 i = 1; i < 40; ++i)
         REQUIRE_FALSE(bits.Get(i));
 }

@@ -15,9 +15,9 @@ typedef struct _LARGE_INTEGER
     forg::uint64 QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
-typedef forg::uint BOOL;
+typedef forg::u32 BOOL;
 
-static forg::uint GetLastError() { return 0; }
+static forg::u32 GetLastError() { return 0; }
 
 // counts in nanosecond ticks, matching the QueryPerformance* contract
 static BOOL QueryPerformanceCounter(LARGE_INTEGER* li)

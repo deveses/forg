@@ -4,8 +4,8 @@
 
 namespace forg {
 
-GLVertexBuffer::GLVertexBuffer(GLRenderDevice* device, uint sizeOfBufferInBytes,
-                               uint usage, uint pool)
+GLVertexBuffer::GLVertexBuffer(GLRenderDevice* device, u32 sizeOfBufferInBytes,
+                               u32 usage, u32 pool)
     : m_device(0), m_caps(0), m_created(false)
 {
     m_caps = device->get_DeviceCaps();
@@ -24,8 +24,8 @@ GLVertexBuffer::~GLVertexBuffer(void)
     GLV(glDeleteBuffersARB(1, &m_buffer_id));
 }
 
-int GLVertexBuffer::Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
-                         uint flags)
+int GLVertexBuffer::Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData,
+                         u32 flags)
 {
     GLenum access = GL_READ_WRITE;
 

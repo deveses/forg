@@ -26,10 +26,10 @@ extern "C"
     /************************************************************************/
     /* GL_ARB_vertex_buffer_object [all] (standard in OGL 1.5)              */
     /************************************************************************/
-    PFNGLBINDBUFFERARBPROC glBindBufferARB = 0; //(enum target, uint buffer)
+    PFNGLBINDBUFFERARBPROC glBindBufferARB = 0; //(enum target, u32 buffer)
     PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB =
-        0;                                      //(sizei n, const uint *buffers)
-    PFNGLGENBUFFERSARBPROC glGenBuffersARB = 0; //(sizei n, uint *buffers)
+        0;                                      //(sizei n, const u32 *buffers)
+    PFNGLGENBUFFERSARBPROC glGenBuffersARB = 0; //(sizei n, u32 *buffers)
     PFNGLISBUFFERARBPROC glIsBufferARB = 0;     //(GLuint buffer)
     PFNGLBUFFERDATAARBPROC glBufferDataARB =
         0; //(enum target, sizeiptrARB size, const void *data,	enum usage)

@@ -65,7 +65,7 @@ struct ModelCylinderParams
 
 struct ModelPyramidParams
 {
-    uint NumAngles;
+    u32 NumAngles;
     float Radius;
     float Height;
     int Color;
@@ -76,7 +76,7 @@ struct ModelGridParams
     float SizeX;
     float SizeY;
     int Color;
-    uint Subgrid;
+    u32 Subgrid;
 };
 
 struct ModelMeshParams
@@ -102,14 +102,14 @@ class FORG_API Model
     ModelMeshType m_mesh_type;
     ModelMeshParams m_mesh_params;
     core::string m_source_path;
-    uint m_load_options;
+    u32 m_load_options;
 
   public:
     Model();
 
-    bool Load(const char* filename, IRenderDevice* device, uint options = 0);
+    bool Load(const char* filename, IRenderDevice* device, u32 options = 0);
     bool Load(const fs::Filesystem& filesystem, const char* filename,
-              IRenderDevice* device, uint options = 0);
+              IRenderDevice* device, u32 options = 0);
     bool LoadResources(IRenderDevice* device);
     bool LoadResources(const fs::Filesystem& filesystem, IRenderDevice* device);
     void SetMesh(geometry::Mesh::MeshPtr mesh);
@@ -124,17 +124,17 @@ class FORG_API Model
     void SetTransform(const Matrix4& transform);
 
     const core::string& SourcePath() const;
-    uint LoadOptions() const;
+    u32 LoadOptions() const;
     ModelMeshType MeshType() const;
     const ModelMeshParams& MeshParams() const;
-    void SetSource(std::string_view filename, uint options = 0);
+    void SetSource(std::string_view filename, u32 options = 0);
     void SetPrimitive(ModelMeshType type);
     void SetBox(float width, float height, float depth);
     void SetSphere(float radius, int slices, int stacks);
     void SetCylinder(float radius1, float radius2, float length, int slices,
                      int stacks);
-    void SetPyramid(uint numAngles, float radius, float height);
-    void SetGrid(float sizeX, float sizeY, int color, uint subgrid);
+    void SetPyramid(u32 numAngles, float radius, float height);
+    void SetGrid(float sizeX, float sizeY, int color, u32 subgrid);
 
     bool Save(forg::io::ISerializer& serializer) const;
     bool Load(forg::io::ISerializer& serializer);

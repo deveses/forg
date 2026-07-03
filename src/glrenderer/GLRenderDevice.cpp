@@ -321,7 +321,7 @@ GLRenderDevice::~GLRenderDevice(void)
 /************************************************************************/
 /* IRenderDevice methods                                                */
 /************************************************************************/
-int GLRenderDevice::Clear(uint flags, Color color, float zdepth, int stencil)
+int GLRenderDevice::Clear(u32 flags, Color color, float zdepth, int stencil)
 {
     GLbitfield mask = 0;
 
@@ -382,15 +382,15 @@ GLRenderDevice::CreateVertexDeclaration(const VertexElement* pVertexElements)
     return decl;
 }
 
-LPVERTEXBUFFER GLRenderDevice::CreateVertexBuffer(uint length, uint usage,
-                                                  uint pool)
+LPVERTEXBUFFER GLRenderDevice::CreateVertexBuffer(u32 length, u32 usage,
+                                                  u32 pool)
 {
     return (new GLVertexBuffer(this, length, usage, pool));
 }
 
-LPINDEXBUFFER GLRenderDevice::CreateIndexBuffer(uint length, uint usage,
+LPINDEXBUFFER GLRenderDevice::CreateIndexBuffer(u32 length, u32 usage,
                                                 bool sixteenBitIndices,
-                                                uint pool)
+                                                u32 pool)
 {
     return (new GLIndexBuffer(this, length, usage, pool, sixteenBitIndices));
 }
@@ -468,38 +468,37 @@ int GLRenderDevice::SetPixelShader(IPixelShader* shader)
     return FORG_OK;
 }
 
-LPTEXTURE GLRenderDevice::CreateTexture(uint Width, uint Height, uint Levels,
-                                        uint Usage, uint Format, uint Pool)
+LPTEXTURE GLRenderDevice::CreateTexture(u32 Width, u32 Height, u32 Levels,
+                                        u32 Usage, u32 Format, u32 Pool)
 {
     return (ITextureGLImpl::Create(this, Width, Height, Levels, Usage, Format,
                                    Pool));
 }
 
-LPTEXTURE GLRenderDevice::CreateTextureFromFile(const char* filename,
-                                                uint Width, uint Height,
-                                                uint Levels, uint Usage,
-                                                uint Format, uint Pool)
+LPTEXTURE GLRenderDevice::CreateTextureFromFile(const char* filename, u32 Width,
+                                                u32 Height, u32 Levels,
+                                                u32 Usage, u32 Format, u32 Pool)
 {
     return 0;
 }
 
 int GLRenderDevice::DrawIndexedUserPrimitives_Slow(
-    PrimitiveType primitiveType, uint minVertexIndex, uint numVertexIndices,
-    uint primitiveCount, const void* indexData, bool sixteenBitIndices,
-    const void* vertexStreamZeroData, uint VertexStreamZeroStride)
+    PrimitiveType primitiveType, u32 minVertexIndex, u32 numVertexIndices,
+    u32 primitiveCount, const void* indexData, bool sixteenBitIndices,
+    const void* vertexStreamZeroData, u32 VertexStreamZeroStride)
 {
     GLenum mode = PTtoGLEnumMap[primitiveType];
-    uint stride = m_pVertexDeclaration->GetVertexSize();
+    u32 stride = m_pVertexDeclaration->GetVertexSize();
 
     glBegin(mode);
-    for (uint idx = minVertexIndex; idx < numVertexIndices; idx++)
+    for (u32 idx = minVertexIndex; idx < numVertexIndices; idx++)
     {
-        uint vindex = 0;
+        u32 vindex = 0;
 
         if (sixteenBitIndices)
-            vindex = *((ushort*)((char*)indexData + idx * 2));
+            vindex = *((u16*)((char*)indexData + idx * 2));
         else
-            vindex = *((uint*)((char*)indexData + idx * 4));
+            vindex = *((u32*)((char*)indexData + idx * 4));
 
         if (m_internal_decl[IntDecl_Color].Type != DeclarationType_Unused)
         {
@@ -523,9 +522,9 @@ int GLRenderDevice::DrawIndexedUserPrimitives_Slow(
 }
 
 int GLRenderDevice::DrawIndexedUserPrimitives(
-    PrimitiveType primitiveType, uint minVertexIndex, uint numVertexIndices,
-    uint primitiveCount, const void* indexData, bool sixteenBitIndices,
-    const void* vertexStreamZeroData, uint VertexStreamZeroStride)
+    PrimitiveType primitiveType, u32 minVertexIndex, u32 numVertexIndices,
+    u32 primitiveCount, const void* indexData, bool sixteenBitIndices,
+    const void* vertexStreamZeroData, u32 VertexStreamZeroStride)
 {
 
     /*
@@ -540,7 +539,7 @@ int GLRenderDevice::DrawIndexedUserPrimitives(
             VertexStreamZeroStride);*/
 
     GLenum mode = PTtoGLEnumMap[primitiveType];
-    uint stride = m_pVertexDeclaration->GetVertexSize();
+    u32 stride = m_pVertexDeclaration->GetVertexSize();
 
     if (m_internal_decl[IntDecl_Position].Type != DeclarationType_Unused)
     {
@@ -584,7 +583,7 @@ int GLRenderDevice::DrawIndexedUserPrimitives(
         glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     }
 
-    uint num_indices = primitiveCount;
+    u32 num_indices = primitiveCount;
 
     switch (primitiveType)
     {
@@ -628,7 +627,7 @@ int GLRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
                                          int primCount)
 {
     GLenum mode = PTtoGLEnumMap[primitiveType];
-    uint stride = m_pVertexDeclaration->GetVertexSize();
+    u32 stride = m_pVertexDeclaration->GetVertexSize();
 
     // ======================================================================
     // Setup vertex components order
@@ -682,7 +681,7 @@ int GLRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     // ======================================================================
 
     bool sixteenBitIndices = ((GLIndexBuffer*)m_index_buffer)->m_sixteen;
-    uint numVertexIndices = primCount;
+    u32 numVertexIndices = primCount;
 
     switch (primitiveType)
     {
@@ -711,7 +710,7 @@ int GLRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     // interpreted as a pointer to client-side memory is instead interpreted as
     // an offset within the buffer object measured in basic machine units.
 
-    uint realStart = (sixteenBitIndices ? startIndex << 1 : startIndex << 2);
+    u32 realStart = (sixteenBitIndices ? startIndex << 1 : startIndex << 2);
     GLV(glDrawElements(mode, numVertexIndices,
                        sixteenBitIndices ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT,
                        reinterpret_cast<const GLvoid*>(
@@ -725,7 +724,7 @@ int GLRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType,
     return 0;
 }
 
-int GLRenderDevice::SetRenderState(uint state, uint value)
+int GLRenderDevice::SetRenderState(u32 state, u32 value)
 {
     switch (state)
     {
@@ -858,15 +857,15 @@ int GLRenderDevice::SetVertexDeclaration(const VertexDeclaration* pDecl)
     m_pVertexDeclaration = pDecl;
 
     const VertexElement* decl = m_pVertexDeclaration->GetDeclaration();
-    uint count = m_pVertexDeclaration->GetElementsCount();
-    // uint stride = m_pVertexDeclaration->GetVertexSize();  //unused
+    u32 count = m_pVertexDeclaration->GetElementsCount();
+    // u32 stride = m_pVertexDeclaration->GetVertexSize();  //unused
 
     m_internal_decl[IntDecl_Position].Type = DeclarationType_Unused;
     m_internal_decl[IntDecl_Color].Type = DeclarationType_Unused;
     m_internal_decl[IntDecl_Normal].Type = DeclarationType_Unused;
     m_internal_decl[IntDecl_TextureCoordinate].Type = DeclarationType_Unused;
 
-    for (uint i = 0; i < count; i++)
+    for (u32 i = 0; i < count; i++)
     {
         switch (decl[i].Usage)
         {
@@ -918,8 +917,8 @@ int GLRenderDevice::SetIndices(IIndexBuffer* pIndexData)
     return 0;
 }
 
-int GLRenderDevice::SetViewport(uint X, uint Y, uint Width, uint Height,
-                                float MinZ, float MaxZ)
+int GLRenderDevice::SetViewport(u32 X, u32 Y, u32 Width, u32 Height, float MinZ,
+                                float MaxZ)
 {
     GLV(glViewport(X, Y, Width, Height));
     GLV(glDepthRange(MinZ, MaxZ));
@@ -938,7 +937,7 @@ int GLRenderDevice::GetViewport(Viewport* viewport)
 }
 
 // TODO: store texture, add ref and release
-int GLRenderDevice::SetTexture(uint Sampler, ITexture* pTexture)
+int GLRenderDevice::SetTexture(u32 Sampler, ITexture* pTexture)
 {
     ITextureGLImpl* texture = static_cast<ITextureGLImpl*>(pTexture);
 
@@ -948,7 +947,7 @@ int GLRenderDevice::SetTexture(uint Sampler, ITexture* pTexture)
     return FORG_OK;
 }
 
-int GLRenderDevice::SetLight(uint Index, const Light* pLight)
+int GLRenderDevice::SetLight(u32 Index, const Light* pLight)
 {
     glPushMatrix();
     glLoadIdentity();
@@ -976,7 +975,7 @@ int GLRenderDevice::SetLight(uint Index, const Light* pLight)
     return FORG_OK;
 }
 
-int GLRenderDevice::LightEnable(uint LightIndex, bool bEnable)
+int GLRenderDevice::LightEnable(u32 LightIndex, bool bEnable)
 {
     glEnable(GL_LIGHT0 + LightIndex);
 
@@ -1005,7 +1004,7 @@ const GLDeviceCaps* GLRenderDevice::get_DeviceCaps() const { return &m_caps; }
 /* Helpers                                                              */
 /************************************************************************/
 
-inline int GLRenderDevice::SetRenderState_CullMode(uint value)
+inline int GLRenderDevice::SetRenderState_CullMode(u32 value)
 {
     switch (value)
     {
@@ -1027,7 +1026,7 @@ inline int GLRenderDevice::SetRenderState_CullMode(uint value)
     return 0;
 }
 
-inline int GLRenderDevice::SetRenderState_ShadeMode(uint value)
+inline int GLRenderDevice::SetRenderState_ShadeMode(u32 value)
 {
     switch (value)
     {
@@ -1042,7 +1041,7 @@ inline int GLRenderDevice::SetRenderState_ShadeMode(uint value)
     return 0;
 }
 
-inline int GLRenderDevice::SetRenderState_FillMode(uint value)
+inline int GLRenderDevice::SetRenderState_FillMode(u32 value)
 {
     switch (value)
     {

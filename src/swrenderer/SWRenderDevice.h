@@ -43,6 +43,10 @@ class SWRenderDevice : public forg::rendering::reference::SWRenderDevice
   public:
     virtual int Present();
     virtual int Reset();
+
+  private:
+    struct Impl;
+    Impl* m_impl = nullptr;
 };
 
 } // namespace forg

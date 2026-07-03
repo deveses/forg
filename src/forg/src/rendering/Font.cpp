@@ -13,6 +13,7 @@
 #include "debug/dbg.h"
 
 #include <algorithm>
+#include <cstring>
 
 namespace forg {
 
@@ -79,8 +80,8 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
     if (FT_New_Face(library, fontDesc->FontPath, 0, &face))
         return nullptr;
 
-    uint Width = fontDesc->Width;
-    uint Height = fontDesc->Height;
+    u32 Width = fontDesc->Width;
+    u32 Height = fontDesc->Height;
 
     if (Width == 0)
         Width = Height;
@@ -88,8 +89,8 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
     FT_Set_Char_Size(face, Width << 6, Height << 6, 96, 96);
 
     //////////////////////////////////////////////////////////////////////////
-    uint bwidth = Width * 2 * 256;
-    uint bheight = Height * 2;
+    u32 bwidth = Width * 2 * 256;
+    u32 bheight = Height * 2;
 
     device->AddRef();
     Font* font = new Font();
@@ -106,7 +107,7 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
             continue;
         }
 
-        FT_Glyph glyph;
+        FT_Glyph glyph = nullptr;
         if (FT_Get_Glyph(face->glyph, &glyph) == 0)
         {
             FT_Glyph_To_Bitmap(&glyph, ft_render_mode_normal, 0, 1);
@@ -120,13 +121,17 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
             font->m_metrics[i].advance = face->glyph->advance.x >> 6;
             font->m_metrics[i].offset = cur_off;
 
-            memcpy(font->m_bitmap.data() + cur_off, bitmap_glyph->bitmap.buffer,
-                   font->m_metrics[i].width * font->m_metrics[i].rows);
+            const int bytes =
+                font->m_metrics[i].width * font->m_metrics[i].rows;
+            if (bytes > 0)
+            {
+                memcpy(font->m_bitmap.data() + cur_off,
+                       bitmap_glyph->bitmap.buffer, bytes);
+            }
 
-            cur_off += font->m_metrics[i].width * font->m_metrics[i].rows;
+            cur_off += bytes;
+            FT_Done_Glyph(glyph);
         }
-
-        FT_Done_Glyph(glyph);
     }
 
     FT_Done_Face(face);
@@ -138,17 +143,17 @@ Font* Font::CreateIndirect(IRenderDevice* device, FontDescription* fontDesc)
 #endif
 }
 
-int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
+int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, u32 format,
                     Color4b color)
 {
     if (!pRect)
         return 0;
 
-    uint total_width = 0;
-    uint tex_width = 0;
-    uint tex_height = 0;
-    uint max_height = 0;
-    uint max_bearingy = 0;
+    u32 total_width = 0;
+    u32 tex_width = 0;
+    u32 tex_height = 0;
+    u32 max_height = 0;
+    u32 max_bearingy = 0;
 
     if (count < 0)
         count = static_cast<int>(strlen(pString));
@@ -159,8 +164,7 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
     for (int i = 0; i < count; i++)
     {
         int c = pString[i];
-        uint th =
-            m_metrics[c].rows /*+ (m_metrics[c].rows - m_metrics[c].top)*/;
+        u32 th = m_metrics[c].rows /*+ (m_metrics[c].rows - m_metrics[c].top)*/;
 
         if (max_height < th)
             max_height = th;
@@ -205,21 +209,21 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
         // comment to see padding
         std::fill_n(data, tex_width * tex_height, PixelA8R8G8B8{});
 
-        uint offx = 0;
+        u32 offx = 0;
 
         for (int i = 0; i < count; i++)
         {
             int c = pString[i];
 
-            uint fw = m_metrics[c].width;
-            uint fh = m_metrics[c].rows;
+            u32 fw = m_metrics[c].width;
+            u32 fh = m_metrics[c].rows;
 
-            for (uint h = 0; h < fh; h++)
+            for (u32 h = 0; h < fh; h++)
             {
-                uint y = max_bearingy - m_metrics[c].top + h;
-                uint x = offx + m_metrics[c].left;
+                u32 y = max_bearingy - m_metrics[c].top + h;
+                u32 x = offx + m_metrics[c].left;
 
-                for (uint w = 0; w < fw; w++)
+                for (u32 w = 0; w < fw; w++)
                 {
                     char grey = m_bitmap[m_metrics[c].offset + h * fw + w];
 
@@ -249,8 +253,8 @@ int Font::DrawText2(LPCTSTR pString, int count, Rectangle* pRect, uint format,
     */
 
     // position of left bottom
-    uint screen_x = 0; // left by default
-    uint screen_y = pRect->top;
+    u32 screen_x = 0; // left by default
+    u32 screen_y = pRect->top;
 
     if ((format & DTFMT_CENTER) == DTFMT_CENTER)
         screen_x = pRect->left + (pRect->right - pRect->left - total_width) / 2;

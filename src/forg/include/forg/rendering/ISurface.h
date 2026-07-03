@@ -30,9 +30,9 @@ namespace forg {
 
 struct SurfaceDescription
 {
-    uint Width;
-    uint Height;
-    uint Format;
+    u32 Width;
+    u32 Height;
+    u32 Format;
 
     // Usage Usage;
     // Pool Pool;
@@ -53,7 +53,7 @@ class ISurface
     int LockRect(
         // D3DLOCKED_RECT * pLockedRect,
         // CONST RECT * pRect,
-        uint Flags);
+        u32 Flags);
     int UnlockRect();
 };
 

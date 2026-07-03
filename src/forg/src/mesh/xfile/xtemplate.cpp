@@ -64,28 +64,28 @@ void XTemplate::AddOption(const xstring& name, const xguid& guid)
 
 int XTemplate::Load(xreader& /*treader*/) { return 0; }
 
-const XTemplateMember* XTemplate::GetMember(uint idx) const
+const XTemplateMember* XTemplate::GetMember(u32 idx) const
 {
     return m_members[idx];
 }
 
-const XTemplateOption& XTemplate::GetOption(uint idx) const
+const XTemplateOption& XTemplate::GetOption(u32 idx) const
 {
     return m_options[idx];
 }
 
-uint XTemplate::GetMemberIndex(const xstring& name) const
+u32 XTemplate::GetMemberIndex(const xstring& name) const
 {
     for (XTemplateMemberVectorCI iter = m_members.begin();
          iter != m_members.end(); ++iter)
     {
         if ((*iter)->GetName() == name)
         {
-            return (uint)(iter - m_members.begin());
+            return (u32)(iter - m_members.begin());
         }
     }
 
-    return (uint)-1;
+    return (u32)-1;
 }
 
 const XTemplateMember* XTemplate::FindMemberByName(const xstring& name) const
@@ -112,7 +112,7 @@ xstring XTemplate::ToString() const
             << ">\n";
     sstream << "\t// members count: " << m_members.size() << "\n";
 
-    for (uint j = 0; j < m_members.size(); j++)
+    for (u32 j = 0; j < m_members.size(); j++)
     {
         const XTemplateMember* mem = m_members[j];
 

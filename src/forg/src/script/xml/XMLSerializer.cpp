@@ -20,13 +20,13 @@ bool XMLSerializer::BeginObject(std::string_view) { return false; }
 
 bool XMLSerializer::EndObject() { return false; }
 
-bool XMLSerializer::BeginArray(std::string_view, uint&) { return false; }
+bool XMLSerializer::BeginArray(std::string_view, u32&) { return false; }
 
 bool XMLSerializer::EndArray() { return false; }
 
 bool XMLSerializer::Value(std::string_view, int&) { return false; }
 
-bool XMLSerializer::Value(std::string_view, uint&) { return false; }
+bool XMLSerializer::Value(std::string_view, u32&) { return false; }
 
 bool XMLSerializer::Value(std::string_view, float&) { return false; }
 

@@ -216,9 +216,9 @@ class XTemplateArray : public XTemplateMember
 
     const xstring& GetArrayTypeName() const { return m_sTypeName; };
 
-    uint GetDimensionListSize() const { return (uint)m_dimension_list.size(); }
+    u32 GetDimensionListSize() const { return (u32)m_dimension_list.size(); }
 
-    const XArrayDimension* GetDimension(uint index) const
+    const XArrayDimension* GetDimension(u32 index) const
     {
         return &m_dimension_list[index];
     }

@@ -14,7 +14,7 @@ namespace forg::geometry {
 
 /////////////////////////////////////////////////////////////////////////////////////
 
-Mesh::Mesh(uint NumFaces, uint NumVertices, uint Options,
+Mesh::Mesh(u32 NumFaces, u32 NumVertices, u32 Options,
            const VertexElement* pDeclaration, LPRENDERDEVICE pDevice)
     : m_vertex_declaration(pDeclaration)
 {
@@ -51,7 +51,7 @@ Mesh::UniqueMeshPtr Mesh::MakeBox(IRenderDevice* device, float width,
                                   float height, float depth)
 {
     PositionNormalTextured* buffer = 0;
-    uint vertices = 24, /*indices = 36,*/ primitives = 12;
+    u32 vertices = 24, /*indices = 36,*/ primitives = 12;
 
     UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
                              PositionNormalTextured::Declaration, device));
@@ -151,7 +151,7 @@ Mesh::UniqueMeshPtr Mesh::MakeBox(IRenderDevice* device, float width,
         m->UnlockVertexBuffer();
     }
 
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     if (m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
@@ -231,18 +231,18 @@ Mesh::UniqueMeshPtr Mesh::MakeSphere(IRenderDevice* device, float radius,
                                      int slices, int stacks)
 {
     PositionNormalTextured* buffer = 0;
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     // 2 poles + slices x stacks
-    uint vertices = 2 + (slices - 1) * stacks;
+    u32 vertices = 2 + (slices - 1) * stacks;
     // 2 pole slices * stacks + (slices - 2) * stacks * 2
-    uint primitives = stacks * (slices - 2) * 2 + stacks * 2;
+    u32 primitives = stacks * (slices - 2) * 2 + stacks * 2;
 
     UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
                              PositionNormalTextured::Declaration, device));
 
-    uint vcount = 0;
-    uint fcount = 0;
+    u32 vcount = 0;
+    u32 fcount = 0;
 
     if (m->LockVertexBuffer(0, (void**)&buffer) == FORG_OK &&
         m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
@@ -277,7 +277,7 @@ Mesh::UniqueMeshPtr Mesh::MakeSphere(IRenderDevice* device, float radius,
 
         // prepare faces
 
-        uint vstart = 1;
+        u32 vstart = 1;
 
         // first (top) slice
         for (int i = 0; i < stacks; i++)
@@ -294,7 +294,7 @@ Mesh::UniqueMeshPtr Mesh::MakeSphere(IRenderDevice* device, float radius,
 
             for (int j = 0; j < stacks; j++)
             {
-                uint j_next = (j + 1) % stacks;
+                u32 j_next = (j + 1) % stacks;
 
                 ibuffer[fcount * 3 + 0] = vstart + j;
                 ibuffer[fcount * 3 + 1] = vstart + j_next;
@@ -352,16 +352,16 @@ Mesh::UniqueMeshPtr Mesh::MakeCylinder(IRenderDevice* device, float radius1,
                                        int stacks)
 {
     PositionNormalTextured* buffer = 0;
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
-    uint vertices = (slices + 1) * stacks + 2;
-    uint primitives = 2 * stacks + 2 * slices * stacks;
+    u32 vertices = (slices + 1) * stacks + 2;
+    u32 primitives = 2 * stacks + 2 * slices * stacks;
 
     UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
                              PositionNormalTextured::Declaration, device));
 
-    uint vcount = 0;
-    uint fcount = 0;
+    u32 vcount = 0;
+    u32 fcount = 0;
 
     if (m->LockVertexBuffer(0, (void**)&buffer) == FORG_OK &&
         m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
@@ -399,7 +399,7 @@ Mesh::UniqueMeshPtr Mesh::MakeCylinder(IRenderDevice* device, float radius1,
 
         // prepare faces
 
-        uint vstart = 2;
+        u32 vstart = 2;
 
         // first (top) slice
         for (int i = 0; i < stacks; i++)
@@ -414,7 +414,7 @@ Mesh::UniqueMeshPtr Mesh::MakeCylinder(IRenderDevice* device, float radius1,
         {
             for (int j = 0; j < stacks; j++)
             {
-                uint j_next = (j + 1) % stacks;
+                u32 j_next = (j + 1) % stacks;
 
                 ibuffer[fcount * 3 + 0] = vstart + j;
                 ibuffer[fcount * 3 + 1] = vstart + j_next;
@@ -478,16 +478,16 @@ Mesh::UniqueMeshPtr Mesh::MakeLandscape(IRenderDevice* _device,
                                         unsigned int _sizey)
 {
     PositionNormalTextured* buffer = 0;
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
-    uint vertices = _sizex * _sizey;
-    uint primitives = 2 * (_sizex - 1) * (_sizey - 1);
+    u32 vertices = _sizex * _sizey;
+    u32 primitives = 2 * (_sizex - 1) * (_sizey - 1);
 
     UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
                              PositionNormalTextured::Declaration, _device));
 
-    uint vcount = 0;
-    uint fcount = 0;
+    u32 vcount = 0;
+    u32 fcount = 0;
 
     if (m->LockVertexBuffer(0, (void**)&buffer) == FORG_OK &&
         m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
@@ -497,9 +497,9 @@ Mesh::UniqueMeshPtr Mesh::MakeLandscape(IRenderDevice* _device,
         float xstep = 2 * _span.X / (_sizex - 1);
         float ystep = 2 * _span.Z / (_sizey - 1);
 
-        for (uint iy = 0; iy < _sizey; iy++)
+        for (u32 iy = 0; iy < _sizey; iy++)
         {
-            for (uint ix = 0; ix < _sizex; ix++)
+            for (u32 ix = 0; ix < _sizex; ix++)
             {
                 float posx = -_span.X + xstep * ix;
                 float posz = -_span.Z + ystep * iy;
@@ -512,16 +512,16 @@ Mesh::UniqueMeshPtr Mesh::MakeLandscape(IRenderDevice* _device,
 
         // prepare faces
 
-        for (uint iy = 1; iy < _sizey; iy++)
+        for (u32 iy = 1; iy < _sizey; iy++)
         {
-            for (uint ix = 1; ix < _sizex; ix++)
+            for (u32 ix = 1; ix < _sizex; ix++)
             {
                 // v0-v1
                 // v2-v3
-                ushort v0 = (iy - 1) * _sizex + ix - 1;
-                ushort v1 = (iy - 1) * _sizex + ix;
-                ushort v2 = (iy)*_sizex + ix - 1;
-                ushort v3 = (iy)*_sizex + ix;
+                u16 v0 = (iy - 1) * _sizex + ix - 1;
+                u16 v1 = (iy - 1) * _sizex + ix;
+                u16 v2 = (iy)*_sizex + ix - 1;
+                u16 v3 = (iy)*_sizex + ix;
 
                 ibuffer[3 * fcount + 0] = v0;
                 ibuffer[3 * fcount + 1] = v2;
@@ -575,7 +575,7 @@ Vector3(0, 0, radius); // os z Vector3 axisX = Vector3(radius, 0, 0); // os x
         int primitives = density*(density-1);
 
         array <Vertex> vb(vertices);
-        array <uint> ib(indices);
+        array <u32> ib(indices);
 
 
         vb[0].set_Position(creator);
@@ -628,23 +628,23 @@ Vector3(0, 0, radius); // os z Vector3 axisX = Vector3(radius, 0, 0); // os x
 
 /////////////////////////////////////////////////////////////////////////////////////
 // ostroslup
-Mesh::MeshPtr Mesh::Pyramid(IRenderDevice* device, uint numAngles, float radius,
+Mesh::MeshPtr Mesh::Pyramid(IRenderDevice* device, u32 numAngles, float radius,
                             float height)
 {
     return MakePyramid(device, numAngles, radius, height);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, uint numAngles,
+Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, u32 numAngles,
                                       float radius, float height)
 {
     if (numAngles < 3)
         numAngles = 3;
 
     PositionNormalTextured* buffer = 0;
-    uint primitives = numAngles * 2;
-    uint indices = primitives * 3;
-    uint vertices = indices + 2;
+    u32 primitives = numAngles * 2;
+    u32 indices = primitives * 3;
+    u32 vertices = indices + 2;
     double angle_step = (Math::PI * 2.0) / numAngles;
 
     UniqueMeshPtr m(new Mesh(primitives, vertices, 0,
@@ -663,7 +663,7 @@ Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, uint numAngles,
         // cos2x = 2.0*cosx*cosx - 1.0f; sin2x = 2*sinx*cosx;
         // cos3x = cos2x*cosx - sin2x*sinx; sin3x = sin2x*cosx+cos2x*sinx
 
-        for (uint i = 0; i < numAngles; i++)
+        for (u32 i = 0; i < numAngles; i++)
         {
             // wektor wiodacy
             rvec.X = (float)(radius * angle_cos);
@@ -712,12 +712,12 @@ Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, uint numAngles,
         m.reset();
     }
 
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     if (m && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
-        // uint indhalf = indices >> 1;
-        for (uint i = 0; i < indices; i++)
+        // u32 indhalf = indices >> 1;
+        for (u32 i = 0; i < indices; i++)
         {
             ibuffer[i] = i;
         }
@@ -741,20 +741,20 @@ Mesh::UniqueMeshPtr Mesh::MakePyramid(IRenderDevice* device, uint numAngles,
 
 /////////////////////////////////////////////////////////////////////////////////////
 Mesh::MeshPtr Mesh::Grid(IRenderDevice* device, float sizeX, float sizeY,
-                         int color, uint subgrid)
+                         int color, u32 subgrid)
 {
     return MakeGrid(device, sizeX, sizeY, color, subgrid);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
 Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
-                                   float sizeY, int color, uint subgrid)
+                                   float sizeY, int color, u32 subgrid)
 {
     PositionColored* buffer = 0;
-    const uint linesPerAxis = subgrid + 2;
-    const uint lines = linesPerAxis << 1;
-    const uint primitives = lines * 2;
-    const uint vertices = lines * 4;
+    const u32 linesPerAxis = subgrid + 2;
+    const u32 lines = linesPerAxis << 1;
+    const u32 primitives = lines * 2;
+    const u32 vertices = lines * 4;
 
     if (sizeX < 0.0f)
         sizeX = -sizeX;
@@ -777,8 +777,8 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
         const float shorter = sizeX < sizeY ? sizeX : sizeY;
         const float halfLine = shorter > 0.0f ? shorter * 0.01f : 0.02f;
 
-        uint voff = 0;
-        for (uint row = 0; row < linesPerAxis; ++row)
+        u32 voff = 0;
+        for (u32 row = 0; row < linesPerAxis; ++row)
         {
             const float z = vstart_Z + row * stepr;
             buffer[voff + 0].set_Position(-halfc, 0.0f, z - halfLine);
@@ -792,7 +792,7 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
             voff += 4;
         }
 
-        for (uint col = 0; col < linesPerAxis; ++col)
+        for (u32 col = 0; col < linesPerAxis; ++col)
         {
             const float x = vstart_X + col * stepc;
             buffer[voff + 0].set_Position(x - halfLine, 0.0f, -halfr);
@@ -813,14 +813,14 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
         m.reset();
     }
 
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
     if (m && m->LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
-        uint ioff = 0;
-        for (uint line = 0; line < lines; ++line)
+        u32 ioff = 0;
+        for (u32 line = 0; line < lines; ++line)
         {
-            const ushort voff = static_cast<ushort>(line * 4);
+            const u16 voff = static_cast<u16>(line * 4);
             ibuffer[ioff + 0] = voff + 0;
             ibuffer[ioff + 1] = voff + 2;
             ibuffer[ioff + 2] = voff + 1;
@@ -848,14 +848,14 @@ Mesh::UniqueMeshPtr Mesh::MakeGrid(IRenderDevice* device, float sizeX,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-Mesh::MeshPtr Mesh::FromFile(const char* filename, uint options,
+Mesh::MeshPtr Mesh::FromFile(const char* filename, u32 options,
                              IRenderDevice* device)
 {
     return LoadFromFile(filename, options, device);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-Mesh::UniqueMeshPtr Mesh::LoadFromFile(const char* filename, uint options,
+Mesh::UniqueMeshPtr Mesh::LoadFromFile(const char* filename, u32 options,
                                        IRenderDevice* device)
 {
     ExtendedMaterialVec tmp_mat;
@@ -864,7 +864,7 @@ Mesh::UniqueMeshPtr Mesh::LoadFromFile(const char* filename, uint options,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-Mesh::MeshPtr Mesh::FromFile(const char* filename, uint options,
+Mesh::MeshPtr Mesh::FromFile(const char* filename, u32 options,
                              IRenderDevice* device,
                              ExtendedMaterialVec& materials)
 {
@@ -872,7 +872,7 @@ Mesh::MeshPtr Mesh::FromFile(const char* filename, uint options,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-Mesh::UniqueMeshPtr Mesh::LoadFromFile(const char* filename, uint options,
+Mesh::UniqueMeshPtr Mesh::LoadFromFile(const char* filename, u32 options,
                                        IRenderDevice* device,
                                        ExtendedMaterialVec& materials)
 {
@@ -914,16 +914,16 @@ const VertexDeclaration* Mesh::GetVertexDeclaration() const
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-uint Mesh::GetNumVertices() const { return m_num_vertices; }
+u32 Mesh::GetNumVertices() const { return m_num_vertices; }
 
 /////////////////////////////////////////////////////////////////////////////////////
-uint Mesh::GetNumFaces() const { return m_num_faces; }
+u32 Mesh::GetNumFaces() const { return m_num_faces; }
 
 /////////////////////////////////////////////////////////////////////////////////////
-uint Mesh::GetNumBytesPerVertex() const { return m_stride_size; }
+u32 Mesh::GetNumBytesPerVertex() const { return m_stride_size; }
 
 /////////////////////////////////////////////////////////////////////////////////////
-uint Mesh::GetOptions() const { return m_options; }
+u32 Mesh::GetOptions() const { return m_options; }
 
 /////////////////////////////////////////////////////////////////////////////////////
 void Mesh::SetPrimitiveType(PrimitiveType primitiveType)
@@ -935,7 +935,7 @@ void Mesh::SetPrimitiveType(PrimitiveType primitiveType)
 PrimitiveType Mesh::GetPrimitiveType() const { return m_primitive_type; }
 
 /////////////////////////////////////////////////////////////////////////////////////
-int Mesh::LockVertexBuffer(uint /*Flags*/, void** ppData)
+int Mesh::LockVertexBuffer(u32 /*Flags*/, void** ppData)
 {
     if (m_vertex_buffer)
         return m_vertex_buffer->Lock(0, 0, ppData, 0);
@@ -944,7 +944,7 @@ int Mesh::LockVertexBuffer(uint /*Flags*/, void** ppData)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-int Mesh::LockIndexBuffer(uint /*Flags*/, void** ppData)
+int Mesh::LockIndexBuffer(u32 /*Flags*/, void** ppData)
 {
     if (m_index_buffer)
         return m_index_buffer->Lock(0, 0, ppData, 0);
@@ -972,11 +972,11 @@ int Mesh::UnlockIndexBuffer()
 
 /////////////////////////////////////////////////////////////////////////////////////
 int Mesh::SetAttributeTable(const AttributeRange* pAttribTable,
-                            uint cAttribTableSize)
+                            u32 cAttribTableSize)
 {
     m_attribtab.resize(cAttribTableSize);
 
-    for (uint i = 0; i < cAttribTableSize; i++)
+    for (u32 i = 0; i < cAttribTableSize; i++)
     {
         m_attribtab[i] = pAttribTable[i];
     }
@@ -985,11 +985,11 @@ int Mesh::SetAttributeTable(const AttributeRange* pAttribTable,
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-int Mesh::DrawSubset(uint attributeID)
+int Mesh::DrawSubset(u32 attributeID)
 {
     if (attributeID < m_attribtab.size())
     {
-        const uint indexStride =
+        const u32 indexStride =
             m_primitive_type == PrimitiveType_LineList ? 2 : 3;
         m_device->SetStreamSource(0, m_vertex_buffer.get(), 0, m_stride_size);
         m_device->SetIndices(m_index_buffer.get());
@@ -1006,16 +1006,16 @@ int Mesh::DrawSubset(uint attributeID)
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-void Mesh::ComputeTangentFrame(uint)
+void Mesh::ComputeTangentFrame(u32)
 {
     char* vbuffer = 0;
-    ushort* ibuffer = 0;
+    u16* ibuffer = 0;
 
-    uint stride = m_vertex_declaration.GetVertexSize();
+    u32 stride = m_vertex_declaration.GetVertexSize();
     int p_off = -1;
     int n_off = -1;
 
-    for (uint e = 0; e < m_vertex_declaration.GetElementsCount(); e++)
+    for (u32 e = 0; e < m_vertex_declaration.GetElementsCount(); e++)
     {
         const VertexElement* el = m_vertex_declaration.GetDeclaration() + e;
 
@@ -1038,20 +1038,20 @@ void Mesh::ComputeTangentFrame(uint)
         LockIndexBuffer(0, (void**)&ibuffer) == FORG_OK)
     {
         bool use32 = _fget(m_options, MeshFlags::Use32Bit);
-        uint primitives = m_num_faces;
-        uint vertices = m_num_vertices;
+        u32 primitives = m_num_faces;
+        u32 vertices = m_num_vertices;
 
-        for (uint j = 0; j < vertices; j++)
+        for (u32 j = 0; j < vertices; j++)
         {
             Vector3* n = (Vector3*)(vbuffer + j * stride + n_off);
             n->Zero();
         }
 
-        uint* ib32 = (uint*)ibuffer;
-        ushort* ib16 = (ushort*)ibuffer;
-        for (uint j = 0; j < primitives; j++)
+        u32* ib32 = (u32*)ibuffer;
+        u16* ib16 = (u16*)ibuffer;
+        for (u32 j = 0; j < primitives; j++)
         {
-            uint idx0, idx1, idx2;
+            u32 idx0, idx1, idx2;
 
             if (use32)
             {
@@ -1086,7 +1086,7 @@ void Mesh::ComputeTangentFrame(uint)
             *n2 += normal;
         }
 
-        for (uint j = 0; j < vertices; j++)
+        for (u32 j = 0; j < vertices; j++)
         {
             Vector3* n = (Vector3*)(vbuffer + j * stride + n_off);
             n->Normalize();
@@ -1103,7 +1103,7 @@ void Mesh::ComputeTangentFrame(uint)
 /************************************************************************/
 /* Mesh loading                                                         */
 /************************************************************************/
-Mesh::MeshPtr Mesh::FromPly(const char* filename, uint /*options*/,
+Mesh::MeshPtr Mesh::FromPly(const char* filename, u32 /*options*/,
                             IRenderDevice* device)
 {
     mesh::ply::plyfile loader;
@@ -1164,13 +1164,13 @@ Mesh::MeshPtr Mesh::FromPly(const char* filename, uint /*options*/,
     return m;
 }
 
-Mesh::MeshPtr Mesh::FromX(const char* filename, uint options,
+Mesh::MeshPtr Mesh::FromX(const char* filename, u32 options,
                           IRenderDevice* device, ExtendedMaterialVec& materials)
 {
     return xfile::XLoader::Load(filename, options, device, materials);
 }
 
-Mesh::MeshPtr Mesh::FromGltf(const char* filename, uint options,
+Mesh::MeshPtr Mesh::FromGltf(const char* filename, u32 options,
                              IRenderDevice* device,
                              ExtendedMaterialVec& materials)
 {

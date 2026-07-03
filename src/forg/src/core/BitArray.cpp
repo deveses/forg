@@ -6,16 +6,16 @@ namespace forg::core {
 
 namespace {
 
-uint WordCount(uint length) { return (length + 0x1f) >> 5; }
+u32 WordCount(u32 length) { return (length + 0x1f) >> 5; }
 
-int LastWordMask(uint length)
+int LastWordMask(u32 length)
 {
-    uint remainder = length % 0x20;
+    u32 remainder = length % 0x20;
     return remainder == 0 ? -1
                           : static_cast<int>(0xffffffff >> (0x20 - remainder));
 }
 
-bool GetOrFalse(const BitArray& bits, uint index)
+bool GetOrFalse(const BitArray& bits, u32 index)
 {
     return index < bits.get_Count() && bits.Get(index);
 }
@@ -57,7 +57,7 @@ BitArray::BitArray(const BitArray& bits)
 // BitArray::BitArray(const array<bool>& values)
 //: m_array(values.get_Count()), m_length(values.get_Count())
 //{
-//	for (uint i = 0; i < values.get_Count(); i++)
+//	for (u32 i = 0; i < values.get_Count(); i++)
 //	{
 //		if (values[i])
 //		{
@@ -66,14 +66,14 @@ BitArray::BitArray(const BitArray& bits)
 //	}
 //}
 
-BitArray::BitArray(uint length)
+BitArray::BitArray(u32 length)
     : m_array(WordCount(length), 0) // 0x1f = 31
       ,
       m_length(length)
 {
 }
 
-BitArray::BitArray(uint length, bool defaultValue)
+BitArray::BitArray(u32 length, bool defaultValue)
     : m_array(WordCount(length), 0), m_length(length)
 {
     SetAll(defaultValue);
@@ -92,7 +92,7 @@ BitArray& BitArray::operator=(const BitArray& bits)
     return *this;
 }
 
-bool BitArray::operator[](uint index) const
+bool BitArray::operator[](u32 index) const
 {
     return (m_array[index >> 5] & 1 << (index % 0x20)) != 0;
 }
@@ -110,8 +110,8 @@ BitArray BitArray::operator&(const BitArray& arg) const
 
     // return *this;
 
-    uint len1 = get_Count();
-    uint len2 = arg.get_Count();
+    u32 len1 = get_Count();
+    u32 len2 = arg.get_Count();
 
     BitArray r(len1 > len2 ? *this : arg);
 
@@ -122,14 +122,14 @@ BitArray BitArray::operator&(const BitArray& arg) const
 
 BitArray& BitArray::operator&=(const BitArray& arg)
 {
-    uint len1 = get_Count();
-    uint len2 = arg.get_Count();
-    uint len = len1 > len2 ? len2 : len1;
+    u32 len1 = get_Count();
+    u32 len2 = arg.get_Count();
+    u32 len = len1 > len2 ? len2 : len1;
 
-    for (uint i = 0; i < len; i += 0x20)
+    for (u32 i = 0; i < len; i += 0x20)
     {
-        uint idx = i >> 5;
-        uint cnt = len - i;
+        u32 idx = i >> 5;
+        u32 cnt = len - i;
         m_array[idx] &= arg.m_array[idx] &
                         (cnt >= 0x20 ? 0xffffffff : 0xffffffff >> (0x20 - cnt));
     }
@@ -139,8 +139,8 @@ BitArray& BitArray::operator&=(const BitArray& arg)
 
 BitArray BitArray::operator|(const BitArray& arg) const
 {
-    uint len1 = get_Count();
-    uint len2 = arg.get_Count();
+    u32 len1 = get_Count();
+    u32 len2 = arg.get_Count();
 
     BitArray r(len1 > len2 ? *this : arg);
 
@@ -151,14 +151,14 @@ BitArray BitArray::operator|(const BitArray& arg) const
 
 BitArray& BitArray::operator|=(const BitArray& arg)
 {
-    uint len1 = get_Count();
-    uint len2 = arg.get_Count();
-    uint len = len1 > len2 ? len2 : len1;
+    u32 len1 = get_Count();
+    u32 len2 = arg.get_Count();
+    u32 len = len1 > len2 ? len2 : len1;
 
-    for (uint i = 0; i < len; i += 0x20)
+    for (u32 i = 0; i < len; i += 0x20)
     {
-        uint idx = i >> 5;
-        uint cnt = len - i;
+        u32 idx = i >> 5;
+        u32 cnt = len - i;
         m_array[idx] |= arg.m_array[idx] &
                         (cnt >= 0x20 ? 0xffffffff : 0xffffffff >> (0x20 - cnt));
     }
@@ -169,9 +169,9 @@ BitArray& BitArray::operator|=(const BitArray& arg)
 BitArray BitArray::operator~() const
 {
     BitArray result(m_length, false);
-    uint len = static_cast<uint>(m_array.size());
+    u32 len = static_cast<u32>(m_array.size());
 
-    for (uint i = 0; i < len; i++)
+    for (u32 i = 0; i < len; i++)
     {
         result.m_array[i] = ~m_array[i];
     }
@@ -186,8 +186,8 @@ BitArray BitArray::operator~() const
 
 BitArray BitArray::operator^(const BitArray& arg) const
 {
-    uint len1 = get_Count();
-    uint len2 = arg.get_Count();
+    u32 len1 = get_Count();
+    u32 len2 = arg.get_Count();
 
     BitArray r(len1 > len2 ? *this : arg);
 
@@ -198,14 +198,14 @@ BitArray BitArray::operator^(const BitArray& arg) const
 
 BitArray& BitArray::operator^=(const BitArray& arg)
 {
-    uint len1 = get_Count();
-    uint len2 = arg.get_Count();
-    uint len = len1 > len2 ? len2 : len1;
+    u32 len1 = get_Count();
+    u32 len2 = arg.get_Count();
+    u32 len = len1 > len2 ? len2 : len1;
 
-    for (uint i = 0; i < len; i += 0x20)
+    for (u32 i = 0; i < len; i += 0x20)
     {
-        uint idx = i >> 5;
-        uint cnt = len - i;
+        u32 idx = i >> 5;
+        u32 cnt = len - i;
         m_array[idx] ^= arg.m_array[idx] &
                         (cnt >= 0x20 ? 0xffffffff : 0xffffffff >> (0x20 - cnt));
     }
@@ -221,12 +221,12 @@ BitArray BitArray::Xor(const BitArray& value) const { return (*this ^ value); }
 
 BitArray BitArray::Not() const { return (~(*this)); }
 
-bool BitArray::Get(uint index) const
+bool BitArray::Get(u32 index) const
 {
     return (m_array[index >> 5] & 1 << (index % 0x20)) != 0;
 }
 
-void BitArray::Set(uint index, bool value)
+void BitArray::Set(u32 index, bool value)
 {
     if (index >= m_length)
         set_Length(index + 1);
@@ -249,8 +249,8 @@ void BitArray::Set(uint index, bool value)
 void BitArray::SetAll(bool value)
 {
     int v = value ? -1 : 0;
-    uint len = static_cast<uint>(m_array.size());
-    for (uint i = 0; i < len; i++)
+    u32 len = static_cast<u32>(m_array.size());
+    for (u32 i = 0; i < len; i++)
     {
         m_array[i] = v;
     }
@@ -261,13 +261,13 @@ void BitArray::SetAll(bool value)
     }
 }
 
-uint BitArray::get_Count() const { return m_length; }
+u32 BitArray::get_Count() const { return m_length; }
 
-uint BitArray::get_Length() const { return m_length; }
+u32 BitArray::get_Length() const { return m_length; }
 
-void BitArray::set_Length(uint value)
+void BitArray::set_Length(u32 value)
 {
-    uint nsize = WordCount(value);
+    u32 nsize = WordCount(value);
 
     if (value > m_length && m_array.size() < nsize)
     {
@@ -288,10 +288,10 @@ void BitArray::set_Length(uint value)
 
 BitArray::string BitArray::ToString()
 {
-    uint len = get_Count();
+    u32 len = get_Count();
     BitArray::string str(len, '0');
 
-    for (uint i = 0; i < len; i++)
+    for (u32 i = 0; i < len; i++)
     {
         str[i] = Get(len - i - 1) ? '1' : '0';
     }
@@ -301,11 +301,11 @@ BitArray::string BitArray::ToString()
 
 bool operator==(const BitArray& b1, const BitArray& b2)
 {
-    uint len1 = b1.get_Count();
-    uint len2 = b2.get_Count();
-    uint len = len1 > len2 ? len1 : len2;
+    u32 len1 = b1.get_Count();
+    u32 len2 = b2.get_Count();
+    u32 len = len1 > len2 ? len1 : len2;
 
-    for (uint i = 0; i < len; i++)
+    for (u32 i = 0; i < len; i++)
     {
         if (GetOrFalse(b1, i) != GetOrFalse(b2, i))
             return false;

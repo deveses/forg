@@ -53,8 +53,8 @@ class XDataMgr
   public:
     int ReadData(xreader& treader, XTemplatesMgr& tmpl_mgr);
     void PrintInfo() const;
-    uint GetDataObjectsCount() const;
-    const XDataObject* GetDataObject(uint nIndex) const;
+    u32 GetDataObjectsCount() const;
+    const XDataObject* GetDataObject(u32 nIndex) const;
 
     // Helpers
   private:

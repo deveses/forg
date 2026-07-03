@@ -46,13 +46,13 @@ class FORG_API VertexDeclaration
 
   private:
     VertexElement elements[256];
-    uint m_nElementsCount;
-    uint m_nVertexSize;
+    u32 m_nElementsCount;
+    u32 m_nVertexSize;
 
   public:
     const VertexElement* GetDeclaration() const;
-    uint GetElementsCount() const;
-    uint GetVertexSize() const;
+    u32 GetElementsCount() const;
+    u32 GetVertexSize() const;
 };
 
 using LPVERTEXDECLARATION = VertexDeclaration*;

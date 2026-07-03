@@ -576,7 +576,7 @@ bool CLDevice::Initialize(cl_device_id device_id)
         OpenCL::clGetDeviceInfo(m_device_id, CL_DEVICE_TYPE, sizeof(dev_type),
                                 &dev_type, nullptr);
         DBG_MSG("[OpenCL] [Device] Type: %s\n",
-                dev_type_name[forg::first_bit((forg::uint)dev_type)]);
+                dev_type_name[forg::first_bit((forg::u32)dev_type)]);
 
         CL_GETDEVICEINFO_PRIMITIVE(CL_DEVICE_MAX_COMPUTE_UNITS, cl_uint);
         CL_GETDEVICEINFO_PRIMITIVE(CL_DEVICE_MAX_WORK_GROUP_SIZE, size_t);

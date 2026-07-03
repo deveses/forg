@@ -18,8 +18,8 @@ std::string buildState(SceneControlContext& ctx)
     const forg::Color& c = *ctx.clearColor;
 
     forg::geometry::Mesh* mesh = ctx.model ? ctx.model->GetMesh() : nullptr;
-    forg::uint vertices = mesh ? mesh->GetNumVertices() : 0;
-    forg::uint faces = mesh ? mesh->GetNumFaces() : 0;
+    forg::u32 vertices = mesh ? mesh->GetNumVertices() : 0;
+    forg::u32 faces = mesh ? mesh->GetNumFaces() : 0;
 
     std::ostringstream o;
     o << "{\"ok\":true,"

@@ -5,7 +5,7 @@
 
 #ifdef FORG_PLATFORM_OSX
 
-static std::optional<uint> getFileSize(FILE* f)
+static std::optional<forg::u32> getFileSize(FILE* f)
 {
     int err = fseeko(f, 0, SEEK_END);
     if (err)
@@ -50,17 +50,17 @@ void File::Close()
     }
 }
 
-uint File::Read(void* _buffer, uint _size)
+u32 File::Read(void* _buffer, u32 _size)
 {
     if (!m_handle)
         return 0;
 
-    uint bytesRead = fread(_buffer, 1, _size, (FILE*)m_handle);
+    u32 bytesRead = fread(_buffer, 1, _size, (FILE*)m_handle);
 
     return bytesRead;
 }
 
-bool File::GetSize(uint& _out_size)
+bool File::GetSize(u32& _out_size)
 {
     if (!m_handle)
         return false;

@@ -6,6 +6,8 @@
 #include "debug/dbg.h"
 #include "image/Image.h"
 
+#include <cstring>
+
 namespace forg {
 
 ITexture* ITexture::FromFile(IRenderDevice* device, const char* srcFile)
@@ -23,7 +25,7 @@ ITexture* ITexture::FromFile(IRenderDevice* device, const char* srcFile)
         {
             image.GenerateMipmaps();
 
-            for (uint i = 0; i < tex->GetLevelCount(); i++)
+            for (u32 i = 0; i < tex->GetLevelCount(); i++)
             {
                 void* bits = tex->LockRect(i, 0);
 
@@ -48,7 +50,7 @@ ITexture* ITexture::FromFile(IRenderDevice* device, const char* srcFile)
     ByteArray ba(m_width*m_height*3);
     float xstart = 3.0f;
     float ystart = 7.0f;
-    for(uint i=0; i<ba.size(); i+=3)
+    for(u32 i=0; i<ba.size(); i+=3)
     {
     float x = (i/3)%m_width;
     float y = (i/3)/m_width;

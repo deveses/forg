@@ -4,30 +4,30 @@
 
 namespace forg {
 
-static uint color_component_to_byte(float value) noexcept
+static u32 color_component_to_byte(float value) noexcept
 {
     // NaN fails both comparisons inside clamp(), so catch it here with
     // negatives.
     if (!(value > 0.0f))
         return 0;
 
-    return static_cast<uint>(clamp(value, 0.0f, 1.0f) * 255.0f);
+    return static_cast<u32>(clamp(value, 0.0f, 1.0f) * 255.0f);
 }
 
-Color::Color(uint argb) { *this = argb; }
+Color::Color(u32 argb) { *this = argb; }
 
-Color::operator uint() const
+Color::operator u32() const
 {
-    uint _r = color_component_to_byte(r);
-    uint _g = color_component_to_byte(g);
-    uint _b = color_component_to_byte(b);
-    uint _a = color_component_to_byte(a);
+    u32 _r = color_component_to_byte(r);
+    u32 _g = color_component_to_byte(g);
+    u32 _b = color_component_to_byte(b);
+    u32 _a = color_component_to_byte(a);
 
     return ((_a & 0xff) << 24) | ((_r & 0xff) << 16) | ((_g & 0xff) << 8) |
            ((_b & 0xff));
 }
 
-Color& Color::operator=(uint argb)
+Color& Color::operator=(u32 argb)
 {
     a = static_cast<float>((argb >> 24) & 0xff) / 255.0f;
     r = static_cast<float>((argb >> 16) & 0xff) / 255.0f;

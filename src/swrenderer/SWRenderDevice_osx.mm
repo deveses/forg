@@ -10,7 +10,7 @@ namespace forg {
 /////////////////////////////////////////////////////////////////////////////////////
 // SWRenderDevice (macOS presentation: HWIN carries a layer-backed NSView*)
 /////////////////////////////////////////////////////////////////////////////////////
-SWRenderDevice::SWRenderDevice(HWIN handle) : super(handle) {}
+SWRenderDevice::SWRenderDevice(HWIN handle) : super(handle), m_impl(nullptr) {}
 
 SWRenderDevice::~SWRenderDevice() {}
 
@@ -19,8 +19,8 @@ int SWRenderDevice::Reset()
     NSView* view = (NSView*)GetHWIN();
     NSSize size = view.bounds.size;
 
-    uint width = (uint)size.width;
-    uint height = (uint)size.height;
+    u32 width = (u32)size.width;
+    u32 height = (u32)size.height;
     SetBufferSize(width, height);
 
     super::Reset();
@@ -33,9 +33,9 @@ int SWRenderDevice::Present()
     // frame buffer color format: ARGB (0xAARRGGBB), same layout GDI consumed
     NSView* view = (NSView*)GetHWIN();
 
-    uint width = GetWidth();
-    uint height = GetHeight();
-    uint* buffer = GetBuffer();
+    u32 width = GetWidth();
+    u32 height = GetHeight();
+    u32* buffer = GetBuffer();
 
     if (view == nil || buffer == 0 || width == 0 || height == 0)
         return FORG_OK;
@@ -47,7 +47,7 @@ int SWRenderDevice::Present()
     CFMutableDataRef data = CFDataCreateMutable(nullptr, length);
     CFDataSetLength(data, length);
     UInt8* dst = CFDataGetMutableBytePtr(data);
-    for (uint row = 0; row < height; row++)
+    for (u32 row = 0; row < height; row++)
     {
         memcpy(dst + row * row_bytes,
                (const UInt8*)buffer + (height - 1 - row) * row_bytes,

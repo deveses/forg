@@ -118,7 +118,7 @@ void XTemplatesMgr::PrintTemplates()
     snprintf(buff, sizeof(buff), "//templates (%zu):\n", m_templates.size());
     DBG_MSG("%s", buff);
 
-    for (uint i = 0; i < m_templates.size(); i++)
+    for (u32 i = 0; i < m_templates.size(); i++)
     {
         const XTemplate* tmpl = m_templates[i];
 
@@ -150,7 +150,7 @@ int XTemplatesMgr::ReadTemplates(xreader& treader)
 
         if (res == 0 && tmpl != 0)
         {
-            uint tindex = (uint)m_templates.size();
+            u32 tindex = (u32)m_templates.size();
             m_templates.push_back(tmpl);
 
             m_string_map[tmpl->GetName()] = tindex;

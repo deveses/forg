@@ -11,7 +11,7 @@ namespace forg {
 /////////////////////////////////////////////////////////////////////////////////////
 // SWRenderDevice
 /////////////////////////////////////////////////////////////////////////////////////
-SWRenderDevice::SWRenderDevice(HWIN handle) : super(handle) {}
+SWRenderDevice::SWRenderDevice(HWIN handle) : super(handle), m_impl(nullptr) {}
 
 SWRenderDevice::~SWRenderDevice() {}
 
@@ -21,8 +21,8 @@ int SWRenderDevice::Reset()
     GetClientRect((HWND)GetHWIN(), &rcClient);
 
     // calculate window width/height
-    uint width = rcClient.right - rcClient.left;
-    uint height = rcClient.bottom - rcClient.top;
+    u32 width = rcClient.right - rcClient.left;
+    u32 height = rcClient.bottom - rcClient.top;
     SetBufferSize(width, height);
 
     super::Reset();
@@ -64,8 +64,8 @@ int SWRenderDevice::Present()
         CreateDIBSection(hMemDC, &bi, DIB_RGB_COLORS, &pvBits, NULL, 0x0);
     HGDIOBJ hOldBitmap = SelectObject(hMemDC, hBitmap);
 
-    // for (uint y = 0; y < ulWindowHeight; y++)
-    // for (uint x = 0; x < ulWindowWidth; x++)
+    // for (u32 y = 0; y < ulWindowHeight; y++)
+    // for (u32 x = 0; x < ulWindowWidth; x++)
     //     ((UINT32 *)pvBits)[x + y * ulWindowWidth] = 0xff0000ff;
 
     memcpy(pvBits, GetBuffer(), ulWindowWidth * ulWindowHeight * 4);

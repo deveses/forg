@@ -23,7 +23,7 @@ bool serializeMatrix(io::ISerializer& serializer, Matrix4& transform)
     if (!serializer.BeginObject("transform"))
         return false;
 
-    for (uint i = 0; i < 16; ++i)
+    for (u32 i = 0; i < 16; ++i)
     {
         if (!serializer.Value(names[i], values[i]))
             return false;
@@ -267,7 +267,7 @@ CreatePrimitiveMaterials(ModelMeshType type, const ModelMeshParams& params)
         return materials;
 
     ExtendedMaterial material = {};
-    const Color color(static_cast<uint>(PrimitiveColor(type, params)));
+    const Color color(static_cast<u32>(PrimitiveColor(type, params)));
     material.Material3D.Diffuse = color;
     material.Material3D.Ambient = Color(1.0f, 1.0f, 1.0f, 1.0f);
     material.Material3D.Specular = Color(0.0f, 0.0f, 0.0f, 1.0f);
@@ -285,7 +285,7 @@ Model::Model()
 {
 }
 
-bool Model::Load(const char* filename, IRenderDevice* device, uint options)
+bool Model::Load(const char* filename, IRenderDevice* device, u32 options)
 {
     fs::Filesystem filesystem;
     filesystem.Mount("data:", "data", fs::MountPermissions::ReadOnly);
@@ -293,7 +293,7 @@ bool Model::Load(const char* filename, IRenderDevice* device, uint options)
 }
 
 bool Model::Load(const fs::Filesystem& filesystem, const char* filename,
-                 IRenderDevice* device, uint options)
+                 IRenderDevice* device, u32 options)
 {
     if (filename == nullptr || device == nullptr)
         return false;
@@ -314,7 +314,7 @@ bool Model::Load(const fs::Filesystem& filesystem, const char* filename,
     std::vector<core::RefPtr<ITexture>> textures;
     textures.reserve(materials.size());
 
-    for (uint i = 0; i < materials.size(); i++)
+    for (u32 i = 0; i < materials.size(); i++)
     {
         const char* textureFilename = materials[i].TextureFilename.c_str();
         if (textureFilename[0] == 0)
@@ -429,13 +429,13 @@ void Model::SetTransform(const Matrix4& transform) { m_transform = transform; }
 
 const core::string& Model::SourcePath() const { return m_source_path; }
 
-uint Model::LoadOptions() const { return m_load_options; }
+u32 Model::LoadOptions() const { return m_load_options; }
 
 ModelMeshType Model::MeshType() const { return m_mesh_type; }
 
 const ModelMeshParams& Model::MeshParams() const { return m_mesh_params; }
 
-void Model::SetSource(std::string_view filename, uint options)
+void Model::SetSource(std::string_view filename, u32 options)
 {
     const std::string filenameText(filename);
     m_mesh_type =
@@ -480,7 +480,7 @@ void Model::SetCylinder(float radius1, float radius2, float length, int slices,
     m_mesh_params.Cylinder.Stacks = stacks;
 }
 
-void Model::SetPyramid(uint numAngles, float radius, float height)
+void Model::SetPyramid(u32 numAngles, float radius, float height)
 {
     SetPrimitive(ModelMeshType::Pyramid);
     m_mesh_params.Pyramid.NumAngles = numAngles;
@@ -488,7 +488,7 @@ void Model::SetPyramid(uint numAngles, float radius, float height)
     m_mesh_params.Pyramid.Height = height;
 }
 
-void Model::SetGrid(float sizeX, float sizeY, int color, uint subgrid)
+void Model::SetGrid(float sizeX, float sizeY, int color, u32 subgrid)
 {
     SetPrimitive(ModelMeshType::Grid);
     m_mesh_params.Grid = {sizeX, sizeY, color, subgrid};
@@ -501,7 +501,7 @@ bool Model::Save(io::ISerializer& serializer) const
 
     core::string meshType(MeshTypeName(m_mesh_type));
     core::string source = m_source_path;
-    uint options = m_load_options;
+    u32 options = m_load_options;
     Matrix4 transform = m_transform;
     ModelMeshParams meshParams = m_mesh_params;
 
@@ -524,7 +524,7 @@ bool Model::Load(io::ISerializer& serializer)
 
     core::string source;
     core::string meshTypeText;
-    uint options = 0;
+    u32 options = 0;
     Matrix4 transform = Matrix4::Identity;
     ModelMeshParams meshParams;
 
@@ -584,7 +584,7 @@ void Model::Render(IRenderDevice* device)
 
     if (!m_materials.empty())
     {
-        for (uint i = 0; i < m_materials.size(); i++)
+        for (u32 i = 0; i < m_materials.size(); i++)
         {
             device->SetMaterial(&m_materials[i].Material3D);
             device->SetTexture(0, i < m_textures.size() ? m_textures[i].get()

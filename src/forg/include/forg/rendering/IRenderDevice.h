@@ -44,10 +44,10 @@ using namespace forg::math;
 /// Viewport
 struct Viewport
 {
-    uint X;
-    uint Y;
-    uint Width;
-    uint Height;
+    u32 X;
+    u32 Y;
+    u32 Width;
+    u32 Height;
     float MinZ;
     float MaxZ;
 };
@@ -59,9 +59,9 @@ enum class BackBufferPixelFormat
 
 struct BackBuffer
 {
-    uint Width = 0;
-    uint Height = 0;
-    uint RowPitch = 0;
+    u32 Width = 0;
+    u32 Height = 0;
+    u32 RowPitch = 0;
     BackBufferPixelFormat Format = BackBufferPixelFormat::RGBA8;
     std::vector<unsigned char> Pixels;
 };
@@ -118,7 +118,7 @@ class IRenderDevice : public core::RefCounter
      * @return If the method succeeds, the return value is FORG_OK.
      * @see ClearFlags
      */
-    virtual int Clear(uint flags, Color color, float zdepth, int stencil) = 0;
+    virtual int Clear(u32 flags, Color color, float zdepth, int stencil) = 0;
 
     /// Presents the contents of the next buffer in the sequence of back buffers
     /// owned by the device.
@@ -183,8 +183,8 @@ class IRenderDevice : public core::RefCounter
      * vertex buffer resource.
      * @see Usage, Pool
      */
-    virtual LPVERTEXBUFFER CreateVertexBuffer(uint length, uint usage,
-                                              uint pool) = 0;
+    virtual LPVERTEXBUFFER CreateVertexBuffer(u32 length, u32 usage,
+                                              u32 pool) = 0;
 
     /// Creates an index buffer.
     /**
@@ -205,17 +205,16 @@ class IRenderDevice : public core::RefCounter
      * @return Pointer to an IIndexBuffer interface, representing the created
      * index buffer resource.
      */
-    virtual LPINDEXBUFFER CreateIndexBuffer(uint length, uint usage,
+    virtual LPINDEXBUFFER CreateIndexBuffer(u32 length, u32 usage,
                                             bool sixteenBitIndices,
-                                            uint pool) = 0;
+                                            u32 pool) = 0;
 
-    virtual LPTEXTURE CreateTexture(uint Width, uint Height, uint Levels,
-                                    uint Usage, uint Format, uint Pool) = 0;
+    virtual LPTEXTURE CreateTexture(u32 Width, u32 Height, u32 Levels,
+                                    u32 Usage, u32 Format, u32 Pool) = 0;
 
-    virtual LPTEXTURE CreateTextureFromFile(const char* filename, uint Width,
-                                            uint Height, uint Levels,
-                                            uint Usage, uint Format,
-                                            uint Pool) = 0;
+    virtual LPTEXTURE CreateTextureFromFile(const char* filename, u32 Width,
+                                            u32 Height, u32 Levels, u32 Usage,
+                                            u32 Format, u32 Pool) = 0;
 
     /// Based on indexing, renders the specified geometric primitive into an
     /// array of vertices.
@@ -277,9 +276,9 @@ class IRenderDevice : public core::RefCounter
      * @see PrimitiveType
      */
     virtual int DrawIndexedUserPrimitives(
-        PrimitiveType primitiveType, uint minVertexIndex, uint numVertexIndices,
-        uint primitiveCount, const void* indexData, bool sixteenBitIndices,
-        const void* vertexStreamZeroData, uint vertexStreamZeroStride) = 0;
+        PrimitiveType primitiveType, u32 minVertexIndex, u32 numVertexIndices,
+        u32 primitiveCount, const void* indexData, bool sixteenBitIndices,
+        const void* vertexStreamZeroData, u32 vertexStreamZeroStride) = 0;
 
     /// Sets a single device transformation-related state.
     /**
@@ -369,7 +368,7 @@ class IRenderDevice : public core::RefCounter
      * after applying the projection matrix.
      * @return If the method succeeds, the return value is FORG_OK.
      */
-    virtual int SetViewport(uint X, uint Y, uint Width, uint Height,
+    virtual int SetViewport(u32 X, u32 Y, u32 Width, u32 Height,
                             float MinZ = 0.0f, float MaxZ = 1.0f) = 0;
 
     /// Retrieves the viewport parameters currently set for the device.
@@ -395,13 +394,13 @@ class IRenderDevice : public core::RefCounter
      * @return If the method succeeds, the return value is FORG_OK.
      * @see RenderStates
      */
-    virtual int SetRenderState(uint state, uint value) = 0;
+    virtual int SetRenderState(u32 state, u32 value) = 0;
 
-    virtual int SetTexture(uint Sampler, ITexture* pTexture) = 0;
+    virtual int SetTexture(u32 Sampler, ITexture* pTexture) = 0;
 
-    virtual int SetLight(uint Index, const Light* pLight) = 0;
+    virtual int SetLight(u32 Index, const Light* pLight) = 0;
 
-    virtual int LightEnable(uint LightIndex, bool bEnable) = 0;
+    virtual int LightEnable(u32 LightIndex, bool bEnable) = 0;
 
     virtual int SetMaterial(const Material* pMaterial) = 0;
 };

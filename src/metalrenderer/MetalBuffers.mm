@@ -38,7 +38,7 @@ MetalVertexBuffer::~MetalVertexBuffer()
     }
 }
 
-int MetalVertexBuffer::Create(void* mtlDevice, uint length)
+int MetalVertexBuffer::Create(void* mtlDevice, u32 length)
 {
     id<MTLDevice> dev = (id<MTLDevice>)mtlDevice;
     id<MTLBuffer> buf = [dev newBufferWithLength:length
@@ -51,8 +51,8 @@ int MetalVertexBuffer::Create(void* mtlDevice, uint length)
     return (buf != nil) ? FORG_OK : FORG_INVALID_CALL;
 }
 
-int MetalVertexBuffer::Lock(uint offsetToLock, uint /*sizeToLock*/,
-                            void** ppbData, uint /*flags*/)
+int MetalVertexBuffer::Lock(u32 offsetToLock, u32 /*sizeToLock*/,
+                            void** ppbData, u32 /*flags*/)
 {
     if (m_buffer == 0 || ppbData == 0)
         return FORG_INVALID_CALL;
@@ -83,7 +83,7 @@ MetalIndexBuffer::~MetalIndexBuffer()
     }
 }
 
-int MetalIndexBuffer::Create(void* mtlDevice, uint length,
+int MetalIndexBuffer::Create(void* mtlDevice, u32 length,
                              bool sixteenBitIndices)
 {
     id<MTLDevice> dev = (id<MTLDevice>)mtlDevice;
@@ -97,8 +97,8 @@ int MetalIndexBuffer::Create(void* mtlDevice, uint length,
     return (buf != nil) ? FORG_OK : FORG_INVALID_CALL;
 }
 
-int MetalIndexBuffer::Lock(uint offsetToLock, uint /*sizeToLock*/,
-                           void** ppbData, uint /*flags*/)
+int MetalIndexBuffer::Lock(u32 offsetToLock, u32 /*sizeToLock*/, void** ppbData,
+                           u32 /*flags*/)
 {
     if (m_buffer == 0 || ppbData == 0)
         return FORG_INVALID_CALL;

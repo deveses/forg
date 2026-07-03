@@ -3,6 +3,9 @@
 #include "rendering/reference/SWBuffers.h"
 #include "rendering/reference/SWRenderDevice.h"
 
+#include <cmath>
+#include <cstring>
+
 namespace forg::rendering::reference {
 
 int bit_set(int v, int b) { return v | (1 << b); }
@@ -57,16 +60,16 @@ struct TriangleInterpolator
     float bary12;
     float bary20;
 
-    float bary_a;
-    float bary_b;
-    float bary_c;
+    float bary_a = 0.0f;
+    float bary_b = 0.0f;
+    float bary_c = 0.0f;
 
-    bool ext01;
-    bool ext12;
-    bool ext20;
+    bool ext01 = false;
+    bool ext12 = false;
+    bool ext20 = false;
 
-    bool draw;
-    bool valid;
+    bool draw = false;
+    bool valid = false;
 
     void Initialize(const Vector4& pos0, const Vector4& pos1,
                     const Vector4& pos2)
@@ -194,7 +197,7 @@ void SWSampler::SetTexture(ITexture* _texture)
     texture = _texture;
 }
 
-uint SWSampler::Sample(float u, float v)
+u32 SWSampler::Sample(float u, float v)
 {
     if (texture)
     {
@@ -229,7 +232,7 @@ SWRenderDevice::~SWRenderDevice()
         SetStreamSource(i, 0, 0, 0);
 }
 
-int SWRenderDevice::Initialize(uint _width, uint _height)
+int SWRenderDevice::Initialize(u32 _width, u32 _height)
 {
     /*
     RECT rcClient;
@@ -251,7 +254,7 @@ int SWRenderDevice::Initialize(uint _width, uint _height)
 void SWRenderDevice::CreateBuffers()
 {
     m_fb_stride = m_width * 4;
-    m_frame_buffer = std::make_unique<uint[]>(m_width * m_height);
+    m_frame_buffer = std::make_unique<u32[]>(m_width * m_height);
     m_depth_buffer = std::make_unique<float[]>(m_width * m_height);
 }
 
@@ -271,8 +274,8 @@ int SWRenderDevice::Reset()
     return FORG_OK;
 }
 
-LPVERTEXBUFFER SWRenderDevice::CreateVertexBuffer(uint length, uint usage,
-                                                  uint pool)
+LPVERTEXBUFFER SWRenderDevice::CreateVertexBuffer(u32 length, u32 usage,
+                                                  u32 pool)
 {
     forg::rendering::reference::SWVertexBuffer* vb =
         new forg::rendering::reference::SWVertexBuffer();
@@ -282,9 +285,9 @@ LPVERTEXBUFFER SWRenderDevice::CreateVertexBuffer(uint length, uint usage,
     return vb;
 }
 
-LPINDEXBUFFER SWRenderDevice::CreateIndexBuffer(uint length, uint usage,
+LPINDEXBUFFER SWRenderDevice::CreateIndexBuffer(u32 length, u32 usage,
                                                 bool sixteenBitIndices,
-                                                uint pool)
+                                                u32 pool)
 {
     forg::rendering::reference::SWIndexBuffer* ib =
         new forg::rendering::reference::SWIndexBuffer();
@@ -294,8 +297,8 @@ LPINDEXBUFFER SWRenderDevice::CreateIndexBuffer(uint length, uint usage,
     return ib;
 }
 
-LPTEXTURE SWRenderDevice::CreateTexture(uint Width, uint Height, uint Levels,
-                                        uint Usage, uint Format, uint Pool)
+LPTEXTURE SWRenderDevice::CreateTexture(u32 Width, u32 Height, u32 Levels,
+                                        u32 Usage, u32 Format, u32 Pool)
 {
     forg::rendering::reference::SWTexture* tex =
         new forg::rendering::reference::SWTexture();
@@ -345,7 +348,7 @@ int SWRenderDevice::SetIndices(IIndexBuffer* pIndexData)
     return FORG_OK;
 }
 
-int SWRenderDevice::SetTexture(uint Sampler, ITexture* pTexture)
+int SWRenderDevice::SetTexture(u32 Sampler, ITexture* pTexture)
 {
     if (Sampler < NUM_SAMPLERS)
     {
@@ -406,8 +409,8 @@ int SWRenderDevice::SetVertexDeclaration(const VertexDeclaration* pDecl)
     return FORG_OK;
 }
 
-int SWRenderDevice::SetViewport(uint X, uint Y, uint Width, uint Height,
-                                float MinZ, float MaxZ)
+int SWRenderDevice::SetViewport(u32 X, u32 Y, u32 Width, u32 Height, float MinZ,
+                                float MaxZ)
 {
     m_vp_x = X;
     m_vp_y = Y;
@@ -439,7 +442,7 @@ int SWRenderDevice::GetViewport(Viewport* viewport)
     return FORG_OK;
 }
 
-int SWRenderDevice::SetLight(uint Index, const Light* pLight)
+int SWRenderDevice::SetLight(u32 Index, const Light* pLight)
 {
     if (Index < NUM_LIGHTS)
     {
@@ -464,21 +467,22 @@ enum
     V_UV0_FLOAT2 = 4,
 };
 
-int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
-                                              uint, uint primitiveCount,
+int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, u32,
+                                              u32, u32 primitiveCount,
                                               const void* indexData,
                                               bool sixteenBitIndices,
                                               const void* vertexStreamZeroData,
-                                              uint)
+                                              u32)
 {
-    uint stride = m_vdecl.GetVertexSize();
+    u32 stride = m_vdecl.GetVertexSize();
     char* position_ptr = 0;
     char* normal_ptr = 0;
     char* texcoord_ptr = 0;
+    char* color_ptr = 0;
     int vertex_usage = 0;
 
     const VertexElement* elements = m_vdecl.GetDeclaration();
-    for (uint i = 0; i < m_vdecl.GetElementsCount(); i++)
+    for (u32 i = 0; i < m_vdecl.GetElementsCount(); i++)
     {
         vertex_usage |= (1 << elements[i].Usage);
 
@@ -496,11 +500,12 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
         }
         else if (elements[i].Usage == DeclarationUsage_Color)
         {
+            color_ptr = (char*)vertexStreamZeroData + elements[i].Offset;
         }
     }
 
-    [[maybe_unused]] uint num_indices = primitiveCount;
-    uint indices_step = 3;
+    [[maybe_unused]] u32 num_indices = primitiveCount;
+    u32 indices_step = 3;
     /// swap indices for even triangles
     bool swap_even = false;
 
@@ -530,15 +535,15 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
         break;
     }
 
-    const uint* indices32 = (const uint*)indexData;
-    const ushort* indices16 = (const ushort*)indexData;
+    const u32* indices32 = (const u32*)indexData;
+    const u16* indices16 = (const u16*)indexData;
 
     VSInput vs_input[3];
     VSOutput vs_output[3];
 
-    for (uint i = 0; i < primitiveCount; i++)
+    for (u32 i = 0; i < primitiveCount; i++)
     {
-        uint idx[3];
+        u32 idx[3];
 
         if (sixteenBitIndices)
         {
@@ -559,7 +564,7 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
 
         if (swap_even && i % 2 != 0)
         {
-            uint ti = idx[0];
+            u32 ti = idx[0];
             idx[0] = idx[1];
             idx[1] = ti;
         }
@@ -571,9 +576,16 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
         // transform vertices to view space
         for (int k = 0; k < 3; k++)
         {
+            vs_input[k].position = Vector4();
+            vs_input[k].color = Vector4();
+            vs_input[k].texcoord0 = Vector3();
+            vs_input[k].normal = Vector4();
+            vs_input[k].tangent = Vector4();
+            vs_output[k].position = Vector4();
+            vs_output[k].color = Vector4();
+            vs_output[k].texcoord0 = Vector3();
+
             float* pos = (float*)(position_ptr + idx[k] * stride);
-            float* nrm = (float*)(normal_ptr + idx[k] * stride);
-            float* uv = (float*)(texcoord_ptr + idx[k] * stride);
 
             // assume the size is 3
             vs_input[k].position.X = pos[0];
@@ -583,6 +595,8 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
 
             if (normal_ptr)
             {
+                float* nrm = (float*)(normal_ptr + idx[k] * stride);
+
                 vs_input[k].normal.X = nrm[0];
                 vs_input[k].normal.Y = nrm[1];
                 vs_input[k].normal.Z = nrm[2];
@@ -591,9 +605,18 @@ int SWRenderDevice::DrawIndexedUserPrimitives(PrimitiveType primitiveType, uint,
 
             if (texcoord_ptr)
             {
+                float* uv = (float*)(texcoord_ptr + idx[k] * stride);
+
                 vs_input[k].texcoord0.X = uv[0];
                 vs_input[k].texcoord0.Y = uv[1];
                 vs_input[k].texcoord0.Z = 0.0f;
+            }
+
+            if (color_ptr)
+            {
+                u32 argb = 0;
+                std::memcpy(&argb, color_ptr + idx[k] * stride, sizeof(argb));
+                vs_input[k].color = static_cast<Vector4>(Color(argb));
             }
 
             vs_output[k].texcoord0 = vs_input[k].texcoord0;
@@ -645,13 +668,13 @@ int SWRenderDevice::DrawIndexedPrimitive(PrimitiveType primitiveType, int, int,
         ib->IsIndexShort(), vb->GetData(), m_vdecl.GetVertexSize());
 }
 
-int SWRenderDevice::Clear(uint flags, Color color, float zdepth, int)
+int SWRenderDevice::Clear(u32 flags, Color color, float zdepth, int)
 {
-    uint c = color;
+    u32 c = color;
 
     if (flags & forg::ClearFlags_Target)
     {
-        for (uint p = 0; p < m_width * m_height; p++)
+        for (u32 p = 0; p < m_width * m_height; p++)
         {
             m_frame_buffer[p] = c;
         }
@@ -659,7 +682,7 @@ int SWRenderDevice::Clear(uint flags, Color color, float zdepth, int)
 
     if (flags & forg::ClearFlags_ZBuffer)
     {
-        for (uint p = 0; p < m_width * m_height; p++)
+        for (u32 p = 0; p < m_width * m_height; p++)
         {
             m_depth_buffer[p] = zdepth;
         }
@@ -705,8 +728,8 @@ int SWRenderDevice::Present()
     HBITMAP hBitmap = CreateDIBSection(hMemDC, &bi, DIB_RGB_COLORS, &pvBits,
     nullptr, 0x0); HGDIOBJ hOldBitmap = SelectObject(hMemDC, hBitmap);
 
-    //for (uint y = 0; y < ulWindowHeight; y++)
-    //for (uint x = 0; x < ulWindowWidth; x++)
+    //for (u32 y = 0; y < ulWindowHeight; y++)
+    //for (u32 x = 0; x < ulWindowWidth; x++)
     //    ((UINT32 *)pvBits)[x + y * ulWindowWidth] = 0xff0000ff;
 
     memcpy(pvBits, m_frame_buffer.get(), ulWindowWidth * ulWindowHeight * 4);
@@ -739,13 +762,13 @@ int SWRenderDevice::GetBackBuffer(BackBuffer& backBuffer)
     backBuffer.RowPitch = m_width * 4;
     backBuffer.Format = BackBufferPixelFormat::RGBA8;
     backBuffer.Pixels.resize(backBuffer.RowPitch * m_height);
-    for (uint y = 0; y < m_height; ++y)
+    for (u32 y = 0; y < m_height; ++y)
     {
-        const uint* row = m_frame_buffer.get() + y * m_width;
+        const u32* row = m_frame_buffer.get() + y * m_width;
         unsigned char* dst = backBuffer.Pixels.data() + y * backBuffer.RowPitch;
-        for (uint x = 0; x < m_width; ++x)
+        for (u32 x = 0; x < m_width; ++x)
         {
-            uint argb = row[x];
+            u32 argb = row[x];
             dst[x * 4 + 0] = static_cast<unsigned char>((argb >> 16) & 0xff);
             dst[x * 4 + 1] = static_cast<unsigned char>((argb >> 8) & 0xff);
             dst[x * 4 + 2] = static_cast<unsigned char>(argb & 0xff);
@@ -756,9 +779,9 @@ int SWRenderDevice::GetBackBuffer(BackBuffer& backBuffer)
     return FORG_OK;
 }
 
-uint blend_color(uint _src, uint _dst)
+u32 blend_color(u32 _src, u32 _dst)
 {
-    uint out = _src;
+    u32 out = _src;
 
     int a = _src >> 24;
 
@@ -791,25 +814,25 @@ uint blend_color(uint _src, uint _dst)
     return out;
 }
 
-float SWRenderDevice::GetDepth(uint _x, uint _y)
+float SWRenderDevice::GetDepth(u32 _x, u32 _y)
 {
     _y = m_height - 1 - _y;
 
-    uint index = _y * m_width + _x;
+    u32 index = _y * m_width + _x;
 
     float d = m_depth_buffer[index];
 
     return d;
 }
 
-void SWRenderDevice::SetPixel(uint _x, uint _y, float _z, uint _c)
+void SWRenderDevice::SetPixel(u32 _x, u32 _y, float _z, u32 _c)
 {
     _x += m_vp_x;
     _y += m_vp_y;
 
     _y = m_height - 1 - _y;
 
-    uint index = _y * m_width + _x;
+    u32 index = _y * m_width + _x;
 
     float& d = m_depth_buffer[index];
 
@@ -817,7 +840,7 @@ void SWRenderDevice::SetPixel(uint _x, uint _y, float _z, uint _c)
     {
         d = _z;
 
-        uint& p = m_frame_buffer[index];
+        u32& p = m_frame_buffer[index];
 
         // Color colz(_z, _z, _z);
         //_c = colz;
@@ -848,7 +871,11 @@ int SWRenderDevice::ProcessVertex(VSInput& _input, VSOutput& _output,
         _output.color.Y = d * m_lights[0].Diffuse.g * m_lights[0].Ambient.g;
         _output.color.Z = d * m_lights[0].Diffuse.b * m_lights[0].Ambient.b;
         _output.color.W = 1.0f;
-        _usage = bit_set(_usage, DeclarationType_Color);
+        _usage = bit_set(_usage, DeclarationUsage_Color);
+    }
+    else if (bit_test(_usage, DeclarationUsage_Color))
+    {
+        _output.color = _input.color;
     }
 
     return _usage;
@@ -857,19 +884,34 @@ int SWRenderDevice::ProcessVertex(VSInput& _input, VSOutput& _output,
 void SWRenderDevice::ProcessPixel(PSInput& _input, PSOutput& _output,
                                   int _usage)
 {
-    Color cout(0.0f, 0.0f, 0.0f, 1.0f);
+    Color cout(1.0f, 1.0f, 1.0f, 1.0f);
 
-    if (bit_test(_usage, DeclarationUsage_TextureCoordinate))
+    const bool hasTexture =
+        bit_test(_usage, DeclarationUsage_TextureCoordinate) &&
+        m_samplers[0].texture != nullptr;
+    const bool hasColor = bit_test(_usage, DeclarationUsage_Color);
+
+    if (hasTexture)
     {
-        Color c =
+        cout =
             Color(m_samplers[0].Sample(_input.texcoord0.X, _input.texcoord0.Y));
-
-        cout = c;
     }
 
-    if (bit_test(_usage, DeclarationType_Color))
+    if (hasColor)
     {
-        cout = _input.color;
+        Color vertexColor(_input.color);
+        if (hasTexture)
+        {
+            cout.r *= vertexColor.r;
+            cout.g *= vertexColor.g;
+            cout.b *= vertexColor.b;
+            cout.a *= vertexColor.a;
+        }
+        else
+        {
+            cout = vertexColor;
+            cout.a = 1.0f;
+        }
     }
 
     _output.color.X = cout.r;
@@ -882,8 +924,6 @@ void SWRenderDevice::ProcessPixel(PSInput& _input, PSOutput& _output,
 // points must be in CCW order
 void SWRenderDevice::DrawTriangle(const Vector3* pos)
 {
-    uint* colorBuffer = m_frame_buffer.get();
-
     // 28.4 fixed-point coordinates
 
     const int Y1 = iround(16.0f * pos[0].Y);
@@ -937,8 +977,6 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
     minx &= ~(q - 1);
     miny &= ~(q - 1);
 
-    (char*&)colorBuffer += miny * m_fb_stride;
-
     // Half-edge constants
     int C1 = DY12 * X1 - DX12 * Y1;
     int C2 = DY23 * X2 - DX23 * Y2;
@@ -989,8 +1027,6 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
             if (a == 0x0 || b == 0x0 || c == 0x0)
                 continue;
 
-            unsigned int* buffer = colorBuffer;
-
             // Accept whole block when totally covered
 
             if (a == 0xF && b == 0xF && c == 0xF)
@@ -1002,8 +1038,6 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
                         // buffer[ix] = 0xFF007F00; // Green
                         SetPixel(ix, y + iy, 0.0f, 0xFF007F00);
                     }
-
-                    (char*&)buffer += m_fb_stride;
                 }
             }
             else // Partially covered block
@@ -1034,13 +1068,9 @@ void SWRenderDevice::DrawTriangle(const Vector3* pos)
                     CY1 += FDX12;
                     CY2 += FDX23;
                     CY3 += FDX31;
-
-                    (char*&)buffer += m_fb_stride;
                 }
             }
         }
-
-        (char*&)colorBuffer += q * m_fb_stride;
     }
 }
 
@@ -1072,217 +1102,85 @@ void SWRenderDevice::DrawTriangle(const VSOutput* vertices, int usage)
     interpolator.Initialize(vertices[0].position, vertices[1].position,
                             vertices[2].position);
 
-    // 28.4 fixed-point coordinates
+    auto edge = [](const Vector4& a, const Vector4& b, float x, float y)
+    { return (x - a.X) * (b.Y - a.Y) - (y - a.Y) * (b.X - a.X); };
 
-    const int Y1 = iround(16.0f * vertices[0].position.Y);
-    const int Y2 = iround(16.0f * vertices[1].position.Y);
-    const int Y3 = iround(16.0f * vertices[2].position.Y);
-
-    const int X1 = iround(16.0f * vertices[0].position.X);
-    const int X2 = iround(16.0f * vertices[1].position.X);
-    const int X3 = iround(16.0f * vertices[2].position.X);
-
-    // Deltas
-
-    const int DX12 = X1 - X2;
-    const int DX23 = X2 - X3;
-    const int DX31 = X3 - X1;
-
-    const int DY12 = Y1 - Y2;
-    const int DY23 = Y2 - Y3;
-    const int DY31 = Y3 - Y1;
-
-    // Fixed-point deltas
-
-    const int FDX12 = DX12 << 4;
-    const int FDX23 = DX23 << 4;
-    const int FDX31 = DX31 << 4;
-
-    const int FDY12 = DY12 << 4;
-    const int FDY23 = DY23 << 4;
-    const int FDY31 = DY31 << 4;
-
-    // Bounding rectangle
-
-    int minx = (min(X1, X2, X3) + 0xF) >> 4;
-    int maxx = (max(X1, X2, X3) + 0xF) >> 4;
-    int miny = (min(Y1, Y2, Y3) + 0xF) >> 4;
-    int maxy = (max(Y1, Y2, Y3) + 0xF) >> 4;
-
-    if (minx < 0)
-        minx = 0;
-    if (miny < 0)
-        miny = 0;
-    if (maxx > static_cast<int>(m_width))
-        maxx = static_cast<int>(m_width);
-    if (maxy > static_cast<int>(m_height))
-        maxy = static_cast<int>(m_height);
-
-    // Block size, standard 8x8 (must be power of two)
-    const int q = 8;
-
-    // Start in corner of 8x8 block
-    minx &= ~(q - 1);
-    miny &= ~(q - 1);
-
-    // Half-edge constants
-    int C1 = DY12 * X1 - DX12 * Y1;
-    int C2 = DY23 * X2 - DX23 * Y2;
-    int C3 = DY31 * X3 - DX31 * Y3;
-
-    // Correct for fill convention
-    if (DY12 < 0 || (DY12 == 0 && DX12 > 0))
-        C1++;
-    if (DY23 < 0 || (DY23 == 0 && DX23 > 0))
-        C2++;
-    if (DY31 < 0 || (DY31 == 0 && DX31 > 0))
-        C3++;
-
-    // Loop through blocks
-    for (int y = miny; y < maxy; y += q)
+    float minxf = vertices[0].position.X;
+    float maxxf = vertices[0].position.X;
+    float minyf = vertices[0].position.Y;
+    float maxyf = vertices[0].position.Y;
+    for (int i = 1; i < 3; ++i)
     {
-        for (int x = minx; x < maxx; x += q)
+        minxf = forg::min(minxf, vertices[i].position.X);
+        maxxf = forg::max(maxxf, vertices[i].position.X);
+        minyf = forg::min(minyf, vertices[i].position.Y);
+        maxyf = forg::max(maxyf, vertices[i].position.Y);
+    }
+
+    int simpleMinX = static_cast<int>(std::floor(minxf));
+    int simpleMaxX = static_cast<int>(std::ceil(maxxf));
+    int simpleMinY = static_cast<int>(std::floor(minyf));
+    int simpleMaxY = static_cast<int>(std::ceil(maxyf));
+
+    if (simpleMinX < 0)
+        simpleMinX = 0;
+    if (simpleMinY < 0)
+        simpleMinY = 0;
+    if (simpleMaxX > static_cast<int>(m_width))
+        simpleMaxX = static_cast<int>(m_width);
+    if (simpleMaxY > static_cast<int>(m_height))
+        simpleMaxY = static_cast<int>(m_height);
+
+    const float area = edge(vertices[0].position, vertices[1].position,
+                            vertices[2].position.X, vertices[2].position.Y);
+    if (fabs(area) < 1e-5f)
+        return;
+
+    const float epsilon = -1e-4f;
+    for (int iy = simpleMinY; iy < simpleMaxY; ++iy)
+    {
+        for (int ix = simpleMinX; ix < simpleMaxX; ++ix)
         {
-            // Corners of block
-            int x0 = x << 4;
-            int x1 = (x + q - 1) << 4;
-            int y0 = y << 4;
-            int y1 = (y + q - 1) << 4;
+            const float sampleX = static_cast<float>(ix) + 0.5f;
+            const float sampleY = static_cast<float>(iy) + 0.5f;
+            const float w0 = edge(vertices[1].position, vertices[2].position,
+                                  sampleX, sampleY) /
+                             area;
+            const float w1 = edge(vertices[2].position, vertices[0].position,
+                                  sampleX, sampleY) /
+                             area;
+            const float w2 = 1.0f - w0 - w1;
 
-            // Evaluate half-space functions
-            bool a00 = C1 + DX12 * y0 - DY12 * x0 > 0;
-            bool a10 = C1 + DX12 * y0 - DY12 * x1 > 0;
-            bool a01 = C1 + DX12 * y1 - DY12 * x0 > 0;
-            bool a11 = C1 + DX12 * y1 - DY12 * x1 > 0;
-
-            int a = (a00 << 0) | (a10 << 1) | (a01 << 2) | (a11 << 3);
-
-            bool b00 = C2 + DX23 * y0 - DY23 * x0 > 0;
-            bool b10 = C2 + DX23 * y0 - DY23 * x1 > 0;
-            bool b01 = C2 + DX23 * y1 - DY23 * x0 > 0;
-            bool b11 = C2 + DX23 * y1 - DY23 * x1 > 0;
-
-            int b = (b00 << 0) | (b10 << 1) | (b01 << 2) | (b11 << 3);
-
-            bool c00 = C3 + DX31 * y0 - DY31 * x0 > 0;
-            bool c10 = C3 + DX31 * y0 - DY31 * x1 > 0;
-            bool c01 = C3 + DX31 * y1 - DY31 * x0 > 0;
-            bool c11 = C3 + DX31 * y1 - DY31 * x1 > 0;
-
-            int c = (c00 << 0) | (c10 << 1) | (c01 << 2) | (c11 << 3);
-
-            // Skip block when outside an edge
-            if (a == 0x0 || b == 0x0 || c == 0x0)
+            if (w0 < epsilon || w1 < epsilon || w2 < epsilon)
                 continue;
 
-            // Accept whole block when totally covered
+            ps_input.vpos.X = static_cast<float>(ix);
+            ps_input.vpos.Y = static_cast<float>(iy);
 
-            if (a == 0xF && b == 0xF && c == 0xF)
+            if (bit_test(usage, DeclarationUsage_Color))
             {
-                for (int iy = 0; iy < q && y + iy < maxy; iy++)
-                {
-
-                    for (int ix = x; ix < x + q && ix < maxx; ix++)
-                    {
-                        interpolator.SetPixel(ix, y + iy);
-
-                        ps_input.vpos.X = ix;
-                        ps_input.vpos.Y = y + iy;
-
-                        if (bit_test(usage, DeclarationType_Color))
-                        {
-                            interpolator.Interpolate(
-                                &ps_input.color, vertices[0].color,
-                                vertices[1].color, vertices[2].color);
-
-                            // flat shading
-                            // ps_input.color = vertices[0].color;
-                        }
-
-                        if (bit_test(usage, DeclarationUsage_TextureCoordinate))
-                        {
-                            interpolator.Interpolate(
-                                &ps_input.texcoord0, vertices[0].texcoord0,
-                                vertices[1].texcoord0, vertices[2].texcoord0);
-                        }
-
-                        ProcessPixel(ps_input, ps_output, usage);
-
-                        float d = interpolator.Interpolate(
-                            vertices[0].position.Z, vertices[1].position.Z,
-                            vertices[2].position.Z);
-
-                        if (interpolator.CanDraw() && d >= m_vp_minz &&
-                            d <= m_vp_maxz && d <= GetDepth(ix, y + iy))
-                        {
-                            Color col = ps_output.color;
-                            SetPixel(ix, y + iy, d, col);
-                        }
-                    }
-                }
+                ps_input.color = vertices[0].color * w0 +
+                                 vertices[1].color * w1 +
+                                 vertices[2].color * w2;
             }
-            else // Partially covered block
+
+            if (bit_test(usage, DeclarationUsage_TextureCoordinate))
             {
-                int CY1 = C1 + DX12 * y0 - DY12 * x0;
-                int CY2 = C2 + DX23 * y0 - DY23 * x0;
-                int CY3 = C3 + DX31 * y0 - DY31 * x0;
+                ps_input.texcoord0 = vertices[0].texcoord0 * w0 +
+                                     vertices[1].texcoord0 * w1 +
+                                     vertices[2].texcoord0 * w2;
+            }
 
-                for (int iy = y; iy < y + q && iy < maxy; iy++)
-                {
-                    int CX1 = CY1;
-                    int CX2 = CY2;
-                    int CX3 = CY3;
+            ProcessPixel(ps_input, ps_output, usage);
 
-                    for (int ix = x; ix < x + q && ix < maxx; ix++)
-                    {
-                        if (CX1 > 0 && CX2 > 0 && CX3 > 0)
-                        {
-                            interpolator.SetPixel(ix, iy);
+            float d = vertices[0].position.Z * w0 +
+                      vertices[1].position.Z * w1 + vertices[2].position.Z * w2;
 
-                            ps_input.vpos.X = ix;
-                            ps_input.vpos.Y = y + iy;
-
-                            if (bit_test(usage, DeclarationType_Color))
-                            {
-                                interpolator.Interpolate(
-                                    &ps_input.color, vertices[0].color,
-                                    vertices[1].color, vertices[2].color);
-                                // flat shading
-                                // ps_input.color = vertices[0].color;
-                            }
-
-                            if (bit_test(usage,
-                                         DeclarationUsage_TextureCoordinate))
-                            {
-                                interpolator.Interpolate(&ps_input.texcoord0,
-                                                         vertices[0].texcoord0,
-                                                         vertices[1].texcoord0,
-                                                         vertices[2].texcoord0);
-                            }
-
-                            ProcessPixel(ps_input, ps_output, usage);
-
-                            float d = interpolator.Interpolate(
-                                vertices[0].position.Z, vertices[1].position.Z,
-                                vertices[2].position.Z);
-
-                            if (interpolator.CanDraw() && d >= m_vp_minz &&
-                                d <= m_vp_maxz && d <= GetDepth(ix, iy))
-                            {
-                                Color col = ps_output.color;
-                                SetPixel(ix, iy, d, col);
-                            }
-                        }
-
-                        CX1 -= FDY12;
-                        CX2 -= FDY23;
-                        CX3 -= FDY31;
-                    }
-
-                    CY1 += FDX12;
-                    CY2 += FDX23;
-                    CY3 += FDX31;
-                }
+            if (d >= m_vp_minz && d <= m_vp_maxz &&
+                d <= GetDepth(static_cast<u32>(ix), static_cast<u32>(iy)))
+            {
+                Color col = ps_output.color;
+                SetPixel(static_cast<u32>(ix), static_cast<u32>(iy), d, col);
             }
         }
     }

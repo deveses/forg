@@ -230,7 +230,7 @@ bool YAMLSerializer::EndObject()
     return true;
 }
 
-bool YAMLSerializer::BeginArray(std::string_view name, uint& count)
+bool YAMLSerializer::BeginArray(std::string_view name, u32& count)
 {
     if (m_stack.empty())
         return false;
@@ -249,7 +249,7 @@ bool YAMLSerializer::BeginArray(std::string_view name, uint& count)
     if (node == nullptr || !node->isArray)
         return false;
 
-    count = static_cast<uint>(node->children.size());
+    count = static_cast<u32>(node->children.size());
     m_stack.push_back({node, 0});
     return true;
 }
@@ -277,7 +277,7 @@ bool YAMLSerializer::Value(std::string_view name, int& value)
     return true;
 }
 
-bool YAMLSerializer::Value(std::string_view name, uint& value)
+bool YAMLSerializer::Value(std::string_view name, u32& value)
 {
     if (IsWriting())
         return WriteValue(name, std::to_string(value));
@@ -287,7 +287,7 @@ bool YAMLSerializer::Value(std::string_view name, uint& value)
     if (!ReadValue(name, text) || !parseInt(text, parsed) || parsed < 0)
         return false;
 
-    value = static_cast<uint>(parsed);
+    value = static_cast<u32>(parsed);
     return true;
 }
 

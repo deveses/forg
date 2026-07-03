@@ -215,7 +215,7 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
 {
     NSSize size = m_view.bounds.size;
 
-    m_engine.Resize((forg::uint)size.width, (forg::uint)size.height);
+    m_engine.Resize((forg::u32)size.width, (forg::u32)size.height);
 }
 
 - (void)viewFrameChanged:(NSNotification*)notification

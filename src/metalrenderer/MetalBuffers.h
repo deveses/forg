@@ -38,18 +38,18 @@ class MetalVertexBuffer : public IVertexBuffer
     virtual ~MetalVertexBuffer();
 
     // mtlDevice is an id<MTLDevice>; allocates a `length`-byte shared buffer.
-    int Create(void* mtlDevice, uint length);
+    int Create(void* mtlDevice, u32 length);
 
     void* GetMTLBuffer() const { return m_buffer; }
-    uint GetLength() const { return m_length; }
+    u32 GetLength() const { return m_length; }
 
-    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
-                     uint flags);
+    virtual int Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData,
+                     u32 flags);
     virtual int Unlock();
 
   private:
     void* m_buffer; // id<MTLBuffer>, retained
-    uint m_length;
+    u32 m_length;
 };
 
 class MetalIndexBuffer : public IIndexBuffer
@@ -58,19 +58,19 @@ class MetalIndexBuffer : public IIndexBuffer
     MetalIndexBuffer();
     virtual ~MetalIndexBuffer();
 
-    int Create(void* mtlDevice, uint length, bool sixteenBitIndices);
+    int Create(void* mtlDevice, u32 length, bool sixteenBitIndices);
 
     void* GetMTLBuffer() const { return m_buffer; }
-    uint GetLength() const { return m_length; }
+    u32 GetLength() const { return m_length; }
     bool IsIndexShort() const { return m_short; }
 
-    virtual int Lock(uint offsetToLock, uint sizeToLock, void** ppbData,
-                     uint flags);
+    virtual int Lock(u32 offsetToLock, u32 sizeToLock, void** ppbData,
+                     u32 flags);
     virtual int Unlock();
 
   private:
     void* m_buffer; // id<MTLBuffer>, retained
-    uint m_length;
+    u32 m_length;
     bool m_short;
 };
 

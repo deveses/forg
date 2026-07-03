@@ -46,11 +46,10 @@ namespace forg::debug {
 FORG_API void DbgOutputStringW(const wchar_t* lpOutputString, va_list args);
 FORG_API void DbgOutputStringA(LPCTSTR lpOutputString, va_list args)
     FORG_PRINTF_FORMAT(1, 0);
-FORG_API int DbgTrace(LPCTSTR strFile, uint dwLine, int iResult,
-                      LPCTSTR strMsg);
-FORG_API int DbgTraceOnlyNonZero(LPCTSTR strFile, uint dwLine, int iResult,
+FORG_API int DbgTrace(LPCTSTR strFile, u32 dwLine, int iResult, LPCTSTR strMsg);
+FORG_API int DbgTraceOnlyNonZero(LPCTSTR strFile, u32 dwLine, int iResult,
                                  LPCTSTR strMsg);
-FORG_API void DbgTrap(LPCTSTR strFile, uint dwLine, LPCTSTR strMsg);
+FORG_API void DbgTrap(LPCTSTR strFile, u32 dwLine, LPCTSTR strMsg);
 
 template <typename T> void DbgOutputString(const T* lpOutputString, ...);
 
@@ -92,7 +91,7 @@ FORG_API void DbgOutputString<char>(const char* lpOutputString, ...)
 
 #define REMIND(strLiteral) DBG_TRACE_MSG(strLiteral)
 #define ASSERT(bCondition)                                                     \
-    if (bCondition == 0)                                                       \
+    if ((bCondition) == 0)                                                     \
     {                                                                          \
         DBG_TRACE_MSG("Assertion failed!");                                    \
         DBG_BREAK();                                                           \

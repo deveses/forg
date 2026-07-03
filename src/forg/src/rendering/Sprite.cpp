@@ -45,7 +45,7 @@ int Sprite::SetTransform(const Matrix4* transform)
     return FORG_OK;
 }
 
-int Sprite::Begin(uint Flags)
+int Sprite::Begin(u32 Flags)
 {
     m_Flags = Flags;
 
@@ -80,8 +80,8 @@ int Sprite::Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
     if (!srcTexture)
         return FORG_INVALID_CALL;
 
-    uint tex_width = 0;
-    uint tex_height = 0;
+    u32 tex_width = 0;
+    u32 tex_height = 0;
 
     SurfaceDescription desc;
 
@@ -122,10 +122,9 @@ int Sprite::Draw(ITexture* srcTexture, const Rectangle* srcRectangle,
         {0.0f, absh, 0.0f, 0xffffffff, u0, v0}  // top-left
     };
     */
-    const uint vertex_color = (static_cast<uint>(color.a) << 24) |
-                              (static_cast<uint>(color.r) << 16) |
-                              (static_cast<uint>(color.g) << 8) |
-                              static_cast<uint>(color.b);
+    const u32 vertex_color =
+        (static_cast<u32>(color.a) << 24) | (static_cast<u32>(color.r) << 16) |
+        (static_cast<u32>(color.g) << 8) | static_cast<u32>(color.b);
 
     forg::geometry::PositionColoredTextured points[4] = {
         {0.0f, 0.0f, 0.0f, static_cast<int>(vertex_color), u0, v0},
