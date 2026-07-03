@@ -2,10 +2,6 @@
 
 include(CMakeFindDependencyMacro)
 
-if(@FORG_USE_FREETYPE@)
-    find_dependency(freetype CONFIG)
-endif()
-
 if(@FORG_USE_ZLIB@)
     find_dependency(ZLIB)
 endif()
