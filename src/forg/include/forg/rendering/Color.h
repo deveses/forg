@@ -86,6 +86,11 @@ template <typename ColorComponentType> struct TColor4
     {
     }
 
+    constexpr TColor4(ColorComponentType component)
+        : r(component), g(component), b(component), a(component)
+    {
+    }
+
     constexpr bool operator<(const TColor4& _rhs) const
     {
         return (r < _rhs.r && g < _rhs.g && b < _rhs.b && a < _rhs.a);

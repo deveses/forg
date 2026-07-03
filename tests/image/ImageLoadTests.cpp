@@ -110,3 +110,67 @@ TEST_CASE("Image saves and loads BMP files", "[image][bmp]")
     std::filesystem::remove(ppmPath);
     std::filesystem::remove(bmpPath);
 }
+
+TEST_CASE("Image applies convolution kernels", "[image][filter]")
+{
+    const std::filesystem::path path = std::filesystem::temp_directory_path() /
+                                       "forg-image-test-convolution.ppm";
+    std::filesystem::remove(path);
+
+    const forg::Color4b pixels[] = {
+        forg::Color4b(10, 0, 0, 255),
+        forg::Color4b(20, 0, 0, 128),
+        forg::Color4b(30, 0, 0, 64),
+    };
+
+    REQUIRE(
+        forg::SavePpm(path.string(), pixels, 3, 1, 3 * sizeof(forg::Color4b)));
+
+    forg::Image image;
+    REQUIRE(image.Load(path.string()));
+
+    const float shiftRight[] = {0.0f, 0.0f, 1.0f};
+    REQUIRE(image.ApplyConvolution(shiftRight, 3, 1));
+
+    const forg::Color4b* filtered =
+        reinterpret_cast<const forg::Color4b*>(image.GetData(0));
+    REQUIRE(filtered[0].r == 20);
+    REQUIRE(filtered[1].r == 30);
+    REQUIRE(filtered[2].r == 30);
+    REQUIRE(filtered[0].a == 255);
+    REQUIRE(filtered[1].a == 255);
+    REQUIRE(filtered[2].a == 255);
+
+    std::filesystem::remove(path);
+}
+
+TEST_CASE("Image applies common convolution filters", "[image][filter]")
+{
+    const std::filesystem::path path = std::filesystem::temp_directory_path() /
+                                       "forg-image-test-common-filter.ppm";
+    std::filesystem::remove(path);
+
+    const forg::Color4b pixels[] = {
+        forg::Color4b(0, 0, 0, 255),
+        forg::Color4b(90, 0, 0, 128),
+        forg::Color4b(0, 0, 0, 64),
+    };
+
+    REQUIRE(
+        forg::SavePpm(path.string(), pixels, 3, 1, 3 * sizeof(forg::Color4b)));
+
+    forg::Image image;
+    REQUIRE(image.Load(path.string()));
+    REQUIRE(image.ApplyGaussianBlur());
+
+    const forg::Color4b* filtered =
+        reinterpret_cast<const forg::Color4b*>(image.GetData(0));
+    REQUIRE(filtered[0].r == 23);
+    REQUIRE(filtered[1].r == 45);
+    REQUIRE(filtered[2].r == 23);
+    REQUIRE(filtered[0].a == 255);
+    REQUIRE(filtered[1].a == 255);
+    REQUIRE(filtered[2].a == 255);
+
+    std::filesystem::remove(path);
+}

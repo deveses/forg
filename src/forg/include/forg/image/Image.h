@@ -25,6 +25,7 @@
 
 #include "base.h"
 
+#include <span>
 #include <string_view>
 #include <vector>
 
@@ -75,6 +76,30 @@ class Image
      * @param _height new height, 0 - no change
      */
     void Resize(u32 _width, u32 _height);
+
+    /**
+     * Applies a convolution kernel to the base image level.
+     *
+     * Kernel dimensions must be odd and non-zero. Sampling outside the image
+     * clamps to the nearest edge pixel. Generated mipmaps are discarded because
+     * the base pixels have changed.
+     *
+     * @param _kernel row-major kernel values
+     * @param _kernel_width kernel width, must be odd
+     * @param _kernel_height kernel height, must be odd
+     * @param _scale multiplier applied to the accumulated color
+     * @param _bias value added to each filtered channel
+     * @param _preserve_alpha keep the source alpha channel unchanged
+     * @return true if the filter was applied
+     */
+    bool ApplyConvolution(std::span<const float> _kernel, u32 _kernel_width,
+                          u32 _kernel_height, float _scale = 1.0f,
+                          float _bias = 0.0f, bool _preserve_alpha = true);
+
+    bool ApplyBoxBlur();
+    bool ApplyGaussianBlur();
+    bool ApplySharpen();
+    bool ApplyEdgeDetect();
 
     /**
      * Generates mipmaps chain
