@@ -322,7 +322,9 @@ int main(int, char*[])
     AppState state;
     int result = 1;
     if (InitializeEngine(state, window, config))
+    {
         result = Run(state);
+    }
 
 #ifdef FORG_USE_FREETYPE
     delete state.Font;

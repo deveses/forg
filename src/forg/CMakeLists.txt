@@ -82,7 +82,10 @@ endif()
 
 if(FORG_PLATFORM_LINUX)
     set_target_properties(forg PROPERTIES POSITION_INDEPENDENT_CODE ON)
-    target_link_libraries(forg PRIVATE ${CMAKE_DL_LIBS})
+    target_link_libraries(forg PRIVATE ${CMAKE_DL_LIBS} ${FORG_SDL2_LIBRARIES})
+    if(FORG_SDL2_INCLUDE_DIRS)
+        target_include_directories(forg PRIVATE ${FORG_SDL2_INCLUDE_DIRS})
+    endif()
 endif()
 
 set_target_properties(forg PROPERTIES EXPORT_NAME forg)

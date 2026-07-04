@@ -19,6 +19,8 @@ set(audio_sources
     AudioOutput.h
     $<${FORG_PLATFORM_OSX}:AudioOutputCoreAudio.h>
     $<${FORG_PLATFORM_OSX}:AudioOutputCoreAudio.cpp>
+    $<${FORG_PLATFORM_LINUX}:AudioOutputSDL.h>
+    $<${FORG_PLATFORM_LINUX}:AudioOutputSDL.cpp>
     $<${FORG_PLATFORM_WINDOWS}:AudioOutputWaveOut.h>
     $<${FORG_PLATFORM_WINDOWS}:AudioOutputWaveOut.cpp>
     WaveFile.cpp

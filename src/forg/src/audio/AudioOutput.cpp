@@ -9,6 +9,10 @@
 #include "audio/AudioOutputCoreAudio.h"
 #endif
 
+#ifdef FORG_PLATFORM_LINUX
+#include "audio/AudioOutputSDL.h"
+#endif
+
 namespace forg::audio {
 
 IAudioOutput* CreateDefaultAudioOutput()
@@ -17,6 +21,8 @@ IAudioOutput* CreateDefaultAudioOutput()
     return CreateAudioOutputWaveOut();
 #elif defined(FORG_PLATFORM_OSX)
     return CreateAudioOutputCoreAudio();
+#elif defined(FORG_PLATFORM_LINUX)
+    return CreateAudioOutputSDL();
 #else
     return nullptr;
 #endif
