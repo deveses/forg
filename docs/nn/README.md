@@ -188,7 +188,19 @@ build/examples/examples/mnist/forg_mnist \
 ```
 
 This is a scalar-autograd educational example, so use small subsets first.
-Pass `matrix` as the backend to use the faster dense matrix path:
+Pass `cnn` as the backend to use the scalar `Conv2d -> ReLU -> MaxPool2d ->
+Linear` image model:
+
+```sh
+build/examples/examples/mnist/forg_mnist \
+  train-images.idx3-ubyte train-labels.idx1-ubyte \
+  t10k-images.idx3-ubyte t10k-labels.idx1-ubyte \
+  1 100 100 0.01 2 cnn
+```
+
+The CNN path uses the same scalar autograd engine as the default backend, so it
+is meant for small correctness and learning-oriented runs. Pass `matrix` as the
+backend to use the faster dense matrix path:
 
 ```sh
 build/examples/examples/mnist/forg_mnist \

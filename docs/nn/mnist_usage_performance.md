@@ -53,8 +53,9 @@ Arguments:
   averaged optimizer update.
 - `checkpoint-path`: Optional parameter file. If it exists, the example loads
   it before training. After training, the example saves current weights there.
-- `backend`: Optional `scalar` or `matrix`. `scalar` preserves the educational
-  autograd path. `matrix` uses the dense matrix backend.
+- `backend`: Optional `scalar`, `matrix`, or `cnn`. `scalar` preserves the
+  educational dense autograd path. `cnn` uses scalar `Conv2d`, `ReLU`,
+  `MaxPool2d`, and `Linear` modules. `matrix` uses the dense matrix backend.
 - `thread-count`: Optional matrix backend CPU thread count. Use `0` or omit it
   to use hardware concurrency.
 
@@ -98,6 +99,9 @@ and educational experiments, not fast full-dataset training.
 # Larger scalar-autograd experiment
 /usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 5000 1000 0.01 32
 
+# Small scalar CNN experiment
+/usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 1 100 100 0.01 2 cnn
+
 # Faster dense matrix backend
 /usr/bin/time -p build/examples/examples/mnist/forg_mnist ... 3 5000 1000 0.05 64 matrix
 ```
@@ -122,7 +126,7 @@ below used 18 worker threads unless a different `thread-count` is shown.
 
 ## Current Model
 
-The example trains this model:
+The default `scalar` backend trains this model:
 
 ```cpp
 Sequential{
@@ -137,10 +141,20 @@ Training uses `CrossEntropyLoss(output, label)` over raw logits and mini-batch
 SGD. Inference predicts the digit with `ArgMax()` over the 10 raw output
 scores.
 
-The NN module also includes scalar `Conv2d`, `MaxPool2d`, `Dropout`, and
-`BatchNorm` helpers. They compose with `Sequential`, but they still allocate
-scalar autograd graph nodes, so a CNN built from them is primarily useful for
-small correctness experiments until a tensor backend exists.
+The `cnn` backend trains this scalar image model:
+
+```cpp
+Sequential{
+    Conv2d(1, 4, 28, 28, 3, 3, 1, 1),
+    ReLU(),
+    MaxPool2d(4, 28, 28, 2, 2),
+    Linear(4 * 14 * 14, 10),
+}
+```
+
+It composes existing scalar `Conv2d` and `MaxPool2d` helpers with
+`Sequential`, but still allocates scalar autograd graph nodes. Treat it as a
+small correctness and learning-oriented CNN path until a tensor backend exists.
 
 The `matrix` backend uses `MatrixMLP`, a dense `Linear -> ReLU -> Linear`
 classifier trained with batched softmax cross-entropy and manual
@@ -148,6 +162,33 @@ backpropagation. It does not build scalar autograd graphs per sample and is the
 recommended path for larger MNIST subsets with the current codebase. Matrix
 training uses row-parallel CPU execution by default; pass an explicit
 `thread-count` after `matrix` to limit parallelism for benchmarking.
+
+## Small Backend Comparison
+
+Measured locally on 2026-07-04 using the real MNIST IDX files under
+`data/mnist_dataset` on Linux 6.17 with an Intel Core i9-14900K, 32 logical
+CPUs. Each backend used the same tiny run:
+
+```sh
+build/examples/examples/mnist/forg_mnist \
+  data/mnist_dataset/train-images.idx3-ubyte \
+  data/mnist_dataset/train-labels.idx1-ubyte \
+  data/mnist_dataset/t10k-images.idx3-ubyte \
+  data/mnist_dataset/t10k-labels.idx1-ubyte \
+  1 100 100 0.01 16 <backend>
+```
+
+Accuracy is not meaningful at this size; the table is for runtime comparison.
+Training time is `epoch - eval` from the built-in profile output.
+
+| Backend | Epoch | Training | Eval | Eval/sample |
+| --- | ---: | ---: | ---: | ---: |
+| `scalar` | 30.359s | 19.114s | 11.245s | 112.455ms |
+| `cnn` | 8.886s | 5.102s | 3.784s | 37.844ms |
+| `matrix` | 0.056s | 0.038s | 0.018s | 0.178ms |
+
+On this small run, `cnn` is about 3.7x faster than `scalar` for training and
+about 3.0x faster for eval, while `matrix` remains the practical fast path.
 
 ## Scalar Baseline Timing
 
