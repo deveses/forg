@@ -510,10 +510,10 @@ bool Image::ApplyConvolution(std::span<const float> _kernel, u32 _kernel_width,
 
                     const float weight = *kernel_helper.Pixel(kx, ky);
 
-                    color.r += sample.r * weight;
-                    color.g += sample.g * weight;
-                    color.b += sample.b * weight;
-                    color.a += sample.a * weight;
+                    color.r += static_cast<float>(sample.r) * weight;
+                    color.g += static_cast<float>(sample.g) * weight;
+                    color.b += static_cast<float>(sample.b) * weight;
+                    color.a += static_cast<float>(sample.a) * weight;
                 }
             }
 
