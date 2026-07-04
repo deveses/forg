@@ -73,12 +73,32 @@ void PrintUsage(const char* program)
               << " <train-images> <train-labels> <test-images> <test-labels>"
                  " [epochs] [train-limit] [test-limit] [learning-rate]"
                  " [batch-size] [checkpoint-path|backend]"
-                 " [backend|thread-count] [thread-count]\n";
+                 " [backend|thread-count] [thread-count]\n"
+              << "Backends: scalar, matrix, cnn\n";
 }
 
 bool IsBackendName(const std::string& text)
 {
-    return text == "scalar" || text == "matrix";
+    return text == "scalar" || text == "matrix" || text == "cnn";
+}
+
+forg::nn::Sequential BuildScalarModel()
+{
+    return forg::nn::Sequential({
+        std::make_shared<forg::nn::Linear>(784, 64),
+        std::make_shared<forg::nn::ReLU>(),
+        std::make_shared<forg::nn::Linear>(64, 10),
+    });
+}
+
+forg::nn::Sequential BuildCnnModel()
+{
+    return forg::nn::Sequential({
+        std::make_shared<forg::nn::Conv2d>(1, 4, 28, 28, 3, 3, 1, 1),
+        std::make_shared<forg::nn::ReLU>(),
+        std::make_shared<forg::nn::MaxPool2d>(4, 28, 28, 2, 2),
+        std::make_shared<forg::nn::Linear>(4 * 14 * 14, 10),
+    });
 }
 
 double Evaluate(forg::nn::Sequential& model,
@@ -187,7 +207,7 @@ int main(int argc, char** argv)
         thread_count = ParseSize(argv[12], 0);
     if (!IsBackendName(backend))
     {
-        std::cerr << "Backend must be 'scalar' or 'matrix'\n";
+        std::cerr << "Backend must be 'scalar', 'matrix', or 'cnn'\n";
         return 1;
     }
 
@@ -300,11 +320,8 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    forg::nn::Sequential model({
-        std::make_shared<forg::nn::Linear>(784, 64),
-        std::make_shared<forg::nn::ReLU>(),
-        std::make_shared<forg::nn::Linear>(64, 10),
-    });
+    forg::nn::Sequential model =
+        backend == "cnn" ? BuildCnnModel() : BuildScalarModel();
 
     if (!checkpoint_path.empty())
     {
@@ -385,7 +402,8 @@ int main(int argc, char** argv)
         profile.epoch_us = ElapsedUs(epoch_start);
 
         std::cout << "epoch " << (epoch + 1) << "/" << epochs
-                  << " loss=" << mean_loss << " accuracy=" << accuracy << '\n';
+                  << " backend=" << backend << " loss=" << mean_loss
+                  << " accuracy=" << accuracy << '\n';
         std::cout << "profile_us"
                   << " epoch=" << profile.epoch_us
                   << " input=" << profile.input_us
