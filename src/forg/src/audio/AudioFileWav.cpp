@@ -47,9 +47,11 @@ bool AudioFileWav::Open(std::string_view filename)
 
     const unsigned int data_size = data_chunk.header.nSize;
     const unsigned int bytes_per_sample = format.bits_per_sample / 8;
-    const unsigned int sample_count = data_size / bytes_per_sample;
-    if (sample_count == 0)
+    const unsigned int frame_size = bytes_per_sample * format.channels;
+    if (data_size == 0 || data_size % frame_size != 0)
         return false;
+
+    const unsigned int sample_count = data_size / bytes_per_sample;
 
     std::vector<char> data(data_size);
     if (wave.ReadChunkData(data_chunk, data.data(), data_size) != data_size)

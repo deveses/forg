@@ -328,3 +328,28 @@ TEST_CASE("AudioMixer pans a stream between channels", "[audio][mixer]")
         REQUIRE(WrittenSamples(output) == std::vector<short>({8000, 0}));
     }
 }
+
+TEST_CASE("AudioMixer resets gain and pan when a buffer replaces a source",
+          "[audio][mixer]")
+{
+    CapturingAudioOutput output;
+    forg::audio::AudioMixer mixer;
+    REQUIRE(mixer.InitWithOutput(&output));
+
+    StubAudioSource source;
+    source.channels = 2;
+    source.samples = {8000, 8000};
+
+    mixer.SetStreamSource(0, &source, false);
+    mixer.SetStreamGainPan(0, 0.5f, 1.0f);
+    mixer.Update();
+    REQUIRE(WrittenSamples(output) == std::vector<short>({0, 4000}));
+
+    short input[] = {1000, -1000};
+    mixer.SetStreamBuffer(0, reinterpret_cast<char*>(input), sizeof(input));
+    mixer.Update();
+
+    // Legacy buffer playback must not inherit the previous stream's
+    // gain/pan.
+    REQUIRE(WrittenSamples(output) == std::vector<short>({1000, -1000}));
+}

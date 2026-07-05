@@ -19,7 +19,13 @@ bool AudioManager::Init()
 bool AudioManager::InitWithOutput(IAudioOutput* output)
 {
     if (m_initialized)
+    {
+        // Ownership contract: the output is always released, even when it
+        // is not adopted because the manager is already initialized.
+        if (output != nullptr)
+            output->Release();
         return true;
+    }
 
     m_initialized = m_mixer.InitWithOutput(output);
     return m_initialized;

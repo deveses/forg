@@ -12,11 +12,12 @@ class NullAudioOutput : public forg::audio::IAudioOutput
 {
   public:
     bool canWrite = true;
+    bool released = false;
 
     bool CanWrite() override { return canWrite; }
     void Write(char*, unsigned int) override {}
     bool Init() override { return true; }
-    void Release() override {}
+    void Release() override { released = true; }
 };
 
 class FiniteAudioSource : public forg::audio::IAudioSource
@@ -123,4 +124,21 @@ TEST_CASE("AudioManager reclaims finished voices on Update",
 
     forg::audio::AudioGenerator tone;
     REQUIRE(manager.Play(&tone, true) == voice);
+}
+
+TEST_CASE("AudioManager releases an output offered while already initialized",
+          "[audio][manager]")
+{
+    NullAudioOutput first;
+    NullAudioOutput second;
+    forg::audio::AudioManager manager;
+
+    REQUIRE(manager.InitWithOutput(&first));
+    REQUIRE(manager.InitWithOutput(&second));
+
+    REQUIRE_FALSE(first.released);
+    REQUIRE(second.released);
+
+    manager.Shutdown();
+    REQUIRE(first.released);
 }

@@ -158,6 +158,14 @@ bool SoundNode::Load(io::ISerializer& serializer)
     return true;
 }
 
+void SoundNode::RetireSource()
+{
+    // The mixer may still pull from the old source until the next
+    // SyncAudio stops the voice, so keep it alive instead of deleting it.
+    if (m_source != nullptr)
+        m_retiredSources.push_back(std::move(m_source));
+}
+
 void SoundNode::SetGenerator(audio::AudioWaveform waveform, float frequencyHz,
                              float amplitude)
 {
@@ -166,6 +174,8 @@ void SoundNode::SetGenerator(audio::AudioWaveform waveform, float frequencyHz,
     generator->SetWaveform(waveform);
     generator->SetFrequency(frequencyHz);
     generator->SetAmplitude(amplitude);
+
+    RetireSource();
 
     m_sourceType = SoundSourceType::Generator;
     m_waveform = generator->Waveform();
@@ -178,6 +188,8 @@ void SoundNode::SetGenerator(audio::AudioWaveform waveform, float frequencyHz,
 void SoundNode::SetFile(std::string_view path)
 {
     const std::string pathText(path);
+
+    RetireSource();
 
     m_sourceType = SoundSourceType::File;
     m_file = pathText.c_str();
@@ -238,6 +250,7 @@ bool SoundNode::LoadResources(const fs::Filesystem& filesystem)
     if (!file->Open(nativePath.string()))
         return false;
 
+    RetireSource();
     m_source = std::move(file);
     return true;
 }
@@ -246,6 +259,18 @@ void SoundNode::SyncAudio(audio::AudioManager& manager,
                           const math::Vector3& listenerPosition,
                           const math::Vector3& listenerRight, bool hasListener)
 {
+    if (!m_retiredSources.empty())
+    {
+        // A voice started before the source swap is still playing the old
+        // source; stop it before the retired sources are released.
+        if (m_voice >= 0)
+        {
+            manager.Stop(m_voice);
+            m_voice = -1;
+        }
+        m_retiredSources.clear();
+    }
+
     if (m_autoplay && !m_autoplayConsumed && m_source != nullptr)
     {
         m_autoplayConsumed = true;

@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string_view>
+#include <vector>
 
 #include "audio/AudioGenerator.h"
 #include "core/string.hpp"
@@ -45,6 +46,9 @@ class FORG_API SoundNode : public SceneNode
     float m_amplitude = 0.5f;
     core::string m_file;
     std::unique_ptr<audio::IAudioSource> m_source;
+    // Sources replaced while a voice may still reference them; kept alive
+    // until SyncAudio stops the voice, then released.
+    std::vector<std::unique_ptr<audio::IAudioSource>> m_retiredSources;
 
     bool m_looping = false;
     bool m_autoplay = false;
@@ -92,6 +96,9 @@ class FORG_API SoundNode : public SceneNode
     void SyncAudio(audio::AudioManager& manager,
                    const math::Vector3& listenerPosition,
                    const math::Vector3& listenerRight, bool hasListener);
+
+  private:
+    void RetireSource();
 };
 
 const char* SoundSourceTypeName(SoundSourceType type);

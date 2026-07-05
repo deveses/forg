@@ -278,3 +278,38 @@ TEST_CASE("SoundNode pans toward an emitter to the listener's right",
     REQUIRE(rightEnergy > 0);
     REQUIRE(leftEnergy == 0);
 }
+
+TEST_CASE("SoundNode keeps a replaced source alive until the next sync",
+          "[scene][sound][audio]")
+{
+    NullAudioOutput output;
+    forg::audio::AudioManager manager;
+    REQUIRE(manager.InitWithOutput(&output));
+
+    forg::scene::Scene scene;
+    forg::scene::SoundNode& tone = scene.CreateSoundNode();
+    tone.SetGenerator(forg::audio::AudioWaveform::Sine, 440.0f, 0.5f);
+    tone.SetLooping(true);
+    tone.Play();
+
+    scene.UpdateAudio(manager);
+    REQUIRE(tone.IsPlaying());
+    manager.Update(); // mixer pulls from the first generator
+
+    // Replace the source while the voice is still attached; the mixer must
+    // keep reading valid memory until the next sync (ASan guards this).
+    tone.SetGenerator(forg::audio::AudioWaveform::Square, 220.0f, 0.5f);
+    manager.Update();
+
+    scene.UpdateAudio(manager); // stops the stale voice, frees the old source
+    REQUIRE_FALSE(tone.IsPlaying());
+
+    tone.Play();
+    scene.UpdateAudio(manager);
+    REQUIRE(tone.IsPlaying());
+    manager.Update();
+
+    tone.Stop();
+    scene.UpdateAudio(manager);
+    REQUIRE_FALSE(tone.IsPlaying());
+}

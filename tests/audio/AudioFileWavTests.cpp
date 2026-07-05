@@ -172,3 +172,25 @@ TEST_CASE("AudioFileWav rejects unsupported files", "[audio][wavsource]")
         REQUIRE_FALSE(file.Open(wave.path.string()));
     }
 }
+
+TEST_CASE("AudioFileWav rejects data not aligned to whole frames",
+          "[audio][wavsource]")
+{
+    forg::audio::AudioFileWav file;
+
+    SECTION("stereo 16-bit data with a lone sample")
+    {
+        TempWave wave("forg_audiofile_partial_frame.wav");
+        // One 16-bit sample = 2 bytes, but a stereo 16-bit frame needs 4.
+        WriteWaveFile(wave.path, 44100, 2, 16, AsBytes({1000}));
+        REQUIRE_FALSE(file.Open(wave.path.string()));
+        REQUIRE_FALSE(file.IsOpen());
+    }
+
+    SECTION("mono 16-bit data with a trailing odd byte")
+    {
+        TempWave wave("forg_audiofile_odd_byte.wav");
+        WriteWaveFile(wave.path, 44100, 1, 16, {0x01, 0x02, 0x03});
+        REQUIRE_FALSE(file.Open(wave.path.string()));
+    }
+}

@@ -95,6 +95,9 @@ void AudioMixer::SetStreamBuffer(unsigned int _stream, char* _buffer,
     if (_stream < m_num_streams)
     {
         m_sources[_stream].source = nullptr;
+        m_sources[_stream].gain = 1.0f;
+        m_sources[_stream].pan = 0.0f;
+        m_sources[_stream].looping = false;
 
         m_streams[_stream].buffer.ptr = _buffer;
         m_streams[_stream].buffer.size = _size;
