@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_AUDIOOUTPUTWAVEOUT_H_
-#define _FORG_AUDIO_AUDIOOUTPUTWAVEOUT_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/audio/AudioDefs.h"
 #include "forg/base.h"
 
@@ -31,4 +25,3 @@ namespace forg::audio {
 IAudioOutput* CreateAudioOutputWaveOut();
 
 } // namespace forg::audio
-#endif

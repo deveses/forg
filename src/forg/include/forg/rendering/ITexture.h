@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_ITEXTURE_H
-#define FORG_RENDERING_ITEXTURE_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "core/RefCounter.h"
 #include "rendering/ISurface.h"
@@ -86,5 +80,3 @@ class FORG_API ITexture : public core::RefCounter
 using LPTEXTURE = ITexture*;
 
 } // namespace forg
-
-#endif // FORG_RENDERING_ITEXTURE_H

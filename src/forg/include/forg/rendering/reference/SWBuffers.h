@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_REFERENCE_SWBUFFERS_H
-#define FORG_RENDERING_REFERENCE_SWBUFFERS_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "rendering/IIndexBuffer.h"
 #include "rendering/ITexture.h"
@@ -126,5 +120,3 @@ class FORG_API SWIndexBuffer : public IIndexBuffer
     virtual int Unlock();
 };
 } // namespace forg::rendering::reference
-
-#endif // FORG_RENDERING_REFERENCE_SWBUFFERS_H

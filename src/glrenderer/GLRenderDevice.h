@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _GL_RENDER_DEVICE_H_
-#define _GL_RENDER_DEVICE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "GLDeviceCaps.h"
 #include "base.h"
 #include "rendering/IRenderDevice.h"
@@ -210,5 +204,3 @@ class GLRenderDevice : public IRenderDevice
 };
 
 } // namespace forg
-
-#endif // _GL_RENDER_DEVICE_H_

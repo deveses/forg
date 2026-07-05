@@ -1,6 +1,4 @@
-#ifndef FORG_CORE_REFPTR_H
-#define FORG_CORE_REFPTR_H
-
+#pragma once
 #include <utility>
 
 namespace forg::core {
@@ -49,5 +47,3 @@ template <typename T> class RefPtr
 };
 
 } // namespace forg::core
-
-#endif // FORG_CORE_REFPTR_H

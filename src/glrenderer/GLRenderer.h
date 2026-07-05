@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _GL_RENDERER_H_
-#define _GL_RENDERER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "GLRenderDevice.h"
 #include "base.h"
 #include "rendering/IRenderer.h"
@@ -56,5 +50,3 @@ extern "C"
     GLRENDERER_API const forg::RendererPluginDescriptor*
     forgGetRendererPluginDescriptor();
 }
-
-#endif //_GL_RENDERER_H_

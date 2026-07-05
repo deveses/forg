@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_IMAGE_IMAGE_H_
-#define FORG_IMAGE_IMAGE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 
 #include <span>
@@ -112,5 +106,3 @@ class Image
 };
 
 } // namespace forg
-
-#endif // FORG_IMAGE_IMAGE_H_

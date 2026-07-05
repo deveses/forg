@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_XMLPARSER_H_
-#define _FORG_XMLPARSER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/base.h"
 #include "forg/script/ParserBase.h"
 #include "forg/script/generic/Document.h"
@@ -73,5 +67,3 @@ class FORG_API XMLParser : public forg::script::TokenParserBase
 };
 
 } // namespace forg::script::xml
-
-#endif

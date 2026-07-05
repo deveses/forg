@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_AUDIODEFS_H_
-#define _FORG_AUDIO_AUDIODEFS_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 namespace forg::audio {
 
 enum
@@ -73,5 +67,3 @@ class IAudioOutput
 };
 
 } // namespace forg::audio
-
-#endif

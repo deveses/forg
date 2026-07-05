@@ -2,9 +2,7 @@
 // One Dispatch<Category> function per command file; the router in
 // SceneControl.cpp forwards by verb prefix. Not part of the public API.
 
-#ifndef _FORG_CONTROL_COMMANDS_H_
-#define _FORG_CONTROL_COMMANDS_H_
-
+#pragma once
 #include <string>
 
 #include "control/SceneControl.h"
@@ -26,5 +24,3 @@ inline std::string fail(const char* error)
 }
 
 } // namespace forg::control
-
-#endif //_FORG_CONTROL_COMMANDS_H_

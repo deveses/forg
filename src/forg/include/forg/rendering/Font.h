@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_FONT_H
-#define FORG_RENDERING_FONT_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "core/RefPtr.h"
 #include "rendering/IRenderDevice.h"
@@ -158,5 +152,3 @@ class Font
 };
 
 } // namespace forg
-
-#endif // FORG_RENDERING_FONT_H

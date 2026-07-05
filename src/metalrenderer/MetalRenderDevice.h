@@ -16,9 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _METAL_RENDER_DEVICE_H_
-#define _METAL_RENDER_DEVICE_H_
-
+#pragma once
 #include <string>
 #include <string_view>
 
@@ -142,5 +140,3 @@ class MetalRenderDevice : public IRenderDevice
 };
 
 } // namespace forg
-
-#endif //_METAL_RENDER_DEVICE_H_

@@ -1,10 +1,4 @@
-#ifndef FORG_SCENE_SCENE_H
-#define FORG_SCENE_SCENE_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "scene/CameraNode.h"
 #include "scene/MeshNode.h"
 #include "scene/SoundEmitterNode.h"
@@ -63,5 +57,3 @@ class FORG_API Scene : public TreeNode
 };
 
 } // namespace forg::scene
-
-#endif // FORG_SCENE_SCENE_H

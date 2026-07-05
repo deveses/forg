@@ -1,10 +1,4 @@
-#ifndef VECTOR_HPP_INCLUDED
-#define VECTOR_HPP_INCLUDED
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/base.h"
 
 #include <cstring>
@@ -356,5 +350,3 @@ template <class _Type> class vector
 };
 
 } // namespace forg::core
-
-#endif // VECTOR_HPP_INCLUDED

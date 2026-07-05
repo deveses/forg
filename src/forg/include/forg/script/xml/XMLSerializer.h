@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_XMLSERIALIZER_H_
-#define _FORG_XMLSERIALIZER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/io/ISerializer.h"
 #include "forg/script/xml/XMLParser.h"
 
@@ -55,5 +49,3 @@ class XMLSerializer : public ISerializer
 };
 
 } // namespace forg::io
-
-#endif

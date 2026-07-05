@@ -1,10 +1,4 @@
-#ifndef FORG_SCENE_SOUNDEMITTERNODE_H
-#define FORG_SCENE_SOUNDEMITTERNODE_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "math/Vector3.h"
 #include "scene/SceneNode.h"
 
@@ -31,5 +25,3 @@ class FORG_API SoundEmitterNode : public SceneNode
 };
 
 } // namespace forg::scene
-
-#endif // FORG_SCENE_SOUNDEMITTERNODE_H

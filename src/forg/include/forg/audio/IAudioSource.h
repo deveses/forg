@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_IAUDIOSOURCE_H_
-#define _FORG_AUDIO_IAUDIOSOURCE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/base.h"
 
 namespace forg::audio {
@@ -51,5 +45,3 @@ class FORG_API IAudioSource
 };
 
 } // namespace forg::audio
-
-#endif

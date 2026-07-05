@@ -1,10 +1,4 @@
-#ifndef FORG_IO_MEMORYSERIALIZER_H
-#define FORG_IO_MEMORYSERIALIZER_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/io/ISerializer.h"
 
 #include <memory>
@@ -70,5 +64,3 @@ class FORG_API MemorySerializer : public ISerializer
 };
 
 } // namespace forg::io
-
-#endif // FORG_IO_MEMORYSERIALIZER_H

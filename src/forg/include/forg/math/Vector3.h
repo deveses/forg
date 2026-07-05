@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_MATH_VECTOR3_H
-#define FORG_MATH_VECTOR3_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <cstddef>
 #include <type_traits>
 
@@ -149,5 +143,3 @@ static_assert(offsetof(Vector3, Y) == sizeof(float));
 static_assert(offsetof(Vector3, Z) == sizeof(float) * 2);
 
 } // namespace forg::math
-
-#endif // FORG_MATH_VECTOR3_H

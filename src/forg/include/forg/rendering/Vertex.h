@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_VERTEX_H
-#define FORG_RENDERING_VERTEX_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "math/Vector2.h"
 #include "math/Vector3.h"
@@ -176,5 +170,3 @@ struct FORG_API PositionNormalTextured
 };
 
 } // namespace forg::geometry
-
-#endif // FORG_RENDERING_VERTEX_H

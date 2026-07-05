@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_CPU_CPUID_H_
-#define _FORG_CPU_CPUID_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 
 namespace forg::cpu {
@@ -140,5 +134,3 @@ class cpuid
 static cpuid g_cpuid;
 
 } // namespace forg::cpu
-
-#endif

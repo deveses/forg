@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_CPU_VECTOR_SSE_H_
-#define _FORG_CPU_VECTOR_SSE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #if defined(__SSE__) || defined(_M_IX86) || defined(_M_X64)
 
 #include <emmintrin.h>
@@ -123,7 +117,5 @@ class vec
 };
 
 } // namespace forg::cpu::simd
-
-#endif
 
 #endif

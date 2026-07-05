@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_MATH_QUATERNION_H
-#define FORG_MATH_QUATERNION_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <cstddef>
 #include <type_traits>
 
@@ -151,5 +145,3 @@ inline Quaternion operator*(const Quaternion& lhs, const Quaternion& rhs)
 }
 
 } // namespace forg::math
-
-#endif // FORG_MATH_QUATERNION_H

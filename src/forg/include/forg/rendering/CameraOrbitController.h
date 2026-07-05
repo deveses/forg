@@ -1,10 +1,4 @@
-#ifndef FORG_RENDERING_CAMERAORBITCONTROLLER_H
-#define FORG_RENDERING_CAMERAORBITCONTROLLER_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 
 namespace forg {
@@ -24,5 +18,3 @@ struct CameraOrbitController
 };
 
 } // namespace forg
-
-#endif // FORG_RENDERING_CAMERAORBITCONTROLLER_H

@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef SPRITE_H_INCLUDED
-#define SPRITE_H_INCLUDED
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "rendering/IRenderDevice.h"
 
@@ -105,5 +99,3 @@ class Sprite
 };
 
 } // namespace forg
-
-#endif // SPRITE_H_INCLUDED

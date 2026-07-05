@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _GLFUNC_H_
-#define _GLFUNC_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #ifdef _WIN32
 #include <Windows.h>
 #endif
@@ -206,5 +200,3 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-#endif //_GLFUNC_H_

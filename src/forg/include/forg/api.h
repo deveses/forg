@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_API_H_
-#define _FORG_API_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #ifdef __cplusplus
 extern "C"
 {
@@ -60,5 +54,3 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-
-#endif //_FORG_API_H_

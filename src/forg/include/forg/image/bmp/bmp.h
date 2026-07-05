@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_IMAGE_BMP_BMP_H_
-#define FORG_IMAGE_BMP_BMP_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "image/Image.h"
 #include "rendering/Color.h"
 
@@ -45,5 +39,3 @@ FORG_API bool SaveBmp(std::string_view filename, const Color4b* pixels,
                       u32 width, u32 height, u32 rowPitchBytes);
 
 } // namespace forg
-
-#endif // FORG_IMAGE_BMP_BMP_H_

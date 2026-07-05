@@ -1,6 +1,4 @@
-#ifndef DBG_NEW_H_INCLUDED
-#define DBG_NEW_H_INCLUDED
-
+#pragma once
 #include "dbg.h"
 
 namespace forg::debug {
@@ -37,5 +35,3 @@ inline void __cdecl operator delete(void* p)
 }
 
 } // namespace forg::debug
-
-#endif // DBG_NEW_H_INCLUDED

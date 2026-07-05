@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_AUDIODSP_H_
-#define _FORG_AUDIO_AUDIODSP_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/base.h"
 
 #include <cmath>
@@ -64,5 +58,3 @@ __inline float RadiansToCutoffFrequency(float Radians, float SampleRate)
 
 void CalcLowpassCoeffs(float Fc, float Q, float4& coeffsA, float4& coeffsB);
 } // namespace forg::audio::dsp
-
-#endif

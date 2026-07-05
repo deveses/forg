@@ -4,9 +4,7 @@
     Lightweight matrix backend for small neural-network experiments.
 *******************************************************************************/
 
-#ifndef FORG_NN_MATRIX_H
-#define FORG_NN_MATRIX_H
-
+#pragma once
 #include <cstddef>
 #include <random>
 #include <string>
@@ -91,5 +89,3 @@ class MatrixMLP
 };
 
 } // namespace forg::nn
-
-#endif // FORG_NN_MATRIX_H

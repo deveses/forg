@@ -1,10 +1,4 @@
-#ifndef FORG_SCENE_SOUNDNODE_H
-#define FORG_SCENE_SOUNDNODE_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <memory>
 #include <string_view>
 
@@ -106,5 +100,3 @@ const char* SoundSourceTypeName(SoundSourceType type);
 bool SoundSourceTypeFromName(const core::string& name, SoundSourceType& type);
 
 } // namespace forg::scene
-
-#endif // FORG_SCENE_SOUNDNODE_H

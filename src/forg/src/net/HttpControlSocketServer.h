@@ -1,6 +1,4 @@
-#ifndef FORG_NET_HTTPCONTROLSOCKETSERVER_H
-#define FORG_NET_HTTPCONTROLSOCKETSERVER_H
-
+#pragma once
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -30,5 +28,3 @@ class PlatformSocketServer
 std::unique_ptr<PlatformSocketServer> CreatePlatformSocketServer();
 
 } // namespace forg::net
-
-#endif // FORG_NET_HTTPCONTROLSOCKETSERVER_H

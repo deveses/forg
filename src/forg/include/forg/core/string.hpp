@@ -1,10 +1,4 @@
-#ifndef STRING_HPP_INCLUDED
-#define STRING_HPP_INCLUDED
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/base.h"
 #include "forg/debug/dbg.h"
 
@@ -325,4 +319,3 @@ template <class T> class basic_string
 typedef basic_string<char> string;
 
 } // namespace forg::core
-#endif // STRING_HPP_INCLUDED

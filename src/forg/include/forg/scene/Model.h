@@ -1,10 +1,4 @@
-#ifndef FORG_SCENE_MODEL_H
-#define FORG_SCENE_MODEL_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "core/RefPtr.h"
 #include "math/Matrix4.h"
@@ -143,5 +137,3 @@ class FORG_API Model
 };
 
 } // namespace forg::scene
-
-#endif // FORG_SCENE_MODEL_H

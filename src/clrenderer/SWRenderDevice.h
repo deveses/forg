@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _SW_RENDER_DEVICE_H_
-#define _SW_RENDER_DEVICE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg.h"
 #include "rendering/IRenderDevice.h"
 #include "rendering/VertexDeclaration.h"
@@ -301,5 +295,3 @@ public:
 };
 
 }
-
-#endif

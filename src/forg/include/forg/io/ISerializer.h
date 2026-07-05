@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_IO_ISERIALIZER_H_
-#define _FORG_IO_ISERIALIZER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/core/string.hpp"
 
 #include <string_view>
@@ -58,5 +52,3 @@ class ISerializer
 };
 
 } // namespace forg::io
-
-#endif

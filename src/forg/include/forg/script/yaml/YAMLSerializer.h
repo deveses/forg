@@ -1,10 +1,4 @@
-#ifndef FORG_YAMLSERIALIZER_H
-#define FORG_YAMLSERIALIZER_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/io/ISerializer.h"
 
 #include <memory>
@@ -81,5 +75,3 @@ class FORG_API YAMLSerializer : public ISerializer
 };
 
 } // namespace forg::io
-
-#endif // FORG_YAMLSERIALIZER_H

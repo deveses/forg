@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _GL_VERTEX_BUFFER_H_
-#define _GL_VERTEX_BUFFER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "GLRenderDevice.h"
 #include <forg.h>
 
@@ -53,5 +47,3 @@ class GLVertexBuffer : public IVertexBuffer
 };
 
 } // namespace forg
-
-#endif // _GL_VERTEX_BUFFER_H_

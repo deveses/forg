@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
-#ifndef XFILE_XTEMPLATE_INCLUDED
-#define XFILE_XTEMPLATE_INCLUDED
-
 #include "base.h"
 #include "mesh/xfile/xreader.h"
 #include "mesh/xfile/xtmembers.h"
@@ -174,5 +168,3 @@ class XTemplate
 };
 
 } // namespace forg::xfile
-
-#endif

@@ -16,9 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_METAL_BUFFERS_H_
-#define _FORG_METAL_BUFFERS_H_
-
+#pragma once
 #include "base.h"
 #include "rendering/IIndexBuffer.h"
 #include "rendering/IVertexBuffer.h"
@@ -75,5 +73,3 @@ class MetalIndexBuffer : public IIndexBuffer
 };
 
 } // namespace forg
-
-#endif //_FORG_METAL_BUFFERS_H_

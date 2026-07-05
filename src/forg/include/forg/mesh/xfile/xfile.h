@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _XFILE_H_
-#define _XFILE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "mesh/xfile/xdatamgr.h"
 #include "mesh/xfile/xdefs.h"
 #include "mesh/xfile/xstdtemplates.h"
@@ -79,5 +73,3 @@ class XFile
 };
 
 } // namespace forg::xfile
-
-#endif //_XFILE_H_

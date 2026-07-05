@@ -1,6 +1,4 @@
-#ifndef _FORG_NET_COMMANDQUEUE_H_
-#define _FORG_NET_COMMANDQUEUE_H_
-
+#pragma once
 #include <deque>
 #include <future>
 #include <memory>
@@ -52,5 +50,3 @@ class CommandQueue
 };
 
 } // namespace forg::net
-
-#endif //_FORG_NET_COMMANDQUEUE_H_

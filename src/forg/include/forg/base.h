@@ -16,12 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_BASE_H_
-#define _FORG_BASE_H_
-
-#if defined(_MSC_VER) && _MSC_VER > 1000
 #pragma once
-#endif
 
 #include <algorithm>
 #include <bit>
@@ -148,5 +143,3 @@ typedef void* HANDLE;
 #define FORG_INVALID_CALL 0x0400
 
 } // namespace forg
-
-#endif //_FORG_BASE_H_

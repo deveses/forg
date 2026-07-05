@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
-#ifndef XFILE_XTEXREADER_INCLUDED
-#define XFILE_XTEXREADER_INCLUDED
-
 #include "mesh/xfile/xlexer.h"
 #include "mesh/xfile/xreader.h"
 #include <fstream>
@@ -63,5 +57,3 @@ class xtexreader : public xreader
 };
 
 } // namespace forg::xfile::reader
-
-#endif // XFILE_XTEXREADER_INCLUDED

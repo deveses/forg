@@ -16,9 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_CPU_ATOMIC_H
-#define FORG_CPU_ATOMIC_H
-
+#pragma once
 #include <atomic>
 
 namespace forg::cpu {
@@ -33,5 +31,3 @@ inline int AtomicDecrement(std::atomic<int>* value) noexcept
 }
 
 } // namespace forg::cpu
-
-#endif // FORG_CPU_ATOMIC_H

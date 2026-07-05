@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_LIGHT_H
-#define FORG_RENDERING_LIGHT_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <cstddef>
 #include <type_traits>
 
@@ -77,5 +71,3 @@ static_assert(offsetof(Light, Diffuse) >= sizeof(u32));
 static_assert(offsetof(Light, Direction) > offsetof(Light, Position));
 static_assert(offsetof(Light, Phi) > offsetof(Light, Theta));
 } // namespace forg
-
-#endif // FORG_RENDERING_LIGHT_H

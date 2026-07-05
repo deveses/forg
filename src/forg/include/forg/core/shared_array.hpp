@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef SHARED_ARRAY_HPP_INCLUDED
-#define SHARED_ARRAY_HPP_INCLUDED
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/debug/dbg.h"
 
 #include <cstdlib>
@@ -146,5 +140,3 @@ template <typename T> class shared_array
 };
 
 } // namespace forg::core
-
-#endif // SHARED_ARRAY_HPP_INCLUDED

@@ -1,6 +1,4 @@
-#ifndef _FORG_NET_COMMAND_H_
-#define _FORG_NET_COMMAND_H_
-
+#pragma once
 #include <map>
 #include <string>
 
@@ -28,5 +26,3 @@ bool TryGetFloat(const Command& cmd, const char* key, float& out);
 bool TryGetInt(const Command& cmd, const char* key, int& out);
 
 } // namespace forg::net
-
-#endif //_FORG_NET_COMMAND_H_

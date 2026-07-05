@@ -16,9 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_MATH_MATH_H
-#define FORG_MATH_MATH_H
-
+#pragma once
 #include <algorithm>
 #include <bit>
 #include <cstdint>
@@ -200,5 +198,3 @@ class Math
 };
 
 } // namespace forg::math
-
-#endif // FORG_MATH_MATH_H

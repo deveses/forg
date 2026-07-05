@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_GLTFLOADER_H_
-#define _FORG_GLTFLOADER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "rendering/Mesh.h"
 #include "rendering/Vertex.h"
 
@@ -77,5 +71,3 @@ class GltfLoader
                               Mesh::ExtendedMaterialVec& materials);
 };
 } // namespace forg::gltf
-
-#endif //_FORG_GLTFLOADER_H_

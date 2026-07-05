@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_RAY_H
-#define FORG_RENDERING_RAY_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "math/Vector3.h"
 
@@ -41,5 +35,3 @@ struct Ray
 };
 
 } // namespace forg
-
-#endif // FORG_RENDERING_RAY_H

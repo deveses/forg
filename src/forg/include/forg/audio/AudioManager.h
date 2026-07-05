@@ -16,12 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_AUDIOMANAGER_H_
-#define _FORG_AUDIO_AUDIOMANAGER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
 
 #include "forg/api.h"
 
@@ -76,5 +71,3 @@ class FORG_API AudioManager
 };
 
 } // namespace forg::audio
-
-#endif

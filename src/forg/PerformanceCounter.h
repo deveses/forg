@@ -16,12 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_PERFORMANCE_COUNTER_H_
-#define _FORG_PERFORMANCE_COUNTER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
 
 #include "base.h"
 
@@ -78,8 +73,6 @@ class FORG_API PerformanceCounter
 };
 
 } // namespace forg
-
-#endif //_FORG_PERFORMANCE_COUNTER_H_
 
 /*
 class CDuration

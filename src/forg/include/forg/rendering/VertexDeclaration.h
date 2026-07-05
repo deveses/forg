@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_VERTEXDECLARATION_H
-#define FORG_RENDERING_VERTEXDECLARATION_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "rendering/VertexElement.h"
 
@@ -58,5 +52,3 @@ class FORG_API VertexDeclaration
 using LPVERTEXDECLARATION = VertexDeclaration*;
 
 } // namespace forg
-
-#endif // FORG_RENDERING_VERTEXDECLARATION_H

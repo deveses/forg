@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_WAVEFILE_H_
-#define _FORG_AUDIO_WAVEFILE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <cstdio>
 #include <memory>
 #include <vector>
@@ -101,5 +95,3 @@ class FORG_API WaveFile
 };
 
 } // namespace forg::audio
-
-#endif //_FORG_AUDIO_WAVEFILE_H_

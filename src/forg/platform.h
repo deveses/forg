@@ -16,13 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_PLATFORM_H_
-#define _FORG_PLATFORM_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #if defined(_WIN32) | defined(_WIN64)
 #define PLATFORM_WINDOWS
 #endif
@@ -38,5 +32,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #ifdef __linux__
 #define PLATFORM_LINUX
 #endif
-
-#endif //_FORG_PLATFORM_H_

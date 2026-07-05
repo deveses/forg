@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_MATERIAL_H
-#define FORG_RENDERING_MATERIAL_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <cstddef>
 #include <type_traits>
 
@@ -66,5 +60,3 @@ static_assert(offsetof(Material, Specular) == sizeof(Color) * 2);
 static_assert(offsetof(Material, Emissive) == sizeof(Color) * 3);
 static_assert(offsetof(Material, Power) == sizeof(Color) * 4);
 } // namespace forg
-
-#endif // FORG_RENDERING_MATERIAL_H

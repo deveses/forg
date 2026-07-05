@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_MATH_MATRIX4_H
-#define FORG_MATH_MATRIX4_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <cstddef>
 #include <type_traits>
 
@@ -223,5 +217,3 @@ static_assert(offsetof(Matrix4, M41) == sizeof(float) * 12);
 static_assert(offsetof(Matrix4, M44) == sizeof(float) * 15);
 
 } // namespace forg::math
-
-#endif // FORG_MATH_MATRIX4_H

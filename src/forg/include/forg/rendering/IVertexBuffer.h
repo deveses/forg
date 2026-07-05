@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_IVERTEXBUFFER_H
-#define FORG_RENDERING_IVERTEXBUFFER_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "core/RefCounter.h"
 
 namespace forg {
@@ -51,5 +45,3 @@ class IVertexBuffer : public core::RefCounter
 using LPVERTEXBUFFER = IVertexBuffer*;
 
 } // namespace forg
-
-#endif // FORG_RENDERING_IVERTEXBUFFER_H

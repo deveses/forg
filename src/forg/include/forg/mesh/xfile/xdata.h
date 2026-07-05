@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _XDATA_H_
-#define _XDATA_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "mesh/xfile/xdefs.h"
 #include "mesh/xfile/xreader.h"
@@ -441,5 +435,3 @@ class XDataObject : public IData
 };
 
 } // namespace forg::xfile
-
-#endif //_XDATA_H_

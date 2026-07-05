@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_CAMERA_H
-#define FORG_RENDERING_CAMERA_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "enums.h"
 #include "math/Matrix4.h"
@@ -184,5 +178,3 @@ class Camera
 };
 
 } // namespace forg
-
-#endif // FORG_RENDERING_CAMERA_H

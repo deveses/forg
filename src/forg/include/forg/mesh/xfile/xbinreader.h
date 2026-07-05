@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
-#ifndef XFILE_XBINREADER_INCLUDED
-#define XFILE_XBINREADER_INCLUDED
-
 #include "mesh/xfile/xreader.h"
 
 namespace forg::xfile::reader {
@@ -65,5 +59,3 @@ class xbinreader : public xreader
 };
 
 } // namespace forg::xfile::reader
-
-#endif // XFILE_XBINREADER_INCLUDED

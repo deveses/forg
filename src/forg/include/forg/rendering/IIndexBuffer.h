@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_IINDEXBUFFER_H
-#define FORG_RENDERING_IINDEXBUFFER_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "core/RefCounter.h"
 
@@ -53,5 +47,3 @@ class IIndexBuffer : public core::RefCounter
 using LPINDEXBUFFER = IIndexBuffer*;
 
 } // namespace forg
-
-#endif // FORG_RENDERING_IINDEXBUFFER_H

@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _XLOADER_H_
-#define _XLOADER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "rendering/Mesh.h"
 
 namespace forg::xfile {
@@ -39,5 +33,3 @@ class XLoader
                               Mesh::ExtendedMaterialVec& materials);
 };
 } // namespace forg::xfile
-
-#endif

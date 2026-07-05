@@ -16,9 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef STRINGTOKENIZER_HPP_INCLUDED
-#define STRINGTOKENIZER_HPP_INCLUDED
-
+#pragma once
 #include "base.h"
 #include "debug/dbg.h"
 #include <string>
@@ -208,5 +206,3 @@ template <typename T = char> class StringTokenizer
 };
 
 } // namespace forg::core
-
-#endif // STRINGTOKENIZER_HPP_INCLUDED

@@ -4,9 +4,7 @@
     Minimal MNIST IDX dataset reader for neural-network examples and tests.
 *******************************************************************************/
 
-#ifndef FORG_NN_MNIST_H
-#define FORG_NN_MNIST_H
-
+#pragma once
 #include "forg/base.h"
 
 #include <cstddef>
@@ -44,5 +42,3 @@ class MnistDataset
 };
 
 } // namespace forg::nn
-
-#endif // FORG_NN_MNIST_H

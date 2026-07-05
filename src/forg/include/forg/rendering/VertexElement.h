@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_VERTEXELEMENT_H
-#define FORG_RENDERING_VERTEXELEMENT_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <cstddef>
 #include <type_traits>
 
@@ -70,5 +64,3 @@ static_assert(offsetof(VertexElement, UsageIndex) ==
               sizeof(u16) * 2 + sizeof(byte) * 2);
 
 } // namespace forg
-
-#endif // FORG_RENDERING_VERTEXELEMENT_H

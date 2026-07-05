@@ -1,3 +1,5 @@
+#pragma once
+
 #include "ParserBase.h"
 #include "generic/Document.h"
 #include "lexer.h"

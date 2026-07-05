@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_AUDIO_AUDIOFILE_H_
-#define _FORG_AUDIO_AUDIOFILE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <string_view>
 #include <vector>
 
@@ -55,5 +49,3 @@ class FORG_API AudioFile : public IAudioSource
 };
 
 } // namespace forg::audio
-
-#endif

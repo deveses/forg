@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_NOISE_H_
-#define _FORG_NOISE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif // _MSC_VER > 1000
-
 #include "base.h"
 
 namespace forg {
@@ -76,5 +70,3 @@ class FORG_API PerlinNoise
 };
 
 } // namespace forg
-
-#endif // _FORG_NOISE_H_

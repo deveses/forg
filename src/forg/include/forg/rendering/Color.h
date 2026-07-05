@@ -16,9 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_COLOR_H
-#define FORG_RENDERING_COLOR_H
-
+#pragma once
 #include "base.h"
 #include "math/Vector4.h"
 
@@ -210,5 +208,3 @@ struct FORG_API Color
 };
 
 } // namespace forg
-
-#endif // FORG_RENDERING_COLOR_H

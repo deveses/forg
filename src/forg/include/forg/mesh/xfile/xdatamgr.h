@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _XDATAMGR_H_
-#define _XDATAMGR_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "mesh/xfile/xdata.h"
 #include "mesh/xfile/xreader.h"
@@ -67,5 +61,3 @@ class XDataMgr
 };
 
 } // namespace forg::xfile
-
-#endif //_XDATAMGR_H_

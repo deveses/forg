@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _GL_TEXTURE_H_
-#define _GL_TEXTURE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg.h"
 
 namespace forg {
@@ -131,5 +125,3 @@ class ITextureGLImpl : public ITexture
 };
 
 } // namespace forg
-
-#endif // _GL_TEXTURE_H_

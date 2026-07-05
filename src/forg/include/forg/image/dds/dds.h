@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_DDS_H_
-#define _FORG_DDS_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "image/Image.h"
 #include "rendering/Color.h"
 
@@ -31,5 +25,3 @@ namespace forg {
 FORG_API Color4b* LoadDds(const char* filename, ImageDescription* bmp_info);
 
 }
-
-#endif //_FORG_DDS_H_

@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_MATH_VECTOR2_H
-#define FORG_MATH_VECTOR2_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <type_traits>
 
 #include "forg/base.h"
@@ -55,5 +49,3 @@ static_assert(sizeof(Vector2) == sizeof(float) * 2);
 static_assert(alignof(Vector2) == alignof(float));
 
 } // namespace forg::math
-
-#endif // FORG_MATH_VECTOR2_H

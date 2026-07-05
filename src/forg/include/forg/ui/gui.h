@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_UI_GUI_H_
-#define _FORG_UI_GUI_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "core/RefPtr.h"
 #include "core/string.hpp"
 #include "rendering/Sprite.h"
@@ -114,5 +108,3 @@ const char* GuiControlTypeName(GuiControlType type);
 bool GuiControlTypeFromName(const core::string& name, GuiControlType& type);
 
 } // namespace forg::ui
-
-#endif

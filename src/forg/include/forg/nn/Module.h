@@ -5,9 +5,7 @@
     Layer, and MLP types.
 *******************************************************************************/
 
-#ifndef FORG_NN_MODULE_H
-#define FORG_NN_MODULE_H
-
+#pragma once
 #include "forg/nn/Value.h"
 
 #include <cstddef>
@@ -427,5 +425,3 @@ class Adam
 };
 
 } // namespace forg::nn
-
-#endif // FORG_NN_MODULE_H

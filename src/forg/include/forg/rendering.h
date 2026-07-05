@@ -16,13 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef FORG_RENDERING_H
-#define FORG_RENDERING_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "rendering/Camera.h"
 #include "rendering/CameraOrbitController.h"
 #include "rendering/Color.h"
@@ -44,5 +38,3 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rendering/reference/SWBuffers.h"
 #include "rendering/reference/SWRenderDevice.h"
-
-#endif // FORG_RENDERING_H

@@ -2,13 +2,7 @@
     This source file is part of FORG library (http://forg.googlecode.com)
 *******************************************************************************/
 
-#ifndef _FORG_YAMLPARSER_H_
-#define _FORG_YAMLPARSER_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <memory>
 #include <utility>
 #include <vector>
@@ -137,5 +131,3 @@ class FORG_API YAMLParser : public forg::script::FileParserBase
 };
 
 } // namespace forg::script::yaml
-
-#endif

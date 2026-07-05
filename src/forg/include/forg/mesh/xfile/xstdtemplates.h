@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
-#ifndef XFILE_XSTDTEMPLATE_INCLUDED
-#define XFILE_XSTDTEMPLATE_INCLUDED
-
 #include "base.h"
 #include "mesh/xfile/xdefs.h"
 #include "mesh/xfile/xtemplate.h"
@@ -94,5 +88,3 @@ DECLARE_XSTDTEMPLATE(VertexElement);
 DECLARE_XSTDTEMPLATE(XSkinMeshHeader);
 
 } // namespace forg::xfile
-
-#endif

@@ -16,13 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _SW_RENDER_DEVICE_H_
-#define _SW_RENDER_DEVICE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 #include "math/Vector2.h"
 #include "math/Vector4.h"
@@ -50,5 +44,3 @@ class SWRenderDevice : public forg::rendering::reference::SWRenderDevice
 };
 
 } // namespace forg
-
-#endif

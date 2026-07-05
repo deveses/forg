@@ -16,19 +16,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *******************************************************************************/
 
-#ifndef _FORG_OS_H_
-#define _FORG_OS_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "os/ILibrary.h"
 
 #include "os/File.h"
 
 #ifdef _WIN32
 #include "os/WindowsLibrary.h"
-#endif
-
 #endif

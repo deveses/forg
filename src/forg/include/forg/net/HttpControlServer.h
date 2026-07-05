@@ -1,6 +1,4 @@
-#ifndef _FORG_NET_HTTPCONTROLSERVER_H_
-#define _FORG_NET_HTTPCONTROLSERVER_H_
-
+#pragma once
 #include <memory>
 #include <string>
 
@@ -41,5 +39,3 @@ class HttpControlServer
 };
 
 } // namespace forg::net
-
-#endif //_FORG_NET_HTTPCONTROLSERVER_H_
