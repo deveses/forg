@@ -32,7 +32,7 @@ bool AudioMixer::InitWithOutput(IAudioOutput* output)
     m_format.bps = 2;
     m_format.chan = 2;
 
-    m_num_streams = 10;
+    m_num_streams = MAX_STREAMS;
     for (unsigned int i = 0; i < m_num_streams; i++)
     {
         m_streams[i].buffer.ptr = 0;
@@ -42,6 +42,11 @@ bool AudioMixer::InitWithOutput(IAudioOutput* output)
         m_streams[i].offset = 0;
         m_streams[i].bytes_left = 0;
         m_streams[i].state = SAudioStream::STATE_OFF;
+
+        m_sources[i].source = nullptr;
+        m_sources[i].gain = 1.0f;
+        m_sources[i].pan = 0.0f;
+        m_sources[i].looping = false;
     }
 
     m_output = output;
@@ -89,6 +94,8 @@ void AudioMixer::SetStreamBuffer(unsigned int _stream, char* _buffer,
 {
     if (_stream < m_num_streams)
     {
+        m_sources[_stream].source = nullptr;
+
         m_streams[_stream].buffer.ptr = _buffer;
         m_streams[_stream].buffer.size = _size;
 
@@ -98,6 +105,47 @@ void AudioMixer::SetStreamBuffer(unsigned int _stream, char* _buffer,
                                        ? SAudioStream::STATE_ON
                                        : SAudioStream::STATE_OFF;
     }
+}
+
+void AudioMixer::SetStreamSource(unsigned int _stream, IAudioSource* source,
+                                 bool looping)
+{
+    if (_stream < m_num_streams)
+    {
+        m_sources[_stream].source = source;
+        m_sources[_stream].looping = looping;
+
+        m_streams[_stream].buffer.ptr = 0;
+        m_streams[_stream].buffer.size = 0;
+        m_streams[_stream].offset = 0;
+        m_streams[_stream].bytes_left = 0;
+        m_streams[_stream].state = source != nullptr ? SAudioStream::STATE_ON
+                                                     : SAudioStream::STATE_OFF;
+    }
+}
+
+void AudioMixer::SetStreamGainPan(unsigned int _stream, float gain, float pan)
+{
+    if (_stream < m_num_streams)
+    {
+        m_sources[_stream].gain = std::clamp(gain, 0.0f, 1.0f);
+        m_sources[_stream].pan = std::clamp(pan, -1.0f, 1.0f);
+    }
+}
+
+bool AudioMixer::IsStreamActive(unsigned int _stream) const
+{
+    if (_stream >= m_num_streams)
+        return false;
+
+    const SAudioStream& stream = m_streams[_stream];
+    if (stream.state != SAudioStream::STATE_ON)
+        return false;
+
+    if (m_sources[_stream].source != nullptr)
+        return true;
+
+    return stream.bytes_left > 0;
 }
 
 void AudioMixer::SetStreamFormat(unsigned int _stream,
@@ -114,7 +162,7 @@ void AudioMixer::SetStreamFormat(unsigned int _stream,
 
 // #define SHORT_TO_FLOAT 0.000030517578125
 void MixSamples(float* _out, int _out_chan, short* _in, int _in_chan,
-                uint32 _count)
+                uint32 _count, float _gain_l, float _gain_r)
 {
     for (uint32 i = 0; i < _count; i++)
     {
@@ -123,7 +171,8 @@ void MixSamples(float* _out, int _out_chan, short* _in, int _in_chan,
             float x = (float)_in[0] / 32768;
             for (int j = 0; j < _out_chan; j++)
             {
-                _out[j] = _out[j] + x;
+                float gain = j == 0 ? _gain_l : _gain_r;
+                _out[j] = _out[j] + x * gain;
             }
         }
         else
@@ -131,8 +180,9 @@ void MixSamples(float* _out, int _out_chan, short* _in, int _in_chan,
             for (int j = 0; j < _out_chan && j < _in_chan; j++)
             {
                 float x = (float)_in[j] / 32768;
+                float gain = j == 0 ? _gain_l : _gain_r;
                 //_out[j] = clamp((_out[j] + x)/2, -1.0f, 1.0f);
-                _out[j] = _out[j] + x;
+                _out[j] = _out[j] + x * gain;
             }
         }
 
@@ -210,11 +260,66 @@ unsigned int AudioMixer::MixStreamsFloat(float* _out_samples,
                                          unsigned int _count)
 {
     unsigned int out_length = 0;
+    short pull_buffer[SAMPLES_BUFFER_CAPACITY];
+
+    _count = min(_count, SAMPLES_BUFFER_SIZE);
 
     for (unsigned int s = 0; s < m_num_streams; s++)
     {
-        if (m_streams[s].state != SAudioStream::STATE_OFF &&
-            m_streams[s].bytes_left > 0)
+        if (m_streams[s].state == SAudioStream::STATE_OFF)
+            continue;
+
+        SStreamSource& stream_source = m_sources[s];
+        const float pan = stream_source.pan;
+        const float gain_l =
+            stream_source.gain * (pan > 0.0f ? 1.0f - pan : 1.0f);
+        const float gain_r =
+            stream_source.gain * (pan < 0.0f ? 1.0f + pan : 1.0f);
+
+        if (stream_source.source != nullptr)
+        {
+            IAudioSource* source = stream_source.source;
+            int in_chan = source->Channels();
+
+            if (in_chan < 1 || in_chan > MAX_NUM_CHANNELS)
+            {
+                m_streams[s].state = SAudioStream::STATE_OFF;
+                continue;
+            }
+
+            unsigned int got = 0;
+            while (got < _count)
+            {
+                got += source->Read(pull_buffer + got * in_chan, _count - got);
+                if (got >= _count)
+                    break;
+
+                if (!source->IsFinished())
+                    break;
+
+                if (!stream_source.looping)
+                {
+                    m_streams[s].state = SAudioStream::STATE_OFF;
+                    break;
+                }
+
+                source->Reset();
+                if (source->IsFinished())
+                {
+                    // Empty source; stop to avoid pulling forever.
+                    m_streams[s].state = SAudioStream::STATE_OFF;
+                    break;
+                }
+            }
+
+            if (got > 0)
+            {
+                MixSamples(_out_samples, m_format.chan, pull_buffer, in_chan,
+                           got, gain_l, gain_r);
+                out_length = max(out_length, got);
+            }
+        }
+        else if (m_streams[s].bytes_left > 0)
         {
             SAudioFormat stream_format = m_streams[s].format;
 
@@ -226,7 +331,7 @@ unsigned int AudioMixer::MixStreamsFloat(float* _out_samples,
             stream_length = min(stream_length, _count);
 
             MixSamples(_out_samples, m_format.chan, buff_in, stream_format.chan,
-                       stream_length);
+                       stream_length, gain_l, gain_r);
 
             out_length = max(out_length, stream_length);
 

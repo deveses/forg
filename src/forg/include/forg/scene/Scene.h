@@ -7,9 +7,15 @@
 
 #include "scene/CameraNode.h"
 #include "scene/MeshNode.h"
+#include "scene/SoundEmitterNode.h"
+#include "scene/SoundNode.h"
 
 #include <memory>
 #include <vector>
+
+namespace forg::audio {
+class AudioManager;
+}
 
 namespace forg::io {
 class ISerializer;
@@ -34,6 +40,8 @@ class FORG_API Scene : public TreeNode
     CameraNode& CreateCameraNode();
     MeshNode& CreateMeshNode();
     ui::GuiNode& CreateGuiNode();
+    SoundNode& CreateSoundNode();
+    SoundEmitterNode& CreateSoundEmitterNode();
     u32 NodeCount() const;
     SceneNode* Node(u32 index);
     const SceneNode* Node(u32 index) const;
@@ -48,6 +56,9 @@ class FORG_API Scene : public TreeNode
     const CameraNode* ActiveCameraNode() const;
 
     void Update(double deltaSeconds);
+    // Syncs SoundNodes with the audio manager, using the active camera as
+    // the listener.
+    void UpdateAudio(audio::AudioManager& manager);
     void Render(IRenderDevice* device);
 };
 

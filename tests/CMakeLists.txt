@@ -13,6 +13,9 @@ endif()
 add_executable(forg_tests
     EngineTests.cpp
     audio/AudioEngineTests.cpp
+    audio/AudioFileWavTests.cpp
+    audio/AudioGeneratorTests.cpp
+    audio/AudioManagerTests.cpp
     audio/AudioMixerTests.cpp
     math/MathTests.cpp
     audio/WaveFileTests.cpp
@@ -31,6 +34,7 @@ add_executable(forg_tests
     rendering/ReferenceRenderTests.cpp
     scene/ModelTests.cpp
     scene/SceneTreeTests.cpp
+    scene/SoundNodeTests.cpp
     ui/GuiNodeTests.cpp
     mesh/GltfLoaderTests.cpp
     net/HttpRequestTests.cpp

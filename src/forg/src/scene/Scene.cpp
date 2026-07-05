@@ -62,6 +62,10 @@ std::unique_ptr<SceneNode> CreateSerializedNode(const core::string& type)
         return std::unique_ptr<SceneNode>(new MeshNode());
     if (typeText == "GuiNode")
         return std::unique_ptr<SceneNode>(new ui::GuiNode());
+    if (typeText == "SoundNode")
+        return std::unique_ptr<SceneNode>(new SoundNode());
+    if (typeText == "SoundEmitterNode")
+        return std::unique_ptr<SceneNode>(new SoundEmitterNode());
     return nullptr;
 }
 
@@ -98,6 +102,24 @@ ui::GuiNode& Scene::CreateGuiNode()
 {
     std::unique_ptr<ui::GuiNode> node(new ui::GuiNode());
     ui::GuiNode& ref = *node;
+    m_nodes.push_back(std::move(node));
+    AddChild(ref);
+    return ref;
+}
+
+SoundNode& Scene::CreateSoundNode()
+{
+    std::unique_ptr<SoundNode> node(new SoundNode());
+    SoundNode& ref = *node;
+    m_nodes.push_back(std::move(node));
+    AddChild(ref);
+    return ref;
+}
+
+SoundEmitterNode& Scene::CreateSoundEmitterNode()
+{
+    std::unique_ptr<SoundEmitterNode> node(new SoundEmitterNode());
+    SoundEmitterNode& ref = *node;
     m_nodes.push_back(std::move(node));
     AddChild(ref);
     return ref;
@@ -284,6 +306,10 @@ bool Scene::LoadResources(const fs::Filesystem& filesystem,
         ui::GuiNode* guiNode = dynamic_cast<ui::GuiNode*>(node.get());
         if (guiNode != nullptr)
             loaded = guiNode->LoadResources(filesystem, device) && loaded;
+
+        SoundNode* soundNode = dynamic_cast<SoundNode*>(node.get());
+        if (soundNode != nullptr)
+            loaded = soundNode->LoadResources(filesystem) && loaded;
     }
     return loaded;
 }
@@ -317,6 +343,42 @@ void Scene::Update(double deltaSeconds)
         SceneNode* sceneNode = dynamic_cast<SceneNode*>(child);
         if (sceneNode != nullptr)
             sceneNode->Update(deltaSeconds);
+    }
+}
+
+void Scene::UpdateAudio(audio::AudioManager& manager)
+{
+    Vector3 listenerPosition(0.0f, 0.0f, 0.0f);
+    Vector3 listenerRight(1.0f, 0.0f, 0.0f);
+    bool hasListener = false;
+
+    CameraNode* cameraNode = ActiveCameraNode();
+    if (cameraNode != nullptr)
+    {
+        const Camera& camera = cameraNode->GetCamera();
+        listenerPosition = camera.get_Position();
+
+        Vector3 forward = camera.get_Target() - listenerPosition;
+        if (forward.LengthSq() > 0.0f)
+        {
+            forward.Normalize();
+            Vector3 right;
+            Vector3::Cross(right, forward, Vector3(0.0f, 1.0f, 0.0f));
+            if (right.LengthSq() > 0.0f)
+            {
+                right.Normalize();
+                listenerRight = right;
+                hasListener = true;
+            }
+        }
+    }
+
+    for (std::unique_ptr<SceneNode>& node : m_nodes)
+    {
+        SoundNode* soundNode = dynamic_cast<SoundNode*>(node.get());
+        if (soundNode != nullptr)
+            soundNode->SyncAudio(manager, listenerPosition, listenerRight,
+                                 hasListener);
     }
 }
 

@@ -24,14 +24,28 @@
 #endif
 
 #include "forg/audio/AudioDefs.h"
+#include "forg/audio/IAudioSource.h"
 #include "forg/base.h"
 
 namespace forg::audio {
 
 class FORG_API AudioMixer
 {
+  public:
+    static constexpr unsigned int MAX_STREAMS = 10;
+
+  private:
+    struct SStreamSource
+    {
+        IAudioSource* source;
+        float gain;
+        float pan;
+        bool looping;
+    };
+
     IAudioOutput* m_output;
-    SAudioStream m_streams[10];
+    SAudioStream m_streams[MAX_STREAMS];
+    SStreamSource m_sources[MAX_STREAMS];
     unsigned int m_num_streams;
     SAudioFormat m_format;
 
@@ -50,6 +64,14 @@ class FORG_API AudioMixer
     void SetStreamBuffer(unsigned int _stream, char* _buffer,
                          unsigned int size);
     void SetStreamFormat(unsigned int _stream, const SAudioFormat& format);
+
+    // Attaches a pull source to the stream; the mixer does not take
+    // ownership. Passing nullptr detaches the source and stops the stream.
+    void SetStreamSource(unsigned int _stream, IAudioSource* source,
+                         bool looping);
+    // gain in [0, 1], pan in [-1, 1] (-1 = left, 1 = right).
+    void SetStreamGainPan(unsigned int _stream, float gain, float pan);
+    bool IsStreamActive(unsigned int _stream) const;
 
   private:
     unsigned int MixStreams(char* _out_buffer, unsigned int _out_size);

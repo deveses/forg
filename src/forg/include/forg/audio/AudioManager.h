@@ -31,9 +31,12 @@ namespace forg::audio {
 class FORG_API AudioManager
 {
     AudioMixer m_mixer;
+    IAudioSource* m_voices[AudioMixer::MAX_STREAMS];
     bool m_initialized;
 
   public:
+    static constexpr int INVALID_VOICE = -1;
+
     AudioManager();
     ~AudioManager();
 
@@ -41,12 +44,25 @@ class FORG_API AudioManager
     AudioManager& operator=(const AudioManager&) = delete;
 
     bool Init();
+    // Takes ownership of output and releases it through
+    // IAudioOutput::Release().
+    bool InitWithOutput(IAudioOutput* output);
     void Shutdown();
     void Update();
 
     bool IsInitialized() const;
     AudioMixer& Mixer();
     const AudioMixer& Mixer() const;
+
+    // Starts playing a source on a free voice and returns its handle,
+    // or INVALID_VOICE when no voice is free. The source is not owned;
+    // callers must Stop() the voice (or StopAll()) before destroying it.
+    int Play(IAudioSource* source, bool looping = false, float gain = 1.0f,
+             float pan = 0.0f);
+    void Stop(int voice);
+    void StopAll();
+    bool IsPlaying(int voice) const;
+    void SetGainPan(int voice, float gain, float pan);
 };
 
 } // namespace forg::audio
