@@ -97,7 +97,7 @@ class ITextureGLImpl : public ITexture
 {
     // 'structors
   private:
-    ITextureGLImpl() {};
+    ITextureGLImpl(){};
     ~ITextureGLImpl();
 
   public:

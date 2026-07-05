@@ -45,7 +45,7 @@ class ISurface
 {
     // 'structors
   public:
-    virtual ~ISurface(void) {};
+    virtual ~ISurface(void){};
 
     // Public Methods
   public:

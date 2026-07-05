@@ -68,8 +68,7 @@ class FORG_API AudioMixer
     // while the stream is attached. Passing nullptr detaches the source and
     // stops the stream.
     void SetStreamSource(unsigned int _stream,
-                         std::shared_ptr<IAudioSource> source,
-                         bool looping);
+                         std::shared_ptr<IAudioSource> source, bool looping);
     // gain in [0, 1], pan in [-1, 1] (-1 = left, 1 = right).
     void SetStreamGainPan(unsigned int _stream, float gain, float pan);
     // True while the stream still produces audio; a drained buffer or a

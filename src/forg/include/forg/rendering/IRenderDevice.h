@@ -82,7 +82,7 @@ class IRenderDevice : public core::RefCounter
   public:
     // Construction / Deconstruction
   public:
-    virtual ~IRenderDevice() {};
+    virtual ~IRenderDevice(){};
 
     // Public Methods
   public:

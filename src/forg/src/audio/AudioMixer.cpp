@@ -276,8 +276,7 @@ unsigned int AudioMixer::Impl::MixStreams(char* _out_buffer,
 
         if (mix_samples > 0)
         {
-            ConvertSamplesToIntegers(obuf, samplesf, mix_samples,
-                                     format.chan);
+            ConvertSamplesToIntegers(obuf, samplesf, mix_samples, format.chan);
 
             obuf += mix_samples * format.chan;
             mixed_size += mix_samples * sample_stride;
@@ -348,8 +347,8 @@ unsigned int AudioMixer::Impl::MixStreamsFloat(float* _out_samples,
 
             if (got > 0)
             {
-                MixSamples(_out_samples, format.chan, pull_buffer, in_chan,
-                           got, gain_l, gain_r);
+                MixSamples(_out_samples, format.chan, pull_buffer, in_chan, got,
+                           gain_l, gain_r);
                 out_length = max(out_length, got);
             }
         }
@@ -361,8 +360,7 @@ unsigned int AudioMixer::Impl::MixStreamsFloat(float* _out_samples,
 
             short* buff_in =
                 (short*)(streams[s].buffer.ptr + streams[s].offset);
-            unsigned int stream_length =
-                streams[s].bytes_left / sample_size;
+            unsigned int stream_length = streams[s].bytes_left / sample_size;
             stream_length = min(stream_length, _count);
 
             MixSamples(_out_samples, format.chan, buff_in, stream_format.chan,

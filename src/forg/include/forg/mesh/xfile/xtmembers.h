@@ -36,7 +36,7 @@ enum xtemplate_member_type
 class XTemplateMember
 {
   public:
-    virtual ~XTemplateMember() {};
+    virtual ~XTemplateMember(){};
 
     virtual bool IsReference() const
     {

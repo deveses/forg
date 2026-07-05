@@ -99,12 +99,12 @@ void WriteMixerRateWaveFile(const std::filesystem::path& path)
     WriteValue(out, static_cast<unsigned int>(WaveID));
     WriteValue(out, static_cast<unsigned int>(FormatID));
     WriteValue(out, format_size);
-    WriteValue(out, static_cast<unsigned short>(1));     // PCM
-    WriteValue(out, static_cast<unsigned short>(1));     // mono
-    WriteValue(out, static_cast<unsigned int>(44100));   // sample rate
+    WriteValue(out, static_cast<unsigned short>(1));       // PCM
+    WriteValue(out, static_cast<unsigned short>(1));       // mono
+    WriteValue(out, static_cast<unsigned int>(44100));     // sample rate
     WriteValue(out, static_cast<unsigned int>(44100 * 2)); // byte rate
-    WriteValue(out, static_cast<unsigned short>(2));     // block align
-    WriteValue(out, static_cast<unsigned short>(16));    // bits per sample
+    WriteValue(out, static_cast<unsigned short>(2));       // block align
+    WriteValue(out, static_cast<unsigned short>(16));      // bits per sample
     WriteValue(out, static_cast<unsigned int>(DataID));
     WriteValue(out, data_size);
     out.write(reinterpret_cast<const char*>(samples.data()), data_size);
@@ -149,8 +149,7 @@ TEST_CASE("Scene round-trips sound nodes through YAML text",
     RequireSoundScene(target);
 }
 
-TEST_CASE("Scene loads WAV resources for file sound nodes",
-          "[scene][sound]")
+TEST_CASE("Scene loads WAV resources for file sound nodes", "[scene][sound]")
 {
     const std::filesystem::path dir =
         std::filesystem::temp_directory_path() / "forg_soundnode_data";

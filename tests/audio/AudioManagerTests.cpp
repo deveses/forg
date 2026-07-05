@@ -115,8 +115,7 @@ TEST_CASE("AudioManager runs out of voices at the mixer stream limit",
     REQUIRE(manager.Play(tone, true) == voices[3]);
 }
 
-TEST_CASE("AudioManager reclaims finished voices on Update",
-          "[audio][manager]")
+TEST_CASE("AudioManager reclaims finished voices on Update", "[audio][manager]")
 {
     NullAudioOutput output;
     forg::audio::AudioManager manager;

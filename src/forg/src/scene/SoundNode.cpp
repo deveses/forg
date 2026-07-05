@@ -79,7 +79,8 @@ bool SoundNode::Save(io::ISerializer& serializer) const
         return false;
 
     core::string source(SoundSourceTypeName(m_sourceType));
-    core::string waveform(std::string(audio::AudioWaveformName(m_waveform)).c_str());
+    core::string waveform(
+        std::string(audio::AudioWaveformName(m_waveform)).c_str());
     core::string file = m_file;
     float frequency = m_frequency;
     float amplitude = m_amplitude;
@@ -221,10 +222,7 @@ void SoundNode::SetAutoplay(bool autoplay) { m_autoplay = autoplay; }
 
 bool SoundNode::Autoplay() const { return m_autoplay; }
 
-void SoundNode::SetGain(float gain)
-{
-    m_gain = std::clamp(gain, 0.0f, 1.0f);
-}
+void SoundNode::SetGain(float gain) { m_gain = std::clamp(gain, 0.0f, 1.0f); }
 
 float SoundNode::Gain() const { return m_gain; }
 
@@ -299,8 +297,8 @@ void SoundNode::SyncAudio(audio::AudioManager& manager,
         {
             math::Vector3 direction = delta;
             direction.Normalize();
-            pan = std::clamp(math::Vector3::Dot(direction, listenerRight), -1.0f,
-                             1.0f);
+            pan = std::clamp(math::Vector3::Dot(direction, listenerRight),
+                             -1.0f, 1.0f);
         }
     }
 

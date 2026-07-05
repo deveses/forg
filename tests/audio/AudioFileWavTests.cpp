@@ -119,8 +119,7 @@ TEST_CASE("AudioFileWav reads interleaved stereo frames", "[audio][wavsource]")
     REQUIRE(file.IsFinished());
 }
 
-TEST_CASE("AudioFileWav converts 8-bit samples to 16-bit",
-          "[audio][wavsource]")
+TEST_CASE("AudioFileWav converts 8-bit samples to 16-bit", "[audio][wavsource]")
 {
     TempWave wave("forg_audiofile_mono8.wav");
     const std::vector<char> data = {
