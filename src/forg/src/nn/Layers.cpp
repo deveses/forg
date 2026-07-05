@@ -286,4 +286,158 @@ Values RNN::Parameters() const
     return parameters;
 }
 
+LSTM::LSTM(std::size_t input_size, std::size_t hidden_size,
+           std::size_t sequence_length)
+    : LSTM(input_size, hidden_size, sequence_length, DefaultRng())
+{
+}
+
+LSTM::LSTM(std::size_t input_size, std::size_t hidden_size,
+           std::size_t sequence_length, std::mt19937& rng)
+    : m_input_size(input_size), m_hidden_size(hidden_size),
+      m_sequence_length(sequence_length)
+{
+    if (m_input_size == 0 || m_hidden_size == 0 || m_sequence_length == 0)
+    {
+        m_input_size = 0;
+        m_hidden_size = 0;
+        m_sequence_length = 0;
+        return;
+    }
+
+    m_input_weights = MakeWeights(4 * m_hidden_size * m_input_size, rng);
+    m_hidden_weights = MakeWeights(4 * m_hidden_size * m_hidden_size, rng);
+    m_biases.reserve(4 * m_hidden_size);
+    for (std::size_t index = 0; index < 4 * m_hidden_size; ++index)
+    {
+        m_biases.push_back(MakeValue(0.0));
+    }
+}
+
+std::size_t LSTM::InputWeightIndex(std::size_t gate, std::size_t hidden,
+                                   std::size_t input) const noexcept
+{
+    return (gate * m_hidden_size + hidden) * m_input_size + input;
+}
+
+std::size_t LSTM::HiddenWeightIndex(
+    std::size_t gate, std::size_t hidden,
+    std::size_t previous_hidden) const noexcept
+{
+    return (gate * m_hidden_size + hidden) * m_hidden_size + previous_hidden;
+}
+
+std::size_t LSTM::BiasIndex(std::size_t gate,
+                            std::size_t hidden) const noexcept
+{
+    return gate * m_hidden_size + hidden;
+}
+
+Values LSTM::Forward(const Values& input) const
+{
+    Values initial_hidden;
+    Values initial_cell;
+    initial_hidden.reserve(m_hidden_size);
+    initial_cell.reserve(m_hidden_size);
+    for (std::size_t index = 0; index < m_hidden_size; ++index)
+    {
+        initial_hidden.push_back(MakeValue(0.0));
+        initial_cell.push_back(MakeValue(0.0));
+    }
+    return Forward(input, initial_hidden, initial_cell);
+}
+
+Values LSTM::Forward(const Values& input, const Values& initial_hidden,
+                     const Values& initial_cell) const
+{
+    if (m_input_weights.empty() || m_hidden_weights.empty() ||
+        m_biases.empty() ||
+        !IsInputValid(input, m_sequence_length * m_input_size) ||
+        !IsInputValid(initial_hidden, m_hidden_size) ||
+        !IsInputValid(initial_cell, m_hidden_size))
+    {
+        return {};
+    }
+
+    Values previous_hidden = initial_hidden;
+    Values previous_cell = initial_cell;
+    Values output;
+    output.reserve(m_sequence_length * m_hidden_size);
+
+    for (std::size_t timestep = 0; timestep < m_sequence_length; ++timestep)
+    {
+        Values current_hidden;
+        Values current_cell;
+        current_hidden.reserve(m_hidden_size);
+        current_cell.reserve(m_hidden_size);
+
+        for (std::size_t hidden = 0; hidden < m_hidden_size; ++hidden)
+        {
+            Values gates;
+            gates.reserve(4);
+            for (std::size_t gate = 0; gate < 4; ++gate)
+            {
+                ValuePtr activation = m_biases[BiasIndex(gate, hidden)];
+                for (std::size_t input_index = 0; input_index < m_input_size;
+                     ++input_index)
+                {
+                    activation =
+                        activation +
+                        m_input_weights[InputWeightIndex(gate, hidden,
+                                                         input_index)] *
+                            input[timestep * m_input_size + input_index];
+                    if (!activation)
+                        return {};
+                }
+
+                for (std::size_t previous = 0; previous < m_hidden_size;
+                     ++previous)
+                {
+                    activation =
+                        activation +
+                        m_hidden_weights[HiddenWeightIndex(gate, hidden,
+                                                           previous)] *
+                            previous_hidden[previous];
+                    if (!activation)
+                        return {};
+                }
+
+                ValuePtr value = gate == 2 ? Tanh(activation)
+                                           : Sigmoid(activation);
+                if (!value)
+                    return {};
+
+                gates.push_back(value);
+            }
+
+            ValuePtr cell =
+                gates[1] * previous_cell[hidden] + gates[0] * gates[2];
+            if (!cell)
+                return {};
+
+            ValuePtr hidden_value = gates[3] * Tanh(cell);
+            if (!hidden_value)
+                return {};
+
+            current_cell.push_back(cell);
+            current_hidden.push_back(hidden_value);
+            output.push_back(hidden_value);
+        }
+
+        previous_cell = std::move(current_cell);
+        previous_hidden = std::move(current_hidden);
+    }
+
+    return output;
+}
+
+Values LSTM::Parameters() const
+{
+    Values parameters = m_input_weights;
+    parameters.insert(parameters.end(), m_hidden_weights.begin(),
+                      m_hidden_weights.end());
+    parameters.insert(parameters.end(), m_biases.begin(), m_biases.end());
+    return parameters;
+}
+
 } // namespace forg::nn

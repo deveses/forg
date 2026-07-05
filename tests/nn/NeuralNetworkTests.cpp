@@ -26,6 +26,16 @@ std::filesystem::path TempDataPath(const std::string& name)
            (name + "-" + std::to_string(std::random_device{}()));
 }
 
+bool HasAnyGradient(const forg::nn::Values& values)
+{
+    for (const forg::nn::ValuePtr& value : values)
+    {
+        if (value && value->GetGrad() != 0.0)
+            return true;
+    }
+    return false;
+}
+
 } // namespace
 
 TEST_CASE("Value backward matches micrograd sanity expression", "[nn][value]")
@@ -190,6 +200,9 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
     REQUIRE(forg::nn::RNN(0, 2, 3, rng).Parameters().empty());
     REQUIRE(forg::nn::RNN(2, 0, 3, rng).Parameters().empty());
     REQUIRE(forg::nn::RNN(2, 3, 0, rng).Parameters().empty());
+    REQUIRE(forg::nn::LSTM(0, 2, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::LSTM(2, 0, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::LSTM(2, 3, 0, rng).Parameters().empty());
 
     forg::nn::Layer layer(2, 1, rng);
     REQUIRE(layer.Forward({forg::nn::MakeValue(1.0)}).empty());
@@ -219,6 +232,31 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
                             forg::nn::MakeValue(8.0),
                         },
                         {forg::nn::MakeValue(0.0)})
+                .empty());
+
+    forg::nn::LSTM lstm(2, 3, 4, rng);
+    REQUIRE(lstm.Forward({forg::nn::MakeValue(1.0)}).empty());
+    REQUIRE(lstm.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
+    const std::vector<forg::nn::ValuePtr> sequence = {
+        forg::nn::MakeValue(1.0),
+        forg::nn::MakeValue(2.0),
+        forg::nn::MakeValue(3.0),
+        forg::nn::MakeValue(4.0),
+        forg::nn::MakeValue(5.0),
+        forg::nn::MakeValue(6.0),
+        forg::nn::MakeValue(7.0),
+        forg::nn::MakeValue(8.0),
+    };
+    REQUIRE(lstm.Forward(sequence, {forg::nn::MakeValue(0.0)},
+                         {forg::nn::MakeValue(0.0),
+                          forg::nn::MakeValue(0.0),
+                          forg::nn::MakeValue(0.0)})
+                .empty());
+    REQUIRE(lstm.Forward(sequence,
+                         {forg::nn::MakeValue(0.0),
+                          forg::nn::MakeValue(0.0),
+                          forg::nn::MakeValue(0.0)},
+                         {forg::nn::MakeValue(0.0)})
                 .empty());
 }
 
@@ -350,6 +388,109 @@ TEST_CASE("RNN composes with Sequential using flattened full sequence",
 
     REQUIRE(output.size() == 1);
     REQUIRE(model.Parameters().size() == rnn->Parameters().size() +
+                                           linear->Parameters().size());
+}
+
+TEST_CASE("LSTM returns full hidden sequence and exposes parameters",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(50);
+    LSTM lstm(2, 3, 4, rng);
+
+    REQUIRE(lstm.InputSize() == 2);
+    REQUIRE(lstm.HiddenSize() == 3);
+    REQUIRE(lstm.SequenceLength() == 4);
+    REQUIRE(lstm.InputWeights().size() == 24);
+    REQUIRE(lstm.HiddenWeights().size() == 36);
+    REQUIRE(lstm.Biases().size() == 12);
+    REQUIRE(lstm.Parameters().size() == 72);
+
+    const Values input = {
+        MakeValue(1.0), MakeValue(2.0), MakeValue(3.0), MakeValue(4.0),
+        MakeValue(5.0), MakeValue(6.0), MakeValue(7.0), MakeValue(8.0),
+    };
+    const Values output = lstm.Forward(input);
+
+    REQUIRE(output.size() == 12);
+}
+
+TEST_CASE("LSTM applies gated cell dynamics across timesteps", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(51);
+    LSTM lstm(1, 1, 2, rng);
+    for (const ValuePtr& parameter : lstm.Parameters())
+    {
+        parameter->SetData(0.0);
+    }
+    lstm.InputWeights()[2]->SetData(1.0);
+
+    const Values output = lstm.Forward({MakeValue(1.0), MakeValue(2.0)});
+    const double first_cell = 0.5 * std::tanh(1.0);
+    const double first_hidden = 0.5 * std::tanh(first_cell);
+    const double second_cell = 0.5 * first_cell + 0.5 * std::tanh(2.0);
+    const double second_hidden = 0.5 * std::tanh(second_cell);
+
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0]->GetData() == Approx(first_hidden));
+    REQUIRE(output[1]->GetData() == Approx(second_hidden));
+}
+
+TEST_CASE("LSTM gradients flow through sequence parameters and states",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(52);
+    LSTM lstm(1, 1, 2, rng);
+    for (std::size_t index = 0; index < lstm.InputWeights().size(); ++index)
+    {
+        lstm.InputWeights()[index]->SetData(0.2 + 0.1 * index);
+    }
+    for (std::size_t index = 0; index < lstm.HiddenWeights().size(); ++index)
+    {
+        lstm.HiddenWeights()[index]->SetData(0.1 + 0.05 * index);
+    }
+    for (const ValuePtr& bias : lstm.Biases())
+    {
+        bias->SetData(0.1);
+    }
+
+    const Values input = {MakeValue(0.5), MakeValue(-0.25)};
+    const ValuePtr initial_hidden = MakeValue(0.2);
+    const ValuePtr initial_cell = MakeValue(-0.1);
+    const Values output =
+        lstm.Forward(input, {initial_hidden}, {initial_cell});
+    REQUIRE(output.size() == 2);
+
+    Backward(output[1]);
+
+    REQUIRE(input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(initial_hidden->GetGrad() != Approx(0.0));
+    REQUIRE(initial_cell->GetGrad() != Approx(0.0));
+    REQUIRE(HasAnyGradient(lstm.InputWeights()));
+    REQUIRE(HasAnyGradient(lstm.HiddenWeights()));
+    REQUIRE(HasAnyGradient(lstm.Biases()));
+}
+
+TEST_CASE("LSTM composes with Sequential using flattened full sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(53);
+    const auto lstm = std::make_shared<LSTM>(1, 2, 2, rng);
+    const auto linear = std::make_shared<Linear>(4, 1, rng);
+    Sequential model({lstm, linear});
+
+    const Values output = model.Forward({MakeValue(0.5), MakeValue(-0.5)});
+
+    REQUIRE(output.size() == 1);
+    REQUIRE(model.Parameters().size() == lstm->Parameters().size() +
                                            linear->Parameters().size());
 }
 
