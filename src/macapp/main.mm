@@ -1,6 +1,6 @@
 // main.mm : macOS port of the Win32 sample app (src/winapp).
 // Reads config.yml to pick the renderer plugin and window geometry, loads the
-// scene from scene.yml, then renders it in a continuous loop.
+// scene from data:scene.yml, then renders it in a continuous loop.
 
 // Cocoa must come first: forg's base.h defines macros (null, IN, OUT)
 // that break the system headers if they are seen earlier.
@@ -106,7 +106,7 @@ static bool RenderEngineFrame(forg::Engine& engine, void* userData)
     }
     m_engine.SetRenderCallback(&RenderEngineFrame, self);
 
-    if (!m_engine.LoadScene("scene.yml"))
+    if (!m_engine.LoadScene("data:scene.yml"))
     {
         std::cerr << m_engine.LastError() << "\n";
         [NSApp terminate:nil];

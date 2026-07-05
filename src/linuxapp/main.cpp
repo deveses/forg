@@ -187,7 +187,7 @@ bool InitializeEngine(AppState& state, SDL_Window* window,
     state.Engine.Resize(static_cast<forg::u32>(width),
                         static_cast<forg::u32>(height));
 
-    if (!state.Engine.LoadScene("scene.yml"))
+    if (!state.Engine.LoadScene("data:scene.yml"))
     {
         std::cerr << state.Engine.LastError() << "\n";
         return false;

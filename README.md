@@ -38,9 +38,10 @@ Run the macOS sample with:
 ```
 
 A post-build step copies `libswrenderer.dylib`, `libmetalrenderer.dylib`,
-`src/macapp/config.yml`, `src/macapp/scene.yml`, and the shared `data/` assets
-next to the binary. `config.yml` selects which plugin `macapp` loads (default:
-`libmetalrenderer.dylib`; switch to `libswrenderer.dylib` to compare).
+`src/macapp/config.yml`, and the shared `data/` assets, including
+`data/scene.yml`, next to the binary. `config.yml` selects which plugin
+`macapp` loads (default: `libmetalrenderer.dylib`; switch to
+`libswrenderer.dylib` to compare).
 
 On Linux, build and run the SDL sample with:
 
@@ -51,7 +52,7 @@ cmake --build --preset debug --target linuxapp
 ```
 
 A post-build step copies `libswrenderer.so`, `src/linuxapp/config.yml`,
-`src/linuxapp/scene.yml`, and the shared `data/` assets next to the binary.
+and the shared `data/` assets, including `data/scene.yml`, next to the binary.
 The Linux v1 path intentionally uses SDL2 plus the software renderer only;
 Metal remains macOS-only, and the OpenGL plugin is still Windows/WGL-oriented.
 
@@ -159,9 +160,9 @@ windowing and OpenCL remain outside the automated test surface.
 Use the `windows-debug` and `windows-release` presets with Visual Studio 2022. CMake builds `forg`, the direct Win32 `winapp`, `glrenderer`, the Windows software renderer, and the test suite. OpenCL and C++ AMP remain unsupported legacy targets until they are independently revived or removed.
 
 A post-build step copies `glrenderer.dll`, `swrenderer.dll`,
-`src/winapp/config.yml`, `src/winapp/scene.yml`, and the shared `data/` assets
-next to `winapp.exe`. `config.yml` selects which plugin `winapp` loads and
-controls the initial window geometry.
+`src/winapp/config.yml`, and the shared `data/` assets, including
+`data/scene.yml`, next to `winapp.exe`. `config.yml` selects which plugin
+`winapp` loads and controls the initial window geometry.
 
 ## Project layout
 

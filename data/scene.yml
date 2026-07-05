@@ -1,7 +1,7 @@
 scene:
   version: "1"
   nodes:
-    count: "4"
+    count: "6"
     item_0:
       type: "CameraNode"
       parent: "-1"
@@ -107,3 +107,23 @@ scene:
           m42: "-1.250000"
           m43: "0.000000"
           m44: "1.000000"
+    item_4:
+      type: "SoundEmitterNode"
+      parent: "-1"
+      emitter:
+        position_x: "0.000000"
+        position_y: "0.500000"
+        position_z: "0.000000"
+        ref_distance: "8.000000"
+    item_5:
+      type: "SoundNode"
+      parent: "4"
+      sound:
+        source: "generator"
+        waveform: "sine"
+        frequency: "329.630000"
+        amplitude: "0.180000"
+        file: ""
+        looping: "1"
+        autoplay: "1"
+        gain: "0.300000"
