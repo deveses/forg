@@ -22,12 +22,16 @@ std::string buildState(SceneControlContext& ctx)
     forg::u32 faces = mesh ? mesh->GetNumFaces() : 0;
 
     std::ostringstream o;
-    o << "{\"ok\":true," << "\"camera\":{" << "\"position\":[" << p.X << ","
-      << p.Y << "," << p.Z << "]," << "\"target\":[" << t.X << "," << t.Y << ","
-      << t.Z << "]," << "\"fov\":" << ctx.camera->get_FOV() << "},"
-      << "\"light\":{" << "\"position\":[" << l.Position.X << ","
-      << l.Position.Y << "," << l.Position.Z << "]," << "\"diffuse\":["
-      << l.Diffuse.r << "," << l.Diffuse.g << "," << l.Diffuse.b << "]},"
+    o << "{\"ok\":true,"
+      << "\"camera\":{"
+      << "\"position\":[" << p.X << "," << p.Y << "," << p.Z << "],"
+      << "\"target\":[" << t.X << "," << t.Y << "," << t.Z << "],"
+      << "\"fov\":" << ctx.camera->get_FOV() << "},"
+      << "\"light\":{"
+      << "\"position\":[" << l.Position.X << "," << l.Position.Y << ","
+      << l.Position.Z << "],"
+      << "\"diffuse\":[" << l.Diffuse.r << "," << l.Diffuse.g << ","
+      << l.Diffuse.b << "]},"
       << "\"clearColor\":[" << c.r << "," << c.g << "," << c.b << "],"
       << "\"mesh\":{\"vertices\":" << vertices << ",\"faces\":" << faces
       << "}}";

@@ -88,7 +88,7 @@ class XDataIdentifier
 class IData
 {
   public:
-    virtual ~IData(){};
+    virtual ~IData() {};
 
     virtual int GetDataType() const = 0;
 

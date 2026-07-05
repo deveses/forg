@@ -90,7 +90,7 @@ class XTemplateOption
 {
     // 'structors
   public:
-    XTemplateOption(){};
+    XTemplateOption() {};
 
     XTemplateOption(const xstring& name) : m_sName(name) {}
 
