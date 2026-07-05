@@ -3,9 +3,7 @@
 // forg call. It is transport-agnostic (no sockets) and deals only in forg
 // rendering types, so any forg-based application can drive its scene with it.
 
-#ifndef _FORG_CONTROL_SCENECONTROL_H_
-#define _FORG_CONTROL_SCENECONTROL_H_
-
+#pragma once
 #include <string>
 
 #include "base.h"
@@ -40,5 +38,3 @@ FORG_API std::string DispatchCommand(SceneControlContext& ctx,
                                      const net::Command& cmd);
 
 } // namespace forg::control
-
-#endif //_FORG_CONTROL_SCENECONTROL_H_

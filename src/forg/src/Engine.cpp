@@ -615,6 +615,11 @@ struct Engine::Impl
             return false;
         }
 
+        // Stop all voices before replacing the scene; playing sources are
+        // owned by the outgoing scene's nodes.
+        if (audio.IsInitialized())
+            audio.Manager().StopAll();
+
         EnsureScene(sceneIndex);
         scenes[sceneIndex] = std::move(nextScene);
 
@@ -743,6 +748,15 @@ struct Engine::Impl
         {
             SetError("Engine update callback failed");
             return false;
+        }
+
+        if (audio.IsInitialized())
+        {
+            for (std::unique_ptr<scene::Scene>& scene : scenes)
+            {
+                if (scene)
+                    scene->UpdateAudio(audio.Manager());
+            }
         }
 
         audio.Update();

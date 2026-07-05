@@ -1,10 +1,4 @@
-#ifndef FORG_SCENE_MESHNODE_H
-#define FORG_SCENE_MESHNODE_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "scene/Model.h"
 #include "scene/SceneNode.h"
 
@@ -34,5 +28,3 @@ class FORG_API MeshNode : public SceneNode
 };
 
 } // namespace forg::scene
-
-#endif // FORG_SCENE_MESHNODE_H

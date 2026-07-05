@@ -2,13 +2,7 @@
     This source file is part of FORG library (http://forg.googlecode.com)
 *******************************************************************************/
 
-#ifndef _FORG_SCRIPT_GENERIC_DOCUMENT_H_
-#define _FORG_SCRIPT_GENERIC_DOCUMENT_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/base.h"
 #include "forg/core/string.hpp"
 
@@ -115,5 +109,3 @@ class FORG_API Document
 };
 
 } // namespace forg::script::generic
-
-#endif

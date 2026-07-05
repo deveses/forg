@@ -68,6 +68,10 @@ if(DEFINED FORG_TEST_CMAKE_EXE_LINKER_FLAGS)
         "-DCMAKE_EXE_LINKER_FLAGS=${FORG_TEST_CMAKE_EXE_LINKER_FLAGS}")
 endif()
 
+if(FORG_TEST_CMAKE_CXX_FLAGS MATCHES "(^| )-fsanitize=[^ ]*address")
+    set(ENV{ASAN_OPTIONS} "detect_leaks=0")
+endif()
+
 execute_process(
     COMMAND "${CMAKE_COMMAND}" -S "${FORG_SOURCE_DIR}" -B "${consumer_build}"
             ${consumer_config_args}

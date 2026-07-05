@@ -5,12 +5,8 @@
     (MIT licensed, Copyright (c) 2020 Andrej Karpathy).
 *******************************************************************************/
 
-#ifndef FORG_NN_H
-#define FORG_NN_H
-
+#pragma once
 #include "forg/nn/Matrix.h"
 #include "forg/nn/Mnist.h"
 #include "forg/nn/Module.h"
 #include "forg/nn/Value.h"
-
-#endif // FORG_NN_H

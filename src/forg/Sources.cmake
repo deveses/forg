@@ -5,20 +5,29 @@ set(audio_includes
     AudioDefs.h
     AudioDSP.h
     AudioEngine.h
+    AudioFile.h
+    AudioFileWav.h
+    AudioGenerator.h
     AudioManager.h
     AudioMixer.h
+    IAudioSource.h
     WaveFile.h
 )
 list(TRANSFORM audio_includes PREPEND "include/forg/audio/")
 set(audio_sources
     AudioDSP.cpp
     AudioEngine.cpp
+    AudioFile.cpp
+    AudioFileWav.cpp
+    AudioGenerator.cpp
     AudioManager.cpp
     AudioMixer.cpp
     AudioOutput.cpp
     AudioOutput.h
     $<${FORG_PLATFORM_OSX}:AudioOutputCoreAudio.h>
     $<${FORG_PLATFORM_OSX}:AudioOutputCoreAudio.cpp>
+    $<${FORG_PLATFORM_LINUX}:AudioOutputSDL.h>
+    $<${FORG_PLATFORM_LINUX}:AudioOutputSDL.cpp>
     $<${FORG_PLATFORM_WINDOWS}:AudioOutputWaveOut.h>
     $<${FORG_PLATFORM_WINDOWS}:AudioOutputWaveOut.cpp>
     WaveFile.cpp
@@ -165,6 +174,8 @@ set(scene_includes
     Model.h
     Scene.h
     SceneNode.h
+    SoundEmitterNode.h
+    SoundNode.h
     TreeNode.h
 )
 list(TRANSFORM scene_includes PREPEND "include/forg/scene/")
@@ -174,6 +185,8 @@ set(scene_sources
     Model.cpp
     Scene.cpp
     SceneNode.cpp
+    SoundEmitterNode.cpp
+    SoundNode.cpp
     TreeNode.cpp
 )
 list(TRANSFORM scene_sources PREPEND "src/scene/")

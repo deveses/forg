@@ -2,6 +2,8 @@
 
 #include "forg/script/lexer.h"
 
+#include <unordered_set>
+
 namespace forg::script {
 
 // RegExp
@@ -77,7 +79,36 @@ StateMachine::StateMachine() { m_current = &m_start; }
 
 StateMachine::~StateMachine()
 {
-    for (SFAState* state : m_states)
+    // Connect() allocates states that are referenced only by the
+    // connection graph, so collect everything reachable from the start
+    // node (loopbacks and shared states make this a graph, not a tree)
+    // and delete each state exactly once.
+    std::unordered_set<SFAState*> states(m_states.begin(), m_states.end());
+
+    std::vector<SFAState*> pending;
+    std::unordered_set<SFAState*> visited;
+    pending.push_back(&m_start);
+    visited.insert(&m_start);
+
+    while (!pending.empty())
+    {
+        SFAState* state = pending.back();
+        pending.pop_back();
+
+        for (const SFAStateConnection& connection : state->connections)
+        {
+            if (connection.state != nullptr &&
+                visited.insert(connection.state).second)
+            {
+                pending.push_back(connection.state);
+            }
+        }
+
+        if (state != &m_start)
+            states.insert(state);
+    }
+
+    for (SFAState* state : states)
     {
         delete state;
     }

@@ -1,10 +1,4 @@
-#ifndef FORG_FS_FILESYSTEM_H
-#define FORG_FS_FILESYSTEM_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/base.h"
 
 #include <filesystem>
@@ -55,5 +49,3 @@ class FORG_API Filesystem
 };
 
 } // namespace forg::fs
-
-#endif // FORG_FS_FILESYSTEM_H

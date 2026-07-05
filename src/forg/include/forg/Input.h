@@ -1,10 +1,4 @@
-#ifndef FORG_INPUT_H
-#define FORG_INPUT_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 namespace forg {
 
 enum class InputEventType
@@ -31,5 +25,3 @@ struct InputEvent
 };
 
 } // namespace forg
-
-#endif // FORG_INPUT_H

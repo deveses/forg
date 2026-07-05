@@ -1,6 +1,4 @@
-#ifndef _FORG_NET_HTTPREQUEST_H_
-#define _FORG_NET_HTTPREQUEST_H_
-
+#pragma once
 #include <map>
 #include <string>
 
@@ -25,5 +23,3 @@ std::map<std::string, std::string> ParseQuery(const std::string& query);
 Command CommandFromRequest(const std::string& path, const std::string& query);
 
 } // namespace forg::net
-
-#endif //_FORG_NET_HTTPREQUEST_H_

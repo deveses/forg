@@ -5,9 +5,7 @@
     project is MIT licensed, Copyright (c) 2020 Andrej Karpathy.
 *******************************************************************************/
 
-#ifndef FORG_NN_VALUE_H
-#define FORG_NN_VALUE_H
-
+#pragma once
 #include "forg/base.h"
 
 #include <functional>
@@ -96,5 +94,3 @@ void Backward(const ValuePtr& root);
 void Backward(const ValuePtr& root, BackwardScratch& scratch);
 
 } // namespace forg::nn
-
-#endif // FORG_NN_VALUE_H

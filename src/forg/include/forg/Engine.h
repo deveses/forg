@@ -1,10 +1,4 @@
-#ifndef FORG_ENGINE_H
-#define FORG_ENGINE_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "forg/base.h"
 #include "forg/Input.h"
 #include "forg/rendering/Color.h"
@@ -125,5 +119,3 @@ class FORG_API Engine
 };
 
 } // namespace forg
-
-#endif // FORG_ENGINE_H

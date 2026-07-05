@@ -13,6 +13,9 @@ endif()
 add_executable(forg_tests
     EngineTests.cpp
     audio/AudioEngineTests.cpp
+    audio/AudioFileWavTests.cpp
+    audio/AudioGeneratorTests.cpp
+    audio/AudioManagerTests.cpp
     audio/AudioMixerTests.cpp
     math/MathTests.cpp
     audio/WaveFileTests.cpp
@@ -31,6 +34,7 @@ add_executable(forg_tests
     rendering/ReferenceRenderTests.cpp
     scene/ModelTests.cpp
     scene/SceneTreeTests.cpp
+    scene/SoundNodeTests.cpp
     ui/GuiNodeTests.cpp
     mesh/GltfLoaderTests.cpp
     net/HttpRequestTests.cpp
@@ -66,6 +70,11 @@ if(TARGET glrenderer)
     add_dependencies(forg_tests glrenderer)
     target_compile_definitions(forg_tests PRIVATE
         FORG_TEST_GLRENDERER_PATH="$<TARGET_FILE:glrenderer>")
+endif()
+
+if(CMAKE_CXX_FLAGS MATCHES "(^| )-fsanitize=[^ ]*address")
+    set_property(TARGET forg_tests PROPERTY CROSSCOMPILING_EMULATOR
+        "${CMAKE_COMMAND};-E;env;ASAN_OPTIONS=detect_leaks=0")
 endif()
 
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)

@@ -14,5 +14,4 @@ add_dependencies(linuxapp swrenderer)
 add_custom_command(TARGET linuxapp POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:swrenderer> $<TARGET_FILE_DIR:linuxapp>
     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/config.yml $<TARGET_FILE_DIR:linuxapp>
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/scene.yml $<TARGET_FILE_DIR:linuxapp>
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/data $<TARGET_FILE_DIR:linuxapp>/data)

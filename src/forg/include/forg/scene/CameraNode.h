@@ -1,10 +1,4 @@
-#ifndef FORG_SCENE_CAMERANODE_H
-#define FORG_SCENE_CAMERANODE_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "core/string.hpp"
 #include "rendering/Camera.h"
 #include "scene/SceneNode.h"
@@ -52,5 +46,3 @@ bool CameraProjectionFromName(const core::string& name,
                               CameraProjection& projection);
 
 } // namespace forg::scene
-
-#endif // FORG_SCENE_CAMERANODE_H

@@ -1,10 +1,4 @@
-#ifndef FORG_SCENE_TREENODE_H
-#define FORG_SCENE_TREENODE_H
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include "base.h"
 
 #include <vector>
@@ -44,5 +38,3 @@ class FORG_API TreeNode
 };
 
 } // namespace forg::scene
-
-#endif // FORG_SCENE_TREENODE_H

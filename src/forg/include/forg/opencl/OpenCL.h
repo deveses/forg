@@ -1,10 +1,4 @@
-#ifndef _FORG_OPENCL_H_
-#define _FORG_OPENCL_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #if defined(FORG_ENABLE_OPENCL)
 
 #include <CL/opencl.h>
@@ -222,5 +216,3 @@ class FORG_API CLCommandQueue
 }; // namespace OpenCL
 
 #endif
-
-#endif // _FORG_OPENCL_H_

@@ -3,10 +3,12 @@
 #include "image/ppm/ppm.h"
 
 #include <cctype>
+#include <charconv>
 #include <fstream>
 #include <limits>
 #include <memory>
 #include <string>
+#include <system_error>
 
 namespace forg {
 
@@ -55,21 +57,15 @@ bool ReadUInt(std::istream& in, u32& value)
     if (!ReadToken(in, token))
         return false;
 
-    std::size_t pos = 0;
-    unsigned long parsed = 0;
-    try
-    {
-        parsed = std::stoul(token, &pos, 10);
-    }
-    catch (...)
-    {
-        return false;
-    }
+    u32 parsed = 0;
+    const char* begin = token.data();
+    const char* end = begin + token.size();
+    const auto [ptr, ec] = std::from_chars(begin, end, parsed, 10);
 
-    if (pos != token.size() || parsed > std::numeric_limits<u32>::max())
+    if (ec != std::errc() || ptr != end)
         return false;
 
-    value = static_cast<u32>(parsed);
+    value = parsed;
     return true;
 }
 

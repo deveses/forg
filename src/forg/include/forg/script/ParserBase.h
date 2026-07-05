@@ -2,13 +2,7 @@
     This source file is part of FORG library (http://forg.googlecode.com)
 *******************************************************************************/
 
-#ifndef _FORG_SCRIPT_PARSERBASE_H_
-#define _FORG_SCRIPT_PARSERBASE_H_
-
-#if _MSC_VER > 1000
 #pragma once
-#endif
-
 #include <string>
 #include <vector>
 
@@ -73,5 +67,3 @@ class FORG_API TokenBackup
 };
 
 } // namespace forg::script
-
-#endif

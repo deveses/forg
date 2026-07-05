@@ -104,7 +104,7 @@ DWORD Viewport::Create(forg::Engine& engine, int x, int y, int nWidth,
     OnSize(SIZE_RESTORED, clientRect.right - clientRect.left,
            clientRect.bottom - clientRect.top);
 
-    if (!m_engine->LoadScene("scene.yml"))
+    if (!m_engine->LoadScene("data:scene.yml"))
         return 1;
 
     if (!m_engine->LoadScene("data:ui/dialog.yml", 1))
