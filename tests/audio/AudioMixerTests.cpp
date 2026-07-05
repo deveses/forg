@@ -3,6 +3,7 @@
 #include "forg/audio/AudioMixer.h"
 
 #include <cstring>
+#include <memory>
 #include <vector>
 
 namespace {
@@ -207,11 +208,12 @@ TEST_CASE("AudioMixer mixes a pull source into the output", "[audio][mixer]")
     forg::audio::AudioMixer mixer;
     REQUIRE(mixer.InitWithOutput(&output));
 
-    StubAudioSource source;
-    source.channels = 2;
-    source.samples = {1000, -1000, 2000, -2000};
+    std::shared_ptr<StubAudioSource> source =
+        std::make_shared<StubAudioSource>();
+    source->channels = 2;
+    source->samples = {1000, -1000, 2000, -2000};
 
-    mixer.SetStreamSource(0, &source, false);
+    mixer.SetStreamSource(0, source, false);
     REQUIRE(mixer.IsStreamActive(0));
     mixer.Update();
 
@@ -231,10 +233,11 @@ TEST_CASE("AudioMixer duplicates a mono pull source to stereo",
     forg::audio::AudioMixer mixer;
     REQUIRE(mixer.InitWithOutput(&output));
 
-    StubAudioSource source;
-    source.samples = {500, -600};
+    std::shared_ptr<StubAudioSource> source =
+        std::make_shared<StubAudioSource>();
+    source->samples = {500, -600};
 
-    mixer.SetStreamSource(0, &source, false);
+    mixer.SetStreamSource(0, source, false);
     mixer.Update();
 
     REQUIRE(WrittenSamples(output) ==
@@ -247,16 +250,17 @@ TEST_CASE("AudioMixer loops a pull source", "[audio][mixer]")
     forg::audio::AudioMixer mixer;
     REQUIRE(mixer.InitWithOutput(&output));
 
-    StubAudioSource source;
-    source.channels = 2;
-    source.samples = {100, 200};
+    std::shared_ptr<StubAudioSource> source =
+        std::make_shared<StubAudioSource>();
+    source->channels = 2;
+    source->samples = {100, 200};
 
-    mixer.SetStreamSource(0, &source, true);
+    mixer.SetStreamSource(0, source, true);
     mixer.Update();
 
     REQUIRE(output.writeCount == 1);
     REQUIRE(mixer.IsStreamActive(0));
-    REQUIRE(source.resetCount > 0);
+    REQUIRE(source->resetCount > 0);
 
     const std::vector<short> samples = WrittenSamples(output);
     REQUIRE(samples.size() >= 4);
@@ -275,8 +279,9 @@ TEST_CASE("AudioMixer stops an empty looping source", "[audio][mixer]")
     forg::audio::AudioMixer mixer;
     REQUIRE(mixer.InitWithOutput(&output));
 
-    StubAudioSource source;
-    mixer.SetStreamSource(0, &source, true);
+    std::shared_ptr<StubAudioSource> source =
+        std::make_shared<StubAudioSource>();
+    mixer.SetStreamSource(0, source, true);
     mixer.Update();
 
     REQUIRE(output.writeCount == 0);
@@ -289,11 +294,12 @@ TEST_CASE("AudioMixer applies stream gain", "[audio][mixer]")
     forg::audio::AudioMixer mixer;
     REQUIRE(mixer.InitWithOutput(&output));
 
-    StubAudioSource source;
-    source.channels = 2;
-    source.samples = {8000, -8000};
+    std::shared_ptr<StubAudioSource> source =
+        std::make_shared<StubAudioSource>();
+    source->channels = 2;
+    source->samples = {8000, -8000};
 
-    mixer.SetStreamSource(0, &source, false);
+    mixer.SetStreamSource(0, source, false);
     mixer.SetStreamGainPan(0, 0.5f, 0.0f);
     mixer.Update();
 
@@ -306,13 +312,14 @@ TEST_CASE("AudioMixer pans a stream between channels", "[audio][mixer]")
     forg::audio::AudioMixer mixer;
     REQUIRE(mixer.InitWithOutput(&output));
 
-    StubAudioSource source;
-    source.channels = 2;
-    source.samples = {8000, 8000};
+    std::shared_ptr<StubAudioSource> source =
+        std::make_shared<StubAudioSource>();
+    source->channels = 2;
+    source->samples = {8000, 8000};
 
     SECTION("full right silences the left channel")
     {
-        mixer.SetStreamSource(0, &source, false);
+        mixer.SetStreamSource(0, source, false);
         mixer.SetStreamGainPan(0, 1.0f, 1.0f);
         mixer.Update();
 
@@ -321,7 +328,7 @@ TEST_CASE("AudioMixer pans a stream between channels", "[audio][mixer]")
 
     SECTION("full left silences the right channel")
     {
-        mixer.SetStreamSource(0, &source, false);
+        mixer.SetStreamSource(0, source, false);
         mixer.SetStreamGainPan(0, 1.0f, -1.0f);
         mixer.Update();
 
@@ -336,11 +343,12 @@ TEST_CASE("AudioMixer resets gain and pan when a buffer replaces a source",
     forg::audio::AudioMixer mixer;
     REQUIRE(mixer.InitWithOutput(&output));
 
-    StubAudioSource source;
-    source.channels = 2;
-    source.samples = {8000, 8000};
+    std::shared_ptr<StubAudioSource> source =
+        std::make_shared<StubAudioSource>();
+    source->channels = 2;
+    source->samples = {8000, 8000};
 
-    mixer.SetStreamSource(0, &source, false);
+    mixer.SetStreamSource(0, source, false);
     mixer.SetStreamGainPan(0, 0.5f, 1.0f);
     mixer.Update();
     REQUIRE(WrittenSamples(output) == std::vector<short>({0, 4000}));

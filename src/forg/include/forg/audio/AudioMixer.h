@@ -27,6 +27,8 @@
 #include "forg/audio/IAudioSource.h"
 #include "forg/base.h"
 
+#include <memory>
+
 namespace forg::audio {
 
 class FORG_API AudioMixer
@@ -37,7 +39,7 @@ class FORG_API AudioMixer
   private:
     struct SStreamSource
     {
-        IAudioSource* source;
+        std::shared_ptr<IAudioSource> source;
         float gain;
         float pan;
         bool looping;
@@ -71,10 +73,11 @@ class FORG_API AudioMixer
                          unsigned int size);
     void SetStreamFormat(unsigned int _stream, const SAudioFormat& format);
 
-    // Attaches a pull source to the stream; the mixer does not take
-    // ownership and the source must outlive the attachment. Passing
-    // nullptr detaches the source and stops the stream.
-    void SetStreamSource(unsigned int _stream, IAudioSource* source,
+    // Attaches a pull source to the stream; shared ownership keeps it alive
+    // while the stream is attached. Passing nullptr detaches the source and
+    // stops the stream.
+    void SetStreamSource(unsigned int _stream,
+                         std::shared_ptr<IAudioSource> source,
                          bool looping);
     // gain in [0, 1], pan in [-1, 1] (-1 = left, 1 = right).
     void SetStreamGainPan(unsigned int _stream, float gain, float pan);

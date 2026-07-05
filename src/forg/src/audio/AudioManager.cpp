@@ -1,6 +1,8 @@
 #include "forg/audio/AudioManager.h"
 #include "forg_pch.h"
 
+#include <utility>
+
 namespace forg::audio {
 
 AudioManager::AudioManager() : m_voices{}, m_initialized(false) {}
@@ -51,7 +53,7 @@ void AudioManager::Update()
         if (m_voices[i] != nullptr && !m_mixer.IsStreamActive(i))
         {
             m_mixer.SetStreamSource(i, nullptr, false);
-            m_voices[i] = nullptr;
+            m_voices[i].reset();
         }
     }
 }
@@ -62,8 +64,8 @@ AudioMixer& AudioManager::Mixer() { return m_mixer; }
 
 const AudioMixer& AudioManager::Mixer() const { return m_mixer; }
 
-int AudioManager::Play(IAudioSource* source, bool looping, float gain,
-                       float pan)
+int AudioManager::Play(std::shared_ptr<IAudioSource> source, bool looping,
+                       float gain, float pan)
 {
     if (!m_initialized || source == nullptr)
         return INVALID_VOICE;
@@ -72,8 +74,8 @@ int AudioManager::Play(IAudioSource* source, bool looping, float gain,
     {
         if (m_voices[i] == nullptr && !m_mixer.IsStreamActive(i))
         {
-            m_voices[i] = source;
-            m_mixer.SetStreamSource(i, source, looping);
+            m_voices[i] = std::move(source);
+            m_mixer.SetStreamSource(i, m_voices[i], looping);
             m_mixer.SetStreamGainPan(i, gain, pan);
             return static_cast<int>(i);
         }
@@ -91,7 +93,7 @@ void AudioManager::Stop(int voice)
     {
         m_mixer.SetStreamSource(static_cast<unsigned int>(voice), nullptr,
                                 false);
-        m_voices[voice] = nullptr;
+        m_voices[voice].reset();
     }
 }
 
@@ -102,7 +104,7 @@ void AudioManager::StopAll()
         if (m_voices[i] != nullptr)
         {
             m_mixer.SetStreamSource(i, nullptr, false);
-            m_voices[i] = nullptr;
+            m_voices[i].reset();
         }
     }
 }

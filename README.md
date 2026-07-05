@@ -274,8 +274,9 @@ flowchart LR
 `AudioManager` allocates mixer streams as *voices*:
 `Play(source, looping, gain, pan)` returns a voice handle (`INVALID_VOICE`
 when all 10 are busy), `Stop`/`StopAll` release voices, and `Update()`
-reclaims voices whose one-shot sources have finished. Sources are never owned
-by the manager or mixer — the caller keeps them alive while playing.
+reclaims voices whose one-shot sources have finished. Sources are passed as
+`std::shared_ptr<IAudioSource>` so the manager and mixer keep them alive while
+their voices are attached.
 
 ### Scene sound nodes
 

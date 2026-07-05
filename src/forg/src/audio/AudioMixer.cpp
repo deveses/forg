@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <utility>
 
 namespace forg::audio {
 
@@ -43,7 +44,7 @@ bool AudioMixer::InitWithOutput(IAudioOutput* output)
         m_streams[i].bytes_left = 0;
         m_streams[i].state = SAudioStream::STATE_OFF;
 
-        m_sources[i].source = nullptr;
+        m_sources[i].source.reset();
         m_sources[i].gain = 1.0f;
         m_sources[i].pan = 0.0f;
         m_sources[i].looping = false;
@@ -94,7 +95,7 @@ void AudioMixer::SetStreamBuffer(unsigned int _stream, char* _buffer,
 {
     if (_stream < m_num_streams)
     {
-        m_sources[_stream].source = nullptr;
+        m_sources[_stream].source.reset();
         m_sources[_stream].gain = 1.0f;
         m_sources[_stream].pan = 0.0f;
         m_sources[_stream].looping = false;
@@ -110,20 +111,22 @@ void AudioMixer::SetStreamBuffer(unsigned int _stream, char* _buffer,
     }
 }
 
-void AudioMixer::SetStreamSource(unsigned int _stream, IAudioSource* source,
+void AudioMixer::SetStreamSource(unsigned int _stream,
+                                 std::shared_ptr<IAudioSource> source,
                                  bool looping)
 {
     if (_stream < m_num_streams)
     {
-        m_sources[_stream].source = source;
+        m_sources[_stream].source = std::move(source);
         m_sources[_stream].looping = looping;
 
         m_streams[_stream].buffer.ptr = 0;
         m_streams[_stream].buffer.size = 0;
         m_streams[_stream].offset = 0;
         m_streams[_stream].bytes_left = 0;
-        m_streams[_stream].state = source != nullptr ? SAudioStream::STATE_ON
-                                                     : SAudioStream::STATE_OFF;
+        m_streams[_stream].state = m_sources[_stream].source != nullptr
+                                       ? SAudioStream::STATE_ON
+                                       : SAudioStream::STATE_OFF;
     }
 }
 
@@ -281,12 +284,13 @@ unsigned int AudioMixer::MixStreamsFloat(float* _out_samples,
 
         if (stream_source.source != nullptr)
         {
-            IAudioSource* source = stream_source.source;
+            std::shared_ptr<IAudioSource> source = stream_source.source;
             int in_chan = source->Channels();
 
             if (in_chan < 1 || in_chan > MAX_NUM_CHANNELS)
             {
                 m_streams[s].state = SAudioStream::STATE_OFF;
+                stream_source.source.reset();
                 continue;
             }
 
@@ -303,6 +307,7 @@ unsigned int AudioMixer::MixStreamsFloat(float* _out_samples,
                 if (!stream_source.looping)
                 {
                     m_streams[s].state = SAudioStream::STATE_OFF;
+                    stream_source.source.reset();
                     break;
                 }
 
@@ -311,6 +316,7 @@ unsigned int AudioMixer::MixStreamsFloat(float* _out_samples,
                 {
                     // Empty source; stop to avoid pulling forever.
                     m_streams[s].state = SAudioStream::STATE_OFF;
+                    stream_source.source.reset();
                     break;
                 }
             }

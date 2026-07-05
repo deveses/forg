@@ -150,6 +150,7 @@ bool SoundNode::Load(io::ISerializer& serializer)
         SetFile(file.c_str());
         break;
     case SoundSourceType::None:
+        RequestStopForSourceChange();
         m_sourceType = SoundSourceType::None;
         m_source.reset();
         break;
@@ -158,38 +159,39 @@ bool SoundNode::Load(io::ISerializer& serializer)
     return true;
 }
 
-void SoundNode::RetireSource()
+void SoundNode::RequestStopForSourceChange()
 {
-    // The mixer may still pull from the old source until the next
-    // SyncAudio stops the voice, so keep it alive instead of deleting it.
-    if (m_source != nullptr)
-        m_retiredSources.push_back(std::move(m_source));
+    if (m_voice >= 0)
+    {
+        m_stopRequested = true;
+        m_playRequested = false;
+    }
 }
 
 void SoundNode::SetGenerator(audio::AudioWaveform waveform, float frequencyHz,
                              float amplitude)
 {
-    std::unique_ptr<audio::AudioGenerator> generator(
-        new audio::AudioGenerator());
+    std::shared_ptr<audio::AudioGenerator> generator =
+        std::make_shared<audio::AudioGenerator>();
     generator->SetWaveform(waveform);
     generator->SetFrequency(frequencyHz);
     generator->SetAmplitude(amplitude);
 
-    RetireSource();
+    RequestStopForSourceChange();
 
     m_sourceType = SoundSourceType::Generator;
     m_waveform = generator->Waveform();
     m_frequency = generator->Frequency();
     m_amplitude = generator->Amplitude();
     m_file = "";
-    m_source = std::move(generator);
+    m_source = generator;
 }
 
 void SoundNode::SetFile(std::string_view path)
 {
     const std::string pathText(path);
 
-    RetireSource();
+    RequestStopForSourceChange();
 
     m_sourceType = SoundSourceType::File;
     m_file = pathText.c_str();
@@ -198,7 +200,10 @@ void SoundNode::SetFile(std::string_view path)
 
 SoundSourceType SoundNode::SourceType() const { return m_sourceType; }
 
-audio::IAudioSource* SoundNode::Source() { return m_source.get(); }
+std::shared_ptr<audio::IAudioSource> SoundNode::Source() const
+{
+    return m_source;
+}
 
 const core::string& SoundNode::File() const { return m_file; }
 
@@ -246,12 +251,13 @@ bool SoundNode::LoadResources(const fs::Filesystem& filesystem)
     if (!filesystem.ResolveReadPath(m_file.c_str(), nativePath))
         return false;
 
-    std::unique_ptr<audio::AudioFileWav> file(new audio::AudioFileWav());
+    std::shared_ptr<audio::AudioFileWav> file =
+        std::make_shared<audio::AudioFileWav>();
     if (!file->Open(nativePath.string()))
         return false;
 
-    RetireSource();
-    m_source = std::move(file);
+    RequestStopForSourceChange();
+    m_source = file;
     return true;
 }
 
@@ -259,18 +265,6 @@ void SoundNode::SyncAudio(audio::AudioManager& manager,
                           const math::Vector3& listenerPosition,
                           const math::Vector3& listenerRight, bool hasListener)
 {
-    if (!m_retiredSources.empty())
-    {
-        // A voice started before the source swap is still playing the old
-        // source; stop it before the retired sources are released.
-        if (m_voice >= 0)
-        {
-            manager.Stop(m_voice);
-            m_voice = -1;
-        }
-        m_retiredSources.clear();
-    }
-
     if (m_autoplay && !m_autoplayConsumed && m_source != nullptr)
     {
         m_autoplayConsumed = true;
@@ -316,7 +310,7 @@ void SoundNode::SyncAudio(audio::AudioManager& manager,
         if (m_voice < 0 && m_source != nullptr)
         {
             m_source->Reset();
-            m_voice = manager.Play(m_source.get(), m_looping, gain, pan);
+            m_voice = manager.Play(m_source, m_looping, gain, pan);
         }
     }
     else if (m_voice >= 0)

@@ -56,6 +56,7 @@ On Windows, CMake also builds `glrenderer`, the GDI side of `swrenderer`, and `w
 - Do not use C++ exceptions in the `forg` library sources.
 - Prefer existing error conventions: `false`, `nullptr`, empty containers, or `FORG_INVALID_CALL`.
 - Prefer `std::string_view` over `const char*` for non-owning string parameters in new or changed C++ APIs.
+- Prefer `std::unique_ptr` for exclusive ownership and `std::shared_ptr` for shared lifetimes; avoid introducing raw pointers in new or changed C++ code unless a legacy ABI or clearly non-owning observer requires one.
 - Match nearby file style before introducing new APIs or modules.
 
 Run the exception-style guard with:

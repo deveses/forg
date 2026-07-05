@@ -7,7 +7,6 @@
 
 #include <memory>
 #include <string_view>
-#include <vector>
 
 #include "audio/AudioGenerator.h"
 #include "core/string.hpp"
@@ -45,10 +44,7 @@ class FORG_API SoundNode : public SceneNode
     float m_frequency = 440.0f;
     float m_amplitude = 0.5f;
     core::string m_file;
-    std::unique_ptr<audio::IAudioSource> m_source;
-    // Sources replaced while a voice may still reference them; kept alive
-    // until SyncAudio stops the voice, then released.
-    std::vector<std::unique_ptr<audio::IAudioSource>> m_retiredSources;
+    std::shared_ptr<audio::IAudioSource> m_source;
 
     bool m_looping = false;
     bool m_autoplay = false;
@@ -65,15 +61,15 @@ class FORG_API SoundNode : public SceneNode
     bool Load(io::ISerializer& serializer) override;
 
     // Creates a waveform generator source immediately. Safe to call while
-    // playing: the old source stays alive until the next SyncAudio, which
-    // stops its voice.
+    // playing: the old source is shared with the mixer until SyncAudio stops
+    // its voice.
     void SetGenerator(audio::AudioWaveform waveform, float frequencyHz,
                       float amplitude);
-    // Records the file path only; the source is created when
-    // LoadResources opens it. Same replacement rules as SetGenerator.
+    // Records the file path only; the source is created when LoadResources
+    // opens it. Same replacement rules as SetGenerator.
     void SetFile(std::string_view path);
     SoundSourceType SourceType() const;
-    audio::IAudioSource* Source();
+    std::shared_ptr<audio::IAudioSource> Source() const;
     const core::string& File() const;
     audio::AudioWaveform Waveform() const;
     float Frequency() const;
@@ -103,7 +99,7 @@ class FORG_API SoundNode : public SceneNode
                    const math::Vector3& listenerRight, bool hasListener);
 
   private:
-    void RetireSource();
+    void RequestStopForSourceChange();
 };
 
 const char* SoundSourceTypeName(SoundSourceType type);

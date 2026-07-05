@@ -26,12 +26,14 @@
 #include "forg/audio/AudioMixer.h"
 #include "forg/base.h"
 
+#include <memory>
+
 namespace forg::audio {
 
 class FORG_API AudioManager
 {
     AudioMixer m_mixer;
-    IAudioSource* m_voices[AudioMixer::MAX_STREAMS];
+    std::shared_ptr<IAudioSource> m_voices[AudioMixer::MAX_STREAMS];
     bool m_initialized;
 
   public:
@@ -59,11 +61,10 @@ class FORG_API AudioManager
 
     // Starts playing a source on a free voice and returns its handle,
     // or INVALID_VOICE when no voice is free (at most
-    // AudioMixer::MAX_STREAMS voices play at once). The source is not
-    // owned; callers must Stop() the voice (or StopAll()) before
-    // destroying it.
-    int Play(IAudioSource* source, bool looping = false, float gain = 1.0f,
-             float pan = 0.0f);
+    // AudioMixer::MAX_STREAMS voices play at once). The manager and mixer
+    // share ownership while the voice is attached.
+    int Play(std::shared_ptr<IAudioSource> source, bool looping = false,
+             float gain = 1.0f, float pan = 0.0f);
     void Stop(int voice);
     void StopAll();
     // True while the voice is attached and its stream still produces

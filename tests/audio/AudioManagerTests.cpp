@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include <cstring>
+#include <memory>
 #include <vector>
 
 #include "forg/audio/AudioGenerator.h"
@@ -49,11 +50,13 @@ TEST_CASE("AudioManager plays sources on separate voices", "[audio][manager]")
     forg::audio::AudioManager manager;
     REQUIRE(manager.InitWithOutput(&output));
 
-    forg::audio::AudioGenerator tone0;
-    forg::audio::AudioGenerator tone1;
+    std::shared_ptr<forg::audio::AudioGenerator> tone0 =
+        std::make_shared<forg::audio::AudioGenerator>();
+    std::shared_ptr<forg::audio::AudioGenerator> tone1 =
+        std::make_shared<forg::audio::AudioGenerator>();
 
-    const int voice0 = manager.Play(&tone0, true);
-    const int voice1 = manager.Play(&tone1, true);
+    const int voice0 = manager.Play(tone0, true);
+    const int voice1 = manager.Play(tone1, true);
 
     REQUIRE(voice0 != forg::audio::AudioManager::INVALID_VOICE);
     REQUIRE(voice1 != forg::audio::AudioManager::INVALID_VOICE);
@@ -74,8 +77,9 @@ TEST_CASE("AudioManager rejects invalid play requests", "[audio][manager]")
     NullAudioOutput output;
     forg::audio::AudioManager manager;
 
-    forg::audio::AudioGenerator tone;
-    REQUIRE(manager.Play(&tone) == forg::audio::AudioManager::INVALID_VOICE);
+    std::shared_ptr<forg::audio::AudioGenerator> tone =
+        std::make_shared<forg::audio::AudioGenerator>();
+    REQUIRE(manager.Play(tone) == forg::audio::AudioManager::INVALID_VOICE);
 
     REQUIRE(manager.InitWithOutput(&output));
     REQUIRE(manager.Play(nullptr) == forg::audio::AudioManager::INVALID_VOICE);
@@ -90,21 +94,22 @@ TEST_CASE("AudioManager runs out of voices at the mixer stream limit",
     forg::audio::AudioManager manager;
     REQUIRE(manager.InitWithOutput(&output));
 
-    forg::audio::AudioGenerator tone;
+    std::shared_ptr<forg::audio::AudioGenerator> tone =
+        std::make_shared<forg::audio::AudioGenerator>();
     std::vector<int> voices;
 
     for (unsigned int i = 0; i < forg::audio::AudioMixer::MAX_STREAMS; i++)
     {
-        const int voice = manager.Play(&tone, true);
+        const int voice = manager.Play(tone, true);
         REQUIRE(voice != forg::audio::AudioManager::INVALID_VOICE);
         voices.push_back(voice);
     }
 
-    REQUIRE(manager.Play(&tone, true) ==
+    REQUIRE(manager.Play(tone, true) ==
             forg::audio::AudioManager::INVALID_VOICE);
 
     manager.Stop(voices[3]);
-    REQUIRE(manager.Play(&tone, true) == voices[3]);
+    REQUIRE(manager.Play(tone, true) == voices[3]);
 }
 
 TEST_CASE("AudioManager reclaims finished voices on Update",
@@ -114,16 +119,41 @@ TEST_CASE("AudioManager reclaims finished voices on Update",
     forg::audio::AudioManager manager;
     REQUIRE(manager.InitWithOutput(&output));
 
-    FiniteAudioSource oneShot;
-    const int voice = manager.Play(&oneShot);
+    std::shared_ptr<FiniteAudioSource> oneShot =
+        std::make_shared<FiniteAudioSource>();
+    const int voice = manager.Play(oneShot);
     REQUIRE(voice != forg::audio::AudioManager::INVALID_VOICE);
     REQUIRE(manager.IsPlaying(voice));
 
     manager.Update(); // drains the source, stream turns off, voice reclaimed
     REQUIRE_FALSE(manager.IsPlaying(voice));
 
-    forg::audio::AudioGenerator tone;
-    REQUIRE(manager.Play(&tone, true) == voice);
+    std::shared_ptr<forg::audio::AudioGenerator> tone =
+        std::make_shared<forg::audio::AudioGenerator>();
+    REQUIRE(manager.Play(tone, true) == voice);
+}
+
+TEST_CASE("AudioManager keeps a playing shared source alive",
+          "[audio][manager]")
+{
+    NullAudioOutput output;
+    output.canWrite = false;
+
+    forg::audio::AudioManager manager;
+    REQUIRE(manager.InitWithOutput(&output));
+
+    std::shared_ptr<FiniteAudioSource> oneShot =
+        std::make_shared<FiniteAudioSource>();
+    std::weak_ptr<FiniteAudioSource> weak = oneShot;
+
+    const int voice = manager.Play(oneShot);
+    REQUIRE(voice != forg::audio::AudioManager::INVALID_VOICE);
+
+    oneShot.reset();
+    REQUIRE_FALSE(weak.expired());
+
+    manager.Stop(voice);
+    REQUIRE(weak.expired());
 }
 
 TEST_CASE("AudioManager releases an output offered while already initialized",
