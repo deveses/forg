@@ -253,8 +253,7 @@ Values RNN::Forward(const Values& input, const Values& initial_hidden) const
                     return {};
             }
 
-            for (std::size_t previous = 0; previous < m_hidden_size;
-                 ++previous)
+            for (std::size_t previous = 0; previous < m_hidden_size; ++previous)
             {
                 activation =
                     activation +
@@ -320,15 +319,13 @@ std::size_t LSTM::InputWeightIndex(std::size_t gate, std::size_t hidden,
     return (gate * m_hidden_size + hidden) * m_input_size + input;
 }
 
-std::size_t LSTM::HiddenWeightIndex(
-    std::size_t gate, std::size_t hidden,
-    std::size_t previous_hidden) const noexcept
+std::size_t LSTM::HiddenWeightIndex(std::size_t gate, std::size_t hidden,
+                                    std::size_t previous_hidden) const noexcept
 {
     return (gate * m_hidden_size + hidden) * m_hidden_size + previous_hidden;
 }
 
-std::size_t LSTM::BiasIndex(std::size_t gate,
-                            std::size_t hidden) const noexcept
+std::size_t LSTM::BiasIndex(std::size_t gate, std::size_t hidden) const noexcept
 {
     return gate * m_hidden_size + hidden;
 }
@@ -394,16 +391,15 @@ Values LSTM::Forward(const Values& input, const Values& initial_hidden,
                      ++previous)
                 {
                     activation =
-                        activation +
-                        m_hidden_weights[HiddenWeightIndex(gate, hidden,
-                                                           previous)] *
-                            previous_hidden[previous];
+                        activation + m_hidden_weights[HiddenWeightIndex(
+                                         gate, hidden, previous)] *
+                                         previous_hidden[previous];
                     if (!activation)
                         return {};
                 }
 
-                ValuePtr value = gate == 2 ? Tanh(activation)
-                                           : Sigmoid(activation);
+                ValuePtr value =
+                    gate == 2 ? Tanh(activation) : Sigmoid(activation);
                 if (!value)
                     return {};
 
@@ -474,15 +470,13 @@ std::size_t GRU::InputWeightIndex(std::size_t gate, std::size_t hidden,
     return (gate * m_hidden_size + hidden) * m_input_size + input;
 }
 
-std::size_t GRU::HiddenWeightIndex(
-    std::size_t gate, std::size_t hidden,
-    std::size_t previous_hidden) const noexcept
+std::size_t GRU::HiddenWeightIndex(std::size_t gate, std::size_t hidden,
+                                   std::size_t previous_hidden) const noexcept
 {
     return (gate * m_hidden_size + hidden) * m_hidden_size + previous_hidden;
 }
 
-std::size_t GRU::BiasIndex(std::size_t gate,
-                           std::size_t hidden) const noexcept
+std::size_t GRU::BiasIndex(std::size_t gate, std::size_t hidden) const noexcept
 {
     return gate * m_hidden_size + hidden;
 }
@@ -540,10 +534,9 @@ Values GRU::Forward(const Values& input, const Values& initial_hidden) const
                      ++previous)
                 {
                     activation =
-                        activation +
-                        m_hidden_weights[HiddenWeightIndex(gate, hidden,
-                                                           previous)] *
-                            previous_hidden[previous];
+                        activation + m_hidden_weights[HiddenWeightIndex(
+                                         gate, hidden, previous)] *
+                                         previous_hidden[previous];
                     if (!activation)
                         return {};
                 }
@@ -561,8 +554,7 @@ Values GRU::Forward(const Values& input, const Values& initial_hidden) const
             {
                 candidate_activation =
                     candidate_activation +
-                    m_input_weights[InputWeightIndex(2, hidden,
-                                                     input_index)] *
+                    m_input_weights[InputWeightIndex(2, hidden, input_index)] *
                         input[timestep * m_input_size + input_index];
                 if (!candidate_activation)
                     return {};
@@ -584,9 +576,8 @@ Values GRU::Forward(const Values& input, const Values& initial_hidden) const
             if (!candidate)
                 return {};
 
-            ValuePtr hidden_value =
-                (MakeValue(1.0) - gates[1]) * candidate +
-                gates[1] * previous_hidden[hidden];
+            ValuePtr hidden_value = (MakeValue(1.0) - gates[1]) * candidate +
+                                    gates[1] * previous_hidden[hidden];
             if (!hidden_value)
                 return {};
 

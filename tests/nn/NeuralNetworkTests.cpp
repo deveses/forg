@@ -141,8 +141,7 @@ TEST_CASE("Value exp log sigmoid and tanh compute gradients", "[nn][value]")
     Backward(tanh);
 
     REQUIRE(tanh->GetData() == Approx(std::tanh(0.5)));
-    REQUIRE(t->GetGrad() ==
-            Approx(1.0 - std::tanh(0.5) * std::tanh(0.5)));
+    REQUIRE(t->GetGrad() == Approx(1.0 - std::tanh(0.5) * std::tanh(0.5)));
 
     REQUIRE_FALSE(Exp(nullptr));
     REQUIRE_FALSE(Log(nullptr));
@@ -224,40 +223,35 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
     forg::nn::RNN rnn(2, 3, 4, rng);
     REQUIRE(rnn.Forward({forg::nn::MakeValue(1.0)}).empty());
     REQUIRE(rnn.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
-    REQUIRE(rnn.Forward(std::vector<forg::nn::ValuePtr>{
-                            forg::nn::MakeValue(1.0),
-                            forg::nn::MakeValue(2.0),
-                            forg::nn::MakeValue(3.0),
-                            forg::nn::MakeValue(4.0),
-                            forg::nn::MakeValue(5.0),
-                            forg::nn::MakeValue(6.0),
-                            forg::nn::MakeValue(7.0),
-                            forg::nn::MakeValue(8.0),
-                        },
-                        {forg::nn::MakeValue(0.0)})
+    REQUIRE(rnn.Forward(
+                   std::vector<forg::nn::ValuePtr>{
+                       forg::nn::MakeValue(1.0),
+                       forg::nn::MakeValue(2.0),
+                       forg::nn::MakeValue(3.0),
+                       forg::nn::MakeValue(4.0),
+                       forg::nn::MakeValue(5.0),
+                       forg::nn::MakeValue(6.0),
+                       forg::nn::MakeValue(7.0),
+                       forg::nn::MakeValue(8.0),
+                   },
+                   {forg::nn::MakeValue(0.0)})
                 .empty());
 
     forg::nn::LSTM lstm(2, 3, 4, rng);
     REQUIRE(lstm.Forward({forg::nn::MakeValue(1.0)}).empty());
     REQUIRE(lstm.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
     const std::vector<forg::nn::ValuePtr> sequence = {
-        forg::nn::MakeValue(1.0),
-        forg::nn::MakeValue(2.0),
-        forg::nn::MakeValue(3.0),
-        forg::nn::MakeValue(4.0),
-        forg::nn::MakeValue(5.0),
-        forg::nn::MakeValue(6.0),
-        forg::nn::MakeValue(7.0),
-        forg::nn::MakeValue(8.0),
+        forg::nn::MakeValue(1.0), forg::nn::MakeValue(2.0),
+        forg::nn::MakeValue(3.0), forg::nn::MakeValue(4.0),
+        forg::nn::MakeValue(5.0), forg::nn::MakeValue(6.0),
+        forg::nn::MakeValue(7.0), forg::nn::MakeValue(8.0),
     };
     REQUIRE(lstm.Forward(sequence, {forg::nn::MakeValue(0.0)},
-                         {forg::nn::MakeValue(0.0),
-                          forg::nn::MakeValue(0.0),
+                         {forg::nn::MakeValue(0.0), forg::nn::MakeValue(0.0),
                           forg::nn::MakeValue(0.0)})
                 .empty());
     REQUIRE(lstm.Forward(sequence,
-                         {forg::nn::MakeValue(0.0),
-                          forg::nn::MakeValue(0.0),
+                         {forg::nn::MakeValue(0.0), forg::nn::MakeValue(0.0),
                           forg::nn::MakeValue(0.0)},
                          {forg::nn::MakeValue(0.0)})
                 .empty());
@@ -395,8 +389,8 @@ TEST_CASE("RNN composes with Sequential using flattened full sequence",
     const Values output = model.Forward({MakeValue(0.5), MakeValue(-0.5)});
 
     REQUIRE(output.size() == 1);
-    REQUIRE(model.Parameters().size() == rnn->Parameters().size() +
-                                           linear->Parameters().size());
+    REQUIRE(model.Parameters().size() ==
+            rnn->Parameters().size() + linear->Parameters().size());
 }
 
 TEST_CASE("LSTM returns full hidden sequence and exposes parameters",
@@ -470,8 +464,7 @@ TEST_CASE("LSTM gradients flow through sequence parameters and states",
     const Values input = {MakeValue(0.5), MakeValue(-0.25)};
     const ValuePtr initial_hidden = MakeValue(0.2);
     const ValuePtr initial_cell = MakeValue(-0.1);
-    const Values output =
-        lstm.Forward(input, {initial_hidden}, {initial_cell});
+    const Values output = lstm.Forward(input, {initial_hidden}, {initial_cell});
     REQUIRE(output.size() == 2);
 
     Backward(output[1]);
@@ -498,8 +491,8 @@ TEST_CASE("LSTM composes with Sequential using flattened full sequence",
     const Values output = model.Forward({MakeValue(0.5), MakeValue(-0.5)});
 
     REQUIRE(output.size() == 1);
-    REQUIRE(model.Parameters().size() == lstm->Parameters().size() +
-                                           linear->Parameters().size());
+    REQUIRE(model.Parameters().size() ==
+            lstm->Parameters().size() + linear->Parameters().size());
 }
 
 TEST_CASE("GRU returns full hidden sequence and exposes parameters",
@@ -596,8 +589,8 @@ TEST_CASE("GRU composes with Sequential using flattened full sequence",
     const Values output = model.Forward({MakeValue(0.5), MakeValue(-0.5)});
 
     REQUIRE(output.size() == 1);
-    REQUIRE(model.Parameters().size() == gru->Parameters().size() +
-                                           linear->Parameters().size());
+    REQUIRE(model.Parameters().size() ==
+            gru->Parameters().size() + linear->Parameters().size());
 }
 
 TEST_CASE("Embedding maps token indices to trainable rows", "[nn][module]")
