@@ -87,8 +87,8 @@ TEST_CASE("AudioWaveform names round-trip", "[audio][generator]")
 
     REQUIRE(std::string(forg::audio::AudioWaveformName(AudioWaveform::Sine)) ==
             "sine");
-    REQUIRE(std::string(forg::audio::AudioWaveformName(AudioWaveform::Square)) ==
-            "square");
+    REQUIRE(std::string(forg::audio::AudioWaveformName(
+                AudioWaveform::Square)) == "square");
     REQUIRE(forg::audio::AudioWaveformFromName("square") ==
             AudioWaveform::Square);
     REQUIRE(forg::audio::AudioWaveformFromName("sine") == AudioWaveform::Sine);
