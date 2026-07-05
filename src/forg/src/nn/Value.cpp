@@ -250,6 +250,25 @@ ValuePtr Sigmoid(const ValuePtr& value)
     return out;
 }
 
+ValuePtr Tanh(const ValuePtr& value)
+{
+    if (!value)
+        return nullptr;
+
+    const double tanh = std::tanh(value->m_data);
+    ValuePtr out(new Value(tanh, Values{value}));
+    std::weak_ptr<Value> weak_out = out;
+    out->m_backward = [value, weak_out]()
+    {
+        if (auto locked = weak_out.lock())
+        {
+            value->m_grad +=
+                (1.0 - locked->m_data * locked->m_data) * locked->m_grad;
+        }
+    };
+    return out;
+}
+
 void Backward(const ValuePtr& root)
 {
     BackwardScratch scratch;

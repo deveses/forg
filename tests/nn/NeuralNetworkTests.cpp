@@ -108,7 +108,7 @@ TEST_CASE("Value data can be updated for simple gradient descent",
     REQUIRE(weight->GetGrad() == Approx(0.0));
 }
 
-TEST_CASE("Value exp log and sigmoid compute gradients", "[nn][value]")
+TEST_CASE("Value exp log sigmoid and tanh compute gradients", "[nn][value]")
 {
     using namespace forg::nn;
 
@@ -126,9 +126,18 @@ TEST_CASE("Value exp log and sigmoid compute gradients", "[nn][value]")
     REQUIRE(sigmoid->GetData() == Approx(0.5));
     REQUIRE(z->GetGrad() == Approx(0.25));
 
+    const ValuePtr t = MakeValue(0.5);
+    const ValuePtr tanh = Tanh(t);
+    Backward(tanh);
+
+    REQUIRE(tanh->GetData() == Approx(std::tanh(0.5)));
+    REQUIRE(t->GetGrad() ==
+            Approx(1.0 - std::tanh(0.5) * std::tanh(0.5)));
+
     REQUIRE_FALSE(Exp(nullptr));
     REQUIRE_FALSE(Log(nullptr));
     REQUIRE_FALSE(Sigmoid(nullptr));
+    REQUIRE_FALSE(Tanh(nullptr));
 }
 
 TEST_CASE("Module zeroes parameters and MLP builds deterministic shapes",
@@ -178,6 +187,9 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
     REQUIRE(forg::nn::Layer(2, 0, rng).Parameters().empty());
     REQUIRE(forg::nn::MLP(2, {}, rng).Parameters().empty());
     REQUIRE(forg::nn::MLP(2, {3, 0}, rng).Parameters().empty());
+    REQUIRE(forg::nn::RNN(0, 2, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::RNN(2, 0, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::RNN(2, 3, 0, rng).Parameters().empty());
 
     forg::nn::Layer layer(2, 1, rng);
     REQUIRE(layer.Forward({forg::nn::MakeValue(1.0)}).empty());
@@ -192,6 +204,22 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
     REQUIRE(embedding.Forward({forg::nn::MakeValue(-1.0)}).empty());
     REQUIRE(embedding.Forward({forg::nn::MakeValue(0.5)}).empty());
     REQUIRE(embedding.Forward({nullptr}).empty());
+
+    forg::nn::RNN rnn(2, 3, 4, rng);
+    REQUIRE(rnn.Forward({forg::nn::MakeValue(1.0)}).empty());
+    REQUIRE(rnn.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
+    REQUIRE(rnn.Forward(std::vector<forg::nn::ValuePtr>{
+                            forg::nn::MakeValue(1.0),
+                            forg::nn::MakeValue(2.0),
+                            forg::nn::MakeValue(3.0),
+                            forg::nn::MakeValue(4.0),
+                            forg::nn::MakeValue(5.0),
+                            forg::nn::MakeValue(6.0),
+                            forg::nn::MakeValue(7.0),
+                            forg::nn::MakeValue(8.0),
+                        },
+                        {forg::nn::MakeValue(0.0)})
+                .empty());
 }
 
 TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
@@ -215,6 +243,114 @@ TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
 
     REQUIRE(prediction.size() == 1);
     REQUIRE(model.Parameters().size() == 21);
+}
+
+TEST_CASE("RNN returns full hidden sequence and exposes parameters",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(45);
+    RNN rnn(2, 3, 4, rng);
+
+    REQUIRE(rnn.InputSize() == 2);
+    REQUIRE(rnn.HiddenSize() == 3);
+    REQUIRE(rnn.SequenceLength() == 4);
+    REQUIRE(rnn.InputWeights().size() == 6);
+    REQUIRE(rnn.HiddenWeights().size() == 9);
+    REQUIRE(rnn.Biases().size() == 3);
+    REQUIRE(rnn.Parameters().size() == 18);
+
+    const Values input = {
+        MakeValue(1.0), MakeValue(2.0), MakeValue(3.0), MakeValue(4.0),
+        MakeValue(5.0), MakeValue(6.0), MakeValue(7.0), MakeValue(8.0),
+    };
+    const Values output = rnn.Forward(input);
+
+    REQUIRE(output.size() == 12);
+}
+
+TEST_CASE("RNN applies recurrent tanh dynamics across timesteps",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(46);
+    RNN rnn(1, 1, 2, rng);
+    rnn.InputWeights()[0]->SetData(1.0);
+    rnn.HiddenWeights()[0]->SetData(1.0);
+    rnn.Biases()[0]->SetData(0.0);
+
+    const Values output = rnn.Forward({MakeValue(1.0), MakeValue(2.0)});
+    const double first = std::tanh(1.0);
+    const double second = std::tanh(2.0 + first);
+
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0]->GetData() == Approx(first));
+    REQUIRE(output[1]->GetData() == Approx(second));
+}
+
+TEST_CASE("RNN gradients flow through inputs recurrent weights and biases",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(47);
+    RNN rnn(1, 1, 2, rng);
+    rnn.InputWeights()[0]->SetData(0.8);
+    rnn.HiddenWeights()[0]->SetData(0.6);
+    rnn.Biases()[0]->SetData(0.1);
+
+    const Values input = {MakeValue(0.5), MakeValue(-0.25)};
+    const Values output = rnn.Forward(input);
+    REQUIRE(output.size() == 2);
+
+    Backward(output[1]);
+
+    REQUIRE(input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(rnn.InputWeights()[0]->GetGrad() != Approx(0.0));
+    REQUIRE(rnn.HiddenWeights()[0]->GetGrad() != Approx(0.0));
+    REQUIRE(rnn.Biases()[0]->GetGrad() != Approx(0.0));
+}
+
+TEST_CASE("RNN accepts explicit initial hidden state with gradients",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(48);
+    RNN rnn(1, 1, 1, rng);
+    rnn.InputWeights()[0]->SetData(0.0);
+    rnn.HiddenWeights()[0]->SetData(1.0);
+    rnn.Biases()[0]->SetData(0.0);
+
+    const ValuePtr initial = MakeValue(0.25);
+    const Values output = rnn.Forward({MakeValue(0.0)}, {initial});
+
+    REQUIRE(output.size() == 1);
+    REQUIRE(output[0]->GetData() == Approx(std::tanh(0.25)));
+
+    Backward(output[0]);
+    REQUIRE(initial->GetGrad() ==
+            Approx(1.0 - std::tanh(0.25) * std::tanh(0.25)));
+}
+
+TEST_CASE("RNN composes with Sequential using flattened full sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(49);
+    const auto rnn = std::make_shared<RNN>(1, 2, 2, rng);
+    const auto linear = std::make_shared<Linear>(4, 1, rng);
+    Sequential model({rnn, linear});
+
+    const Values output = model.Forward({MakeValue(0.5), MakeValue(-0.5)});
+
+    REQUIRE(output.size() == 1);
+    REQUIRE(model.Parameters().size() == rnn->Parameters().size() +
+                                           linear->Parameters().size());
 }
 
 TEST_CASE("Embedding maps token indices to trainable rows", "[nn][module]")
