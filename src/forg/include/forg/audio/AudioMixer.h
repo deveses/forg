@@ -23,13 +23,15 @@
 #pragma once
 #endif
 
-#include "forg/audio/AudioDefs.h"
-#include "forg/audio/IAudioSource.h"
-#include "forg/base.h"
+#include "forg/api.h"
 
 #include <memory>
 
 namespace forg::audio {
+
+class IAudioOutput;
+class IAudioSource;
+struct SAudioFormat;
 
 class FORG_API AudioMixer
 {
@@ -37,19 +39,8 @@ class FORG_API AudioMixer
     static constexpr unsigned int MAX_STREAMS = 10;
 
   private:
-    struct SStreamSource
-    {
-        std::shared_ptr<IAudioSource> source;
-        float gain;
-        float pan;
-        bool looping;
-    };
-
-    IAudioOutput* m_output;
-    SAudioStream m_streams[MAX_STREAMS];
-    SStreamSource m_sources[MAX_STREAMS];
-    unsigned int m_num_streams;
-    SAudioFormat m_format;
+    struct Impl;
+    std::unique_ptr<Impl> m_impl;
 
   public:
     AudioMixer();
@@ -85,10 +76,6 @@ class FORG_API AudioMixer
     // finished non-looping source counts as inactive so the slot can be
     // reused.
     bool IsStreamActive(unsigned int _stream) const;
-
-  private:
-    unsigned int MixStreams(char* _out_buffer, unsigned int _out_size);
-    unsigned int MixStreamsFloat(float* _out_samples, unsigned int _count);
 };
 
 } // namespace forg::audio

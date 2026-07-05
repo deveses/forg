@@ -4,8 +4,11 @@
 #include <memory>
 #include <vector>
 
+#include "forg/audio/AudioDefs.h"
 #include "forg/audio/AudioGenerator.h"
 #include "forg/audio/AudioManager.h"
+#include "forg/audio/AudioMixer.h"
+#include "forg/audio/IAudioSource.h"
 
 namespace {
 

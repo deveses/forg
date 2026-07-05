@@ -23,18 +23,20 @@
 #pragma once
 #endif
 
-#include "forg/audio/AudioMixer.h"
-#include "forg/base.h"
+#include "forg/api.h"
 
 #include <memory>
 
 namespace forg::audio {
 
+class AudioMixer;
+class IAudioOutput;
+class IAudioSource;
+
 class FORG_API AudioManager
 {
-    AudioMixer m_mixer;
-    std::shared_ptr<IAudioSource> m_voices[AudioMixer::MAX_STREAMS];
-    bool m_initialized;
+    struct Impl;
+    std::unique_ptr<Impl> m_impl;
 
   public:
     static constexpr int INVALID_VOICE = -1;

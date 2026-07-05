@@ -1,5 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
+#include "forg/audio/AudioDefs.h"
+#include "forg/audio/IAudioSource.h"
 #include "forg/audio/AudioMixer.h"
 
 #include <cstring>

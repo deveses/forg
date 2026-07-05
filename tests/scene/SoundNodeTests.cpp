@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "forg/audio/AudioDefs.h"
 #include "forg/audio/AudioManager.h"
 #include "forg/audio/WaveFile.h"
 #include "forg/fs/Filesystem.h"
