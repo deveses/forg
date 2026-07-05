@@ -174,4 +174,43 @@ class LSTM : public Module
     Values m_biases;
 };
 
+/// Gated recurrent unit layer over flat time-major input.
+///
+/// Parameters are stored in gate-major order: reset gate, update gate, then
+/// candidate hidden state. Forward(input) returns hidden activations for every
+/// timestep flattened in time-major order.
+class GRU : public Module
+{
+  public:
+    GRU(std::size_t input_size, std::size_t hidden_size,
+        std::size_t sequence_length);
+    GRU(std::size_t input_size, std::size_t hidden_size,
+        std::size_t sequence_length, std::mt19937& rng);
+
+    Values Forward(const Values& input) const override;
+    Values Forward(const Values& input, const Values& initial_hidden) const;
+    Values Parameters() const override;
+
+    std::size_t InputSize() const noexcept { return m_input_size; }
+    std::size_t HiddenSize() const noexcept { return m_hidden_size; }
+    std::size_t SequenceLength() const noexcept { return m_sequence_length; }
+    const Values& InputWeights() const noexcept { return m_input_weights; }
+    const Values& HiddenWeights() const noexcept { return m_hidden_weights; }
+    const Values& Biases() const noexcept { return m_biases; }
+
+  private:
+    std::size_t InputWeightIndex(std::size_t gate, std::size_t hidden,
+                                 std::size_t input) const noexcept;
+    std::size_t HiddenWeightIndex(std::size_t gate, std::size_t hidden,
+                                  std::size_t previous_hidden) const noexcept;
+    std::size_t BiasIndex(std::size_t gate, std::size_t hidden) const noexcept;
+
+    std::size_t m_input_size = 0;
+    std::size_t m_hidden_size = 0;
+    std::size_t m_sequence_length = 0;
+    Values m_input_weights;
+    Values m_hidden_weights;
+    Values m_biases;
+};
+
 } // namespace forg::nn

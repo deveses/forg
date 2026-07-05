@@ -203,6 +203,9 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
     REQUIRE(forg::nn::LSTM(0, 2, 3, rng).Parameters().empty());
     REQUIRE(forg::nn::LSTM(2, 0, 3, rng).Parameters().empty());
     REQUIRE(forg::nn::LSTM(2, 3, 0, rng).Parameters().empty());
+    REQUIRE(forg::nn::GRU(0, 2, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::GRU(2, 0, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::GRU(2, 3, 0, rng).Parameters().empty());
 
     forg::nn::Layer layer(2, 1, rng);
     REQUIRE(layer.Forward({forg::nn::MakeValue(1.0)}).empty());
@@ -258,6 +261,11 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
                           forg::nn::MakeValue(0.0)},
                          {forg::nn::MakeValue(0.0)})
                 .empty());
+
+    forg::nn::GRU gru(2, 3, 4, rng);
+    REQUIRE(gru.Forward({forg::nn::MakeValue(1.0)}).empty());
+    REQUIRE(gru.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
+    REQUIRE(gru.Forward(sequence, {forg::nn::MakeValue(0.0)}).empty());
 }
 
 TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
@@ -491,6 +499,104 @@ TEST_CASE("LSTM composes with Sequential using flattened full sequence",
 
     REQUIRE(output.size() == 1);
     REQUIRE(model.Parameters().size() == lstm->Parameters().size() +
+                                           linear->Parameters().size());
+}
+
+TEST_CASE("GRU returns full hidden sequence and exposes parameters",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(54);
+    GRU gru(2, 3, 4, rng);
+
+    REQUIRE(gru.InputSize() == 2);
+    REQUIRE(gru.HiddenSize() == 3);
+    REQUIRE(gru.SequenceLength() == 4);
+    REQUIRE(gru.InputWeights().size() == 18);
+    REQUIRE(gru.HiddenWeights().size() == 27);
+    REQUIRE(gru.Biases().size() == 9);
+    REQUIRE(gru.Parameters().size() == 54);
+
+    const Values input = {
+        MakeValue(1.0), MakeValue(2.0), MakeValue(3.0), MakeValue(4.0),
+        MakeValue(5.0), MakeValue(6.0), MakeValue(7.0), MakeValue(8.0),
+    };
+    const Values output = gru.Forward(input);
+
+    REQUIRE(output.size() == 12);
+}
+
+TEST_CASE("GRU applies gated hidden dynamics across timesteps", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(55);
+    GRU gru(1, 1, 2, rng);
+    for (const ValuePtr& parameter : gru.Parameters())
+    {
+        parameter->SetData(0.0);
+    }
+    gru.InputWeights()[2]->SetData(1.0);
+
+    const Values output = gru.Forward({MakeValue(1.0), MakeValue(2.0)});
+    const double first_hidden = 0.5 * std::tanh(1.0);
+    const double second_hidden = 0.5 * std::tanh(2.0) + 0.5 * first_hidden;
+
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0]->GetData() == Approx(first_hidden));
+    REQUIRE(output[1]->GetData() == Approx(second_hidden));
+}
+
+TEST_CASE("GRU gradients flow through sequence parameters and initial state",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(56);
+    GRU gru(1, 1, 2, rng);
+    for (std::size_t index = 0; index < gru.InputWeights().size(); ++index)
+    {
+        gru.InputWeights()[index]->SetData(0.2 + 0.1 * index);
+    }
+    for (std::size_t index = 0; index < gru.HiddenWeights().size(); ++index)
+    {
+        gru.HiddenWeights()[index]->SetData(0.1 + 0.05 * index);
+    }
+    for (const ValuePtr& bias : gru.Biases())
+    {
+        bias->SetData(0.1);
+    }
+
+    const Values input = {MakeValue(0.5), MakeValue(-0.25)};
+    const ValuePtr initial_hidden = MakeValue(0.2);
+    const Values output = gru.Forward(input, {initial_hidden});
+    REQUIRE(output.size() == 2);
+
+    Backward(output[1]);
+
+    REQUIRE(input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(initial_hidden->GetGrad() != Approx(0.0));
+    REQUIRE(HasAnyGradient(gru.InputWeights()));
+    REQUIRE(HasAnyGradient(gru.HiddenWeights()));
+    REQUIRE(HasAnyGradient(gru.Biases()));
+}
+
+TEST_CASE("GRU composes with Sequential using flattened full sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(57);
+    const auto gru = std::make_shared<GRU>(1, 2, 2, rng);
+    const auto linear = std::make_shared<Linear>(4, 1, rng);
+    Sequential model({gru, linear});
+
+    const Values output = model.Forward({MakeValue(0.5), MakeValue(-0.5)});
+
+    REQUIRE(output.size() == 1);
+    REQUIRE(model.Parameters().size() == gru->Parameters().size() +
                                            linear->Parameters().size());
 }
 

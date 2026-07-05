@@ -440,4 +440,173 @@ Values LSTM::Parameters() const
     return parameters;
 }
 
+GRU::GRU(std::size_t input_size, std::size_t hidden_size,
+         std::size_t sequence_length)
+    : GRU(input_size, hidden_size, sequence_length, DefaultRng())
+{
+}
+
+GRU::GRU(std::size_t input_size, std::size_t hidden_size,
+         std::size_t sequence_length, std::mt19937& rng)
+    : m_input_size(input_size), m_hidden_size(hidden_size),
+      m_sequence_length(sequence_length)
+{
+    if (m_input_size == 0 || m_hidden_size == 0 || m_sequence_length == 0)
+    {
+        m_input_size = 0;
+        m_hidden_size = 0;
+        m_sequence_length = 0;
+        return;
+    }
+
+    m_input_weights = MakeWeights(3 * m_hidden_size * m_input_size, rng);
+    m_hidden_weights = MakeWeights(3 * m_hidden_size * m_hidden_size, rng);
+    m_biases.reserve(3 * m_hidden_size);
+    for (std::size_t index = 0; index < 3 * m_hidden_size; ++index)
+    {
+        m_biases.push_back(MakeValue(0.0));
+    }
+}
+
+std::size_t GRU::InputWeightIndex(std::size_t gate, std::size_t hidden,
+                                  std::size_t input) const noexcept
+{
+    return (gate * m_hidden_size + hidden) * m_input_size + input;
+}
+
+std::size_t GRU::HiddenWeightIndex(
+    std::size_t gate, std::size_t hidden,
+    std::size_t previous_hidden) const noexcept
+{
+    return (gate * m_hidden_size + hidden) * m_hidden_size + previous_hidden;
+}
+
+std::size_t GRU::BiasIndex(std::size_t gate,
+                           std::size_t hidden) const noexcept
+{
+    return gate * m_hidden_size + hidden;
+}
+
+Values GRU::Forward(const Values& input) const
+{
+    Values initial_hidden;
+    initial_hidden.reserve(m_hidden_size);
+    for (std::size_t index = 0; index < m_hidden_size; ++index)
+    {
+        initial_hidden.push_back(MakeValue(0.0));
+    }
+    return Forward(input, initial_hidden);
+}
+
+Values GRU::Forward(const Values& input, const Values& initial_hidden) const
+{
+    if (m_input_weights.empty() || m_hidden_weights.empty() ||
+        m_biases.empty() ||
+        !IsInputValid(input, m_sequence_length * m_input_size) ||
+        !IsInputValid(initial_hidden, m_hidden_size))
+    {
+        return {};
+    }
+
+    Values previous_hidden = initial_hidden;
+    Values output;
+    output.reserve(m_sequence_length * m_hidden_size);
+
+    for (std::size_t timestep = 0; timestep < m_sequence_length; ++timestep)
+    {
+        Values current_hidden;
+        current_hidden.reserve(m_hidden_size);
+
+        for (std::size_t hidden = 0; hidden < m_hidden_size; ++hidden)
+        {
+            Values gates;
+            gates.reserve(2);
+            for (std::size_t gate = 0; gate < 2; ++gate)
+            {
+                ValuePtr activation = m_biases[BiasIndex(gate, hidden)];
+                for (std::size_t input_index = 0; input_index < m_input_size;
+                     ++input_index)
+                {
+                    activation =
+                        activation +
+                        m_input_weights[InputWeightIndex(gate, hidden,
+                                                         input_index)] *
+                            input[timestep * m_input_size + input_index];
+                    if (!activation)
+                        return {};
+                }
+
+                for (std::size_t previous = 0; previous < m_hidden_size;
+                     ++previous)
+                {
+                    activation =
+                        activation +
+                        m_hidden_weights[HiddenWeightIndex(gate, hidden,
+                                                           previous)] *
+                            previous_hidden[previous];
+                    if (!activation)
+                        return {};
+                }
+
+                ValuePtr value = Sigmoid(activation);
+                if (!value)
+                    return {};
+
+                gates.push_back(value);
+            }
+
+            ValuePtr candidate_activation = m_biases[BiasIndex(2, hidden)];
+            for (std::size_t input_index = 0; input_index < m_input_size;
+                 ++input_index)
+            {
+                candidate_activation =
+                    candidate_activation +
+                    m_input_weights[InputWeightIndex(2, hidden,
+                                                     input_index)] *
+                        input[timestep * m_input_size + input_index];
+                if (!candidate_activation)
+                    return {};
+            }
+
+            ValuePtr hidden_sum = MakeValue(0.0);
+            for (std::size_t previous = 0; previous < m_hidden_size; ++previous)
+            {
+                hidden_sum =
+                    hidden_sum +
+                    m_hidden_weights[HiddenWeightIndex(2, hidden, previous)] *
+                        previous_hidden[previous];
+                if (!hidden_sum)
+                    return {};
+            }
+
+            candidate_activation = candidate_activation + gates[0] * hidden_sum;
+            ValuePtr candidate = Tanh(candidate_activation);
+            if (!candidate)
+                return {};
+
+            ValuePtr hidden_value =
+                (MakeValue(1.0) - gates[1]) * candidate +
+                gates[1] * previous_hidden[hidden];
+            if (!hidden_value)
+                return {};
+
+            current_hidden.push_back(hidden_value);
+            output.push_back(hidden_value);
+        }
+
+        previous_hidden = std::move(current_hidden);
+    }
+
+    return output;
+}
+
+Values GRU::Parameters() const
+{
+    Values parameters = m_input_weights;
+    parameters.insert(parameters.end(), m_hidden_weights.begin(),
+                      m_hidden_weights.end());
+    parameters.insert(parameters.end(), m_biases.begin(), m_biases.end());
+    return parameters;
+}
+
 } // namespace forg::nn
