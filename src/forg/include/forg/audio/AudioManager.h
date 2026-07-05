@@ -45,9 +45,12 @@ class FORG_API AudioManager
 
     bool Init();
     // Takes ownership of output and releases it through
-    // IAudioOutput::Release().
+    // IAudioOutput::Release(), even when the manager is already
+    // initialized and the output is not adopted.
     bool InitWithOutput(IAudioOutput* output);
     void Shutdown();
+    // Pumps the mixer and reclaims voices whose sources have finished,
+    // making their slots available to Play() again.
     void Update();
 
     bool IsInitialized() const;
@@ -55,12 +58,16 @@ class FORG_API AudioManager
     const AudioMixer& Mixer() const;
 
     // Starts playing a source on a free voice and returns its handle,
-    // or INVALID_VOICE when no voice is free. The source is not owned;
-    // callers must Stop() the voice (or StopAll()) before destroying it.
+    // or INVALID_VOICE when no voice is free (at most
+    // AudioMixer::MAX_STREAMS voices play at once). The source is not
+    // owned; callers must Stop() the voice (or StopAll()) before
+    // destroying it.
     int Play(IAudioSource* source, bool looping = false, float gain = 1.0f,
              float pan = 0.0f);
     void Stop(int voice);
     void StopAll();
+    // True while the voice is attached and its stream still produces
+    // audio; finished one-shot voices turn false after Update().
     bool IsPlaying(int voice) const;
     void SetGainPan(int voice, float gain, float pan);
 };

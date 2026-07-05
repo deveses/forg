@@ -64,8 +64,13 @@ class FORG_API SoundNode : public SceneNode
     bool Save(io::ISerializer& serializer) const override;
     bool Load(io::ISerializer& serializer) override;
 
+    // Creates a waveform generator source immediately. Safe to call while
+    // playing: the old source stays alive until the next SyncAudio, which
+    // stops its voice.
     void SetGenerator(audio::AudioWaveform waveform, float frequencyHz,
                       float amplitude);
+    // Records the file path only; the source is created when
+    // LoadResources opens it. Same replacement rules as SetGenerator.
     void SetFile(std::string_view path);
     SoundSourceType SourceType() const;
     audio::IAudioSource* Source();

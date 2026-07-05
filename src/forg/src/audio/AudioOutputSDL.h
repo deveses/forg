@@ -27,6 +27,9 @@
 
 namespace forg::audio {
 
+// Creates the SDL2 audio output (Linux default): a push/queue model where
+// CanWrite() reports queue headroom and Write() enqueues PCM via
+// SDL_QueueAudio; no callback is involved.
 IAudioOutput* CreateAudioOutputSDL();
 
 } // namespace forg::audio
