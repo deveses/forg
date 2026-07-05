@@ -182,6 +182,16 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
     forg::nn::Layer layer(2, 1, rng);
     REQUIRE(layer.Forward({forg::nn::MakeValue(1.0)}).empty());
     REQUIRE(layer.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
+
+    forg::nn::Embedding invalid_embedding(0, 3, rng);
+    REQUIRE(invalid_embedding.Parameters().empty());
+    REQUIRE(invalid_embedding.Forward(std::vector<std::size_t>{0}).empty());
+
+    forg::nn::Embedding embedding(2, 3, rng);
+    REQUIRE(embedding.Forward(std::vector<std::size_t>{2}).empty());
+    REQUIRE(embedding.Forward({forg::nn::MakeValue(-1.0)}).empty());
+    REQUIRE(embedding.Forward({forg::nn::MakeValue(0.5)}).empty());
+    REQUIRE(embedding.Forward({nullptr}).empty());
 }
 
 TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
@@ -205,6 +215,72 @@ TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
 
     REQUIRE(prediction.size() == 1);
     REQUIRE(model.Parameters().size() == 21);
+}
+
+TEST_CASE("Embedding maps token indices to trainable rows", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(43);
+    Embedding embedding(4, 3, rng);
+    REQUIRE(embedding.NumEmbeddings() == 4);
+    REQUIRE(embedding.EmbeddingDim() == 3);
+    REQUIRE(embedding.Parameters().size() == 12);
+
+    for (std::size_t index = 0; index < embedding.Weights().size(); ++index)
+    {
+        embedding.Weights()[index]->SetData(static_cast<double>(index) + 0.5);
+    }
+
+    const Values output = embedding.Forward(std::vector<std::size_t>{2, 0});
+    REQUIRE(output.size() == 6);
+    REQUIRE(output[0] == embedding.Weights()[6]);
+    REQUIRE(output[1] == embedding.Weights()[7]);
+    REQUIRE(output[2] == embedding.Weights()[8]);
+    REQUIRE(output[3] == embedding.Weights()[0]);
+    REQUIRE(output[4] == embedding.Weights()[1]);
+    REQUIRE(output[5] == embedding.Weights()[2]);
+    REQUIRE(output[0]->GetData() == Approx(6.5));
+    REQUIRE(output[5]->GetData() == Approx(2.5));
+
+    Backward(output[0] + output[5]);
+    REQUIRE(embedding.Weights()[6]->GetGrad() == Approx(1.0));
+    REQUIRE(embedding.Weights()[2]->GetGrad() == Approx(1.0));
+    REQUIRE(embedding.Weights()[7]->GetGrad() == Approx(0.0));
+}
+
+TEST_CASE("Embedding accepts scalar Value indices in module pipelines",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(44);
+    const auto embedding = std::make_shared<Embedding>(5, 2, rng);
+    for (std::size_t index = 0; index < embedding->Weights().size(); ++index)
+    {
+        embedding->Weights()[index]->SetData(static_cast<double>(index));
+    }
+
+    Sequential model({
+        embedding,
+        std::make_shared<Linear>(4, 1, rng),
+    });
+    Values linear_parameters = model.Modules()[1]->Parameters();
+    for (const ValuePtr& parameter : linear_parameters)
+    {
+        parameter->SetData(1.0);
+    }
+
+    const Values prediction = model.Forward({MakeValue(1.0), MakeValue(3.0)});
+    REQUIRE(prediction.size() == 1);
+    REQUIRE(prediction[0]->GetData() == Approx(19.0));
+
+    Backward(prediction[0]);
+    REQUIRE(embedding->Weights()[2]->GetGrad() == Approx(1.0));
+    REQUIRE(embedding->Weights()[3]->GetGrad() == Approx(1.0));
+    REQUIRE(embedding->Weights()[6]->GetGrad() == Approx(1.0));
+    REQUIRE(embedding->Weights()[7]->GetGrad() == Approx(1.0));
+    REQUIRE(embedding->Weights()[0]->GetGrad() == Approx(0.0));
 }
 
 TEST_CASE("Matrix stores row-major numeric data", "[nn][matrix]")
