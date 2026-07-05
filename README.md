@@ -115,6 +115,24 @@ switches; FreeType defaults to `ON`, while OpenCL and zlib default to `OFF`. On 
 `FORG_STATIC`, `NOMINMAX`, and `WIN32_LEAN_AND_MEAN` definitions required by
 consumers of the static library.
 
+## Development tooling
+
+CI pins `clang-format` through Python tooling. To match CI locally, create a
+virtual environment and install the development requirements:
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -r requirements-dev.txt
+```
+
+Run the formatting check with the pinned formatter:
+
+```sh
+cmake -DCLANG_FORMAT_EXECUTABLE="$PWD/.venv/bin/clang-format" \
+      -DPROJECT_SOURCE_DIR="$PWD" \
+      -P cmake/CheckFormat.cmake
+```
+
 ## Testing
 
 The CMake build uses CTest with Catch2 v3. Catch2 is fetched with CMake `FetchContent` and pinned in `tests/CMakeLists.txt`, so the first configure of a fresh build directory needs network access.

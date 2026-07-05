@@ -1,6 +1,7 @@
 /output/
 /bin/
 /build/
+/.venv/
 .cache/
 .vscode/
 compile_commands.json
