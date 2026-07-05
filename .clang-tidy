@@ -2,6 +2,9 @@ Checks: >
   bugprone-*,
   performance-*,
   portability-*,
+  -bugprone-reserved-identifier,
+  -performance-enum-size,
+  -clang-analyzer-optin.*,
   -bugprone-easily-swappable-parameters
 WarningsAsErrors: ''
 HeaderFilterRegex: 'src/forg/(include|src)/.*'

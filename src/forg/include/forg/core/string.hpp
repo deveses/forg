@@ -99,6 +99,8 @@ template <class T> class basic_string
 
     basic_string& operator=(const basic_string& rhs)
     {
+        if (this == &rhs)
+            return *this;
 
         size_type l = rhs.length();
 

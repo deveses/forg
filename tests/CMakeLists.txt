@@ -72,6 +72,11 @@ if(TARGET glrenderer)
         FORG_TEST_GLRENDERER_PATH="$<TARGET_FILE:glrenderer>")
 endif()
 
+if(CMAKE_CXX_FLAGS MATCHES "(^| )-fsanitize=[^ ]*address")
+    set_property(TARGET forg_tests PROPERTY CROSSCOMPILING_EMULATOR
+        "${CMAKE_COMMAND};-E;env;ASAN_OPTIONS=detect_leaks=0")
+endif()
+
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 include(Catch)
 catch_discover_tests(forg_tests)
