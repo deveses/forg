@@ -1,6 +1,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <string>
 #include <vector>
 
 #include "forg/audio/AudioGenerator.h"
@@ -84,8 +85,10 @@ TEST_CASE("AudioWaveform names round-trip", "[audio][generator]")
 {
     using forg::audio::AudioWaveform;
 
-    REQUIRE(forg::audio::AudioWaveformName(AudioWaveform::Sine) == "sine");
-    REQUIRE(forg::audio::AudioWaveformName(AudioWaveform::Square) == "square");
+    REQUIRE(std::string(forg::audio::AudioWaveformName(AudioWaveform::Sine)) ==
+            "sine");
+    REQUIRE(std::string(forg::audio::AudioWaveformName(AudioWaveform::Square)) ==
+            "square");
     REQUIRE(forg::audio::AudioWaveformFromName("square") ==
             AudioWaveform::Square);
     REQUIRE(forg::audio::AudioWaveformFromName("sine") == AudioWaveform::Sine);
