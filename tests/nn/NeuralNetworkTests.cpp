@@ -26,6 +26,16 @@ std::filesystem::path TempDataPath(const std::string& name)
            (name + "-" + std::to_string(std::random_device{}()));
 }
 
+bool HasAnyGradient(const forg::nn::Values& values)
+{
+    for (const forg::nn::ValuePtr& value : values)
+    {
+        if (value && value->GetGrad() != 0.0)
+            return true;
+    }
+    return false;
+}
+
 } // namespace
 
 TEST_CASE("Value backward matches micrograd sanity expression", "[nn][value]")
@@ -108,7 +118,7 @@ TEST_CASE("Value data can be updated for simple gradient descent",
     REQUIRE(weight->GetGrad() == Approx(0.0));
 }
 
-TEST_CASE("Value exp log and sigmoid compute gradients", "[nn][value]")
+TEST_CASE("Value exp log sigmoid and tanh compute gradients", "[nn][value]")
 {
     using namespace forg::nn;
 
@@ -126,9 +136,17 @@ TEST_CASE("Value exp log and sigmoid compute gradients", "[nn][value]")
     REQUIRE(sigmoid->GetData() == Approx(0.5));
     REQUIRE(z->GetGrad() == Approx(0.25));
 
+    const ValuePtr t = MakeValue(0.5);
+    const ValuePtr tanh = Tanh(t);
+    Backward(tanh);
+
+    REQUIRE(tanh->GetData() == Approx(std::tanh(0.5)));
+    REQUIRE(t->GetGrad() == Approx(1.0 - std::tanh(0.5) * std::tanh(0.5)));
+
     REQUIRE_FALSE(Exp(nullptr));
     REQUIRE_FALSE(Log(nullptr));
     REQUIRE_FALSE(Sigmoid(nullptr));
+    REQUIRE_FALSE(Tanh(nullptr));
 }
 
 TEST_CASE("Module zeroes parameters and MLP builds deterministic shapes",
@@ -178,6 +196,15 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
     REQUIRE(forg::nn::Layer(2, 0, rng).Parameters().empty());
     REQUIRE(forg::nn::MLP(2, {}, rng).Parameters().empty());
     REQUIRE(forg::nn::MLP(2, {3, 0}, rng).Parameters().empty());
+    REQUIRE(forg::nn::RNN(0, 2, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::RNN(2, 0, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::RNN(2, 3, 0, rng).Parameters().empty());
+    REQUIRE(forg::nn::LSTM(0, 2, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::LSTM(2, 0, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::LSTM(2, 3, 0, rng).Parameters().empty());
+    REQUIRE(forg::nn::GRU(0, 2, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::GRU(2, 0, 3, rng).Parameters().empty());
+    REQUIRE(forg::nn::GRU(2, 3, 0, rng).Parameters().empty());
 
     forg::nn::Layer layer(2, 1, rng);
     REQUIRE(layer.Forward({forg::nn::MakeValue(1.0)}).empty());
@@ -192,6 +219,47 @@ TEST_CASE("Neural modules return empty results for invalid shapes",
     REQUIRE(embedding.Forward({forg::nn::MakeValue(-1.0)}).empty());
     REQUIRE(embedding.Forward({forg::nn::MakeValue(0.5)}).empty());
     REQUIRE(embedding.Forward({nullptr}).empty());
+
+    forg::nn::RNN rnn(2, 3, 4, rng);
+    REQUIRE(rnn.Forward({forg::nn::MakeValue(1.0)}).empty());
+    REQUIRE(rnn.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
+    REQUIRE(rnn.Forward(
+                   std::vector<forg::nn::ValuePtr>{
+                       forg::nn::MakeValue(1.0),
+                       forg::nn::MakeValue(2.0),
+                       forg::nn::MakeValue(3.0),
+                       forg::nn::MakeValue(4.0),
+                       forg::nn::MakeValue(5.0),
+                       forg::nn::MakeValue(6.0),
+                       forg::nn::MakeValue(7.0),
+                       forg::nn::MakeValue(8.0),
+                   },
+                   {forg::nn::MakeValue(0.0)})
+                .empty());
+
+    forg::nn::LSTM lstm(2, 3, 4, rng);
+    REQUIRE(lstm.Forward({forg::nn::MakeValue(1.0)}).empty());
+    REQUIRE(lstm.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
+    const std::vector<forg::nn::ValuePtr> sequence = {
+        forg::nn::MakeValue(1.0), forg::nn::MakeValue(2.0),
+        forg::nn::MakeValue(3.0), forg::nn::MakeValue(4.0),
+        forg::nn::MakeValue(5.0), forg::nn::MakeValue(6.0),
+        forg::nn::MakeValue(7.0), forg::nn::MakeValue(8.0),
+    };
+    REQUIRE(lstm.Forward(sequence, {forg::nn::MakeValue(0.0)},
+                         {forg::nn::MakeValue(0.0), forg::nn::MakeValue(0.0),
+                          forg::nn::MakeValue(0.0)})
+                .empty());
+    REQUIRE(lstm.Forward(sequence,
+                         {forg::nn::MakeValue(0.0), forg::nn::MakeValue(0.0),
+                          forg::nn::MakeValue(0.0)},
+                         {forg::nn::MakeValue(0.0)})
+                .empty());
+
+    forg::nn::GRU gru(2, 3, 4, rng);
+    REQUIRE(gru.Forward({forg::nn::MakeValue(1.0)}).empty());
+    REQUIRE(gru.Forward({forg::nn::MakeValue(1.0), nullptr}).empty());
+    REQUIRE(gru.Forward(sequence, {forg::nn::MakeValue(0.0)}).empty());
 }
 
 TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
@@ -215,6 +283,314 @@ TEST_CASE("Linear and Sequential compose scalar modules", "[nn][module]")
 
     REQUIRE(prediction.size() == 1);
     REQUIRE(model.Parameters().size() == 21);
+}
+
+TEST_CASE("RNN returns full hidden sequence and exposes parameters",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(45);
+    RNN rnn(2, 3, 4, rng);
+
+    REQUIRE(rnn.InputSize() == 2);
+    REQUIRE(rnn.HiddenSize() == 3);
+    REQUIRE(rnn.SequenceLength() == 4);
+    REQUIRE(rnn.InputWeights().size() == 6);
+    REQUIRE(rnn.HiddenWeights().size() == 9);
+    REQUIRE(rnn.Biases().size() == 3);
+    REQUIRE(rnn.Parameters().size() == 18);
+
+    const Values input = {
+        MakeValue(1.0), MakeValue(2.0), MakeValue(3.0), MakeValue(4.0),
+        MakeValue(5.0), MakeValue(6.0), MakeValue(7.0), MakeValue(8.0),
+    };
+    const Values output = rnn.Forward(input);
+
+    REQUIRE(output.size() == 12);
+}
+
+TEST_CASE("RNN applies recurrent tanh dynamics across timesteps",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(46);
+    RNN rnn(1, 1, 2, rng);
+    rnn.InputWeights()[0]->SetData(1.0);
+    rnn.HiddenWeights()[0]->SetData(1.0);
+    rnn.Biases()[0]->SetData(0.0);
+
+    const Values output = rnn.Forward({MakeValue(1.0), MakeValue(2.0)});
+    const double first = std::tanh(1.0);
+    const double second = std::tanh(2.0 + first);
+
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0]->GetData() == Approx(first));
+    REQUIRE(output[1]->GetData() == Approx(second));
+}
+
+TEST_CASE("RNN gradients flow through inputs recurrent weights and biases",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(47);
+    RNN rnn(1, 1, 2, rng);
+    rnn.InputWeights()[0]->SetData(0.8);
+    rnn.HiddenWeights()[0]->SetData(0.6);
+    rnn.Biases()[0]->SetData(0.1);
+
+    const Values input = {MakeValue(0.5), MakeValue(-0.25)};
+    const Values output = rnn.Forward(input);
+    REQUIRE(output.size() == 2);
+
+    Backward(output[1]);
+
+    REQUIRE(input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(rnn.InputWeights()[0]->GetGrad() != Approx(0.0));
+    REQUIRE(rnn.HiddenWeights()[0]->GetGrad() != Approx(0.0));
+    REQUIRE(rnn.Biases()[0]->GetGrad() != Approx(0.0));
+}
+
+TEST_CASE("RNN accepts explicit initial hidden state with gradients",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(48);
+    RNN rnn(1, 1, 1, rng);
+    rnn.InputWeights()[0]->SetData(0.0);
+    rnn.HiddenWeights()[0]->SetData(1.0);
+    rnn.Biases()[0]->SetData(0.0);
+
+    const ValuePtr initial = MakeValue(0.25);
+    const Values output = rnn.Forward({MakeValue(0.0)}, {initial});
+
+    REQUIRE(output.size() == 1);
+    REQUIRE(output[0]->GetData() == Approx(std::tanh(0.25)));
+
+    Backward(output[0]);
+    REQUIRE(initial->GetGrad() ==
+            Approx(1.0 - std::tanh(0.25) * std::tanh(0.25)));
+}
+
+TEST_CASE("RNN composes with Sequential using flattened full sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(49);
+    const auto rnn = std::make_shared<RNN>(1, 2, 2, rng);
+    const auto linear = std::make_shared<Linear>(4, 1, rng);
+    Sequential model({rnn, linear});
+
+    const Values output = model.Forward({MakeValue(0.5), MakeValue(-0.5)});
+
+    REQUIRE(output.size() == 1);
+    REQUIRE(model.Parameters().size() ==
+            rnn->Parameters().size() + linear->Parameters().size());
+}
+
+TEST_CASE("LSTM returns full hidden sequence and exposes parameters",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(50);
+    LSTM lstm(2, 3, 4, rng);
+
+    REQUIRE(lstm.InputSize() == 2);
+    REQUIRE(lstm.HiddenSize() == 3);
+    REQUIRE(lstm.SequenceLength() == 4);
+    REQUIRE(lstm.InputWeights().size() == 24);
+    REQUIRE(lstm.HiddenWeights().size() == 36);
+    REQUIRE(lstm.Biases().size() == 12);
+    REQUIRE(lstm.Parameters().size() == 72);
+
+    const Values input = {
+        MakeValue(1.0), MakeValue(2.0), MakeValue(3.0), MakeValue(4.0),
+        MakeValue(5.0), MakeValue(6.0), MakeValue(7.0), MakeValue(8.0),
+    };
+    const Values output = lstm.Forward(input);
+
+    REQUIRE(output.size() == 12);
+}
+
+TEST_CASE("LSTM applies gated cell dynamics across timesteps", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(51);
+    LSTM lstm(1, 1, 2, rng);
+    for (const ValuePtr& parameter : lstm.Parameters())
+    {
+        parameter->SetData(0.0);
+    }
+    lstm.InputWeights()[2]->SetData(1.0);
+
+    const Values output = lstm.Forward({MakeValue(1.0), MakeValue(2.0)});
+    const double first_cell = 0.5 * std::tanh(1.0);
+    const double first_hidden = 0.5 * std::tanh(first_cell);
+    const double second_cell = 0.5 * first_cell + 0.5 * std::tanh(2.0);
+    const double second_hidden = 0.5 * std::tanh(second_cell);
+
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0]->GetData() == Approx(first_hidden));
+    REQUIRE(output[1]->GetData() == Approx(second_hidden));
+}
+
+TEST_CASE("LSTM gradients flow through sequence parameters and states",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(52);
+    LSTM lstm(1, 1, 2, rng);
+    for (std::size_t index = 0; index < lstm.InputWeights().size(); ++index)
+    {
+        lstm.InputWeights()[index]->SetData(0.2 + 0.1 * index);
+    }
+    for (std::size_t index = 0; index < lstm.HiddenWeights().size(); ++index)
+    {
+        lstm.HiddenWeights()[index]->SetData(0.1 + 0.05 * index);
+    }
+    for (const ValuePtr& bias : lstm.Biases())
+    {
+        bias->SetData(0.1);
+    }
+
+    const Values input = {MakeValue(0.5), MakeValue(-0.25)};
+    const ValuePtr initial_hidden = MakeValue(0.2);
+    const ValuePtr initial_cell = MakeValue(-0.1);
+    const Values output = lstm.Forward(input, {initial_hidden}, {initial_cell});
+    REQUIRE(output.size() == 2);
+
+    Backward(output[1]);
+
+    REQUIRE(input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(initial_hidden->GetGrad() != Approx(0.0));
+    REQUIRE(initial_cell->GetGrad() != Approx(0.0));
+    REQUIRE(HasAnyGradient(lstm.InputWeights()));
+    REQUIRE(HasAnyGradient(lstm.HiddenWeights()));
+    REQUIRE(HasAnyGradient(lstm.Biases()));
+}
+
+TEST_CASE("LSTM composes with Sequential using flattened full sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(53);
+    const auto lstm = std::make_shared<LSTM>(1, 2, 2, rng);
+    const auto linear = std::make_shared<Linear>(4, 1, rng);
+    Sequential model({lstm, linear});
+
+    const Values output = model.Forward({MakeValue(0.5), MakeValue(-0.5)});
+
+    REQUIRE(output.size() == 1);
+    REQUIRE(model.Parameters().size() ==
+            lstm->Parameters().size() + linear->Parameters().size());
+}
+
+TEST_CASE("GRU returns full hidden sequence and exposes parameters",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(54);
+    GRU gru(2, 3, 4, rng);
+
+    REQUIRE(gru.InputSize() == 2);
+    REQUIRE(gru.HiddenSize() == 3);
+    REQUIRE(gru.SequenceLength() == 4);
+    REQUIRE(gru.InputWeights().size() == 18);
+    REQUIRE(gru.HiddenWeights().size() == 27);
+    REQUIRE(gru.Biases().size() == 9);
+    REQUIRE(gru.Parameters().size() == 54);
+
+    const Values input = {
+        MakeValue(1.0), MakeValue(2.0), MakeValue(3.0), MakeValue(4.0),
+        MakeValue(5.0), MakeValue(6.0), MakeValue(7.0), MakeValue(8.0),
+    };
+    const Values output = gru.Forward(input);
+
+    REQUIRE(output.size() == 12);
+}
+
+TEST_CASE("GRU applies gated hidden dynamics across timesteps", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(55);
+    GRU gru(1, 1, 2, rng);
+    for (const ValuePtr& parameter : gru.Parameters())
+    {
+        parameter->SetData(0.0);
+    }
+    gru.InputWeights()[2]->SetData(1.0);
+
+    const Values output = gru.Forward({MakeValue(1.0), MakeValue(2.0)});
+    const double first_hidden = 0.5 * std::tanh(1.0);
+    const double second_hidden = 0.5 * std::tanh(2.0) + 0.5 * first_hidden;
+
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0]->GetData() == Approx(first_hidden));
+    REQUIRE(output[1]->GetData() == Approx(second_hidden));
+}
+
+TEST_CASE("GRU gradients flow through sequence parameters and initial state",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(56);
+    GRU gru(1, 1, 2, rng);
+    for (std::size_t index = 0; index < gru.InputWeights().size(); ++index)
+    {
+        gru.InputWeights()[index]->SetData(0.2 + 0.1 * index);
+    }
+    for (std::size_t index = 0; index < gru.HiddenWeights().size(); ++index)
+    {
+        gru.HiddenWeights()[index]->SetData(0.1 + 0.05 * index);
+    }
+    for (const ValuePtr& bias : gru.Biases())
+    {
+        bias->SetData(0.1);
+    }
+
+    const Values input = {MakeValue(0.5), MakeValue(-0.25)};
+    const ValuePtr initial_hidden = MakeValue(0.2);
+    const Values output = gru.Forward(input, {initial_hidden});
+    REQUIRE(output.size() == 2);
+
+    Backward(output[1]);
+
+    REQUIRE(input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(initial_hidden->GetGrad() != Approx(0.0));
+    REQUIRE(HasAnyGradient(gru.InputWeights()));
+    REQUIRE(HasAnyGradient(gru.HiddenWeights()));
+    REQUIRE(HasAnyGradient(gru.Biases()));
+}
+
+TEST_CASE("GRU composes with Sequential using flattened full sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(57);
+    const auto gru = std::make_shared<GRU>(1, 2, 2, rng);
+    const auto linear = std::make_shared<Linear>(4, 1, rng);
+    Sequential model({gru, linear});
+
+    const Values output = model.Forward({MakeValue(0.5), MakeValue(-0.5)});
+
+    REQUIRE(output.size() == 1);
+    REQUIRE(model.Parameters().size() ==
+            gru->Parameters().size() + linear->Parameters().size());
 }
 
 TEST_CASE("Embedding maps token indices to trainable rows", "[nn][module]")
