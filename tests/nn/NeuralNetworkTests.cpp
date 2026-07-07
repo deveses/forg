@@ -593,6 +593,176 @@ TEST_CASE("GRU composes with Sequential using flattened full sequence",
             gru->Parameters().size() + linear->Parameters().size());
 }
 
+TEST_CASE("Recurrent layers expose final state alongside full sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(58);
+
+    RNN rnn(1, 2, 3, rng);
+    const RecurrentState rnn_state =
+        rnn.ForwardState({MakeValue(0.1), MakeValue(0.2), MakeValue(0.3)});
+    REQUIRE(rnn_state.sequence.size() == 6);
+    REQUIRE(rnn_state.hidden.size() == 2);
+    REQUIRE(rnn_state.cell.empty());
+    REQUIRE(rnn_state.hidden[0] == rnn_state.sequence[4]);
+    REQUIRE(rnn_state.hidden[1] == rnn_state.sequence[5]);
+
+    LSTM lstm(1, 2, 3, rng);
+    const RecurrentState lstm_state =
+        lstm.ForwardState({MakeValue(0.1), MakeValue(0.2), MakeValue(0.3)});
+    REQUIRE(lstm_state.sequence.size() == 6);
+    REQUIRE(lstm_state.hidden.size() == 2);
+    REQUIRE(lstm_state.cell.size() == 2);
+    REQUIRE(lstm_state.hidden[0] == lstm_state.sequence[4]);
+    REQUIRE(lstm_state.hidden[1] == lstm_state.sequence[5]);
+
+    GRU gru(1, 2, 3, rng);
+    const RecurrentState gru_state =
+        gru.ForwardState({MakeValue(0.1), MakeValue(0.2), MakeValue(0.3)});
+    REQUIRE(gru_state.sequence.size() == 6);
+    REQUIRE(gru_state.hidden.size() == 2);
+    REQUIRE(gru_state.cell.empty());
+    REQUIRE(gru_state.hidden[0] == gru_state.sequence[4]);
+    REQUIRE(gru_state.hidden[1] == gru_state.sequence[5]);
+}
+
+TEST_CASE("EncoderDecoder exposes dimensions shapes and parameters",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(59);
+    const Values encoder_input = {
+        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+    };
+    const Values decoder_input = {
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
+        MakeValue(0.9), MakeValue(1.0),
+    };
+
+    EncoderDecoder rnn(2, 2, 3, 2, 3, RecurrentCellType::RNN, rng);
+    REQUIRE(rnn.EncoderInputSize() == 2);
+    REQUIRE(rnn.DecoderInputSize() == 2);
+    REQUIRE(rnn.HiddenSize() == 3);
+    REQUIRE(rnn.EncoderLength() == 2);
+    REQUIRE(rnn.DecoderLength() == 3);
+    REQUIRE(rnn.CellType() == RecurrentCellType::RNN);
+    REQUIRE(rnn.Forward(encoder_input, decoder_input).size() == 9);
+    REQUIRE(rnn.Parameters().size() == 36);
+
+    EncoderDecoder lstm(2, 2, 3, 2, 3, RecurrentCellType::LSTM, rng);
+    REQUIRE(lstm.Forward(encoder_input, decoder_input).size() == 9);
+    REQUIRE(lstm.Parameters().size() == 144);
+
+    EncoderDecoder gru(2, 2, 3, 2, 3, RecurrentCellType::GRU, rng);
+    REQUIRE(gru.Forward(encoder_input, decoder_input).size() == 9);
+    REQUIRE(gru.Parameters().size() == 108);
+}
+
+TEST_CASE("EncoderDecoder passes RNN encoder state to decoder",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(60);
+    EncoderDecoder model(1, 1, 1, 1, 1, RecurrentCellType::RNN, rng);
+    const Values parameters = model.Parameters();
+    REQUIRE(parameters.size() == 6);
+    for (const ValuePtr& parameter : parameters)
+    {
+        parameter->SetData(0.0);
+    }
+    parameters[0]->SetData(1.0);
+    parameters[4]->SetData(1.0);
+
+    const Values output = model.Forward({MakeValue(1.0)}, {MakeValue(0.0)});
+    REQUIRE(output.size() == 1);
+    REQUIRE(output[0]->GetData() == Approx(std::tanh(std::tanh(1.0))));
+}
+
+TEST_CASE("LSTM EncoderDecoder gradients flow through encoder and decoder",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(61);
+    EncoderDecoder model(1, 1, 1, 2, 2, RecurrentCellType::LSTM, rng);
+    for (const ValuePtr& parameter : model.Parameters())
+    {
+        parameter->SetData(0.2);
+    }
+
+    const Values encoder_input = {MakeValue(0.5), MakeValue(-0.25)};
+    const Values decoder_input = {MakeValue(0.75), MakeValue(0.1)};
+    const RecurrentState encoder_state = model.Encode(encoder_input);
+    const RecurrentState decoder_state =
+        model.Decode(decoder_input, encoder_state);
+    REQUIRE(decoder_state.sequence.size() == 2);
+
+    Backward(decoder_state.sequence.back());
+
+    REQUIRE(encoder_input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(encoder_input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(decoder_input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(decoder_input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(encoder_state.hidden[0]->GetGrad() != Approx(0.0));
+    REQUIRE(encoder_state.cell[0]->GetGrad() != Approx(0.0));
+    REQUIRE(HasAnyGradient(model.Parameters()));
+}
+
+TEST_CASE("Seq2Seq projects decoder states at each timestep", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(62);
+    Seq2Seq model(2, 2, 3, 4, 2, 3, RecurrentCellType::GRU, rng);
+    const Values encoder_input = {
+        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+    };
+    const Values decoder_input = {
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
+        MakeValue(0.9), MakeValue(1.0),
+    };
+
+    const Values output = model.Forward(encoder_input, decoder_input);
+    REQUIRE(output.size() == 12);
+    REQUIRE(model.OutputSize() == 4);
+    REQUIRE(model.Parameters().size() == 124);
+
+    Values concatenated = encoder_input;
+    concatenated.insert(concatenated.end(), decoder_input.begin(),
+                        decoder_input.end());
+    REQUIRE(model.Forward(concatenated).size() == 12);
+}
+
+TEST_CASE("EncoderDecoder and Seq2Seq reject invalid inputs", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(63);
+    EncoderDecoder encoder_decoder(1, 1, 2, 2, 2, RecurrentCellType::GRU, rng);
+    REQUIRE(encoder_decoder.Forward({MakeValue(1.0)}, {MakeValue(2.0)})
+                .empty());
+    REQUIRE(encoder_decoder.Forward(
+                               {MakeValue(1.0), nullptr, MakeValue(2.0),
+                                MakeValue(3.0)})
+                .empty());
+    REQUIRE(EncoderDecoder(0, 1, 1, 1, 1, RecurrentCellType::RNN, rng)
+                .Parameters()
+                .empty());
+
+    Seq2Seq seq2seq(1, 1, 2, 2, 2, 2, RecurrentCellType::RNN, rng);
+    REQUIRE(seq2seq.Forward({MakeValue(1.0)}, {MakeValue(2.0)}).empty());
+    REQUIRE(seq2seq.Forward({MakeValue(1.0), MakeValue(2.0), nullptr,
+                             MakeValue(3.0)})
+                .empty());
+    REQUIRE(Seq2Seq(1, 1, 1, 0, 1, 1, RecurrentCellType::RNN, rng)
+                .Parameters()
+                .empty());
+}
+
 TEST_CASE("Embedding maps token indices to trainable rows", "[nn][module]")
 {
     using namespace forg::nn;

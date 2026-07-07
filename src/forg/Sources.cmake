@@ -59,6 +59,7 @@ set(nn_includes
     Normalization.h
     Optim.h
     Parameters.h
+    Seq2Seq.h
     Sequential.h
     Value.h
 )
@@ -76,6 +77,7 @@ set(nn_sources
     Normalization.cpp
     Optim.cpp
     Parameters.cpp
+    Seq2Seq.cpp
     Sequential.cpp
     Value.cpp
 )

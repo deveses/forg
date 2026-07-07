@@ -9,4 +9,5 @@
 #include "forg/nn/Matrix.h"
 #include "forg/nn/Mnist.h"
 #include "forg/nn/Module.h"
+#include "forg/nn/Seq2Seq.h"
 #include "forg/nn/Value.h"

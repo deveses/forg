@@ -5,13 +5,23 @@
 *******************************************************************************/
 
 #pragma once
+#define FORG_NN_INCLUDING_LAYERS_H
 #include "forg/nn/Module.h"
+#undef FORG_NN_INCLUDING_LAYERS_H
 
 #include <cstddef>
 #include <random>
 #include <vector>
 
 namespace forg::nn {
+
+/// Full recurrent output plus the final state needed by encoder-decoder models.
+struct RecurrentState
+{
+    Values sequence;
+    Values hidden;
+    Values cell;
+};
 
 /// One fully connected scalar neuron.
 ///
@@ -111,6 +121,9 @@ class RNN : public Module
 
     Values Forward(const Values& input) const override;
     Values Forward(const Values& input, const Values& initial_hidden) const;
+    RecurrentState ForwardState(const Values& input) const;
+    RecurrentState ForwardState(const Values& input,
+                                const Values& initial_hidden) const;
     Values Parameters() const override;
 
     std::size_t InputSize() const noexcept { return m_input_size; }
@@ -150,6 +163,10 @@ class LSTM : public Module
     Values Forward(const Values& input) const override;
     Values Forward(const Values& input, const Values& initial_hidden,
                    const Values& initial_cell) const;
+    RecurrentState ForwardState(const Values& input) const;
+    RecurrentState ForwardState(const Values& input,
+                                const Values& initial_hidden,
+                                const Values& initial_cell) const;
     Values Parameters() const override;
 
     std::size_t InputSize() const noexcept { return m_input_size; }
@@ -189,6 +206,9 @@ class GRU : public Module
 
     Values Forward(const Values& input) const override;
     Values Forward(const Values& input, const Values& initial_hidden) const;
+    RecurrentState ForwardState(const Values& input) const;
+    RecurrentState ForwardState(const Values& input,
+                                const Values& initial_hidden) const;
     Values Parameters() const override;
 
     std::size_t InputSize() const noexcept { return m_input_size; }

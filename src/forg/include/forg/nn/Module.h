@@ -50,4 +50,7 @@ class Module
 #include "forg/nn/Normalization.h"
 #include "forg/nn/Optim.h"
 #include "forg/nn/Parameters.h"
+#ifndef FORG_NN_INCLUDING_LAYERS_H
+#include "forg/nn/Seq2Seq.h"
+#endif
 #include "forg/nn/Sequential.h"
