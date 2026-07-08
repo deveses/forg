@@ -7,3 +7,4 @@
 compile_commands.json
 **/.DS_Store
 data/mnist_dataset/*
+data/gpt_dataset/tiny_shakespeare_dataset.txt
