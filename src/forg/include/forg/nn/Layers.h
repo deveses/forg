@@ -5,9 +5,7 @@
 *******************************************************************************/
 
 #pragma once
-#define FORG_NN_INCLUDING_LAYERS_H
 #include "forg/nn/Module.h"
-#undef FORG_NN_INCLUDING_LAYERS_H
 
 #include <cstddef>
 #include <random>

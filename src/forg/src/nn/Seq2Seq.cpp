@@ -1,5 +1,6 @@
 #include "forg/nn/Seq2Seq.h"
 
+#include "forg/nn/Attention.h"
 #include "ModuleUtils.h"
 
 #include <cstddef>
@@ -354,6 +355,129 @@ Values Seq2Seq::Parameters() const
                           projection_parameters.end());
     }
     return parameters;
+}
+
+AttentionSeq2Seq::AttentionSeq2Seq(
+    std::size_t encoder_input_size, std::size_t decoder_input_size,
+    std::size_t hidden_size, std::size_t output_size,
+    std::size_t encoder_length, std::size_t decoder_length,
+    RecurrentCellType cell_type, std::size_t head_count)
+    : AttentionSeq2Seq(encoder_input_size, decoder_input_size, hidden_size,
+                       output_size, encoder_length, decoder_length, cell_type,
+                       DefaultRng(), head_count)
+{
+}
+
+AttentionSeq2Seq::AttentionSeq2Seq(
+    std::size_t encoder_input_size, std::size_t decoder_input_size,
+    std::size_t hidden_size, std::size_t output_size,
+    std::size_t encoder_length, std::size_t decoder_length,
+    RecurrentCellType cell_type, std::mt19937& rng, std::size_t head_count)
+    : m_encoder_input_size(encoder_input_size),
+      m_decoder_input_size(decoder_input_size),
+      m_encoder_length(encoder_length), m_decoder_length(decoder_length),
+      m_output_size(output_size), m_head_count(head_count)
+{
+    if (m_encoder_input_size == 0 || m_decoder_input_size == 0 ||
+        hidden_size == 0 || m_output_size == 0 || m_encoder_length == 0 ||
+        m_decoder_length == 0 || m_head_count == 0 ||
+        hidden_size % m_head_count != 0)
+    {
+        m_encoder_input_size = 0;
+        m_decoder_input_size = 0;
+        m_encoder_length = 0;
+        m_decoder_length = 0;
+        m_output_size = 0;
+        m_head_count = 0;
+        return;
+    }
+
+    m_encoder_decoder = std::make_unique<EncoderDecoder>(
+        m_encoder_input_size, m_decoder_input_size, hidden_size,
+        m_encoder_length, m_decoder_length, cell_type, rng);
+    m_attention = std::make_unique<MultiHeadAttention>(
+        hidden_size, m_head_count, m_decoder_length, m_encoder_length, rng);
+    m_projection = std::make_unique<Linear>(hidden_size, m_output_size, rng);
+}
+
+AttentionSeq2Seq::~AttentionSeq2Seq() = default;
+
+std::size_t AttentionSeq2Seq::EncoderValueCount() const noexcept
+{
+    return m_encoder_input_size * m_encoder_length;
+}
+
+std::size_t AttentionSeq2Seq::DecoderValueCount() const noexcept
+{
+    return m_decoder_input_size * m_decoder_length;
+}
+
+Values AttentionSeq2Seq::Forward(const Values& input) const
+{
+    const std::size_t encoder_count = EncoderValueCount();
+    const std::size_t decoder_count = DecoderValueCount();
+    if (!IsInputValid(input, encoder_count + decoder_count))
+        return {};
+
+    const Values encoder_input(input.begin(), input.begin() + encoder_count);
+    const Values decoder_input(input.begin() + encoder_count, input.end());
+    return Forward(encoder_input, decoder_input);
+}
+
+Values AttentionSeq2Seq::Forward(const Values& encoder_input,
+                                 const Values& decoder_input) const
+{
+    if (!m_encoder_decoder || !m_attention || !m_projection)
+        return {};
+
+    RecurrentState encoder_state = m_encoder_decoder->Encode(encoder_input);
+    if (encoder_state.sequence.empty() || encoder_state.hidden.empty())
+        return {};
+
+    RecurrentState decoder_state =
+        m_encoder_decoder->Decode(decoder_input, encoder_state);
+    if (decoder_state.sequence.empty() || decoder_state.hidden.empty())
+        return {};
+
+    const Values context = m_attention->Forward(
+        decoder_state.sequence, encoder_state.sequence, encoder_state.sequence);
+    return ProjectDecoderHidden(context, *m_encoder_decoder, *m_projection,
+                                m_output_size);
+}
+
+Values AttentionSeq2Seq::Parameters() const
+{
+    Values parameters;
+    if (m_encoder_decoder)
+    {
+        Values encoder_decoder_parameters = m_encoder_decoder->Parameters();
+        parameters.insert(parameters.end(), encoder_decoder_parameters.begin(),
+                          encoder_decoder_parameters.end());
+    }
+    if (m_attention)
+    {
+        Values attention_parameters = m_attention->Parameters();
+        parameters.insert(parameters.end(), attention_parameters.begin(),
+                          attention_parameters.end());
+    }
+    if (m_projection)
+    {
+        Values projection_parameters = m_projection->Parameters();
+        parameters.insert(parameters.end(), projection_parameters.begin(),
+                          projection_parameters.end());
+    }
+    return parameters;
+}
+
+void AttentionSeq2Seq::Train(bool training)
+{
+    Module::Train(training);
+    if (m_encoder_decoder)
+        m_encoder_decoder->Train(training);
+    if (m_attention)
+        m_attention->Train(training);
+    if (m_projection)
+        m_projection->Train(training);
 }
 
 } // namespace forg::nn

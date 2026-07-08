@@ -39,18 +39,3 @@ class Module
 };
 
 } // namespace forg::nn
-
-// Compatibility umbrella: existing users can keep including Module.h while new
-// code may include the focused headers directly.
-#include "forg/nn/Activations.h"
-#include "forg/nn/Embedding.h"
-#include "forg/nn/Image.h"
-#include "forg/nn/Layers.h"
-#include "forg/nn/Loss.h"
-#include "forg/nn/Normalization.h"
-#include "forg/nn/Optim.h"
-#include "forg/nn/Parameters.h"
-#ifndef FORG_NN_INCLUDING_LAYERS_H
-#include "forg/nn/Seq2Seq.h"
-#endif
-#include "forg/nn/Sequential.h"

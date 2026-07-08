@@ -14,6 +14,7 @@
 namespace forg::nn {
 
 class RecurrentModule;
+class MultiHeadAttention;
 
 enum class RecurrentCellType
 {
@@ -99,6 +100,61 @@ class Seq2Seq : public Module
   private:
     std::size_t m_output_size = 0;
     std::unique_ptr<EncoderDecoder> m_encoder_decoder;
+    std::unique_ptr<Linear> m_projection;
+};
+
+/// Recurrent encoder-decoder with cross-attention over the encoder sequence.
+///
+/// The recurrent decoder state is used as the attention query, the full encoder
+/// hidden sequence is used as key/value memory, and the attended decoder
+/// context is projected at each output timestep.
+class AttentionSeq2Seq : public Module
+{
+  public:
+    AttentionSeq2Seq(std::size_t encoder_input_size,
+                     std::size_t decoder_input_size, std::size_t hidden_size,
+                     std::size_t output_size, std::size_t encoder_length,
+                     std::size_t decoder_length,
+                     RecurrentCellType cell_type,
+                     std::size_t head_count = 1);
+    AttentionSeq2Seq(std::size_t encoder_input_size,
+                     std::size_t decoder_input_size, std::size_t hidden_size,
+                     std::size_t output_size, std::size_t encoder_length,
+                     std::size_t decoder_length,
+                     RecurrentCellType cell_type, std::mt19937& rng,
+                     std::size_t head_count = 1);
+    ~AttentionSeq2Seq() override;
+
+    Values Forward(const Values& input) const override;
+    Values Forward(const Values& encoder_input,
+                   const Values& decoder_input) const;
+    Values Parameters() const override;
+    void Train(bool training = true) override;
+
+    const EncoderDecoder* InnerEncoderDecoder() const noexcept
+    {
+        return m_encoder_decoder.get();
+    }
+    const MultiHeadAttention* Attention() const noexcept
+    {
+        return m_attention.get();
+    }
+    const Linear* Projection() const noexcept { return m_projection.get(); }
+    std::size_t OutputSize() const noexcept { return m_output_size; }
+    std::size_t HeadCount() const noexcept { return m_head_count; }
+
+  private:
+    std::size_t EncoderValueCount() const noexcept;
+    std::size_t DecoderValueCount() const noexcept;
+
+    std::size_t m_encoder_input_size = 0;
+    std::size_t m_decoder_input_size = 0;
+    std::size_t m_encoder_length = 0;
+    std::size_t m_decoder_length = 0;
+    std::size_t m_output_size = 0;
+    std::size_t m_head_count = 0;
+    std::unique_ptr<EncoderDecoder> m_encoder_decoder;
+    std::unique_ptr<MultiHeadAttention> m_attention;
     std::unique_ptr<Linear> m_projection;
 };
 

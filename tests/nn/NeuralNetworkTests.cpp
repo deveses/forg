@@ -763,6 +763,143 @@ TEST_CASE("EncoderDecoder and Seq2Seq reject invalid inputs", "[nn][module]")
                 .empty());
 }
 
+TEST_CASE("LayerNorm normalizes each flat sequence token", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    LayerNorm norm(2, 2);
+    const Values input = {
+        MakeValue(1.0),
+        MakeValue(3.0),
+        MakeValue(2.0),
+        MakeValue(6.0),
+    };
+
+    const Values output = norm.Forward(input);
+    REQUIRE(output.size() == 4);
+    REQUIRE(norm.Parameters().size() == 4);
+    REQUIRE(output[0]->GetData() == Approx(-1.0).margin(1e-4));
+    REQUIRE(output[1]->GetData() == Approx(1.0).margin(1e-4));
+    REQUIRE(output[2]->GetData() == Approx(-1.0).margin(1e-4));
+    REQUIRE(output[3]->GetData() == Approx(1.0).margin(1e-4));
+    REQUIRE(norm.Forward({MakeValue(1.0), nullptr, MakeValue(2.0),
+                          MakeValue(3.0)})
+                .empty());
+}
+
+TEST_CASE("ScaledDotProductAttention supports causal masking",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    ScaledDotProductAttention attention(1, 1, 2, 2, AttentionMask::Causal);
+    const Values query = {MakeValue(1.0), MakeValue(1.0)};
+    const Values key = {MakeValue(1.0), MakeValue(1.0)};
+    const Values value = {MakeValue(2.0), MakeValue(8.0)};
+
+    const Values output = attention.Forward(query, key, value);
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0]->GetData() == Approx(2.0));
+    REQUIRE(output[1]->GetData() == Approx(5.0));
+
+    Backward(output[0]);
+    REQUIRE(value[0]->GetGrad() == Approx(1.0));
+    REQUIRE(value[1]->GetGrad() == Approx(0.0));
+    REQUIRE(attention.Forward({query[0]}, key, value).empty());
+}
+
+TEST_CASE("MultiHeadAttention exposes parameters and gradients",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(64);
+    MultiHeadAttention attention(4, 2, 3, rng);
+    const Values input = {
+        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
+        MakeValue(0.9), MakeValue(1.0), MakeValue(1.1), MakeValue(1.2),
+    };
+
+    const Values output = attention.Forward(input);
+    REQUIRE(output.size() == input.size());
+    REQUIRE(attention.Parameters().size() == 80);
+
+    Backward(output.front());
+    REQUIRE(HasAnyGradient(input));
+    REQUIRE(HasAnyGradient(attention.Parameters()));
+    REQUIRE(MultiHeadAttention(3, 2, 3, rng).Parameters().empty());
+    REQUIRE(attention.Forward({MakeValue(1.0)}).empty());
+}
+
+TEST_CASE("Transformer blocks preserve sequence shape", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(65);
+    TransformerEncoderBlock encoder_block(4, 2, 2, 5, rng);
+    const Values encoder_input = {
+        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
+    };
+
+    const Values encoder_output = encoder_block.Forward(encoder_input);
+    REQUIRE(encoder_output.size() == encoder_input.size());
+    REQUIRE(encoder_block.Parameters().size() == 145);
+
+    TransformerDecoderBlock decoder_block(4, 2, 2, 3, 5, rng);
+    const Values decoder_input = {
+        MakeValue(0.2), MakeValue(0.3), MakeValue(0.4), MakeValue(0.5),
+        MakeValue(0.6), MakeValue(0.7), MakeValue(0.8), MakeValue(0.9),
+    };
+    const Values encoder_memory = {
+        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
+        MakeValue(0.9), MakeValue(1.0), MakeValue(1.1), MakeValue(1.2),
+    };
+
+    const Values decoder_output =
+        decoder_block.Forward(decoder_input, encoder_memory);
+    REQUIRE(decoder_output.size() == decoder_input.size());
+
+    TransformerEncoder encoder(2, 4, 2, 2, 5, rng);
+    REQUIRE(encoder.LayerCount() == 2);
+    REQUIRE(encoder.Forward(encoder_input).size() == encoder_input.size());
+    REQUIRE(encoder.Parameters().size() == 290);
+}
+
+TEST_CASE("AttentionSeq2Seq attends over encoder hidden sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(66);
+    AttentionSeq2Seq model(1, 1, 2, 2, 2, 1, RecurrentCellType::RNN, rng);
+    const Values encoder_input = {MakeValue(0.1), MakeValue(0.2)};
+    const Values decoder_input = {MakeValue(0.3)};
+
+    const Values output = model.Forward(encoder_input, decoder_input);
+    REQUIRE(output.size() == 2);
+    REQUIRE(model.OutputSize() == 2);
+    REQUIRE(model.HeadCount() == 1);
+    REQUIRE(model.Parameters().size() == 46);
+
+    const RecurrentState encoder_state =
+        model.InnerEncoderDecoder()->Encode(encoder_input);
+    const RecurrentState decoder_state =
+        model.InnerEncoderDecoder()->Decode(decoder_input, encoder_state);
+    const Values context = model.Attention()->Forward(
+        decoder_state.sequence, encoder_state.sequence, encoder_state.sequence);
+    REQUIRE(context.size() == 2);
+
+    Backward(context.front());
+    REQUIRE(encoder_state.sequence.front()->GetGrad() != Approx(0.0));
+    REQUIRE(HasAnyGradient(model.Attention()->Parameters()));
+    REQUIRE(AttentionSeq2Seq(1, 1, 3, 2, 2, 1, RecurrentCellType::RNN, rng, 2)
+                .Parameters()
+                .empty());
+}
+
 TEST_CASE("Embedding maps token indices to trainable rows", "[nn][module]")
 {
     using namespace forg::nn;

@@ -49,6 +49,7 @@ list(TRANSFORM core_sources PREPEND "src/core/")
 ###############################################################################
 set(nn_includes
     Activations.h
+    Attention.h
     Embedding.h
     Image.h
     Layers.h
@@ -66,6 +67,7 @@ set(nn_includes
 list(TRANSFORM nn_includes PREPEND "include/forg/nn/")
 set(nn_sources
     Activations.cpp
+    Attention.cpp
     Embedding.cpp
     Image.cpp
     Layers.cpp
