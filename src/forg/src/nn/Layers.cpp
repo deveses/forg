@@ -394,6 +394,8 @@ RecurrentState LSTM::ForwardState(const Values& input,
 
         for (std::size_t hidden = 0; hidden < m_hidden_size; ++hidden)
         {
+            // Gate order is input, forget, candidate cell, output. Each gate
+            // sees the current input vector and the previous hidden state.
             Values gates;
             gates.reserve(4);
             for (std::size_t gate = 0; gate < 4; ++gate)
@@ -430,6 +432,8 @@ RecurrentState LSTM::ForwardState(const Values& input,
                 gates.push_back(value);
             }
 
+            // LSTM memory update: forget part of the old cell, then add the
+            // input-gated candidate. The output gate exposes the hidden value.
             ValuePtr cell =
                 gates[1] * previous_cell[hidden] + gates[0] * gates[2];
             if (!cell)
@@ -444,10 +448,14 @@ RecurrentState LSTM::ForwardState(const Values& input,
             state.sequence.push_back(hidden_value);
         }
 
+        // The next timestep consumes the full hidden/cell vectors computed for
+        // this timestep.
         previous_cell = std::move(current_cell);
         previous_hidden = std::move(current_hidden);
     }
 
+    // Encoder-decoder callers need both the full hidden sequence and the final
+    // recurrent state.
     state.hidden = std::move(previous_hidden);
     state.cell = std::move(previous_cell);
     return state;
