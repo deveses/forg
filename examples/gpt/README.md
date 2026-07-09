@@ -23,7 +23,7 @@ Arguments:
 ```text
 forg_gpt [dataset-path] [steps] [block-size] [model-size] [heads] [layers]
          [feed-forward-size] [learning-rate] [generate-count] [seed-text]
-         [backend] [batch-size] [thread-count] [checkpoint-path]
+         [backend] [batch-size] [thread-count] [checkpoint-path] [target-loss]
 ```
 
 Fast smoke test:
@@ -59,8 +59,12 @@ Better output if you can wait longer:
 Argument meaning after the dataset path:
 
 ```text
-steps block-size model-size heads layers feed-forward-size learning-rate generate-count seed-text backend batch-size thread-count checkpoint-path
+steps block-size model-size heads layers feed-forward-size learning-rate generate-count seed-text backend batch-size thread-count checkpoint-path target-loss
 ```
+
+`steps` is the maximum number of training updates. `target-loss` is optional; if
+it is greater than zero, training stops early once the current batch loss is less
+than or equal to that value.
 
 Backends:
 
@@ -71,6 +75,12 @@ Checkpoint example:
 
 ```sh
 ./build/examples/gpt/forg_gpt data/gpt_dataset/tiny_shakespeare_dataset.txt 5000 16 32 4 2 64 0.0005 500 "First Citizen:" matrix 32 0 tiny-shakespeare.gpt
+```
+
+Early-stop example:
+
+```sh
+./build/examples/gpt/forg_gpt data/gpt_dataset/tiny_shakespeare_dataset.txt 10000 16 32 4 2 64 0.0005 500 "First Citizen:" matrix 32 0 tiny-shakespeare.gpt 1.8
 ```
 
 Watch `loss` while training:

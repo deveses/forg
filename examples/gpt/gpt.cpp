@@ -61,7 +61,7 @@ void PrintUsage(const char* program)
         << " [dataset-path] [steps] [block-size] [model-size] [heads]"
            " [layers] [feed-forward-size] [learning-rate] [generate-count]"
            " [seed-text] [backend] [batch-size] [thread-count]"
-           " [checkpoint-path]\n"
+           " [checkpoint-path] [target-loss]\n"
         << "Default dataset: data/gpt_dataset/tiny_shakespeare_dataset.txt\n"
         << "Example: " << program
         << " data/gpt_dataset/tiny_shakespeare_dataset.txt 20 8 16 2 1 32"
@@ -520,6 +520,8 @@ int main(int argc, char** argv)
     const std::size_t thread_count =
         argc > 13 ? ParseSize(argv[13], 0) : 0;
     const std::string checkpoint_path = argc > 14 ? argv[14] : "";
+    const double target_loss =
+        argc > 15 ? ParseDouble(argv[15], 0.0) : 0.0;
 
     if (block_size == 0 || model_size == 0 || head_count == 0 ||
         layer_count == 0 || feed_forward_size == 0 ||
@@ -595,7 +597,10 @@ int main(int argc, char** argv)
                   << " backend=matrix"
                   << " batch_size=" << batch_size
                   << " threads=" << model.ThreadCount()
-                  << " parameters=" << model.ParameterCount() << '\n';
+                  << " parameters=" << model.ParameterCount();
+        if (target_loss > 0.0)
+            std::cout << " target_loss=" << target_loss;
+        std::cout << '\n';
 
         std::vector<std::size_t> input(batch_size * block_size, 0);
         std::vector<std::size_t> target(batch_size * block_size, 0);
@@ -625,6 +630,12 @@ int main(int argc, char** argv)
             std::cout << "step " << (step + 1) << "/" << steps
                       << " loss=" << loss
                       << " ms=" << ElapsedMs(start) << '\n';
+            if (target_loss > 0.0 && loss <= target_loss)
+            {
+                std::cout << "target_loss_reached step=" << (step + 1)
+                          << " loss=" << loss << '\n';
+                break;
+            }
         }
 
         if (!checkpoint_path.empty())
@@ -662,7 +673,10 @@ int main(int argc, char** argv)
               << " model_size=" << model_size
               << " heads=" << head_count
               << " layers=" << layer_count
-              << " parameters=" << optimizer.Parameters().size() << '\n';
+              << " parameters=" << optimizer.Parameters().size();
+    if (target_loss > 0.0)
+        std::cout << " target_loss=" << target_loss;
+    std::cout << '\n';
 
     for (std::size_t step = 0; step < steps; ++step)
     {
@@ -692,6 +706,12 @@ int main(int argc, char** argv)
         std::cout << "step " << (step + 1) << "/" << steps
                   << " loss=" << loss->GetData()
                   << " ms=" << ElapsedMs(start) << '\n';
+        if (target_loss > 0.0 && loss->GetData() <= target_loss)
+        {
+            std::cout << "target_loss_reached step=" << (step + 1)
+                      << " loss=" << loss->GetData() << '\n';
+            break;
+        }
     }
 
     std::vector<std::size_t> seed = vocabulary.Encode(seed_text);
