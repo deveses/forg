@@ -20,6 +20,7 @@ add_executable(forg_tests
     math/MathTests.cpp
     audio/WaveFileTests.cpp
     core/BitArrayTests.cpp
+    core/ObjectBufferTests.cpp
     core/RefCounterTests.cpp
     core/StringTests.cpp
     fs/FilesystemTests.cpp

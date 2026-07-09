@@ -37,9 +37,13 @@ list(TRANSFORM audio_sources PREPEND "src/audio/")
 ###############################################################################
 # core
 ###############################################################################
-set(core_includes)
+set(core_includes
+    ObjectBuffer.h
+)
+list(TRANSFORM core_includes PREPEND "include/forg/core/")
 set(core_sources
     BitArray.cpp
+    ObjectBuffer.cpp
     RefCounter.cpp
 )
 list(TRANSFORM core_sources PREPEND "src/core/")
