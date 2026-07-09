@@ -29,8 +29,7 @@ class ScaledDotProductAttention : public Module
 {
   public:
     ScaledDotProductAttention(std::size_t key_size, std::size_t value_size,
-                              std::size_t query_length,
-                              std::size_t key_length,
+                              std::size_t query_length, std::size_t key_length,
                               AttentionMask mask = AttentionMask::None);
 
     Values Forward(const Values& input) const override;
@@ -56,8 +55,7 @@ class MultiHeadAttention : public Module
 {
   public:
     MultiHeadAttention(std::size_t model_size, std::size_t head_count,
-                       std::size_t sequence_length,
-                       bool causal = false);
+                       std::size_t sequence_length, bool causal = false);
     MultiHeadAttention(std::size_t model_size, std::size_t head_count,
                        std::size_t sequence_length, std::mt19937& rng,
                        bool causal = false);
@@ -102,8 +100,7 @@ class TransformerEncoderBlock : public Module
                             std::size_t feed_forward_size);
     TransformerEncoderBlock(std::size_t model_size, std::size_t head_count,
                             std::size_t sequence_length,
-                            std::size_t feed_forward_size,
-                            std::mt19937& rng);
+                            std::size_t feed_forward_size, std::mt19937& rng);
 
     Values Forward(const Values& input) const override;
     Values Parameters() const override;
@@ -111,10 +108,7 @@ class TransformerEncoderBlock : public Module
 
     std::size_t ModelSize() const noexcept { return m_model_size; }
     std::size_t SequenceLength() const noexcept { return m_sequence_length; }
-    std::size_t FeedForwardSize() const noexcept
-    {
-        return m_feed_forward_size;
-    }
+    std::size_t FeedForwardSize() const noexcept { return m_feed_forward_size; }
 
   private:
     std::size_t m_model_size = 0;
@@ -137,8 +131,7 @@ class TransformerDecoderBlock : public Module
     TransformerDecoderBlock(std::size_t model_size, std::size_t head_count,
                             std::size_t decoder_length,
                             std::size_t encoder_length,
-                            std::size_t feed_forward_size,
-                            std::mt19937& rng);
+                            std::size_t feed_forward_size, std::mt19937& rng);
 
     Values Forward(const Values& input) const override;
     Values Forward(const Values& decoder_input,

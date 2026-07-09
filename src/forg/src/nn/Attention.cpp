@@ -119,9 +119,11 @@ AttentionMask MaskFromBool(bool causal)
 
 } // namespace
 
-ScaledDotProductAttention::ScaledDotProductAttention(
-    std::size_t key_size, std::size_t value_size, std::size_t query_length,
-    std::size_t key_length, AttentionMask mask)
+ScaledDotProductAttention::ScaledDotProductAttention(std::size_t key_size,
+                                                     std::size_t value_size,
+                                                     std::size_t query_length,
+                                                     std::size_t key_length,
+                                                     AttentionMask mask)
     : m_key_size(key_size), m_value_size(value_size),
       m_query_length(query_length), m_key_length(key_length), m_mask(mask)
 {
@@ -181,13 +183,10 @@ Values ScaledDotProductAttention::Forward(const Values& query,
                 continue;
 
             ValuePtr score = MakeValue(0.0);
-            for (std::size_t dimension = 0; dimension < m_key_size;
-                 ++dimension)
+            for (std::size_t dimension = 0; dimension < m_key_size; ++dimension)
             {
-                score =
-                    score +
-                    query[query_index * m_key_size + dimension] *
-                        key[key_index * m_key_size + dimension];
+                score = score + query[query_index * m_key_size + dimension] *
+                                    key[key_index * m_key_size + dimension];
                 if (!score)
                     return {};
             }
@@ -231,10 +230,9 @@ Values ScaledDotProductAttention::Forward(const Values& query,
             for (std::size_t index = 0; index < allowed_keys.size(); ++index)
             {
                 const std::size_t key_index = allowed_keys[index];
-                context =
-                    context +
-                    weights[index] *
-                        value[key_index * m_value_size + value_dimension];
+                context = context +
+                          weights[index] *
+                              value[key_index * m_value_size + value_dimension];
                 if (!context)
                     return {};
             }
@@ -246,10 +244,9 @@ Values ScaledDotProductAttention::Forward(const Values& query,
 
 MultiHeadAttention::MultiHeadAttention(std::size_t model_size,
                                        std::size_t head_count,
-                                       std::size_t sequence_length,
-                                       bool causal)
-    : MultiHeadAttention(model_size, head_count, sequence_length,
-                         DefaultRng(), causal)
+                                       std::size_t sequence_length, bool causal)
+    : MultiHeadAttention(model_size, head_count, sequence_length, DefaultRng(),
+                         causal)
 {
 }
 
@@ -277,8 +274,7 @@ MultiHeadAttention::MultiHeadAttention(std::size_t model_size,
                                        std::size_t key_length,
                                        std::mt19937& rng, bool causal)
     : m_model_size(model_size), m_head_count(head_count),
-      m_query_length(query_length), m_key_length(key_length),
-      m_causal(causal)
+      m_query_length(query_length), m_key_length(key_length), m_causal(causal)
 {
     if (m_model_size == 0 || m_head_count == 0 || m_query_length == 0 ||
         m_key_length == 0 || m_model_size % m_head_count != 0)
@@ -291,8 +287,8 @@ MultiHeadAttention::MultiHeadAttention(std::size_t model_size,
     }
 
     m_head_size = m_model_size / m_head_count;
-    m_query_projection = std::make_unique<Linear>(m_model_size, m_model_size,
-                                                  rng);
+    m_query_projection =
+        std::make_unique<Linear>(m_model_size, m_model_size, rng);
     m_key_projection =
         std::make_unique<Linear>(m_model_size, m_model_size, rng);
     m_value_projection =
@@ -334,14 +330,14 @@ Values MultiHeadAttention::Forward(const Values& query, const Values& key,
     for (std::size_t head = 0; head < m_head_count; ++head)
     {
         const Values query_head = HeadSlice(projected_query, m_query_length,
-                                           m_model_size, m_head_size, head);
+                                            m_model_size, m_head_size, head);
         const Values key_head = HeadSlice(projected_key, m_key_length,
-                                         m_model_size, m_head_size, head);
+                                          m_model_size, m_head_size, head);
         const Values value_head = HeadSlice(projected_value, m_key_length,
-                                           m_model_size, m_head_size, head);
-        const ScaledDotProductAttention attention(
-            m_head_size, m_head_size, m_query_length, m_key_length,
-            MaskFromBool(m_causal));
+                                            m_model_size, m_head_size, head);
+        const ScaledDotProductAttention attention(m_head_size, m_head_size,
+                                                  m_query_length, m_key_length,
+                                                  MaskFromBool(m_causal));
         const Values head_output =
             attention.Forward(query_head, key_head, value_head);
         if (head_output.empty())
@@ -386,18 +382,20 @@ void MultiHeadAttention::Train(bool training)
         m_output_projection->Train(training);
 }
 
-TransformerEncoderBlock::TransformerEncoderBlock(
-    std::size_t model_size, std::size_t head_count,
-    std::size_t sequence_length, std::size_t feed_forward_size)
+TransformerEncoderBlock::TransformerEncoderBlock(std::size_t model_size,
+                                                 std::size_t head_count,
+                                                 std::size_t sequence_length,
+                                                 std::size_t feed_forward_size)
     : TransformerEncoderBlock(model_size, head_count, sequence_length,
                               feed_forward_size, DefaultRng())
 {
 }
 
-TransformerEncoderBlock::TransformerEncoderBlock(
-    std::size_t model_size, std::size_t head_count,
-    std::size_t sequence_length, std::size_t feed_forward_size,
-    std::mt19937& rng)
+TransformerEncoderBlock::TransformerEncoderBlock(std::size_t model_size,
+                                                 std::size_t head_count,
+                                                 std::size_t sequence_length,
+                                                 std::size_t feed_forward_size,
+                                                 std::mt19937& rng)
     : m_model_size(model_size), m_sequence_length(sequence_length),
       m_feed_forward_size(feed_forward_size)
 {
@@ -411,8 +409,8 @@ TransformerEncoderBlock::TransformerEncoderBlock(
         return;
     }
 
-    m_attention = std::make_unique<MultiHeadAttention>(
-        m_model_size, head_count, m_sequence_length, rng);
+    m_attention = std::make_unique<MultiHeadAttention>(m_model_size, head_count,
+                                                       m_sequence_length, rng);
     m_norm1 = std::make_unique<LayerNorm>(m_model_size, m_sequence_length);
     m_norm2 = std::make_unique<LayerNorm>(m_model_size, m_sequence_length);
     m_feed_forward1 =
@@ -467,25 +465,28 @@ void TransformerEncoderBlock::Train(bool training)
         m_feed_forward2->Train(training);
 }
 
-TransformerDecoderBlock::TransformerDecoderBlock(
-    std::size_t model_size, std::size_t head_count,
-    std::size_t decoder_length, std::size_t encoder_length,
-    std::size_t feed_forward_size)
+TransformerDecoderBlock::TransformerDecoderBlock(std::size_t model_size,
+                                                 std::size_t head_count,
+                                                 std::size_t decoder_length,
+                                                 std::size_t encoder_length,
+                                                 std::size_t feed_forward_size)
     : TransformerDecoderBlock(model_size, head_count, decoder_length,
                               encoder_length, feed_forward_size, DefaultRng())
 {
 }
 
-TransformerDecoderBlock::TransformerDecoderBlock(
-    std::size_t model_size, std::size_t head_count,
-    std::size_t decoder_length, std::size_t encoder_length,
-    std::size_t feed_forward_size, std::mt19937& rng)
+TransformerDecoderBlock::TransformerDecoderBlock(std::size_t model_size,
+                                                 std::size_t head_count,
+                                                 std::size_t decoder_length,
+                                                 std::size_t encoder_length,
+                                                 std::size_t feed_forward_size,
+                                                 std::mt19937& rng)
     : m_model_size(model_size), m_decoder_length(decoder_length),
       m_encoder_length(encoder_length), m_feed_forward_size(feed_forward_size)
 {
-    if (m_model_size == 0 || m_decoder_length == 0 ||
-        m_encoder_length == 0 || m_feed_forward_size == 0 ||
-        head_count == 0 || m_model_size % head_count != 0)
+    if (m_model_size == 0 || m_decoder_length == 0 || m_encoder_length == 0 ||
+        m_feed_forward_size == 0 || head_count == 0 ||
+        m_model_size % head_count != 0)
     {
         m_model_size = 0;
         m_decoder_length = 0;
@@ -657,13 +658,10 @@ TransformerDecoder::TransformerDecoder(std::size_t layer_count,
 {
 }
 
-TransformerDecoder::TransformerDecoder(std::size_t layer_count,
-                                       std::size_t model_size,
-                                       std::size_t head_count,
-                                       std::size_t decoder_length,
-                                       std::size_t encoder_length,
-                                       std::size_t feed_forward_size,
-                                       std::mt19937& rng)
+TransformerDecoder::TransformerDecoder(
+    std::size_t layer_count, std::size_t model_size, std::size_t head_count,
+    std::size_t decoder_length, std::size_t encoder_length,
+    std::size_t feed_forward_size, std::mt19937& rng)
     : m_model_size(model_size), m_decoder_length(decoder_length),
       m_encoder_length(encoder_length)
 {
