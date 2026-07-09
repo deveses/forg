@@ -114,15 +114,13 @@ class AttentionSeq2Seq : public Module
     AttentionSeq2Seq(std::size_t encoder_input_size,
                      std::size_t decoder_input_size, std::size_t hidden_size,
                      std::size_t output_size, std::size_t encoder_length,
-                     std::size_t decoder_length,
-                     RecurrentCellType cell_type,
+                     std::size_t decoder_length, RecurrentCellType cell_type,
                      std::size_t head_count = 1);
     AttentionSeq2Seq(std::size_t encoder_input_size,
                      std::size_t decoder_input_size, std::size_t hidden_size,
                      std::size_t output_size, std::size_t encoder_length,
-                     std::size_t decoder_length,
-                     RecurrentCellType cell_type, std::mt19937& rng,
-                     std::size_t head_count = 1);
+                     std::size_t decoder_length, RecurrentCellType cell_type,
+                     std::mt19937& rng, std::size_t head_count = 1);
     ~AttentionSeq2Seq() override;
 
     Values Forward(const Values& input) const override;

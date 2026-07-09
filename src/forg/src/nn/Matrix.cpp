@@ -577,8 +577,7 @@ struct Tensor3
     std::size_t Rows() const noexcept { return batch * time; }
     std::size_t Size() const noexcept { return data.size(); }
 
-    double& operator()(std::size_t b, std::size_t t,
-                       std::size_t c) noexcept
+    double& operator()(std::size_t b, std::size_t t, std::size_t c) noexcept
     {
         return data[(b * time + t) * channels + c];
     }
@@ -678,8 +677,8 @@ MatrixGPTParameters MakeGPTParameters(const MatrixGPTConfig& config,
 {
     MatrixGPTParameters parameters;
     parameters.token_embedding = Matrix(config.vocab_size, config.model_size);
-    parameters.position_embedding = Matrix(config.block_size,
-                                           config.model_size);
+    parameters.position_embedding =
+        Matrix(config.block_size, config.model_size);
     InitWeights(parameters.token_embedding, rng);
     InitWeights(parameters.position_embedding, rng);
 
@@ -693,10 +692,8 @@ MatrixGPTParameters MakeGPTParameters(const MatrixGPTConfig& config,
         InitLinear(block.output, config.model_size, config.model_size, rng);
         InitVector(block.norm1_scale, config.model_size, 1.0);
         InitVector(block.norm1_bias, config.model_size, 0.0);
-        InitLinear(block.ff1, config.model_size, config.feed_forward_size,
-                   rng);
-        InitLinear(block.ff2, config.feed_forward_size, config.model_size,
-                   rng);
+        InitLinear(block.ff1, config.model_size, config.feed_forward_size, rng);
+        InitLinear(block.ff2, config.feed_forward_size, config.model_size, rng);
         InitVector(block.norm2_scale, config.model_size, 1.0);
         InitVector(block.norm2_bias, config.model_size, 0.0);
         parameters.blocks.push_back(std::move(block));
@@ -759,8 +756,7 @@ void LinearBackward(const Tensor3& input,
     }
 }
 
-Tensor3 LayerNormForward(const Tensor3& input,
-                         const std::vector<double>& scale,
+Tensor3 LayerNormForward(const Tensor3& input, const std::vector<double>& scale,
                          const std::vector<double>& bias,
                          std::vector<double>& mean,
                          std::vector<double>& inv_std)
@@ -822,8 +818,7 @@ void LayerNormBackward(const Tensor3& input, const std::vector<double>& scale,
             double mean_dnorm_norm = 0.0;
             for (std::size_t c = 0; c < input.channels; ++c)
             {
-                const double norm = (input(b, t, c) - mean[row]) *
-                                    inv_std[row];
+                const double norm = (input(b, t, c) - mean[row]) * inv_std[row];
                 const double dnorm = grad_output(b, t, c) * scale[c];
                 mean_dnorm += dnorm;
                 mean_dnorm_norm += dnorm * norm;
@@ -835,12 +830,10 @@ void LayerNormBackward(const Tensor3& input, const std::vector<double>& scale,
 
             for (std::size_t c = 0; c < input.channels; ++c)
             {
-                const double norm = (input(b, t, c) - mean[row]) *
-                                    inv_std[row];
+                const double norm = (input(b, t, c) - mean[row]) * inv_std[row];
                 const double dnorm = grad_output(b, t, c) * scale[c];
-                grad_input(b, t, c) +=
-                    inv_std[row] *
-                    (dnorm - mean_dnorm - norm * mean_dnorm_norm);
+                grad_input(b, t, c) += inv_std[row] * (dnorm - mean_dnorm -
+                                                       norm * mean_dnorm_norm);
             }
         }
     }
@@ -1039,8 +1032,7 @@ Matrix TensorToLogits(const Tensor3& input,
 }
 
 Tensor3 LogitsGrad(const Matrix& logits, const std::vector<std::size_t>& labels,
-                   std::size_t batch_size, std::size_t block_size,
-                   double& loss)
+                   std::size_t batch_size, std::size_t block_size, double& loss)
 {
     if (logits.Rows() != labels.size() ||
         logits.Rows() != batch_size * block_size)
@@ -1106,8 +1098,7 @@ void AppendVectorPointers(std::vector<double*>& values,
         values.push_back(&value);
 }
 
-void AppendMatrixGradients(std::vector<double>& gradients,
-                           const Matrix& matrix)
+void AppendMatrixGradients(std::vector<double>& gradients, const Matrix& matrix)
 {
     gradients.insert(gradients.end(), matrix.Data().begin(),
                      matrix.Data().end());
@@ -1213,8 +1204,7 @@ MatrixGPTParameters MakeZeroGradients(const MatrixGPTConfig& config)
 {
     MatrixGPTParameters gradients;
     gradients.token_embedding = Matrix(config.vocab_size, config.model_size);
-    gradients.position_embedding = Matrix(config.block_size,
-                                          config.model_size);
+    gradients.position_embedding = Matrix(config.block_size, config.model_size);
     gradients.blocks.reserve(config.layer_count);
     for (std::size_t index = 0; index < config.layer_count; ++index)
     {
@@ -1229,11 +1219,9 @@ MatrixGPTParameters MakeZeroGradients(const MatrixGPTConfig& config)
         block.output.bias.assign(config.model_size, 0.0);
         block.norm1_scale.assign(config.model_size, 0.0);
         block.norm1_bias.assign(config.model_size, 0.0);
-        block.ff1.weights = Matrix(config.feed_forward_size,
-                                   config.model_size);
+        block.ff1.weights = Matrix(config.feed_forward_size, config.model_size);
         block.ff1.bias.assign(config.feed_forward_size, 0.0);
-        block.ff2.weights = Matrix(config.model_size,
-                                   config.feed_forward_size);
+        block.ff2.weights = Matrix(config.model_size, config.feed_forward_size);
         block.ff2.bias.assign(config.model_size, 0.0);
         block.norm2_scale.assign(config.model_size, 0.0);
         block.norm2_bias.assign(config.model_size, 0.0);
@@ -1366,25 +1354,24 @@ Tensor3 MatrixGPTForwardInternal(const MatrixGPTConfig& config,
         Tensor3 key = LinearForward(current, block.key);
         Tensor3 value = LinearForward(current, block.value);
         std::vector<double> probabilities;
-        Tensor3 context = CausalAttentionForward(query, key, value,
-                                                 config.head_count,
-                                                 probabilities);
+        Tensor3 context = CausalAttentionForward(
+            query, key, value, config.head_count, probabilities);
         Tensor3 attention_output = LinearForward(context, block.output);
         Tensor3 residual1 = AddTensors(current, attention_output);
         std::vector<double> norm1_mean;
         std::vector<double> norm1_inv_std;
-        Tensor3 norm1 = LayerNormForward(residual1, block.norm1_scale,
-                                         block.norm1_bias, norm1_mean,
-                                         norm1_inv_std);
+        Tensor3 norm1 =
+            LayerNormForward(residual1, block.norm1_scale, block.norm1_bias,
+                             norm1_mean, norm1_inv_std);
         Tensor3 ff1_pre = LinearForward(norm1, block.ff1);
         Tensor3 ff1 = ReluForward(ff1_pre);
         Tensor3 ff2 = LinearForward(ff1, block.ff2);
         Tensor3 residual2 = AddTensors(norm1, ff2);
         std::vector<double> norm2_mean;
         std::vector<double> norm2_inv_std;
-        Tensor3 norm2 = LayerNormForward(residual2, block.norm2_scale,
-                                         block.norm2_bias, norm2_mean,
-                                         norm2_inv_std);
+        Tensor3 norm2 =
+            LayerNormForward(residual2, block.norm2_scale, block.norm2_bias,
+                             norm2_mean, norm2_inv_std);
 
         if (query.Empty() || key.Empty() || value.Empty() || context.Empty() ||
             attention_output.Empty() || residual1.Empty() || norm1.Empty() ||
@@ -1423,11 +1410,10 @@ Tensor3 MatrixGPTForwardInternal(const MatrixGPTConfig& config,
 
     std::vector<double> final_mean;
     std::vector<double> final_inv_std;
-    current = LayerNormForward(current, parameters.final_norm_scale,
-                               parameters.final_norm_bias,
-                               cache ? cache->final_norm_mean : final_mean,
-                               cache ? cache->final_norm_inv_std
-                                     : final_inv_std);
+    current = LayerNormForward(
+        current, parameters.final_norm_scale, parameters.final_norm_bias,
+        cache ? cache->final_norm_mean : final_mean,
+        cache ? cache->final_norm_inv_std : final_inv_std);
     if (current.Empty())
         return {};
 
@@ -1445,8 +1431,8 @@ Matrix MatrixGPT::Forward(const std::vector<std::size_t>& input,
         return {};
 
     MatrixGPTForwardCache cache;
-    const Tensor3 final = MatrixGPTForwardInternal(
-        m_config, m_impl->parameters, input, batch_size, &cache);
+    const Tensor3 final = MatrixGPTForwardInternal(m_config, m_impl->parameters,
+                                                   input, batch_size, &cache);
     if (final.Empty())
         return {};
 
@@ -1461,8 +1447,8 @@ double MatrixGPT::TrainBatch(const std::vector<std::size_t>& input,
         return 0.0;
 
     MatrixGPTForwardCache cache;
-    const Tensor3 final = MatrixGPTForwardInternal(
-        m_config, m_impl->parameters, input, batch_size, &cache);
+    const Tensor3 final = MatrixGPTForwardInternal(m_config, m_impl->parameters,
+                                                   input, batch_size, &cache);
     if (final.Empty())
         return 0.0;
 
@@ -1488,16 +1474,16 @@ double MatrixGPT::TrainBatch(const std::vector<std::size_t>& input,
          --reverse_layer)
     {
         const std::size_t layer = reverse_layer - 1;
-        const MatrixGPTBlockParameters& block = m_impl->parameters.blocks[layer];
+        const MatrixGPTBlockParameters& block =
+            m_impl->parameters.blocks[layer];
         MatrixGPTBlockParameters& grad_block = gradients.blocks[layer];
         const MatrixGPTBlockCache& block_cache = cache.blocks[layer];
 
         Tensor3 grad_residual2(grad_current.batch, grad_current.time,
                                grad_current.channels);
         LayerNormBackward(block_cache.residual2, block.norm2_scale,
-                          block_cache.norm2_mean,
-                          block_cache.norm2_inv_std, grad_current,
-                          grad_residual2, grad_block.norm2_scale,
+                          block_cache.norm2_mean, block_cache.norm2_inv_std,
+                          grad_current, grad_residual2, grad_block.norm2_scale,
                           grad_block.norm2_bias);
 
         Tensor3 grad_norm1 = grad_residual2;
@@ -1507,8 +1493,7 @@ double MatrixGPT::TrainBatch(const std::vector<std::size_t>& input,
         LinearBackward(block_cache.ff1, block.ff2, grad_ff2, grad_ff1,
                        grad_block.ff2.weights, grad_block.ff2.bias);
 
-        Tensor3 grad_ff1_pre(grad_ff1.batch, grad_ff1.time,
-                             grad_ff1.channels);
+        Tensor3 grad_ff1_pre(grad_ff1.batch, grad_ff1.time, grad_ff1.channels);
         ReluBackward(block_cache.ff1_pre, grad_ff1, grad_ff1_pre);
         Tensor3 grad_norm1_from_ff(grad_norm1.batch, grad_norm1.time,
                                    grad_norm1.channels);
@@ -1521,9 +1506,8 @@ double MatrixGPT::TrainBatch(const std::vector<std::size_t>& input,
         Tensor3 grad_residual1(grad_norm1.batch, grad_norm1.time,
                                grad_norm1.channels);
         LayerNormBackward(block_cache.residual1, block.norm1_scale,
-                          block_cache.norm1_mean,
-                          block_cache.norm1_inv_std, grad_norm1,
-                          grad_residual1, grad_block.norm1_scale,
+                          block_cache.norm1_mean, block_cache.norm1_inv_std,
+                          grad_norm1, grad_residual1, grad_block.norm1_scale,
                           grad_block.norm1_bias);
 
         Tensor3 grad_input = grad_residual1;
@@ -1531,9 +1515,9 @@ double MatrixGPT::TrainBatch(const std::vector<std::size_t>& input,
         Tensor3 grad_context(grad_attention_output.batch,
                              grad_attention_output.time,
                              block_cache.context.channels);
-        LinearBackward(block_cache.context, block.output,
-                       grad_attention_output, grad_context,
-                       grad_block.output.weights, grad_block.output.bias);
+        LinearBackward(block_cache.context, block.output, grad_attention_output,
+                       grad_context, grad_block.output.weights,
+                       grad_block.output.bias);
 
         Tensor3 grad_query(block_cache.query.batch, block_cache.query.time,
                            block_cache.query.channels);
@@ -1550,8 +1534,7 @@ double MatrixGPT::TrainBatch(const std::vector<std::size_t>& input,
                                 block_cache.input.channels);
         Tensor3 grad_from_key(block_cache.input.batch, block_cache.input.time,
                               block_cache.input.channels);
-        Tensor3 grad_from_value(block_cache.input.batch,
-                                block_cache.input.time,
+        Tensor3 grad_from_value(block_cache.input.batch, block_cache.input.time,
                                 block_cache.input.channels);
         LinearBackward(block_cache.input, block.query, grad_query,
                        grad_from_query, grad_block.query.weights,
@@ -1619,8 +1602,8 @@ double MatrixGPT::TrainBatch(const std::vector<std::size_t>& input,
     return loss;
 }
 
-std::size_t MatrixGPT::PredictNext(
-    const std::vector<std::size_t>& context) const
+std::size_t
+MatrixGPT::PredictNext(const std::vector<std::size_t>& context) const
 {
     if (!Valid() || context.empty())
         return std::numeric_limits<std::size_t>::max();
@@ -1677,8 +1660,7 @@ bool MatrixGPT::SaveParameters(const std::string& filename,
     stream << "FORG_NN_MATRIX_GPT 1\n";
     stream << m_config.vocab_size << ' ' << m_config.block_size << ' '
            << m_config.model_size << ' ' << m_config.head_count << ' '
-           << m_config.layer_count << ' ' << m_config.feed_forward_size
-           << '\n';
+           << m_config.layer_count << ' ' << m_config.feed_forward_size << '\n';
     stream << std::setprecision(std::numeric_limits<double>::max_digits10);
     std::vector<const double*> values;
     CollectParameterValues(values, m_impl->parameters);

@@ -635,11 +635,14 @@ TEST_CASE("EncoderDecoder exposes dimensions shapes and parameters",
 
     std::mt19937 rng(59);
     const Values encoder_input = {
-        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+        MakeValue(0.1),
+        MakeValue(0.2),
+        MakeValue(0.3),
+        MakeValue(0.4),
     };
     const Values decoder_input = {
-        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
-        MakeValue(0.9), MakeValue(1.0),
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7),
+        MakeValue(0.8), MakeValue(0.9), MakeValue(1.0),
     };
 
     EncoderDecoder rnn(2, 2, 3, 2, 3, RecurrentCellType::RNN, rng);
@@ -661,8 +664,7 @@ TEST_CASE("EncoderDecoder exposes dimensions shapes and parameters",
     REQUIRE(gru.Parameters().size() == 108);
 }
 
-TEST_CASE("EncoderDecoder passes RNN encoder state to decoder",
-          "[nn][module]")
+TEST_CASE("EncoderDecoder passes RNN encoder state to decoder", "[nn][module]")
 {
     using namespace forg::nn;
 
@@ -719,11 +721,14 @@ TEST_CASE("Seq2Seq projects decoder states at each timestep", "[nn][module]")
     std::mt19937 rng(62);
     Seq2Seq model(2, 2, 3, 4, 2, 3, RecurrentCellType::GRU, rng);
     const Values encoder_input = {
-        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+        MakeValue(0.1),
+        MakeValue(0.2),
+        MakeValue(0.3),
+        MakeValue(0.4),
     };
     const Values decoder_input = {
-        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
-        MakeValue(0.9), MakeValue(1.0),
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7),
+        MakeValue(0.8), MakeValue(0.9), MakeValue(1.0),
     };
 
     const Values output = model.Forward(encoder_input, decoder_input);
@@ -743,21 +748,22 @@ TEST_CASE("EncoderDecoder and Seq2Seq reject invalid inputs", "[nn][module]")
 
     std::mt19937 rng(63);
     EncoderDecoder encoder_decoder(1, 1, 2, 2, 2, RecurrentCellType::GRU, rng);
-    REQUIRE(encoder_decoder.Forward({MakeValue(1.0)}, {MakeValue(2.0)})
-                .empty());
-    REQUIRE(encoder_decoder.Forward(
-                               {MakeValue(1.0), nullptr, MakeValue(2.0),
-                                MakeValue(3.0)})
-                .empty());
+    REQUIRE(
+        encoder_decoder.Forward({MakeValue(1.0)}, {MakeValue(2.0)}).empty());
+    REQUIRE(
+        encoder_decoder
+            .Forward({MakeValue(1.0), nullptr, MakeValue(2.0), MakeValue(3.0)})
+            .empty());
     REQUIRE(EncoderDecoder(0, 1, 1, 1, 1, RecurrentCellType::RNN, rng)
                 .Parameters()
                 .empty());
 
     Seq2Seq seq2seq(1, 1, 2, 2, 2, 2, RecurrentCellType::RNN, rng);
     REQUIRE(seq2seq.Forward({MakeValue(1.0)}, {MakeValue(2.0)}).empty());
-    REQUIRE(seq2seq.Forward({MakeValue(1.0), MakeValue(2.0), nullptr,
-                             MakeValue(3.0)})
-                .empty());
+    REQUIRE(
+        seq2seq
+            .Forward({MakeValue(1.0), MakeValue(2.0), nullptr, MakeValue(3.0)})
+            .empty());
     REQUIRE(Seq2Seq(1, 1, 1, 0, 1, 1, RecurrentCellType::RNN, rng)
                 .Parameters()
                 .empty());
@@ -782,13 +788,12 @@ TEST_CASE("LayerNorm normalizes each flat sequence token", "[nn][module]")
     REQUIRE(output[1]->GetData() == Approx(1.0).margin(1e-4));
     REQUIRE(output[2]->GetData() == Approx(-1.0).margin(1e-4));
     REQUIRE(output[3]->GetData() == Approx(1.0).margin(1e-4));
-    REQUIRE(norm.Forward({MakeValue(1.0), nullptr, MakeValue(2.0),
-                          MakeValue(3.0)})
-                .empty());
+    REQUIRE(
+        norm.Forward({MakeValue(1.0), nullptr, MakeValue(2.0), MakeValue(3.0)})
+            .empty());
 }
 
-TEST_CASE("ScaledDotProductAttention supports causal masking",
-          "[nn][module]")
+TEST_CASE("ScaledDotProductAttention supports causal masking", "[nn][module]")
 {
     using namespace forg::nn;
 
@@ -808,8 +813,7 @@ TEST_CASE("ScaledDotProductAttention supports causal masking",
     REQUIRE(attention.Forward({query[0]}, key, value).empty());
 }
 
-TEST_CASE("MultiHeadAttention exposes parameters and gradients",
-          "[nn][module]")
+TEST_CASE("MultiHeadAttention exposes parameters and gradients", "[nn][module]")
 {
     using namespace forg::nn;
 
@@ -1111,8 +1115,7 @@ TEST_CASE("MatrixGPT validates config and returns batched logits",
     REQUIRE(invalid.Forward(input, 2).Empty());
 }
 
-TEST_CASE("MatrixGPT training lowers tiny language-model loss",
-          "[nn][matrix]")
+TEST_CASE("MatrixGPT training lowers tiny language-model loss", "[nn][matrix]")
 {
     std::mt19937 rng(92);
     forg::nn::MatrixGPTConfig config;
@@ -1125,16 +1128,10 @@ TEST_CASE("MatrixGPT training lowers tiny language-model loss",
 
     forg::nn::MatrixGPT model(config, rng);
     const std::vector<std::size_t> input = {
-        0, 1, 0,
-        0, 1, 0,
-        0, 1, 0,
-        0, 1, 0,
+        0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
     };
     const std::vector<std::size_t> target = {
-        1, 0, 1,
-        1, 0, 1,
-        1, 0, 1,
-        1, 0, 1,
+        1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
     };
 
     const double first_loss = model.TrainBatch(input, target, 4, 0.01);
@@ -1146,8 +1143,7 @@ TEST_CASE("MatrixGPT training lowers tiny language-model loss",
     REQUIRE(last_loss < first_loss);
 }
 
-TEST_CASE("MatrixGPT causal attention ignores future tokens",
-          "[nn][matrix]")
+TEST_CASE("MatrixGPT causal attention ignores future tokens", "[nn][matrix]")
 {
     std::mt19937 rng(93);
     forg::nn::MatrixGPTConfig config;
@@ -1228,8 +1224,7 @@ TEST_CASE("MatrixGPT threaded training matches single-thread training",
     const std::vector<std::size_t> target = {1, 2, 3, 2, 3, 0};
 
     const double single_loss = single.TrainBatch(input, target, 2, 0.005);
-    const double threaded_loss =
-        threaded.TrainBatch(input, target, 2, 0.005);
+    const double threaded_loss = threaded.TrainBatch(input, target, 2, 0.005);
     REQUIRE(threaded_loss == Approx(single_loss));
 
     const forg::nn::Matrix single_output = single.Forward(input, 2);

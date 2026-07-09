@@ -73,10 +73,7 @@ Values BatchNorm::Parameters() const
     return parameters;
 }
 
-LayerNorm::LayerNorm(std::size_t feature_count)
-    : LayerNorm(feature_count, 1)
-{
-}
+LayerNorm::LayerNorm(std::size_t feature_count) : LayerNorm(feature_count, 1) {}
 
 LayerNorm::LayerNorm(std::size_t feature_count, std::size_t sequence_length,
                      double epsilon)
@@ -138,8 +135,8 @@ Values LayerNorm::Forward(const Values& input) const
 
         for (std::size_t feature = 0; feature < m_feature_count; ++feature)
         {
-            const ValuePtr normalized = (input[offset + feature] - mean) *
-                                       inv_std;
+            const ValuePtr normalized =
+                (input[offset + feature] - mean) * inv_std;
             ValuePtr value = m_scale[feature] * normalized + m_bias[feature];
             if (!value)
                 return {};

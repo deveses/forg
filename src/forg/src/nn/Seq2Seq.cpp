@@ -25,8 +25,9 @@ class RecurrentModule : public Module
         return ForwardState(input, {});
     }
 
-    virtual RecurrentState ForwardState(
-        const Values& input, const RecurrentState& initial_state) const = 0;
+    virtual RecurrentState
+    ForwardState(const Values& input,
+                 const RecurrentState& initial_state) const = 0;
 
     std::size_t InputSize() const noexcept { return m_input_size; }
     std::size_t HiddenSize() const noexcept { return m_hidden_size; }
@@ -55,9 +56,9 @@ class RNNModule final : public RecurrentModule
         return m_layer.Forward(input);
     }
 
-    RecurrentState ForwardState(
-        const Values& input,
-        const RecurrentState& initial_state) const override
+    RecurrentState
+    ForwardState(const Values& input,
+                 const RecurrentState& initial_state) const override
     {
         if (initial_state.hidden.empty())
             return m_layer.ForwardState(input);
@@ -86,9 +87,9 @@ class LSTMModule final : public RecurrentModule
         return m_layer.Forward(input);
     }
 
-    RecurrentState ForwardState(
-        const Values& input,
-        const RecurrentState& initial_state) const override
+    RecurrentState
+    ForwardState(const Values& input,
+                 const RecurrentState& initial_state) const override
     {
         if (initial_state.hidden.empty() && initial_state.cell.empty())
             return m_layer.ForwardState(input);
@@ -118,9 +119,9 @@ class GRUModule final : public RecurrentModule
         return m_layer.Forward(input);
     }
 
-    RecurrentState ForwardState(
-        const Values& input,
-        const RecurrentState& initial_state) const override
+    RecurrentState
+    ForwardState(const Values& input,
+                 const RecurrentState& initial_state) const override
     {
         if (initial_state.hidden.empty())
             return m_layer.ForwardState(input);
@@ -134,9 +135,10 @@ class GRUModule final : public RecurrentModule
     GRU m_layer;
 };
 
-std::unique_ptr<RecurrentModule> MakeRecurrentModule(
-    RecurrentCellType cell_type, std::size_t input_size,
-    std::size_t hidden_size, std::size_t sequence_length, std::mt19937& rng)
+std::unique_ptr<RecurrentModule>
+MakeRecurrentModule(RecurrentCellType cell_type, std::size_t input_size,
+                    std::size_t hidden_size, std::size_t sequence_length,
+                    std::mt19937& rng)
 {
     switch (cell_type)
     {
@@ -156,8 +158,7 @@ std::unique_ptr<RecurrentModule> MakeRecurrentModule(
 
 Values ProjectDecoderHidden(const Values& decoder_hidden,
                             const EncoderDecoder& encoder_decoder,
-                            const Linear& projection,
-                            std::size_t output_size)
+                            const Linear& projection, std::size_t output_size)
 {
     const std::size_t hidden_size = encoder_decoder.HiddenSize();
     const std::size_t decoder_length = encoder_decoder.DecoderLength();
@@ -261,8 +262,8 @@ RecurrentState EncoderDecoder::Encode(const Values& encoder_input) const
                      : RecurrentState{};
 }
 
-RecurrentState EncoderDecoder::Decode(
-    const Values& decoder_input, const RecurrentState& encoder_state) const
+RecurrentState EncoderDecoder::Decode(const Values& decoder_input,
+                                      const RecurrentState& encoder_state) const
 {
     return m_decoder ? m_decoder->ForwardState(decoder_input, encoder_state)
                      : RecurrentState{};
@@ -287,20 +288,19 @@ Values EncoderDecoder::Parameters() const
     return parameters;
 }
 
-Seq2Seq::Seq2Seq(std::size_t encoder_input_size,
-                 std::size_t decoder_input_size, std::size_t hidden_size,
-                 std::size_t output_size, std::size_t encoder_length,
-                 std::size_t decoder_length, RecurrentCellType cell_type)
+Seq2Seq::Seq2Seq(std::size_t encoder_input_size, std::size_t decoder_input_size,
+                 std::size_t hidden_size, std::size_t output_size,
+                 std::size_t encoder_length, std::size_t decoder_length,
+                 RecurrentCellType cell_type)
     : Seq2Seq(encoder_input_size, decoder_input_size, hidden_size, output_size,
               encoder_length, decoder_length, cell_type, DefaultRng())
 {
 }
 
-Seq2Seq::Seq2Seq(std::size_t encoder_input_size,
-                 std::size_t decoder_input_size, std::size_t hidden_size,
-                 std::size_t output_size, std::size_t encoder_length,
-                 std::size_t decoder_length, RecurrentCellType cell_type,
-                 std::mt19937& rng)
+Seq2Seq::Seq2Seq(std::size_t encoder_input_size, std::size_t decoder_input_size,
+                 std::size_t hidden_size, std::size_t output_size,
+                 std::size_t encoder_length, std::size_t decoder_length,
+                 RecurrentCellType cell_type, std::mt19937& rng)
     : m_output_size(output_size)
 {
     if (encoder_input_size == 0 || decoder_input_size == 0 ||
