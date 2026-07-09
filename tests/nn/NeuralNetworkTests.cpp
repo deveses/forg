@@ -593,6 +593,317 @@ TEST_CASE("GRU composes with Sequential using flattened full sequence",
             gru->Parameters().size() + linear->Parameters().size());
 }
 
+TEST_CASE("Recurrent layers expose final state alongside full sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(58);
+
+    RNN rnn(1, 2, 3, rng);
+    const RecurrentState rnn_state =
+        rnn.ForwardState({MakeValue(0.1), MakeValue(0.2), MakeValue(0.3)});
+    REQUIRE(rnn_state.sequence.size() == 6);
+    REQUIRE(rnn_state.hidden.size() == 2);
+    REQUIRE(rnn_state.cell.empty());
+    REQUIRE(rnn_state.hidden[0] == rnn_state.sequence[4]);
+    REQUIRE(rnn_state.hidden[1] == rnn_state.sequence[5]);
+
+    LSTM lstm(1, 2, 3, rng);
+    const RecurrentState lstm_state =
+        lstm.ForwardState({MakeValue(0.1), MakeValue(0.2), MakeValue(0.3)});
+    REQUIRE(lstm_state.sequence.size() == 6);
+    REQUIRE(lstm_state.hidden.size() == 2);
+    REQUIRE(lstm_state.cell.size() == 2);
+    REQUIRE(lstm_state.hidden[0] == lstm_state.sequence[4]);
+    REQUIRE(lstm_state.hidden[1] == lstm_state.sequence[5]);
+
+    GRU gru(1, 2, 3, rng);
+    const RecurrentState gru_state =
+        gru.ForwardState({MakeValue(0.1), MakeValue(0.2), MakeValue(0.3)});
+    REQUIRE(gru_state.sequence.size() == 6);
+    REQUIRE(gru_state.hidden.size() == 2);
+    REQUIRE(gru_state.cell.empty());
+    REQUIRE(gru_state.hidden[0] == gru_state.sequence[4]);
+    REQUIRE(gru_state.hidden[1] == gru_state.sequence[5]);
+}
+
+TEST_CASE("EncoderDecoder exposes dimensions shapes and parameters",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(59);
+    const Values encoder_input = {
+        MakeValue(0.1),
+        MakeValue(0.2),
+        MakeValue(0.3),
+        MakeValue(0.4),
+    };
+    const Values decoder_input = {
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7),
+        MakeValue(0.8), MakeValue(0.9), MakeValue(1.0),
+    };
+
+    EncoderDecoder rnn(2, 2, 3, 2, 3, RecurrentCellType::RNN, rng);
+    REQUIRE(rnn.EncoderInputSize() == 2);
+    REQUIRE(rnn.DecoderInputSize() == 2);
+    REQUIRE(rnn.HiddenSize() == 3);
+    REQUIRE(rnn.EncoderLength() == 2);
+    REQUIRE(rnn.DecoderLength() == 3);
+    REQUIRE(rnn.CellType() == RecurrentCellType::RNN);
+    REQUIRE(rnn.Forward(encoder_input, decoder_input).size() == 9);
+    REQUIRE(rnn.Parameters().size() == 36);
+
+    EncoderDecoder lstm(2, 2, 3, 2, 3, RecurrentCellType::LSTM, rng);
+    REQUIRE(lstm.Forward(encoder_input, decoder_input).size() == 9);
+    REQUIRE(lstm.Parameters().size() == 144);
+
+    EncoderDecoder gru(2, 2, 3, 2, 3, RecurrentCellType::GRU, rng);
+    REQUIRE(gru.Forward(encoder_input, decoder_input).size() == 9);
+    REQUIRE(gru.Parameters().size() == 108);
+}
+
+TEST_CASE("EncoderDecoder passes RNN encoder state to decoder", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(60);
+    EncoderDecoder model(1, 1, 1, 1, 1, RecurrentCellType::RNN, rng);
+    const Values parameters = model.Parameters();
+    REQUIRE(parameters.size() == 6);
+    for (const ValuePtr& parameter : parameters)
+    {
+        parameter->SetData(0.0);
+    }
+    parameters[0]->SetData(1.0);
+    parameters[4]->SetData(1.0);
+
+    const Values output = model.Forward({MakeValue(1.0)}, {MakeValue(0.0)});
+    REQUIRE(output.size() == 1);
+    REQUIRE(output[0]->GetData() == Approx(std::tanh(std::tanh(1.0))));
+}
+
+TEST_CASE("LSTM EncoderDecoder gradients flow through encoder and decoder",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(61);
+    EncoderDecoder model(1, 1, 1, 2, 2, RecurrentCellType::LSTM, rng);
+    for (const ValuePtr& parameter : model.Parameters())
+    {
+        parameter->SetData(0.2);
+    }
+
+    const Values encoder_input = {MakeValue(0.5), MakeValue(-0.25)};
+    const Values decoder_input = {MakeValue(0.75), MakeValue(0.1)};
+    const RecurrentState encoder_state = model.Encode(encoder_input);
+    const RecurrentState decoder_state =
+        model.Decode(decoder_input, encoder_state);
+    REQUIRE(decoder_state.sequence.size() == 2);
+
+    Backward(decoder_state.sequence.back());
+
+    REQUIRE(encoder_input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(encoder_input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(decoder_input[0]->GetGrad() != Approx(0.0));
+    REQUIRE(decoder_input[1]->GetGrad() != Approx(0.0));
+    REQUIRE(encoder_state.hidden[0]->GetGrad() != Approx(0.0));
+    REQUIRE(encoder_state.cell[0]->GetGrad() != Approx(0.0));
+    REQUIRE(HasAnyGradient(model.Parameters()));
+}
+
+TEST_CASE("Seq2Seq projects decoder states at each timestep", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(62);
+    Seq2Seq model(2, 2, 3, 4, 2, 3, RecurrentCellType::GRU, rng);
+    const Values encoder_input = {
+        MakeValue(0.1),
+        MakeValue(0.2),
+        MakeValue(0.3),
+        MakeValue(0.4),
+    };
+    const Values decoder_input = {
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7),
+        MakeValue(0.8), MakeValue(0.9), MakeValue(1.0),
+    };
+
+    const Values output = model.Forward(encoder_input, decoder_input);
+    REQUIRE(output.size() == 12);
+    REQUIRE(model.OutputSize() == 4);
+    REQUIRE(model.Parameters().size() == 124);
+
+    Values concatenated = encoder_input;
+    concatenated.insert(concatenated.end(), decoder_input.begin(),
+                        decoder_input.end());
+    REQUIRE(model.Forward(concatenated).size() == 12);
+}
+
+TEST_CASE("EncoderDecoder and Seq2Seq reject invalid inputs", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(63);
+    EncoderDecoder encoder_decoder(1, 1, 2, 2, 2, RecurrentCellType::GRU, rng);
+    REQUIRE(
+        encoder_decoder.Forward({MakeValue(1.0)}, {MakeValue(2.0)}).empty());
+    REQUIRE(
+        encoder_decoder
+            .Forward({MakeValue(1.0), nullptr, MakeValue(2.0), MakeValue(3.0)})
+            .empty());
+    REQUIRE(EncoderDecoder(0, 1, 1, 1, 1, RecurrentCellType::RNN, rng)
+                .Parameters()
+                .empty());
+
+    Seq2Seq seq2seq(1, 1, 2, 2, 2, 2, RecurrentCellType::RNN, rng);
+    REQUIRE(seq2seq.Forward({MakeValue(1.0)}, {MakeValue(2.0)}).empty());
+    REQUIRE(
+        seq2seq
+            .Forward({MakeValue(1.0), MakeValue(2.0), nullptr, MakeValue(3.0)})
+            .empty());
+    REQUIRE(Seq2Seq(1, 1, 1, 0, 1, 1, RecurrentCellType::RNN, rng)
+                .Parameters()
+                .empty());
+}
+
+TEST_CASE("LayerNorm normalizes each flat sequence token", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    LayerNorm norm(2, 2);
+    const Values input = {
+        MakeValue(1.0),
+        MakeValue(3.0),
+        MakeValue(2.0),
+        MakeValue(6.0),
+    };
+
+    const Values output = norm.Forward(input);
+    REQUIRE(output.size() == 4);
+    REQUIRE(norm.Parameters().size() == 4);
+    REQUIRE(output[0]->GetData() == Approx(-1.0).margin(1e-4));
+    REQUIRE(output[1]->GetData() == Approx(1.0).margin(1e-4));
+    REQUIRE(output[2]->GetData() == Approx(-1.0).margin(1e-4));
+    REQUIRE(output[3]->GetData() == Approx(1.0).margin(1e-4));
+    REQUIRE(
+        norm.Forward({MakeValue(1.0), nullptr, MakeValue(2.0), MakeValue(3.0)})
+            .empty());
+}
+
+TEST_CASE("ScaledDotProductAttention supports causal masking", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    ScaledDotProductAttention attention(1, 1, 2, 2, AttentionMask::Causal);
+    const Values query = {MakeValue(1.0), MakeValue(1.0)};
+    const Values key = {MakeValue(1.0), MakeValue(1.0)};
+    const Values value = {MakeValue(2.0), MakeValue(8.0)};
+
+    const Values output = attention.Forward(query, key, value);
+    REQUIRE(output.size() == 2);
+    REQUIRE(output[0]->GetData() == Approx(2.0));
+    REQUIRE(output[1]->GetData() == Approx(5.0));
+
+    Backward(output[0]);
+    REQUIRE(value[0]->GetGrad() == Approx(1.0));
+    REQUIRE(value[1]->GetGrad() == Approx(0.0));
+    REQUIRE(attention.Forward({query[0]}, key, value).empty());
+}
+
+TEST_CASE("MultiHeadAttention exposes parameters and gradients", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(64);
+    MultiHeadAttention attention(4, 2, 3, rng);
+    const Values input = {
+        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
+        MakeValue(0.9), MakeValue(1.0), MakeValue(1.1), MakeValue(1.2),
+    };
+
+    const Values output = attention.Forward(input);
+    REQUIRE(output.size() == input.size());
+    REQUIRE(attention.Parameters().size() == 80);
+
+    Backward(output.front());
+    REQUIRE(HasAnyGradient(input));
+    REQUIRE(HasAnyGradient(attention.Parameters()));
+    REQUIRE(MultiHeadAttention(3, 2, 3, rng).Parameters().empty());
+    REQUIRE(attention.Forward({MakeValue(1.0)}).empty());
+}
+
+TEST_CASE("Transformer blocks preserve sequence shape", "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(65);
+    TransformerEncoderBlock encoder_block(4, 2, 2, 5, rng);
+    const Values encoder_input = {
+        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
+    };
+
+    const Values encoder_output = encoder_block.Forward(encoder_input);
+    REQUIRE(encoder_output.size() == encoder_input.size());
+    REQUIRE(encoder_block.Parameters().size() == 145);
+
+    TransformerDecoderBlock decoder_block(4, 2, 2, 3, 5, rng);
+    const Values decoder_input = {
+        MakeValue(0.2), MakeValue(0.3), MakeValue(0.4), MakeValue(0.5),
+        MakeValue(0.6), MakeValue(0.7), MakeValue(0.8), MakeValue(0.9),
+    };
+    const Values encoder_memory = {
+        MakeValue(0.1), MakeValue(0.2), MakeValue(0.3), MakeValue(0.4),
+        MakeValue(0.5), MakeValue(0.6), MakeValue(0.7), MakeValue(0.8),
+        MakeValue(0.9), MakeValue(1.0), MakeValue(1.1), MakeValue(1.2),
+    };
+
+    const Values decoder_output =
+        decoder_block.Forward(decoder_input, encoder_memory);
+    REQUIRE(decoder_output.size() == decoder_input.size());
+
+    TransformerEncoder encoder(2, 4, 2, 2, 5, rng);
+    REQUIRE(encoder.LayerCount() == 2);
+    REQUIRE(encoder.Forward(encoder_input).size() == encoder_input.size());
+    REQUIRE(encoder.Parameters().size() == 290);
+}
+
+TEST_CASE("AttentionSeq2Seq attends over encoder hidden sequence",
+          "[nn][module]")
+{
+    using namespace forg::nn;
+
+    std::mt19937 rng(66);
+    AttentionSeq2Seq model(1, 1, 2, 2, 2, 1, RecurrentCellType::RNN, rng);
+    const Values encoder_input = {MakeValue(0.1), MakeValue(0.2)};
+    const Values decoder_input = {MakeValue(0.3)};
+
+    const Values output = model.Forward(encoder_input, decoder_input);
+    REQUIRE(output.size() == 2);
+    REQUIRE(model.OutputSize() == 2);
+    REQUIRE(model.HeadCount() == 1);
+    REQUIRE(model.Parameters().size() == 46);
+
+    const RecurrentState encoder_state =
+        model.InnerEncoderDecoder()->Encode(encoder_input);
+    const RecurrentState decoder_state =
+        model.InnerEncoderDecoder()->Decode(decoder_input, encoder_state);
+    const Values context = model.Attention()->Forward(
+        decoder_state.sequence, encoder_state.sequence, encoder_state.sequence);
+    REQUIRE(context.size() == 2);
+
+    Backward(context.front());
+    REQUIRE(encoder_state.sequence.front()->GetGrad() != Approx(0.0));
+    REQUIRE(HasAnyGradient(model.Attention()->Parameters()));
+    REQUIRE(AttentionSeq2Seq(1, 1, 3, 2, 2, 1, RecurrentCellType::RNN, rng, 2)
+                .Parameters()
+                .empty());
+}
+
 TEST_CASE("Embedding maps token indices to trainable rows", "[nn][module]")
 {
     using namespace forg::nn;
@@ -773,6 +1084,157 @@ TEST_CASE("MatrixMLP parameters can be saved and loaded", "[nn][matrix]")
     REQUIRE_FALSE(error.empty());
 
     std::filesystem::remove(filename);
+}
+
+TEST_CASE("MatrixGPT validates config and returns batched logits",
+          "[nn][matrix]")
+{
+    std::mt19937 rng(91);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 5;
+    config.block_size = 3;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 12;
+
+    forg::nn::MatrixGPT model(config, rng);
+    REQUIRE(model.Valid());
+    REQUIRE(model.ParameterCount() > 0);
+    REQUIRE(model.Config().vocab_size == 5);
+
+    const std::vector<std::size_t> input = {0, 1, 2, 2, 3, 4};
+    const forg::nn::Matrix logits = model.Forward(input, 2);
+    REQUIRE(logits.Rows() == 6);
+    REQUIRE(logits.Columns() == 5);
+
+    config.model_size = 7;
+    forg::nn::MatrixGPT invalid(config, rng);
+    REQUIRE_FALSE(invalid.Valid());
+    REQUIRE(invalid.ParameterCount() == 0);
+    REQUIRE(invalid.Forward(input, 2).Empty());
+}
+
+TEST_CASE("MatrixGPT training lowers tiny language-model loss", "[nn][matrix]")
+{
+    std::mt19937 rng(92);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 3;
+    config.block_size = 3;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 16;
+
+    forg::nn::MatrixGPT model(config, rng);
+    const std::vector<std::size_t> input = {
+        0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0,
+    };
+    const std::vector<std::size_t> target = {
+        1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1,
+    };
+
+    const double first_loss = model.TrainBatch(input, target, 4, 0.01);
+    double last_loss = first_loss;
+    for (std::size_t step = 0; step < 80; ++step)
+        last_loss = model.TrainBatch(input, target, 4, 0.01);
+
+    REQUIRE(first_loss > 0.0);
+    REQUIRE(last_loss < first_loss);
+}
+
+TEST_CASE("MatrixGPT causal attention ignores future tokens", "[nn][matrix]")
+{
+    std::mt19937 rng(93);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 6;
+    config.block_size = 4;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 12;
+
+    forg::nn::MatrixGPT model(config, rng);
+    const forg::nn::Matrix first =
+        model.Forward(std::vector<std::size_t>{1, 2, 3, 4}, 1);
+    const forg::nn::Matrix second =
+        model.Forward(std::vector<std::size_t>{1, 5, 5, 5}, 1);
+    REQUIRE(first.Rows() == second.Rows());
+    REQUIRE(first.Columns() == second.Columns());
+    for (std::size_t column = 0; column < first.Columns(); ++column)
+        REQUIRE(second(0, column) == Approx(first(0, column)));
+}
+
+TEST_CASE("MatrixGPT parameters can be saved and loaded", "[nn][matrix]")
+{
+    std::mt19937 source_rng(94);
+    std::mt19937 target_rng(95);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 5;
+    config.block_size = 3;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 12;
+
+    forg::nn::MatrixGPT source(config, source_rng);
+    forg::nn::MatrixGPT target(config, target_rng);
+    const std::vector<std::size_t> input = {0, 1, 2};
+    const forg::nn::Matrix source_before = source.Forward(input, 1);
+    const forg::nn::Matrix target_before = target.Forward(input, 1);
+    REQUIRE(source_before.Data() != target_before.Data());
+
+    const std::filesystem::path filename = TempDataPath("forg-nn-matrix-gpt");
+    std::string error = "not cleared";
+    REQUIRE(source.SaveParameters(filename.string(), &error));
+    REQUIRE(error.empty());
+    REQUIRE(target.LoadParameters(filename.string(), &error));
+    REQUIRE(error.empty());
+
+    const forg::nn::Matrix target_after = target.Forward(input, 1);
+    REQUIRE(source_before.Rows() == target_after.Rows());
+    REQUIRE(source_before.Columns() == target_after.Columns());
+    for (std::size_t index = 0; index < source_before.Size(); ++index)
+    {
+        REQUIRE(target_after.Data()[index] ==
+                Approx(source_before.Data()[index]));
+    }
+
+    std::filesystem::remove(filename);
+}
+
+TEST_CASE("MatrixGPT threaded training matches single-thread training",
+          "[nn][matrix]")
+{
+    std::mt19937 single_rng(96);
+    std::mt19937 threaded_rng(96);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 4;
+    config.block_size = 3;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 12;
+
+    forg::nn::MatrixGPT single(config, single_rng);
+    forg::nn::MatrixGPT threaded(config, threaded_rng);
+    single.SetThreadCount(1);
+    threaded.SetThreadCount(2);
+    const std::vector<std::size_t> input = {0, 1, 2, 1, 2, 3};
+    const std::vector<std::size_t> target = {1, 2, 3, 2, 3, 0};
+
+    const double single_loss = single.TrainBatch(input, target, 2, 0.005);
+    const double threaded_loss = threaded.TrainBatch(input, target, 2, 0.005);
+    REQUIRE(threaded_loss == Approx(single_loss));
+
+    const forg::nn::Matrix single_output = single.Forward(input, 2);
+    const forg::nn::Matrix threaded_output = threaded.Forward(input, 2);
+    REQUIRE(threaded_output.Size() == single_output.Size());
+    for (std::size_t index = 0; index < single_output.Size(); ++index)
+    {
+        REQUIRE(threaded_output.Data()[index] ==
+                Approx(single_output.Data()[index]).epsilon(1e-12));
+    }
 }
 
 TEST_CASE("Model parameters can be saved and loaded", "[nn][module]")

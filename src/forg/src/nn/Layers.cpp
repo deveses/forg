@@ -212,16 +212,27 @@ std::size_t RNN::HiddenWeightIndex(std::size_t hidden,
 
 Values RNN::Forward(const Values& input) const
 {
+    return ForwardState(input).sequence;
+}
+
+Values RNN::Forward(const Values& input, const Values& initial_hidden) const
+{
+    return ForwardState(input, initial_hidden).sequence;
+}
+
+RecurrentState RNN::ForwardState(const Values& input) const
+{
     Values initial_hidden;
     initial_hidden.reserve(m_hidden_size);
     for (std::size_t index = 0; index < m_hidden_size; ++index)
     {
         initial_hidden.push_back(MakeValue(0.0));
     }
-    return Forward(input, initial_hidden);
+    return ForwardState(input, initial_hidden);
 }
 
-Values RNN::Forward(const Values& input, const Values& initial_hidden) const
+RecurrentState RNN::ForwardState(const Values& input,
+                                 const Values& initial_hidden) const
 {
     if (m_input_weights.empty() || m_hidden_weights.empty() ||
         m_biases.empty() ||
@@ -232,8 +243,8 @@ Values RNN::Forward(const Values& input, const Values& initial_hidden) const
     }
 
     Values previous_hidden = initial_hidden;
-    Values output;
-    output.reserve(m_sequence_length * m_hidden_size);
+    RecurrentState state;
+    state.sequence.reserve(m_sequence_length * m_hidden_size);
 
     for (std::size_t timestep = 0; timestep < m_sequence_length; ++timestep)
     {
@@ -268,12 +279,13 @@ Values RNN::Forward(const Values& input, const Values& initial_hidden) const
                 return {};
 
             current_hidden.push_back(value);
-            output.push_back(value);
+            state.sequence.push_back(value);
         }
         previous_hidden = std::move(current_hidden);
     }
 
-    return output;
+    state.hidden = std::move(previous_hidden);
+    return state;
 }
 
 Values RNN::Parameters() const
@@ -332,6 +344,17 @@ std::size_t LSTM::BiasIndex(std::size_t gate, std::size_t hidden) const noexcept
 
 Values LSTM::Forward(const Values& input) const
 {
+    return ForwardState(input).sequence;
+}
+
+Values LSTM::Forward(const Values& input, const Values& initial_hidden,
+                     const Values& initial_cell) const
+{
+    return ForwardState(input, initial_hidden, initial_cell).sequence;
+}
+
+RecurrentState LSTM::ForwardState(const Values& input) const
+{
     Values initial_hidden;
     Values initial_cell;
     initial_hidden.reserve(m_hidden_size);
@@ -341,11 +364,12 @@ Values LSTM::Forward(const Values& input) const
         initial_hidden.push_back(MakeValue(0.0));
         initial_cell.push_back(MakeValue(0.0));
     }
-    return Forward(input, initial_hidden, initial_cell);
+    return ForwardState(input, initial_hidden, initial_cell);
 }
 
-Values LSTM::Forward(const Values& input, const Values& initial_hidden,
-                     const Values& initial_cell) const
+RecurrentState LSTM::ForwardState(const Values& input,
+                                  const Values& initial_hidden,
+                                  const Values& initial_cell) const
 {
     if (m_input_weights.empty() || m_hidden_weights.empty() ||
         m_biases.empty() ||
@@ -358,8 +382,8 @@ Values LSTM::Forward(const Values& input, const Values& initial_hidden,
 
     Values previous_hidden = initial_hidden;
     Values previous_cell = initial_cell;
-    Values output;
-    output.reserve(m_sequence_length * m_hidden_size);
+    RecurrentState state;
+    state.sequence.reserve(m_sequence_length * m_hidden_size);
 
     for (std::size_t timestep = 0; timestep < m_sequence_length; ++timestep)
     {
@@ -370,6 +394,8 @@ Values LSTM::Forward(const Values& input, const Values& initial_hidden,
 
         for (std::size_t hidden = 0; hidden < m_hidden_size; ++hidden)
         {
+            // Gate order is input, forget, candidate cell, output. Each gate
+            // sees the current input vector and the previous hidden state.
             Values gates;
             gates.reserve(4);
             for (std::size_t gate = 0; gate < 4; ++gate)
@@ -406,6 +432,8 @@ Values LSTM::Forward(const Values& input, const Values& initial_hidden,
                 gates.push_back(value);
             }
 
+            // LSTM memory update: forget part of the old cell, then add the
+            // input-gated candidate. The output gate exposes the hidden value.
             ValuePtr cell =
                 gates[1] * previous_cell[hidden] + gates[0] * gates[2];
             if (!cell)
@@ -417,14 +445,20 @@ Values LSTM::Forward(const Values& input, const Values& initial_hidden,
 
             current_cell.push_back(cell);
             current_hidden.push_back(hidden_value);
-            output.push_back(hidden_value);
+            state.sequence.push_back(hidden_value);
         }
 
+        // The next timestep consumes the full hidden/cell vectors computed for
+        // this timestep.
         previous_cell = std::move(current_cell);
         previous_hidden = std::move(current_hidden);
     }
 
-    return output;
+    // Encoder-decoder callers need both the full hidden sequence and the final
+    // recurrent state.
+    state.hidden = std::move(previous_hidden);
+    state.cell = std::move(previous_cell);
+    return state;
 }
 
 Values LSTM::Parameters() const
@@ -483,16 +517,27 @@ std::size_t GRU::BiasIndex(std::size_t gate, std::size_t hidden) const noexcept
 
 Values GRU::Forward(const Values& input) const
 {
+    return ForwardState(input).sequence;
+}
+
+Values GRU::Forward(const Values& input, const Values& initial_hidden) const
+{
+    return ForwardState(input, initial_hidden).sequence;
+}
+
+RecurrentState GRU::ForwardState(const Values& input) const
+{
     Values initial_hidden;
     initial_hidden.reserve(m_hidden_size);
     for (std::size_t index = 0; index < m_hidden_size; ++index)
     {
         initial_hidden.push_back(MakeValue(0.0));
     }
-    return Forward(input, initial_hidden);
+    return ForwardState(input, initial_hidden);
 }
 
-Values GRU::Forward(const Values& input, const Values& initial_hidden) const
+RecurrentState GRU::ForwardState(const Values& input,
+                                 const Values& initial_hidden) const
 {
     if (m_input_weights.empty() || m_hidden_weights.empty() ||
         m_biases.empty() ||
@@ -503,8 +548,8 @@ Values GRU::Forward(const Values& input, const Values& initial_hidden) const
     }
 
     Values previous_hidden = initial_hidden;
-    Values output;
-    output.reserve(m_sequence_length * m_hidden_size);
+    RecurrentState state;
+    state.sequence.reserve(m_sequence_length * m_hidden_size);
 
     for (std::size_t timestep = 0; timestep < m_sequence_length; ++timestep)
     {
@@ -582,13 +627,14 @@ Values GRU::Forward(const Values& input, const Values& initial_hidden) const
                 return {};
 
             current_hidden.push_back(hidden_value);
-            output.push_back(hidden_value);
+            state.sequence.push_back(hidden_value);
         }
 
         previous_hidden = std::move(current_hidden);
     }
 
-    return output;
+    state.hidden = std::move(previous_hidden);
+    return state;
 }
 
 Values GRU::Parameters() const

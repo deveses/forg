@@ -49,6 +49,7 @@ list(TRANSFORM core_sources PREPEND "src/core/")
 ###############################################################################
 set(nn_includes
     Activations.h
+    Attention.h
     Embedding.h
     Image.h
     Layers.h
@@ -59,12 +60,14 @@ set(nn_includes
     Normalization.h
     Optim.h
     Parameters.h
+    Seq2Seq.h
     Sequential.h
     Value.h
 )
 list(TRANSFORM nn_includes PREPEND "include/forg/nn/")
 set(nn_sources
     Activations.cpp
+    Attention.cpp
     Embedding.cpp
     Image.cpp
     Layers.cpp
@@ -76,6 +79,7 @@ set(nn_sources
     Normalization.cpp
     Optim.cpp
     Parameters.cpp
+    Seq2Seq.cpp
     Sequential.cpp
     Value.cpp
 )
