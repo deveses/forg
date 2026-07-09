@@ -81,6 +81,8 @@ Early-stop example:
 
 ```sh
 ./build/examples/gpt/forg_gpt data/gpt_dataset/tiny_shakespeare_dataset.txt 10000 16 32 4 2 64 0.0005 500 "First Citizen:" matrix 32 0 tiny-shakespeare.gpt 1.8
+# or with larger model and more steps:
+./build/examples/gpt/forg_gpt data/gpt_dataset/tiny_shakespeare_dataset.txt 30000 32 64 4 2 128 0.0003 800 "ROMEO:" matrix 32 0 tiny-shakespeare-32x64.gpt 1.55
 ```
 
 Watch `loss` while training:
