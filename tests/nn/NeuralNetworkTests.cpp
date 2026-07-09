@@ -1082,6 +1082,166 @@ TEST_CASE("MatrixMLP parameters can be saved and loaded", "[nn][matrix]")
     std::filesystem::remove(filename);
 }
 
+TEST_CASE("MatrixGPT validates config and returns batched logits",
+          "[nn][matrix]")
+{
+    std::mt19937 rng(91);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 5;
+    config.block_size = 3;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 12;
+
+    forg::nn::MatrixGPT model(config, rng);
+    REQUIRE(model.Valid());
+    REQUIRE(model.ParameterCount() > 0);
+    REQUIRE(model.Config().vocab_size == 5);
+
+    const std::vector<std::size_t> input = {0, 1, 2, 2, 3, 4};
+    const forg::nn::Matrix logits = model.Forward(input, 2);
+    REQUIRE(logits.Rows() == 6);
+    REQUIRE(logits.Columns() == 5);
+
+    config.model_size = 7;
+    forg::nn::MatrixGPT invalid(config, rng);
+    REQUIRE_FALSE(invalid.Valid());
+    REQUIRE(invalid.ParameterCount() == 0);
+    REQUIRE(invalid.Forward(input, 2).Empty());
+}
+
+TEST_CASE("MatrixGPT training lowers tiny language-model loss",
+          "[nn][matrix]")
+{
+    std::mt19937 rng(92);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 3;
+    config.block_size = 3;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 16;
+
+    forg::nn::MatrixGPT model(config, rng);
+    const std::vector<std::size_t> input = {
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+    };
+    const std::vector<std::size_t> target = {
+        1, 0, 1,
+        1, 0, 1,
+        1, 0, 1,
+        1, 0, 1,
+    };
+
+    const double first_loss = model.TrainBatch(input, target, 4, 0.01);
+    double last_loss = first_loss;
+    for (std::size_t step = 0; step < 80; ++step)
+        last_loss = model.TrainBatch(input, target, 4, 0.01);
+
+    REQUIRE(first_loss > 0.0);
+    REQUIRE(last_loss < first_loss);
+}
+
+TEST_CASE("MatrixGPT causal attention ignores future tokens",
+          "[nn][matrix]")
+{
+    std::mt19937 rng(93);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 6;
+    config.block_size = 4;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 12;
+
+    forg::nn::MatrixGPT model(config, rng);
+    const forg::nn::Matrix first =
+        model.Forward(std::vector<std::size_t>{1, 2, 3, 4}, 1);
+    const forg::nn::Matrix second =
+        model.Forward(std::vector<std::size_t>{1, 5, 5, 5}, 1);
+    REQUIRE(first.Rows() == second.Rows());
+    REQUIRE(first.Columns() == second.Columns());
+    for (std::size_t column = 0; column < first.Columns(); ++column)
+        REQUIRE(second(0, column) == Approx(first(0, column)));
+}
+
+TEST_CASE("MatrixGPT parameters can be saved and loaded", "[nn][matrix]")
+{
+    std::mt19937 source_rng(94);
+    std::mt19937 target_rng(95);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 5;
+    config.block_size = 3;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 12;
+
+    forg::nn::MatrixGPT source(config, source_rng);
+    forg::nn::MatrixGPT target(config, target_rng);
+    const std::vector<std::size_t> input = {0, 1, 2};
+    const forg::nn::Matrix source_before = source.Forward(input, 1);
+    const forg::nn::Matrix target_before = target.Forward(input, 1);
+    REQUIRE(source_before.Data() != target_before.Data());
+
+    const std::filesystem::path filename = TempDataPath("forg-nn-matrix-gpt");
+    std::string error = "not cleared";
+    REQUIRE(source.SaveParameters(filename.string(), &error));
+    REQUIRE(error.empty());
+    REQUIRE(target.LoadParameters(filename.string(), &error));
+    REQUIRE(error.empty());
+
+    const forg::nn::Matrix target_after = target.Forward(input, 1);
+    REQUIRE(source_before.Rows() == target_after.Rows());
+    REQUIRE(source_before.Columns() == target_after.Columns());
+    for (std::size_t index = 0; index < source_before.Size(); ++index)
+    {
+        REQUIRE(target_after.Data()[index] ==
+                Approx(source_before.Data()[index]));
+    }
+
+    std::filesystem::remove(filename);
+}
+
+TEST_CASE("MatrixGPT threaded training matches single-thread training",
+          "[nn][matrix]")
+{
+    std::mt19937 single_rng(96);
+    std::mt19937 threaded_rng(96);
+    forg::nn::MatrixGPTConfig config;
+    config.vocab_size = 4;
+    config.block_size = 3;
+    config.model_size = 8;
+    config.head_count = 2;
+    config.layer_count = 1;
+    config.feed_forward_size = 12;
+
+    forg::nn::MatrixGPT single(config, single_rng);
+    forg::nn::MatrixGPT threaded(config, threaded_rng);
+    single.SetThreadCount(1);
+    threaded.SetThreadCount(2);
+    const std::vector<std::size_t> input = {0, 1, 2, 1, 2, 3};
+    const std::vector<std::size_t> target = {1, 2, 3, 2, 3, 0};
+
+    const double single_loss = single.TrainBatch(input, target, 2, 0.005);
+    const double threaded_loss =
+        threaded.TrainBatch(input, target, 2, 0.005);
+    REQUIRE(threaded_loss == Approx(single_loss));
+
+    const forg::nn::Matrix single_output = single.Forward(input, 2);
+    const forg::nn::Matrix threaded_output = threaded.Forward(input, 2);
+    REQUIRE(threaded_output.Size() == single_output.Size());
+    for (std::size_t index = 0; index < single_output.Size(); ++index)
+    {
+        REQUIRE(threaded_output.Data()[index] ==
+                Approx(single_output.Data()[index]).epsilon(1e-12));
+    }
+}
+
 TEST_CASE("Model parameters can be saved and loaded", "[nn][module]")
 {
     using namespace forg::nn;

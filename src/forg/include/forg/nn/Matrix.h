@@ -88,4 +88,58 @@ class MatrixMLP
     std::size_t m_thread_count = 1;
 };
 
+struct MatrixGPTConfig
+{
+    std::size_t vocab_size = 0;
+    std::size_t block_size = 0;
+    std::size_t model_size = 0;
+    std::size_t head_count = 0;
+    std::size_t layer_count = 0;
+    std::size_t feed_forward_size = 0;
+};
+
+/// Batched decoder-only character GPT implemented with matrix operations.
+///
+/// Inputs and targets are token indices flattened batch-major:
+/// batch_size * block_size. Forward() returns logits with
+/// batch_size * block_size rows and vocab_size columns.
+class MatrixGPT
+{
+  public:
+    explicit MatrixGPT(const MatrixGPTConfig& config);
+    MatrixGPT(const MatrixGPTConfig& config, std::mt19937& rng);
+    ~MatrixGPT();
+
+    MatrixGPT(MatrixGPT&&) noexcept;
+    MatrixGPT& operator=(MatrixGPT&&) noexcept;
+    MatrixGPT(const MatrixGPT&) = delete;
+    MatrixGPT& operator=(const MatrixGPT&) = delete;
+
+    Matrix Forward(const std::vector<std::size_t>& input,
+                   std::size_t batch_size) const;
+    double TrainBatch(const std::vector<std::size_t>& input,
+                      const std::vector<std::size_t>& targets,
+                      std::size_t batch_size, double learning_rate);
+    std::size_t PredictNext(const std::vector<std::size_t>& context) const;
+
+    void SetThreadCount(std::size_t thread_count);
+    std::size_t ThreadCount() const noexcept { return m_thread_count; }
+
+    bool SaveParameters(const std::string& filename,
+                        std::string* error = nullptr) const;
+    bool LoadParameters(const std::string& filename,
+                        std::string* error = nullptr);
+
+    bool Valid() const noexcept;
+    std::size_t ParameterCount() const noexcept;
+    const MatrixGPTConfig& Config() const noexcept { return m_config; }
+
+  private:
+    struct Impl;
+
+    MatrixGPTConfig m_config;
+    Impl* m_impl = nullptr;
+    std::size_t m_thread_count = 1;
+};
+
 } // namespace forg::nn

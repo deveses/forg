@@ -2,9 +2,11 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -58,11 +60,18 @@ void PrintUsage(const char* program)
         << "Usage: " << program
         << " [dataset-path] [steps] [block-size] [model-size] [heads]"
            " [layers] [feed-forward-size] [learning-rate] [generate-count]"
-           " [seed-text]\n"
+           " [seed-text] [backend] [batch-size] [thread-count]"
+           " [checkpoint-path]\n"
         << "Default dataset: data/gpt_dataset/tiny_shakespeare_dataset.txt\n"
         << "Example: " << program
         << " data/gpt_dataset/tiny_shakespeare_dataset.txt 20 8 16 2 1 32"
-           " 0.001 200 \"First Citizen:\"\n";
+           " 0.001 200 \"First Citizen:\" matrix 16\n"
+        << "Backends: matrix, scalar\n";
+}
+
+bool IsBackendName(const std::string& text)
+{
+    return text == "matrix" || text == "scalar";
 }
 
 std::string ReadFile(const std::string& path)
@@ -388,6 +397,25 @@ std::size_t SampleFromLogits(const forg::nn::Values& logits, std::mt19937& rng)
     return distribution(rng);
 }
 
+std::size_t SampleFromLogits(const forg::nn::Matrix& logits, std::size_t row,
+                             std::mt19937& rng)
+{
+    if (logits.Empty() || row >= logits.Rows())
+        return 0;
+
+    double max_logit = logits(row, 0);
+    for (std::size_t column = 1; column < logits.Columns(); ++column)
+        max_logit = std::max(max_logit, logits(row, column));
+
+    std::vector<double> weights(logits.Columns(), 0.0);
+    for (std::size_t column = 0; column < logits.Columns(); ++column)
+        weights[column] = std::exp(logits(row, column) - max_logit);
+
+    std::discrete_distribution<std::size_t> distribution(weights.begin(),
+                                                         weights.end());
+    return distribution(rng);
+}
+
 std::string Generate(const TinyGpt& model, const Vocabulary& vocabulary,
                      std::vector<std::size_t> context,
                      std::size_t token_count, std::mt19937& rng)
@@ -426,6 +454,41 @@ std::string Generate(const TinyGpt& model, const Vocabulary& vocabulary,
     return vocabulary.Decode(generated);
 }
 
+std::string Generate(forg::nn::MatrixGPT& model, const Vocabulary& vocabulary,
+                     std::vector<std::size_t> context,
+                     std::size_t token_count, std::mt19937& rng)
+{
+    if (context.empty())
+        context.push_back(0);
+
+    const std::size_t block_size = model.Config().block_size;
+    std::vector<std::size_t> generated = context;
+    std::vector<std::size_t> window(block_size, context.front());
+    for (std::size_t step = 0; step < token_count; ++step)
+    {
+        if (generated.size() >= block_size)
+        {
+            std::copy(generated.end() -
+                          static_cast<std::ptrdiff_t>(block_size),
+                      generated.end(), window.begin());
+        }
+        else
+        {
+            std::fill(window.begin(), window.end(), generated.front());
+            std::copy(generated.begin(), generated.end(),
+                      window.end() -
+                          static_cast<std::ptrdiff_t>(generated.size()));
+        }
+
+        const forg::nn::Matrix logits = model.Forward(window, 1);
+        if (logits.Empty())
+            break;
+
+        generated.push_back(SampleFromLogits(logits, block_size - 1, rng));
+    }
+    return vocabulary.Decode(generated);
+}
+
 } // namespace
 
 int main(int argc, char** argv)
@@ -450,12 +513,19 @@ int main(int argc, char** argv)
     const std::size_t generate_count =
         argc > 9 ? ParseSize(argv[9], 200) : 200;
     const std::string seed_text = argc > 10 ? argv[10] : "First Citizen:";
+    const std::string backend =
+        argc > 11 && IsBackendName(argv[11]) ? argv[11] : "matrix";
+    const std::size_t batch_size =
+        std::max<std::size_t>(1, argc > 12 ? ParseSize(argv[12], 16) : 16);
+    const std::size_t thread_count =
+        argc > 13 ? ParseSize(argv[13], 0) : 0;
+    const std::string checkpoint_path = argc > 14 ? argv[14] : "";
 
     if (block_size == 0 || model_size == 0 || head_count == 0 ||
         layer_count == 0 || feed_forward_size == 0 ||
-        model_size % head_count != 0)
+        model_size % head_count != 0 || !IsBackendName(backend))
     {
-        std::cerr << "Invalid model dimensions\n";
+        std::cerr << "Invalid model dimensions or backend\n";
         PrintUsage(argv[0]);
         return 1;
     }
@@ -483,6 +553,102 @@ int main(int argc, char** argv)
     }
 
     std::mt19937 rng(1337);
+    if (backend == "matrix")
+    {
+        forg::nn::MatrixGPTConfig config;
+        config.vocab_size = vocabulary.Size();
+        config.block_size = block_size;
+        config.model_size = model_size;
+        config.head_count = head_count;
+        config.layer_count = layer_count;
+        config.feed_forward_size = feed_forward_size;
+
+        forg::nn::MatrixGPT model(config, rng);
+        model.SetThreadCount(thread_count);
+        if (!model.Valid())
+        {
+            std::cerr << "Unable to create MatrixGPT\n";
+            return 1;
+        }
+
+        if (!checkpoint_path.empty() &&
+            std::filesystem::exists(checkpoint_path))
+        {
+            std::string error;
+            if (!model.LoadParameters(checkpoint_path, &error))
+            {
+                std::cerr << "Unable to load checkpoint: " << error << '\n';
+                return 1;
+            }
+            std::cout << "loaded_checkpoint=" << checkpoint_path << '\n';
+        }
+
+        std::uniform_int_distribution<std::size_t> offset_distribution(
+            0, encoded.size() - block_size - 1);
+
+        std::cout << "dataset_bytes=" << text.size()
+                  << " vocab_size=" << vocabulary.Size()
+                  << " block_size=" << block_size
+                  << " model_size=" << model_size
+                  << " heads=" << head_count
+                  << " layers=" << layer_count
+                  << " backend=matrix"
+                  << " batch_size=" << batch_size
+                  << " threads=" << model.ThreadCount()
+                  << " parameters=" << model.ParameterCount() << '\n';
+
+        std::vector<std::size_t> input(batch_size * block_size, 0);
+        std::vector<std::size_t> target(batch_size * block_size, 0);
+        for (std::size_t step = 0; step < steps; ++step)
+        {
+            for (std::size_t row = 0; row < batch_size; ++row)
+            {
+                const std::size_t offset = offset_distribution(rng);
+                for (std::size_t token = 0; token < block_size; ++token)
+                {
+                    input[row * block_size + token] = encoded[offset + token];
+                    target[row * block_size + token] =
+                        encoded[offset + token + 1];
+                }
+            }
+
+            const Clock::time_point start = Clock::now();
+            const double loss =
+                model.TrainBatch(input, target, batch_size, learning_rate);
+            if (!(loss > 0.0))
+            {
+                std::cerr << "Training failed at step " << (step + 1)
+                          << '\n';
+                return 1;
+            }
+
+            std::cout << "step " << (step + 1) << "/" << steps
+                      << " loss=" << loss
+                      << " ms=" << ElapsedMs(start) << '\n';
+        }
+
+        if (!checkpoint_path.empty())
+        {
+            std::string error;
+            if (!model.SaveParameters(checkpoint_path, &error))
+            {
+                std::cerr << "Unable to save checkpoint: " << error << '\n';
+                return 1;
+            }
+            std::cout << "saved_checkpoint=" << checkpoint_path << '\n';
+        }
+
+        std::vector<std::size_t> seed = vocabulary.Encode(seed_text);
+        if (seed.empty())
+            seed.push_back(vocabulary.IndexOf('\n'));
+
+        std::cout << "\n--- sample ---\n"
+                  << Generate(model, vocabulary, std::move(seed),
+                              generate_count, rng)
+                  << "\n--- end ---\n";
+        return 0;
+    }
+
     TinyGpt model(vocabulary.Size(), block_size, model_size, head_count,
                   layer_count, feed_forward_size, rng);
     forg::nn::Adam optimizer(model.Parameters(), learning_rate);
