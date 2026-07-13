@@ -5,4 +5,8 @@
 #include "audio/AudioEngine.h"
 #include "audio/AudioManager.h"
 #include "audio/AudioMixer.h"
+#include "audio/AudioMixerProcessor.h"
+#include "audio/ProcessedSoundInstance.h"
+#include "audio/SoundInstanceProcessor.h"
+#include "audio/SoundInstanceProcessorChain.h"
 #include "audio/WaveFile.h"

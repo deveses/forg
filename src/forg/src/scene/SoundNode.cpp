@@ -162,7 +162,7 @@ bool SoundNode::Load(io::ISerializer& serializer)
 
 void SoundNode::RequestStopForSourceChange()
 {
-    if (m_voice >= 0)
+    if (m_soundInstanceId != audio::INVALID_SOUND_INSTANCE_ID)
     {
         m_stopRequested = true;
         m_playRequested = false;
@@ -238,7 +238,10 @@ void SoundNode::Stop()
     m_playRequested = false;
 }
 
-bool SoundNode::IsPlaying() const { return m_voice >= 0; }
+bool SoundNode::IsPlaying() const
+{
+    return m_soundInstanceId != audio::INVALID_SOUND_INSTANCE_ID;
+}
 
 bool SoundNode::LoadResources(const fs::Filesystem& filesystem)
 {
@@ -266,20 +269,24 @@ void SoundNode::SyncAudio(audio::AudioManager& manager,
     if (m_autoplay && !m_autoplayConsumed && m_source != nullptr)
     {
         m_autoplayConsumed = true;
-        if (m_voice < 0 && !m_stopRequested)
+        if (m_soundInstanceId == audio::INVALID_SOUND_INSTANCE_ID &&
+            !m_stopRequested)
             m_playRequested = true;
     }
 
     if (m_stopRequested)
     {
-        if (m_voice >= 0)
-            manager.Stop(m_voice);
-        m_voice = -1;
+        if (m_soundInstanceId != audio::INVALID_SOUND_INSTANCE_ID)
+            manager.Stop(m_soundInstanceId);
+        m_soundInstanceId = audio::INVALID_SOUND_INSTANCE_ID;
         m_stopRequested = false;
     }
 
-    if (m_voice >= 0 && !manager.IsPlaying(m_voice))
-        m_voice = -1; // finished one-shot, voice reclaimed by the manager
+    if (m_soundInstanceId != audio::INVALID_SOUND_INSTANCE_ID &&
+        !manager.IsPlaying(m_soundInstanceId))
+    {
+        m_soundInstanceId = audio::INVALID_SOUND_INSTANCE_ID;
+    }
 
     float gain = m_gain;
     float pan = 0.0f;
@@ -305,15 +312,16 @@ void SoundNode::SyncAudio(audio::AudioManager& manager,
     if (m_playRequested)
     {
         m_playRequested = false;
-        if (m_voice < 0 && m_source != nullptr)
+        if (m_soundInstanceId == audio::INVALID_SOUND_INSTANCE_ID &&
+            m_source != nullptr)
         {
             m_source->Reset();
-            m_voice = manager.Play(m_source, m_looping, gain, pan);
+            m_soundInstanceId = manager.Play(m_source, m_looping, gain, pan);
         }
     }
-    else if (m_voice >= 0)
+    else if (m_soundInstanceId != audio::INVALID_SOUND_INSTANCE_ID)
     {
-        manager.SetGainPan(m_voice, gain, pan);
+        manager.SetGainPan(m_soundInstanceId, gain, pan);
     }
 }
 

@@ -3,6 +3,7 @@
 #include <string_view>
 
 #include "audio/AudioGenerator.h"
+#include "audio/ProcessedSoundInstance.h"
 #include "core/string.hpp"
 #include "math/Vector3.h"
 #include "scene/SceneNode.h"
@@ -47,7 +48,7 @@ class FORG_API SoundNode : public SceneNode
     bool m_playRequested = false;
     bool m_stopRequested = false;
     bool m_autoplayConsumed = false;
-    int m_voice = -1;
+    audio::SoundInstanceId m_soundInstanceId = audio::INVALID_SOUND_INSTANCE_ID;
 
   public:
     const char* TypeName() const override;
@@ -55,8 +56,7 @@ class FORG_API SoundNode : public SceneNode
     bool Load(io::ISerializer& serializer) override;
 
     // Creates a waveform generator source immediately. Safe to call while
-    // playing: the old source is shared with the mixer until SyncAudio stops
-    // its voice.
+    // playing: the old source is retained until SyncAudio stops its instance.
     void SetGenerator(audio::AudioWaveform waveform, float frequencyHz,
                       float amplitude);
     // Records the file path only; the source is created when LoadResources

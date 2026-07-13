@@ -1,21 +1,66 @@
 #include "forg/audio/AudioManager.h"
 #include "forg/audio/AudioDefs.h"
 #include "forg/audio/AudioMixer.h"
+#include "forg/audio/AudioMixerProcessor.h"
+#include "forg/audio/ProcessedSoundInstance.h"
+#include "forg/audio/SoundInstanceProcessorChain.h"
 #include "forg_pch.h"
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 namespace forg::audio {
 
 struct AudioManager::Impl
 {
     AudioMixer mixer;
-    std::shared_ptr<IAudioSource> voices[AudioMixer::MAX_STREAMS];
     bool initialized = false;
+    std::shared_ptr<SoundInstanceProcessorChain> processorChain;
+    std::shared_ptr<AudioMixerProcessor> mixerProcessor;
+    std::vector<std::unique_ptr<ProcessedSoundInstance>> instances;
+    SoundInstanceId nextInstanceId = 1;
+
+    SoundInstanceId NextInstanceId()
+    {
+        const SoundInstanceId id = nextInstanceId++;
+        if (nextInstanceId == INVALID_SOUND_INSTANCE_ID)
+            nextInstanceId = 1;
+        return id;
+    }
+
+    ProcessedSoundInstance* FindInstance(SoundInstanceId id)
+    {
+        for (const std::unique_ptr<ProcessedSoundInstance>& instance :
+             instances)
+        {
+            if (instance->Id() == id)
+                return instance.get();
+        }
+
+        return nullptr;
+    }
+
+    const ProcessedSoundInstance* FindInstance(SoundInstanceId id) const
+    {
+        for (const std::unique_ptr<ProcessedSoundInstance>& instance :
+             instances)
+        {
+            if (instance->Id() == id)
+                return instance.get();
+        }
+
+        return nullptr;
+    }
 };
 
-AudioManager::AudioManager() : m_impl(std::make_unique<Impl>()) {}
+AudioManager::AudioManager() : m_impl(std::make_unique<Impl>())
+{
+    m_impl->processorChain = std::make_shared<SoundInstanceProcessorChain>();
+    m_impl->mixerProcessor =
+        std::make_shared<AudioMixerProcessor>(m_impl->mixer);
+    m_impl->processorChain->AddProcessor(m_impl->mixerProcessor);
+}
 
 AudioManager::~AudioManager() { Shutdown(); }
 
@@ -57,14 +102,13 @@ void AudioManager::Update()
 
     m_impl->mixer.Update();
 
-    // Reclaim voices whose sources have finished playing.
-    for (unsigned int i = 0; i < AudioMixer::MAX_STREAMS; i++)
+    for (auto it = m_impl->instances.begin(); it != m_impl->instances.end();)
     {
-        if (m_impl->voices[i] != nullptr && !m_impl->mixer.IsStreamActive(i))
-        {
-            m_impl->mixer.SetStreamSource(i, nullptr, false);
-            m_impl->voices[i].reset();
-        }
+        (*it)->Update();
+        if (!(*it)->IsActive())
+            it = m_impl->instances.erase(it);
+        else
+            ++it;
     }
 }
 
@@ -74,68 +118,93 @@ AudioMixer& AudioManager::Mixer() { return m_impl->mixer; }
 
 const AudioMixer& AudioManager::Mixer() const { return m_impl->mixer; }
 
-int AudioManager::Play(std::shared_ptr<IAudioSource> source, bool looping,
-                       float gain, float pan)
+std::shared_ptr<SoundInstanceProcessorChain>
+AudioManager::ProcessorChain() const
 {
-    if (!m_impl->initialized || source == nullptr)
-        return INVALID_VOICE;
-
-    for (unsigned int i = 0; i < AudioMixer::MAX_STREAMS; i++)
-    {
-        if (m_impl->voices[i] == nullptr && !m_impl->mixer.IsStreamActive(i))
-        {
-            m_impl->voices[i] = std::move(source);
-            m_impl->mixer.SetStreamSource(i, m_impl->voices[i], looping);
-            m_impl->mixer.SetStreamGainPan(i, gain, pan);
-            return static_cast<int>(i);
-        }
-    }
-
-    return INVALID_VOICE;
+    return m_impl->processorChain;
 }
 
-void AudioManager::Stop(int voice)
+AudioMixerProcessor& AudioManager::MixerProcessor() noexcept
 {
-    if (voice < 0 || voice >= static_cast<int>(AudioMixer::MAX_STREAMS))
+    return *m_impl->mixerProcessor;
+}
+
+const AudioMixerProcessor& AudioManager::MixerProcessor() const noexcept
+{
+    return *m_impl->mixerProcessor;
+}
+
+SoundInstanceId AudioManager::Play(std::shared_ptr<IAudioSource> source,
+                                   bool looping, float gain, float pan)
+{
+    if (!m_impl->initialized || source == nullptr)
+        return INVALID_SOUND_INSTANCE_ID;
+
+    std::unique_ptr<ProcessedSoundInstance> instance =
+        std::make_unique<ProcessedSoundInstance>(m_impl->processorChain);
+    instance->Parameters().volumeMultiplier = gain;
+    instance->Parameters().pan = pan;
+
+    if (!instance->Create(m_impl->NextInstanceId()) ||
+        !m_impl->mixerProcessor->Configure(*instance, std::move(source),
+                                           looping) ||
+        !instance->Play())
+    {
+        return INVALID_SOUND_INSTANCE_ID;
+    }
+
+    const SoundInstanceId id = instance->Id();
+    m_impl->instances.push_back(std::move(instance));
+    return id;
+}
+
+void AudioManager::Stop(SoundInstanceId id)
+{
+    if (id == INVALID_SOUND_INSTANCE_ID)
         return;
 
-    if (m_impl->voices[voice] != nullptr)
+    for (auto it = m_impl->instances.begin(); it != m_impl->instances.end();
+         ++it)
     {
-        m_impl->mixer.SetStreamSource(static_cast<unsigned int>(voice), nullptr,
-                                      false);
-        m_impl->voices[voice].reset();
+        if ((*it)->Id() != id)
+            continue;
+
+        (*it)->Stop();
+        m_impl->instances.erase(it);
+        return;
     }
 }
 
 void AudioManager::StopAll()
 {
-    for (unsigned int i = 0; i < AudioMixer::MAX_STREAMS; i++)
-    {
-        if (m_impl->voices[i] != nullptr)
-        {
-            m_impl->mixer.SetStreamSource(i, nullptr, false);
-            m_impl->voices[i].reset();
-        }
-    }
+    for (const std::unique_ptr<ProcessedSoundInstance>& instance :
+         m_impl->instances)
+        instance->Stop();
+
+    m_impl->instances.clear();
 }
 
-bool AudioManager::IsPlaying(int voice) const
+bool AudioManager::IsPlaying(SoundInstanceId id) const
 {
-    if (voice < 0 || voice >= static_cast<int>(AudioMixer::MAX_STREAMS))
+    if (id == INVALID_SOUND_INSTANCE_ID)
         return false;
 
-    return m_impl->voices[voice] != nullptr &&
-           m_impl->mixer.IsStreamActive(static_cast<unsigned int>(voice));
+    const ProcessedSoundInstance* instance = m_impl->FindInstance(id);
+    return instance != nullptr &&
+           instance->State() == SoundInstanceState::Playing;
 }
 
-void AudioManager::SetGainPan(int voice, float gain, float pan)
+void AudioManager::SetGainPan(SoundInstanceId id, float gain, float pan)
 {
-    if (voice < 0 || voice >= static_cast<int>(AudioMixer::MAX_STREAMS))
+    if (id == INVALID_SOUND_INSTANCE_ID)
         return;
 
-    if (m_impl->voices[voice] != nullptr)
-        m_impl->mixer.SetStreamGainPan(static_cast<unsigned int>(voice), gain,
-                                       pan);
+    ProcessedSoundInstance* instance = m_impl->FindInstance(id);
+    if (instance == nullptr)
+        return;
+
+    instance->Parameters().pan = pan;
+    instance->SetVolumeMultiplier(gain);
 }
 
 } // namespace forg::audio

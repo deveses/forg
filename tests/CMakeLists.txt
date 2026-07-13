@@ -17,6 +17,7 @@ add_executable(forg_tests
     audio/AudioGeneratorTests.cpp
     audio/AudioManagerTests.cpp
     audio/AudioMixerTests.cpp
+    audio/SoundInstanceProcessorTests.cpp
     math/MathTests.cpp
     audio/WaveFileTests.cpp
     core/BitArrayTests.cpp

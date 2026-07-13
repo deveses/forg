@@ -10,7 +10,11 @@ set(audio_includes
     AudioGenerator.h
     AudioManager.h
     AudioMixer.h
+    AudioMixerProcessor.h
     IAudioSource.h
+    ProcessedSoundInstance.h
+    SoundInstanceProcessor.h
+    SoundInstanceProcessorChain.h
     WaveFile.h
 )
 list(TRANSFORM audio_includes PREPEND "include/forg/audio/")
@@ -22,8 +26,12 @@ set(audio_sources
     AudioGenerator.cpp
     AudioManager.cpp
     AudioMixer.cpp
+    AudioMixerProcessor.cpp
     AudioOutput.cpp
     AudioOutput.h
+    ProcessedSoundInstance.cpp
+    SoundInstanceProcessor.cpp
+    SoundInstanceProcessorChain.cpp
     $<${FORG_PLATFORM_OSX}:AudioOutputCoreAudio.h>
     $<${FORG_PLATFORM_OSX}:AudioOutputCoreAudio.cpp>
     $<${FORG_PLATFORM_LINUX}:AudioOutputSDL.h>

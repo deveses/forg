@@ -35,6 +35,7 @@ struct AudioMixer::Impl
     IAudioOutput* output = nullptr;
     SAudioStream streams[MAX_STREAMS];
     SStreamSource sources[MAX_STREAMS];
+    bool acquiredVoices[MAX_STREAMS] = {};
     unsigned int num_streams = 0;
     SAudioFormat format = {};
 
@@ -71,6 +72,7 @@ bool AudioMixer::InitWithOutput(IAudioOutput* output)
         m_impl->sources[i].gain = 1.0f;
         m_impl->sources[i].pan = 0.0f;
         m_impl->sources[i].looping = false;
+        m_impl->acquiredVoices[i] = false;
     }
 
     m_impl->output = output;
@@ -94,6 +96,11 @@ void AudioMixer::Shutdown()
         m_impl->output->Release();
         m_impl->output = 0;
     }
+}
+
+bool AudioMixer::IsInitialized() const noexcept
+{
+    return m_impl->output != nullptr;
 }
 
 void AudioMixer::Update()
@@ -176,6 +183,44 @@ bool AudioMixer::IsStreamActive(unsigned int _stream) const
         return true;
 
     return stream.bytes_left > 0;
+}
+
+int AudioMixer::AcquireVoice()
+{
+    if (!IsInitialized())
+        return INVALID_VOICE;
+
+    for (unsigned int i = 0; i < m_impl->num_streams; i++)
+    {
+        if (!m_impl->acquiredVoices[i] && !IsStreamActive(i))
+        {
+            m_impl->acquiredVoices[i] = true;
+            return static_cast<int>(i);
+        }
+    }
+
+    return INVALID_VOICE;
+}
+
+void AudioMixer::ReleaseVoice(int voiceId)
+{
+    if (voiceId < 0 || voiceId >= static_cast<int>(m_impl->num_streams))
+        return;
+
+    const unsigned int stream = static_cast<unsigned int>(voiceId);
+    if (!m_impl->acquiredVoices[stream])
+        return;
+
+    SetStreamSource(stream, nullptr, false);
+    m_impl->acquiredVoices[stream] = false;
+}
+
+bool AudioMixer::IsVoiceAcquired(int voiceId) const noexcept
+{
+    if (voiceId < 0 || voiceId >= static_cast<int>(m_impl->num_streams))
+        return false;
+
+    return m_impl->acquiredVoices[static_cast<unsigned int>(voiceId)];
 }
 
 void AudioMixer::SetStreamFormat(unsigned int _stream,
