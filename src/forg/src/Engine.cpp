@@ -615,8 +615,8 @@ struct Engine::Impl
             return false;
         }
 
-        // Stop all voices before replacing the scene; playing sources are
-        // owned by the outgoing scene's nodes.
+        // Stop all sound instances before replacing the scene; playing
+        // sources are owned by the outgoing scene's nodes.
         if (audio.IsInitialized())
             audio.Manager().StopAll();
 
