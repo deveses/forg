@@ -54,6 +54,26 @@ TEST_CASE("SoundInstanceManager queues stops and releases them during update",
     REQUIRE(manager.Size() == 0);
 }
 
+TEST_CASE("SoundInstanceManager StopAll excludes later instances",
+          "[audio][sound-instance-manager]")
+{
+    auto chain = std::make_shared<forg::audio::SoundInstanceProcessorChain>();
+    forg::audio::SoundInstanceManager manager(2, chain);
+
+    const forg::audio::SoundInstanceId first = manager.Play();
+    REQUIRE(first != forg::audio::INVALID_SOUND_INSTANCE_ID);
+    REQUIRE(manager.StopAll());
+
+    const forg::audio::SoundInstanceId second = manager.Play();
+    REQUIRE(second != forg::audio::INVALID_SOUND_INSTANCE_ID);
+
+    manager.Update();
+
+    REQUIRE_FALSE(manager.IsPlaying(first));
+    REQUIRE(manager.IsPlaying(second));
+    REQUIRE(manager.Size() == 1);
+}
+
 TEST_CASE("SoundInstanceManager publishes state safely while reclaiming",
           "[audio][sound-instance-manager][threading]")
 {

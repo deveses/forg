@@ -49,6 +49,7 @@ SoundInstanceId SoundInstanceManager::Play(SoundInstanceDescription description)
 
     const SoundInstanceId id = instance->Id();
     m_instances.push_back({instance, snapshotIndex});
+    m_lastIssuedInstanceId.store(id, std::memory_order_release);
     PublishSnapshot(snapshotIndex, id, instance->State());
     return id;
 }
@@ -84,7 +85,12 @@ bool SoundInstanceManager::Stop(SoundInstanceId id)
     return Queue({CommandType::Stop, id});
 }
 
-bool SoundInstanceManager::StopAll() { return Queue({CommandType::StopAll}); }
+bool SoundInstanceManager::StopAll()
+{
+    const SoundInstanceId lastIssuedId =
+        m_lastIssuedInstanceId.load(std::memory_order_acquire);
+    return Queue({CommandType::StopAll, lastIssuedId});
+}
 
 bool SoundInstanceManager::SetGainPan(SoundInstanceId id, float gain, float pan)
 {
@@ -210,7 +216,10 @@ void SoundInstanceManager::ProcessCommands()
         if (command.type == CommandType::StopAll)
         {
             for (const InstanceEntry& entry : m_instances)
-                entry.instance->Stop();
+            {
+                if (entry.instance->Id() <= command.id)
+                    entry.instance->Stop();
+            }
             continue;
         }
 

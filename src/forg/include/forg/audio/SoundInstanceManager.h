@@ -36,6 +36,7 @@ class FORG_API SoundInstanceManager
     // These methods do not access pooled instance pointers and may be called
     // by other threads while this manager remains alive.
     bool Stop(SoundInstanceId id);
+    // Captures the currently issued ID range; later Play calls are excluded.
     bool StopAll();
     bool SetGainPan(SoundInstanceId id, float gain, float pan);
     bool IsPlaying(SoundInstanceId id) const noexcept;
@@ -100,6 +101,8 @@ class FORG_API SoundInstanceManager
     std::size_t m_commandCount = 0;
 
     SoundInstanceId m_nextInstanceId = 1;
+    std::atomic<SoundInstanceId> m_lastIssuedInstanceId{
+        INVALID_SOUND_INSTANCE_ID};
 };
 
 } // namespace forg::audio

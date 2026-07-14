@@ -146,12 +146,18 @@ boundary; its private `Create` and `Find` helpers are called only by that
 thread.
 
 `Stop`, `StopAll`, and `SetGainPan` do not look up an instance. They append an
-ID-based command to the manager's fixed queue under a short mutex and return
-`false` if the ID equals `INVALID_SOUND_INSTANCE_ID` or the queue is full. The
-owner thread drains the queue during `SoundInstanceManager::Update`, resolves
-IDs, invokes lifecycle operations, publishes the resulting state, and finally
-releases terminal pool slots. A nonzero ID that no longer identifies an active
-instance is accepted into the queue and ignored when it is resolved.
+ID-based command to the manager's fixed queue under a short mutex. All three
+return `false` if the queue is full; `Stop` and `SetGainPan` also reject
+`INVALID_SOUND_INSTANCE_ID`. The owner thread drains the queue during
+`SoundInstanceManager::Update`, resolves IDs, invokes lifecycle operations,
+publishes the resulting state, and finally releases terminal pool slots. A
+nonzero ID that no longer identifies an active instance is accepted into the
+queue and ignored when it is resolved.
+
+`StopAll` captures the most recently issued instance ID when it is queued and
+only stops instances at or below that ID. This preserves request ordering when
+new sounds are played before the owner thread drains the queue: a stale
+`StopAll` request cannot stop a later instance.
 
 `IsPlaying` never dereferences a pooled object. It reads a fixed table of
 atomic `(ID, state)` snapshots and verifies the ID both before and after the
