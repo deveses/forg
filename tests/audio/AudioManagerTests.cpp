@@ -129,11 +129,15 @@ TEST_CASE("AudioManager plays sources as separate sound instances",
     REQUIRE(manager.IsPlaying(id0));
     REQUIRE(manager.IsPlaying(id1));
 
-    manager.Stop(id0);
+    REQUIRE(manager.Stop(id0));
+    REQUIRE(manager.IsPlaying(id0));
+    manager.Update();
     REQUIRE_FALSE(manager.IsPlaying(id0));
     REQUIRE(manager.IsPlaying(id1));
 
-    manager.StopAll();
+    REQUIRE(manager.StopAll());
+    REQUIRE(manager.IsPlaying(id1));
+    manager.Update();
     REQUIRE_FALSE(manager.IsPlaying(id1));
 }
 
@@ -172,7 +176,9 @@ TEST_CASE("AudioManager runs out of voices at the mixer stream limit",
 
     REQUIRE(manager.Play(tone, true) == forg::audio::INVALID_SOUND_INSTANCE_ID);
 
-    manager.Stop(ids[3]);
+    REQUIRE(manager.Stop(ids[3]));
+    REQUIRE(manager.Play(tone, true) == forg::audio::INVALID_SOUND_INSTANCE_ID);
+    manager.Update();
     const forg::audio::SoundInstanceId replacement = manager.Play(tone, true);
     REQUIRE(replacement != forg::audio::INVALID_SOUND_INSTANCE_ID);
     REQUIRE(replacement != ids[3]);
@@ -220,7 +226,9 @@ TEST_CASE("AudioManager keeps a playing shared source alive",
     oneShot.reset();
     REQUIRE_FALSE(weak.expired());
 
-    manager.Stop(id);
+    REQUIRE(manager.Stop(id));
+    REQUIRE_FALSE(weak.expired());
+    manager.Update();
     REQUIRE(weak.expired());
 }
 
@@ -256,7 +264,8 @@ TEST_CASE("AudioManager skips mixer voices reserved by another owner",
     const forg::audio::SoundInstanceId id = manager.Play(tone, true);
     REQUIRE(id != forg::audio::INVALID_SOUND_INSTANCE_ID);
 
-    manager.Stop(id);
+    REQUIRE(manager.Stop(id));
+    manager.Update();
     manager.Mixer().ReleaseVoice(reserved);
 }
 
@@ -282,7 +291,8 @@ TEST_CASE("AudioManager drives its processor chain through sound instances",
 
     manager.SetGainPan(id, 0.5f, -0.25f);
     manager.Update();
-    manager.Stop(id);
+    REQUIRE(manager.Stop(id));
+    manager.Update();
 
     REQUIRE(events == std::vector<std::string>{"create", "play", "volume",
                                                "update", "stop", "destroy"});

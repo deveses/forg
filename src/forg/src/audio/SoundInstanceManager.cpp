@@ -14,7 +14,7 @@ SoundInstanceManager::SoundInstanceManager(std::size_t capacity)
     m_instances.reserve(capacity);
 }
 
-SoundInstanceManager::~SoundInstanceManager() { StopAll(); }
+SoundInstanceManager::~SoundInstanceManager() { Clear(); }
 
 ProcessedSoundInstance* SoundInstanceManager::Create(
     std::shared_ptr<SoundInstanceProcessorChain> processorChain,
@@ -86,17 +86,25 @@ void SoundInstanceManager::Update()
     }
 }
 
-void SoundInstanceManager::Stop(SoundInstanceId id)
+bool SoundInstanceManager::Stop(SoundInstanceId id)
 {
     ProcessedSoundInstance* instance = Find(id);
     if (instance == nullptr)
-        return;
+        return false;
 
-    instance->Stop();
-    Destroy(instance);
+    return instance->RequestStop();
 }
 
-void SoundInstanceManager::StopAll()
+bool SoundInstanceManager::StopAll()
+{
+    bool accepted = true;
+    for (ProcessedSoundInstance* instance : m_instances)
+        accepted = instance->RequestStop() && accepted;
+
+    return accepted;
+}
+
+void SoundInstanceManager::Clear()
 {
     for (ProcessedSoundInstance* instance : m_instances)
         instance->Stop();

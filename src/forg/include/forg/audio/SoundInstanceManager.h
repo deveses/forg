@@ -32,8 +32,9 @@ class FORG_API SoundInstanceManager
     const ProcessedSoundInstance* Find(SoundInstanceId id) const noexcept;
 
     void Update();
-    void Stop(SoundInstanceId id);
-    void StopAll();
+    bool Stop(SoundInstanceId id);
+    bool StopAll();
+    void Clear();
 
     std::size_t Capacity() const noexcept;
     std::size_t Size() const noexcept;

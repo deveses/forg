@@ -57,7 +57,7 @@ bool AudioManager::InitWithOutput(IAudioOutput* output)
 
 void AudioManager::Shutdown()
 {
-    StopAll();
+    m_impl->instanceManager.Clear();
     m_impl->mixer.Shutdown();
     m_impl->initialized = false;
 }
@@ -121,15 +121,15 @@ SoundInstanceId AudioManager::Play(std::shared_ptr<IAudioSource> source,
     return id;
 }
 
-void AudioManager::Stop(SoundInstanceId id)
+bool AudioManager::Stop(SoundInstanceId id)
 {
     if (id == INVALID_SOUND_INSTANCE_ID)
-        return;
+        return false;
 
-    m_impl->instanceManager.Stop(id);
+    return m_impl->instanceManager.Stop(id);
 }
 
-void AudioManager::StopAll() { m_impl->instanceManager.StopAll(); }
+bool AudioManager::StopAll() { return m_impl->instanceManager.StopAll(); }
 
 bool AudioManager::IsPlaying(SoundInstanceId id) const
 {

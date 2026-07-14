@@ -49,8 +49,8 @@ class FORG_API AudioManager
     SoundInstanceId Play(std::shared_ptr<IAudioSource> source,
                          bool looping = false, float gain = 1.0f,
                          float pan = 0.0f);
-    void Stop(SoundInstanceId id);
-    void StopAll();
+    bool Stop(SoundInstanceId id);
+    bool StopAll();
     bool IsPlaying(SoundInstanceId id) const;
     void SetGainPan(SoundInstanceId id, float gain, float pan);
 };

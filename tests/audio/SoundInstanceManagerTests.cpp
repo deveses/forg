@@ -31,7 +31,7 @@ TEST_CASE("SoundInstanceManager allocates instances from its fixed pool",
     REQUIRE(replacement->Id() != firstId);
 }
 
-TEST_CASE("SoundInstanceManager stops and releases managed instances",
+TEST_CASE("SoundInstanceManager queues stops and releases them during update",
           "[audio][sound-instance-manager]")
 {
     forg::audio::SoundInstanceManager manager(2);
@@ -42,8 +42,13 @@ TEST_CASE("SoundInstanceManager stops and releases managed instances",
     REQUIRE(instance->Play());
 
     const forg::audio::SoundInstanceId id = instance->Id();
-    manager.Stop(id);
+    REQUIRE(manager.Stop(id));
 
+    REQUIRE(manager.Find(id) == instance);
+    REQUIRE(manager.Size() == 1);
+    REQUIRE(instance->State() == forg::audio::SoundInstanceState::Playing);
+
+    manager.Update();
     REQUIRE(manager.Find(id) == nullptr);
     REQUIRE(manager.Size() == 0);
 }
