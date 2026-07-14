@@ -5,15 +5,17 @@
 #include "forg/api.h"
 #include "forg/audio/SoundInstanceProcessor.h"
 
+#include <array>
 #include <memory>
 #include <utility>
-#include <vector>
 
 namespace forg::audio {
 
 class FORG_API SoundInstanceProcessorChain
 {
   public:
+    static constexpr std::size_t MAX_PROCESSORS = MAX_SOUND_INSTANCE_PROCESSORS;
+
     bool AddProcessor(std::shared_ptr<SoundInstanceProcessor> processor);
     [[nodiscard]] std::size_t Count() const noexcept;
 
@@ -25,7 +27,9 @@ class FORG_API SoundInstanceProcessorChain
     ProcessorPtr(std::size_t index) const;
 
   private:
-    std::vector<std::shared_ptr<SoundInstanceProcessor>> m_processors;
+    std::array<std::shared_ptr<SoundInstanceProcessor>, MAX_PROCESSORS>
+        m_processors;
+    std::size_t m_count = 0;
 };
 
 } // namespace forg::audio

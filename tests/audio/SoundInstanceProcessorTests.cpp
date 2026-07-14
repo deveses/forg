@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "forg/audio/AudioDefs.h"
+#include "forg/audio/AudioGenerator.h"
 #include "forg/audio/AudioManager.h"
 #include "forg/audio/AudioMixer.h"
 #include "forg/audio/AudioMixerProcessor.h"
@@ -17,6 +18,7 @@ using forg::audio::AudioManager;
 using forg::audio::AudioMixer;
 using forg::audio::AudioMixerProcessor;
 using forg::audio::ProcessedSoundInstance;
+using forg::audio::SoundInstanceDescription;
 using forg::audio::SoundInstanceLifecyclePhase;
 using forg::audio::SoundInstanceProcessor;
 using forg::audio::SoundInstanceProcessorChain;
@@ -174,6 +176,14 @@ std::shared_ptr<SoundInstanceProcessorChain> MakeChain()
     return std::make_shared<SoundInstanceProcessorChain>();
 }
 
+SoundInstanceDescription MakeMixerDescription(bool looping = false)
+{
+    SoundInstanceDescription description;
+    description.source = std::make_shared<forg::audio::AudioGenerator>();
+    description.looping = looping;
+    return description;
+}
+
 } // namespace
 
 TEST_CASE("ProcessedSoundInstance runs processors in lifecycle order",
@@ -221,6 +231,33 @@ TEST_CASE("SoundProcessorContext stores isolated typed processor data",
 
     REQUIRE(instance.Play());
     REQUIRE(observed == std::vector<int>{11, 22});
+}
+
+TEST_CASE("SoundInstanceProcessorChain enforces its static processor limit",
+          "[audio][soundinstance]")
+{
+    std::vector<std::string> events;
+    std::shared_ptr<SoundInstanceProcessorChain> chain = MakeChain();
+    std::shared_ptr<RecordingProcessor> processor =
+        std::make_shared<RecordingProcessor>("processor", events);
+
+    for (std::size_t i = 0; i < SoundInstanceProcessorChain::MAX_PROCESSORS;
+         ++i)
+    {
+        REQUIRE(chain->AddProcessor(processor));
+    }
+
+    REQUIRE_FALSE(chain->AddProcessor(processor));
+    REQUIRE(chain->Count() == SoundInstanceProcessorChain::MAX_PROCESSORS);
+
+    ProcessedSoundInstance instance(chain);
+    REQUIRE(instance.Create());
+    REQUIRE(instance.ProcessorContextCount() ==
+            SoundInstanceProcessorChain::MAX_PROCESSORS);
+    REQUIRE(instance.ProcessorContext(
+                SoundInstanceProcessorChain::MAX_PROCESSORS - 1) != nullptr);
+    REQUIRE(instance.ProcessorContext(
+                SoundInstanceProcessorChain::MAX_PROCESSORS) == nullptr);
 }
 
 TEST_CASE("Bypassed processors skip lifecycle callbacks except destroy",
@@ -351,9 +388,9 @@ TEST_CASE("Deferred commands are drained in update order",
     REQUIRE(instance.Create());
     REQUIRE(instance.Play());
 
-    instance.RequestPause();
-    instance.RequestVolumeMultiplier(0.25f);
-    instance.RequestResume();
+    REQUIRE(instance.RequestPause());
+    REQUIRE(instance.RequestVolumeMultiplier(0.25f));
+    REQUIRE(instance.RequestResume());
     instance.Update();
 
     REQUIRE(instance.State() == SoundInstanceState::Playing);
@@ -361,6 +398,27 @@ TEST_CASE("Deferred commands are drained in update order",
     REQUIRE(events == std::vector<std::string>{"a:create", "a:play", "a:pause",
                                                "a:volume", "a:resume",
                                                "a:update"});
+}
+
+TEST_CASE("Deferred command queue has a fixed reported capacity",
+          "[audio][soundinstance]")
+{
+    ProcessedSoundInstance instance(nullptr);
+    REQUIRE(instance.Create());
+    REQUIRE(instance.Play());
+
+    for (std::size_t i = 0; i < ProcessedSoundInstance::MAX_QUEUED_COMMANDS;
+         ++i)
+    {
+        REQUIRE(instance.RequestVolumeMultiplier(static_cast<float>(i)));
+    }
+
+    REQUIRE_FALSE(instance.RequestStop());
+    instance.Update();
+
+    REQUIRE(
+        instance.Parameters().volumeMultiplier ==
+        static_cast<float>(ProcessedSoundInstance::MAX_QUEUED_COMMANDS - 1));
 }
 
 TEST_CASE("Sound instances expose default object routing identity",
@@ -391,7 +449,7 @@ TEST_CASE("AudioMixerProcessor acquires isolated voices during play",
     REQUIRE(chain->Count() == 1);
     REQUIRE(chain->Processor(0) == &processor);
 
-    ProcessedSoundInstance first(chain);
+    ProcessedSoundInstance first(chain, MakeMixerDescription());
     REQUIRE(processor.VoiceId(first) == AudioMixer::INVALID_VOICE);
     REQUIRE(first.Create());
     REQUIRE(processor.VoiceId(first) == AudioMixer::INVALID_VOICE);
@@ -400,7 +458,7 @@ TEST_CASE("AudioMixerProcessor acquires isolated voices during play",
     REQUIRE(mixer.IsVoiceAcquired(0));
 
     {
-        ProcessedSoundInstance second(chain);
+        ProcessedSoundInstance second(chain, MakeMixerDescription());
         REQUIRE(second.Create());
         REQUIRE(second.Play());
         REQUIRE(processor.VoiceId(second) == 1);
@@ -411,6 +469,21 @@ TEST_CASE("AudioMixerProcessor acquires isolated voices during play",
     first.Stop();
     REQUIRE(processor.VoiceId(first) == AudioMixer::INVALID_VOICE);
     REQUIRE_FALSE(mixer.IsVoiceAcquired(0));
+}
+
+TEST_CASE("AudioMixerProcessor requires a source during instance creation",
+          "[audio][soundinstance][mixerprocessor]")
+{
+    NullAudioOutput output;
+    AudioManager manager;
+    REQUIRE(manager.InitWithOutput(&output));
+
+    ProcessedSoundInstance instance(manager.ProcessorChain());
+
+    REQUIRE_FALSE(instance.Create());
+    REQUIRE(instance.IsFailed());
+    REQUIRE(manager.MixerProcessor().VoiceId(instance) ==
+            AudioMixer::INVALID_VOICE);
 }
 
 TEST_CASE("AudioMixerProcessor waits until a voice becomes available",
@@ -429,7 +502,7 @@ TEST_CASE("AudioMixerProcessor waits until a voice becomes available",
         manager.ProcessorChain();
     AudioMixerProcessor& processor = manager.MixerProcessor();
 
-    ProcessedSoundInstance instance(chain);
+    ProcessedSoundInstance instance(chain, MakeMixerDescription());
     REQUIRE(instance.Create());
     REQUIRE_FALSE(instance.Play());
     REQUIRE(instance.HasPendingWork());
@@ -455,7 +528,7 @@ TEST_CASE("AudioMixerProcessor fails play with an uninitialized mixer",
         manager.ProcessorChain();
     AudioMixerProcessor& processor = manager.MixerProcessor();
 
-    ProcessedSoundInstance instance(chain);
+    ProcessedSoundInstance instance(chain, MakeMixerDescription());
     REQUIRE(instance.Create());
     REQUIRE_FALSE(instance.Play());
     REQUIRE(instance.IsFailed());

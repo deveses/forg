@@ -4,15 +4,22 @@
 
 #include "forg/api.h"
 #include "forg/core/ObjectBuffer.h"
-#include "forg/core/string.hpp"
 #include "forg/math/Vector3.h"
 
+#include <array>
+#include <cstddef>
 #include <cstdint>
 #include <utility>
 
 namespace forg::audio {
 
 class ProcessedSoundInstance;
+
+inline constexpr std::size_t MAX_SOUND_INSTANCE_PROCESSORS = 16;
+inline constexpr std::size_t SOUND_PROCESSOR_CONTEXT_STORAGE_SIZE = 64;
+inline constexpr std::size_t SOUND_PROCESSOR_CONTEXT_STORAGE_ALIGNMENT =
+    alignof(std::max_align_t);
+inline constexpr std::size_t SOUND_PROCESSOR_CONTEXT_MESSAGE_SIZE = 128;
 
 enum class SoundInstanceState
 {
@@ -60,11 +67,13 @@ struct SoundProcessingParameters
 
 struct SoundProcessorContext
 {
-    core::ObjectBuffer storage;
+    core::StaticObjectBuffer<SOUND_PROCESSOR_CONTEXT_STORAGE_SIZE,
+                             SOUND_PROCESSOR_CONTEXT_STORAGE_ALIGNMENT>
+        storage;
     void* userData = nullptr;
     std::uintptr_t handle = 0;
     bool bypassed = false;
-    core::string message;
+    std::array<char, SOUND_PROCESSOR_CONTEXT_MESSAGE_SIZE> message{};
 
     SoundProcessorContext() = default;
     ~SoundProcessorContext() = default;
@@ -72,9 +81,8 @@ struct SoundProcessorContext
     SoundProcessorContext(const SoundProcessorContext&) = delete;
     SoundProcessorContext& operator=(const SoundProcessorContext&) = delete;
 
-    SoundProcessorContext(SoundProcessorContext&&) noexcept = default;
-    SoundProcessorContext&
-    operator=(SoundProcessorContext&&) noexcept = default;
+    SoundProcessorContext(SoundProcessorContext&&) = delete;
+    SoundProcessorContext& operator=(SoundProcessorContext&&) = delete;
 
     template <typename T, typename... Args> T* Emplace(Args&&... args)
     {

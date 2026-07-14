@@ -5,22 +5,35 @@
 #include "forg/api.h"
 #include "forg/audio/SoundInstanceProcessor.h"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 
 namespace forg::audio {
 
+class IAudioSource;
 class SoundInstanceProcessorChain;
 
 using SoundInstanceId = std::uint64_t;
 inline constexpr SoundInstanceId INVALID_SOUND_INSTANCE_ID = 0;
 
+struct SoundInstanceDescription
+{
+    std::shared_ptr<IAudioSource> source;
+    bool looping = false;
+    SoundProcessingParameters parameters;
+};
+
 class FORG_API ProcessedSoundInstance
 {
   public:
+    static constexpr std::size_t MAX_QUEUED_COMMANDS = 16;
+
     explicit ProcessedSoundInstance(
-        std::shared_ptr<SoundInstanceProcessorChain> chain);
+        std::shared_ptr<SoundInstanceProcessorChain> chain,
+        SoundInstanceDescription description = {});
     virtual ~ProcessedSoundInstance();
 
     ProcessedSoundInstance(const ProcessedSoundInstance&) = delete;
@@ -40,6 +53,8 @@ class FORG_API ProcessedSoundInstance
 
     SoundProcessingParameters& Parameters() noexcept;
     const SoundProcessingParameters& Parameters() const noexcept;
+    std::shared_ptr<IAudioSource> Source() const;
+    bool Looping() const noexcept;
 
     std::shared_ptr<SoundInstanceProcessorChain> ProcessorChain() const;
     std::size_t ProcessorContextCount() const noexcept;
@@ -61,18 +76,58 @@ class FORG_API ProcessedSoundInstance
     void Resume();
     void SetVolumeMultiplier(float volumeMultiplier);
 
-    void RequestStop();
-    void RequestPause();
-    void RequestResume();
-    void RequestVolumeMultiplier(float volumeMultiplier);
+    bool RequestStop();
+    bool RequestPause();
+    bool RequestResume();
+    bool RequestVolumeMultiplier(float volumeMultiplier);
 
   protected:
     virtual void* ResolveSenderObject() const;
     virtual void* ResolveEmitterObject() const;
 
   private:
-    struct Impl;
-    std::unique_ptr<Impl> m_impl;
+    enum class CommandType
+    {
+        Stop,
+        Pause,
+        Resume,
+        Volume
+    };
+
+    struct Command
+    {
+        CommandType type = CommandType::Stop;
+        float volumeMultiplier = 1.0f;
+    };
+
+    std::shared_ptr<SoundInstanceProcessorChain> m_chain;
+    std::shared_ptr<IAudioSource> m_source;
+    bool m_looping = false;
+    std::array<SoundProcessorContext, MAX_SOUND_INSTANCE_PROCESSORS> m_contexts;
+    std::size_t m_contextCount = 0;
+    SoundProcessingParameters m_parameters;
+
+    SoundInstanceId m_id = INVALID_SOUND_INSTANCE_ID;
+    SoundInstanceState m_state = SoundInstanceState::Pending;
+    SoundInstanceLifecyclePhase m_pendingPhase =
+        SoundInstanceLifecyclePhase::Create;
+    std::size_t m_pendingIndex = 0;
+    bool m_hasPending = false;
+    bool m_creationStarted = false;
+    bool m_created = false;
+    bool m_destroyed = false;
+
+    void* m_sender = nullptr;
+    void* m_emitter = nullptr;
+
+    mutable std::mutex m_commandMutex;
+    std::array<Command, MAX_QUEUED_COMMANDS> m_commands;
+    std::size_t m_commandHead = 0;
+    std::size_t m_commandCount = 0;
+
+    bool Queue(Command command);
+    std::size_t
+    DrainCommands(std::array<Command, MAX_QUEUED_COMMANDS>& commands);
 
     SoundProcessingResult CallProcessor(SoundInstanceLifecyclePhase phase,
                                         SoundInstanceProcessor& processor,

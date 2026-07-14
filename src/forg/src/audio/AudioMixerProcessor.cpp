@@ -49,42 +49,21 @@ int AudioMixerProcessor::VoiceId(
     return AudioMixer::INVALID_VOICE;
 }
 
-bool AudioMixerProcessor::Configure(ProcessedSoundInstance& instance,
-                                    std::shared_ptr<IAudioSource> source,
-                                    bool looping)
-{
-    const std::shared_ptr<SoundInstanceProcessorChain> chain =
-        instance.ProcessorChain();
-    if (chain == nullptr || source == nullptr)
-        return false;
-
-    for (std::size_t i = 0; i < chain->Count(); i++)
-    {
-        if (chain->Processor(i) != this)
-            continue;
-
-        SoundProcessorContext* context = instance.ProcessorContext(i);
-        if (context == nullptr || context->storage.Empty())
-            return false;
-
-        AudioMixerProcessorState* state =
-            context->Get<AudioMixerProcessorState>();
-        if (state == nullptr)
-            return false;
-
-        state->source = std::move(source);
-        state->looping = looping;
-        return true;
-    }
-
-    return false;
-}
-
 SoundProcessingResult
-AudioMixerProcessor::OnCreate(ProcessedSoundInstance&,
+AudioMixerProcessor::OnCreate(ProcessedSoundInstance& instance,
                               SoundProcessorContext& context)
 {
-    context.Emplace<AudioMixerProcessorState>();
+    std::shared_ptr<IAudioSource> source = instance.Source();
+    if (source == nullptr)
+        return SoundProcessingResult::Fail;
+
+    AudioMixerProcessorState* state =
+        context.Emplace<AudioMixerProcessorState>();
+    if (state == nullptr)
+        return SoundProcessingResult::Fail;
+
+    state->source = std::move(source);
+    state->looping = instance.Looping();
     return SoundProcessingResult::Continue;
 }
 
@@ -106,14 +85,11 @@ AudioMixerProcessor::OnPlay(ProcessedSoundInstance& instance,
     if (state->voiceId == AudioMixer::INVALID_VOICE)
         return SoundProcessingResult::Wait;
 
-    if (state->source != nullptr)
-    {
-        const SoundProcessingParameters& parameters = instance.Parameters();
-        m_mixer.SetStreamSource(static_cast<unsigned int>(state->voiceId),
-                                state->source, state->looping);
-        m_mixer.SetStreamGainPan(static_cast<unsigned int>(state->voiceId),
-                                 parameters.volumeMultiplier, parameters.pan);
-    }
+    const SoundProcessingParameters& parameters = instance.Parameters();
+    m_mixer.SetStreamSource(static_cast<unsigned int>(state->voiceId),
+                            state->source, state->looping);
+    m_mixer.SetStreamGainPan(static_cast<unsigned int>(state->voiceId),
+                             parameters.volumeMultiplier, parameters.pan);
 
     return SoundProcessingResult::Continue;
 }

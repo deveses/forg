@@ -18,10 +18,12 @@ add_executable(forg_tests
     audio/AudioManagerTests.cpp
     audio/AudioMixerTests.cpp
     audio/SoundInstanceProcessorTests.cpp
+    audio/SoundInstanceManagerTests.cpp
     math/MathTests.cpp
     audio/WaveFileTests.cpp
     core/BitArrayTests.cpp
     core/ObjectBufferTests.cpp
+    core/ObjectPoolTests.cpp
     core/RefCounterTests.cpp
     core/StringTests.cpp
     fs/FilesystemTests.cpp

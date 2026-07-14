@@ -4,10 +4,7 @@
 
 #include "forg/audio/SoundInstanceProcessorChain.h"
 
-#include <deque>
-#include <mutex>
 #include <utility>
-#include <vector>
 
 namespace forg::audio {
 namespace {
@@ -21,159 +18,136 @@ bool IsTerminal(SoundInstanceState state)
 
 } // namespace
 
-struct ProcessedSoundInstance::Impl
-{
-    enum class CommandType
-    {
-        Stop,
-        Pause,
-        Resume,
-        Volume
-    };
-
-    struct Command
-    {
-        CommandType type = CommandType::Stop;
-        float volumeMultiplier = 1.0f;
-    };
-
-    explicit Impl(std::shared_ptr<SoundInstanceProcessorChain> soundChain)
-        : chain(std::move(soundChain))
-    {
-    }
-
-    std::shared_ptr<SoundInstanceProcessorChain> chain;
-    std::vector<SoundProcessorContext> contexts;
-    SoundProcessingParameters parameters;
-
-    SoundInstanceId id = INVALID_SOUND_INSTANCE_ID;
-    SoundInstanceState state = SoundInstanceState::Pending;
-    SoundInstanceLifecyclePhase pendingPhase =
-        SoundInstanceLifecyclePhase::Create;
-    std::size_t pendingIndex = 0;
-    bool hasPending = false;
-    bool creationStarted = false;
-    bool created = false;
-    bool destroyed = false;
-
-    void* sender = nullptr;
-    void* emitter = nullptr;
-
-    mutable std::mutex commandMutex;
-    std::deque<Command> commands;
-
-    void Queue(Command command)
-    {
-        std::lock_guard<std::mutex> lock(commandMutex);
-        commands.push_back(command);
-    }
-
-    std::deque<Command> DrainCommands()
-    {
-        std::lock_guard<std::mutex> lock(commandMutex);
-        std::deque<Command> drained;
-        drained.swap(commands);
-        return drained;
-    }
-};
-
 ProcessedSoundInstance::ProcessedSoundInstance(
-    std::shared_ptr<SoundInstanceProcessorChain> chain)
-    : m_impl(std::make_unique<Impl>(std::move(chain)))
+    std::shared_ptr<SoundInstanceProcessorChain> chain,
+    SoundInstanceDescription description)
+    : m_chain(std::move(chain)), m_source(std::move(description.source)),
+      m_looping(description.looping),
+      m_parameters(std::move(description.parameters))
 {
 }
 
 ProcessedSoundInstance::~ProcessedSoundInstance() { DestroyProcessors(); }
 
-SoundInstanceState ProcessedSoundInstance::State() const noexcept
+bool ProcessedSoundInstance::Queue(Command command)
 {
-    return m_impl->state;
+    std::lock_guard<std::mutex> lock(m_commandMutex);
+    if (m_commandCount == m_commands.size())
+        return false;
+
+    const std::size_t index =
+        (m_commandHead + m_commandCount) % m_commands.size();
+    m_commands[index] = command;
+    ++m_commandCount;
+    return true;
 }
 
-SoundInstanceId ProcessedSoundInstance::Id() const noexcept
+std::size_t ProcessedSoundInstance::DrainCommands(
+    std::array<Command, MAX_QUEUED_COMMANDS>& commands)
 {
-    return m_impl->id;
+    std::lock_guard<std::mutex> lock(m_commandMutex);
+    const std::size_t count = m_commandCount;
+    for (std::size_t i = 0; i < count; ++i)
+        commands[i] = m_commands[(m_commandHead + i) % m_commands.size()];
+
+    m_commandHead = 0;
+    m_commandCount = 0;
+    return count;
 }
+
+SoundInstanceState ProcessedSoundInstance::State() const noexcept
+{
+    return m_state;
+}
+
+SoundInstanceId ProcessedSoundInstance::Id() const noexcept { return m_id; }
 
 bool ProcessedSoundInstance::IsActive() const noexcept
 {
-    return !IsTerminal(m_impl->state);
+    return !IsTerminal(m_state);
 }
 
 bool ProcessedSoundInstance::IsPending() const noexcept
 {
-    return m_impl->state == SoundInstanceState::Pending || m_impl->hasPending;
+    return m_state == SoundInstanceState::Pending || m_hasPending;
 }
 
 bool ProcessedSoundInstance::IsComplete() const noexcept
 {
-    return m_impl->state == SoundInstanceState::Complete;
+    return m_state == SoundInstanceState::Complete;
 }
 
 bool ProcessedSoundInstance::IsFailed() const noexcept
 {
-    return m_impl->state == SoundInstanceState::Failed;
+    return m_state == SoundInstanceState::Failed;
 }
 
 bool ProcessedSoundInstance::IsStopped() const noexcept
 {
-    return m_impl->state == SoundInstanceState::Stopped;
+    return m_state == SoundInstanceState::Stopped;
 }
 
 bool ProcessedSoundInstance::HasPendingWork() const noexcept
 {
-    return m_impl->hasPending;
+    return m_hasPending;
 }
 
 SoundInstanceLifecyclePhase
 ProcessedSoundInstance::PendingPhase() const noexcept
 {
-    return m_impl->pendingPhase;
+    return m_pendingPhase;
 }
 
 std::size_t ProcessedSoundInstance::PendingProcessorIndex() const noexcept
 {
-    return m_impl->pendingIndex;
+    return m_pendingIndex;
 }
 
 SoundProcessingParameters& ProcessedSoundInstance::Parameters() noexcept
 {
-    return m_impl->parameters;
+    return m_parameters;
 }
 
 const SoundProcessingParameters&
 ProcessedSoundInstance::Parameters() const noexcept
 {
-    return m_impl->parameters;
+    return m_parameters;
 }
+
+std::shared_ptr<IAudioSource> ProcessedSoundInstance::Source() const
+{
+    return m_source;
+}
+
+bool ProcessedSoundInstance::Looping() const noexcept { return m_looping; }
 
 std::shared_ptr<SoundInstanceProcessorChain>
 ProcessedSoundInstance::ProcessorChain() const
 {
-    return m_impl->chain;
+    return m_chain;
 }
 
 std::size_t ProcessedSoundInstance::ProcessorContextCount() const noexcept
 {
-    return m_impl->contexts.size();
+    return m_contextCount;
 }
 
 SoundProcessorContext*
 ProcessedSoundInstance::ProcessorContext(std::size_t index) noexcept
 {
-    if (index >= m_impl->contexts.size())
+    if (index >= m_contextCount)
         return nullptr;
 
-    return &m_impl->contexts[index];
+    return &m_contexts[index];
 }
 
 const SoundProcessorContext*
 ProcessedSoundInstance::ProcessorContext(std::size_t index) const noexcept
 {
-    if (index >= m_impl->contexts.size())
+    if (index >= m_contextCount)
         return nullptr;
 
-    return &m_impl->contexts[index];
+    return &m_contexts[index];
 }
 
 void* ProcessedSoundInstance::SenderObject() const
@@ -188,91 +162,96 @@ void* ProcessedSoundInstance::EmitterObject() const
 
 void ProcessedSoundInstance::SetSenderObject(void* sender) noexcept
 {
-    m_impl->sender = sender;
+    m_sender = sender;
 }
 
 void ProcessedSoundInstance::SetEmitterObject(void* emitter) noexcept
 {
-    m_impl->emitter = emitter;
+    m_emitter = emitter;
 }
 
 bool ProcessedSoundInstance::Create(SoundInstanceId id)
 {
-    if (IsTerminal(m_impl->state))
+    if (IsTerminal(m_state))
         return false;
 
-    if (m_impl->created)
+    if (m_created)
         return true;
 
-    if (m_impl->hasPending &&
-        m_impl->pendingPhase != SoundInstanceLifecyclePhase::Create)
+    if (m_hasPending && m_pendingPhase != SoundInstanceLifecyclePhase::Create)
     {
         return false;
     }
 
-    if (!m_impl->creationStarted)
+    if (!m_creationStarted)
     {
-        m_impl->id = id;
-        const std::size_t count =
-            m_impl->chain != nullptr ? m_impl->chain->Count() : 0;
-        m_impl->contexts.resize(count);
-        m_impl->creationStarted = true;
+        m_id = id;
+        const std::size_t contextCount =
+            m_chain != nullptr ? m_chain->Count() : 0;
+        if (contextCount > m_contexts.size())
+        {
+            TransitionTo(SoundInstanceState::Failed);
+            return false;
+        }
+        m_contextCount = contextCount;
+        m_creationStarted = true;
     }
 
     const SoundProcessingResult result =
-        m_impl->hasPending
-            ? (ResumePendingWork() ? SoundProcessingResult::Continue
-                                   : SoundProcessingResult::Wait)
-            : RunPhase(SoundInstanceLifecyclePhase::Create, 0);
-    if (result == SoundProcessingResult::Continue && !m_impl->hasPending &&
-        !IsTerminal(m_impl->state))
+        m_hasPending ? (ResumePendingWork() ? SoundProcessingResult::Continue
+                                            : SoundProcessingResult::Wait)
+                     : RunPhase(SoundInstanceLifecyclePhase::Create, 0);
+    if (result == SoundProcessingResult::Continue && !m_hasPending &&
+        !IsTerminal(m_state))
     {
-        m_impl->created = true;
-        m_impl->state = SoundInstanceState::Pending;
+        m_created = true;
+        m_state = SoundInstanceState::Pending;
     }
 
-    return m_impl->created;
+    return m_created;
 }
 
 bool ProcessedSoundInstance::Play()
 {
-    if (IsTerminal(m_impl->state) || !m_impl->created)
+    if (IsTerminal(m_state) || !m_created)
         return false;
 
     if (!ResumePendingWork())
         return false;
 
-    if (IsTerminal(m_impl->state))
+    if (IsTerminal(m_state))
         return false;
 
     const SoundProcessingResult result =
         RunPhase(SoundInstanceLifecyclePhase::Play, 0);
     if (result == SoundProcessingResult::Continue)
-        m_impl->state = SoundInstanceState::Playing;
+        m_state = SoundInstanceState::Playing;
 
-    return m_impl->state == SoundInstanceState::Playing;
+    return m_state == SoundInstanceState::Playing;
 }
 
 void ProcessedSoundInstance::Update()
 {
-    std::deque<Impl::Command> commands = m_impl->DrainCommands();
-    for (const Impl::Command& command : commands)
+    std::array<Command, MAX_QUEUED_COMMANDS> commands;
+    const std::size_t commandCount = DrainCommands(commands);
+    for (std::size_t i = 0; i < commandCount; ++i)
     {
-        if (IsTerminal(m_impl->state))
+        const Command& command = commands[i];
+        if (IsTerminal(m_state))
             break;
 
         switch (command.type)
         {
-        case Impl::CommandType::Stop:
+        case CommandType::Stop:
             Stop();
             break;
-        case Impl::CommandType::Pause:
+        case CommandType::Pause:
             Pause();
             break;
-        case Impl::CommandType::Resume:
+        case CommandType::Resume:
             Resume();
             break;
-        case Impl::CommandType::Volume:
+        case CommandType::Volume:
             SetVolumeMultiplier(command.volumeMultiplier);
             break;
         }
@@ -281,20 +260,20 @@ void ProcessedSoundInstance::Update()
     if (!ResumePendingWork())
         return;
 
-    if (m_impl->state != SoundInstanceState::Playing)
+    if (m_state != SoundInstanceState::Playing)
         return;
 
     const SoundProcessingResult result =
         RunPhase(SoundInstanceLifecyclePhase::Update, 0);
-    if (result == SoundProcessingResult::Continue && !IsTerminal(m_impl->state))
+    if (result == SoundProcessingResult::Continue && !IsTerminal(m_state))
     {
-        m_impl->state = SoundInstanceState::Playing;
+        m_state = SoundInstanceState::Playing;
     }
 }
 
 void ProcessedSoundInstance::Stop()
 {
-    if (IsTerminal(m_impl->state))
+    if (IsTerminal(m_state))
         return;
 
     const SoundProcessingResult result =
@@ -305,24 +284,24 @@ void ProcessedSoundInstance::Stop()
 
 void ProcessedSoundInstance::Pause()
 {
-    if (IsTerminal(m_impl->state) ||
-        m_impl->state == SoundInstanceState::Paused || !m_impl->created)
+    if (IsTerminal(m_state) || m_state == SoundInstanceState::Paused ||
+        !m_created)
     {
         return;
     }
 
     const SoundProcessingResult result =
         RunPhase(SoundInstanceLifecyclePhase::Pause, 0);
-    if (result == SoundProcessingResult::Continue && !IsTerminal(m_impl->state))
+    if (result == SoundProcessingResult::Continue && !IsTerminal(m_state))
     {
-        m_impl->state = SoundInstanceState::Paused;
+        m_state = SoundInstanceState::Paused;
     }
 }
 
 void ProcessedSoundInstance::Resume()
 {
-    if (IsTerminal(m_impl->state) ||
-        m_impl->state == SoundInstanceState::Playing || !m_impl->created)
+    if (IsTerminal(m_state) || m_state == SoundInstanceState::Playing ||
+        !m_created)
     {
         return;
     }
@@ -332,62 +311,55 @@ void ProcessedSoundInstance::Resume()
 
     const SoundProcessingResult result =
         RunPhase(SoundInstanceLifecyclePhase::Resume, 0);
-    if (result == SoundProcessingResult::Continue && !IsTerminal(m_impl->state))
+    if (result == SoundProcessingResult::Continue && !IsTerminal(m_state))
     {
-        m_impl->state = SoundInstanceState::Playing;
+        m_state = SoundInstanceState::Playing;
     }
 }
 
 void ProcessedSoundInstance::SetVolumeMultiplier(float volumeMultiplier)
 {
-    if (IsTerminal(m_impl->state) || !m_impl->created ||
-        !m_impl->parameters.volumeChangesEnabled)
+    if (IsTerminal(m_state) || !m_created || !m_parameters.volumeChangesEnabled)
     {
         return;
     }
 
-    m_impl->parameters.volumeMultiplier = volumeMultiplier;
+    m_parameters.volumeMultiplier = volumeMultiplier;
 
     const SoundProcessingResult result =
         RunPhase(SoundInstanceLifecyclePhase::Volume, 0);
-    if (result == SoundProcessingResult::Continue && !IsTerminal(m_impl->state))
+    if (result == SoundProcessingResult::Continue && !IsTerminal(m_state))
     {
-        if (m_impl->state == SoundInstanceState::Pending && !m_impl->hasPending)
+        if (m_state == SoundInstanceState::Pending && !m_hasPending)
         {
-            m_impl->state = SoundInstanceState::Pending;
+            m_state = SoundInstanceState::Pending;
         }
     }
 }
 
-void ProcessedSoundInstance::RequestStop()
+bool ProcessedSoundInstance::RequestStop()
 {
-    m_impl->Queue({Impl::CommandType::Stop, 1.0f});
+    return Queue({CommandType::Stop, 1.0f});
 }
 
-void ProcessedSoundInstance::RequestPause()
+bool ProcessedSoundInstance::RequestPause()
 {
-    m_impl->Queue({Impl::CommandType::Pause, 1.0f});
+    return Queue({CommandType::Pause, 1.0f});
 }
 
-void ProcessedSoundInstance::RequestResume()
+bool ProcessedSoundInstance::RequestResume()
 {
-    m_impl->Queue({Impl::CommandType::Resume, 1.0f});
+    return Queue({CommandType::Resume, 1.0f});
 }
 
-void ProcessedSoundInstance::RequestVolumeMultiplier(float volumeMultiplier)
+bool ProcessedSoundInstance::RequestVolumeMultiplier(float volumeMultiplier)
 {
-    m_impl->Queue({Impl::CommandType::Volume, volumeMultiplier});
+    return Queue({CommandType::Volume, volumeMultiplier});
 }
 
-void* ProcessedSoundInstance::ResolveSenderObject() const
-{
-    return m_impl->sender;
-}
+void* ProcessedSoundInstance::ResolveSenderObject() const { return m_sender; }
 
-void* ProcessedSoundInstance::ResolveEmitterObject() const
-{
-    return m_impl->emitter;
-}
+void* ProcessedSoundInstance::ResolveEmitterObject() const { return m_emitter; }
 
 SoundProcessingResult
 ProcessedSoundInstance::CallProcessor(SoundInstanceLifecyclePhase phase,
@@ -421,18 +393,17 @@ SoundProcessingResult
 ProcessedSoundInstance::RunPhase(SoundInstanceLifecyclePhase phase,
                                  std::size_t startIndex)
 {
-    if (m_impl->chain == nullptr)
+    if (m_chain == nullptr)
         return SoundProcessingResult::Continue;
 
-    const std::size_t count = m_impl->chain->Count();
-    for (std::size_t i = startIndex; i < count && i < m_impl->contexts.size();
-         i++)
+    const std::size_t count = m_chain->Count();
+    for (std::size_t i = startIndex; i < count && i < m_contextCount; i++)
     {
-        SoundProcessorContext& context = m_impl->contexts[i];
+        SoundProcessorContext& context = m_contexts[i];
         if (context.bypassed && phase != SoundInstanceLifecyclePhase::Destroy)
             continue;
 
-        SoundInstanceProcessor* processor = m_impl->chain->Processor(i);
+        SoundInstanceProcessor* processor = m_chain->Processor(i);
         if (processor == nullptr)
             continue;
 
@@ -447,10 +418,10 @@ ProcessedSoundInstance::RunPhase(SoundInstanceLifecyclePhase phase,
             context.bypassed = true;
             break;
         case SoundProcessingResult::Wait:
-            m_impl->hasPending = true;
-            m_impl->pendingPhase = phase;
-            m_impl->pendingIndex = i;
-            m_impl->state = SoundInstanceState::Pending;
+            m_hasPending = true;
+            m_pendingPhase = phase;
+            m_pendingIndex = i;
+            m_state = SoundInstanceState::Pending;
             return result;
         case SoundProcessingResult::Stop:
             TransitionTo(SoundInstanceState::Stopped);
@@ -464,17 +435,17 @@ ProcessedSoundInstance::RunPhase(SoundInstanceLifecyclePhase phase,
         }
     }
 
-    m_impl->hasPending = false;
+    m_hasPending = false;
     return SoundProcessingResult::Continue;
 }
 
 bool ProcessedSoundInstance::ResumePendingWork()
 {
-    if (!m_impl->hasPending)
+    if (!m_hasPending)
         return true;
 
-    const SoundInstanceLifecyclePhase phase = m_impl->pendingPhase;
-    const SoundProcessingResult result = RunPhase(phase, m_impl->pendingIndex);
+    const SoundInstanceLifecyclePhase phase = m_pendingPhase;
+    const SoundProcessingResult result = RunPhase(phase, m_pendingIndex);
     if (result != SoundProcessingResult::Continue)
         return false;
 
@@ -482,60 +453,59 @@ bool ProcessedSoundInstance::ResumePendingWork()
     {
     case SoundInstanceLifecyclePhase::Play:
     case SoundInstanceLifecyclePhase::Resume:
-        if (!IsTerminal(m_impl->state))
-            m_impl->state = SoundInstanceState::Playing;
+        if (!IsTerminal(m_state))
+            m_state = SoundInstanceState::Playing;
         break;
     case SoundInstanceLifecyclePhase::Pause:
-        if (!IsTerminal(m_impl->state))
-            m_impl->state = SoundInstanceState::Paused;
+        if (!IsTerminal(m_state))
+            m_state = SoundInstanceState::Paused;
         break;
     case SoundInstanceLifecyclePhase::Stop:
         TransitionTo(SoundInstanceState::Stopped);
         break;
     case SoundInstanceLifecyclePhase::Create:
-        if (!IsTerminal(m_impl->state))
+        if (!IsTerminal(m_state))
         {
-            m_impl->created = true;
-            m_impl->state = SoundInstanceState::Pending;
+            m_created = true;
+            m_state = SoundInstanceState::Pending;
         }
         break;
     case SoundInstanceLifecyclePhase::Update:
     case SoundInstanceLifecyclePhase::Volume:
     case SoundInstanceLifecyclePhase::Destroy:
-        if (!IsTerminal(m_impl->state) &&
-            m_impl->state == SoundInstanceState::Pending)
+        if (!IsTerminal(m_state) && m_state == SoundInstanceState::Pending)
         {
-            m_impl->state = SoundInstanceState::Pending;
+            m_state = SoundInstanceState::Pending;
         }
         break;
     }
 
-    return !m_impl->hasPending;
+    return !m_hasPending;
 }
 
 void ProcessedSoundInstance::TransitionTo(SoundInstanceState state)
 {
-    m_impl->hasPending = false;
-    m_impl->state = state;
+    m_hasPending = false;
+    m_state = state;
     if (IsTerminal(state))
         DestroyProcessors();
 }
 
 void ProcessedSoundInstance::DestroyProcessors()
 {
-    if (m_impl->destroyed)
+    if (m_destroyed)
         return;
 
-    m_impl->destroyed = true;
-    if (!m_impl->creationStarted || m_impl->chain == nullptr)
+    m_destroyed = true;
+    if (!m_creationStarted || m_chain == nullptr)
         return;
 
-    const std::size_t count = m_impl->chain->Count();
-    for (std::size_t i = 0; i < count && i < m_impl->contexts.size(); i++)
+    const std::size_t count = m_chain->Count();
+    for (std::size_t i = 0; i < count && i < m_contextCount; i++)
     {
-        SoundInstanceProcessor* processor = m_impl->chain->Processor(i);
+        SoundInstanceProcessor* processor = m_chain->Processor(i);
         if (processor != nullptr)
-            processor->OnDestroy(*this, m_impl->contexts[i]);
+            processor->OnDestroy(*this, m_contexts[i]);
     }
 }
 

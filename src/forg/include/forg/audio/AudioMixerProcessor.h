@@ -5,12 +5,9 @@
 #include "forg/api.h"
 #include "forg/audio/SoundInstanceProcessor.h"
 
-#include <memory>
-
 namespace forg::audio {
 
 class AudioMixer;
-class IAudioSource;
 
 class FORG_API AudioMixerProcessor final : public SoundInstanceProcessor
 {
@@ -18,8 +15,6 @@ class FORG_API AudioMixerProcessor final : public SoundInstanceProcessor
     explicit AudioMixerProcessor(AudioMixer& mixer) noexcept;
 
     int VoiceId(const ProcessedSoundInstance& instance) const noexcept;
-    bool Configure(ProcessedSoundInstance& instance,
-                   std::shared_ptr<IAudioSource> source, bool looping);
 
     SoundProcessingResult OnCreate(ProcessedSoundInstance& instance,
                                    SoundProcessorContext& context) override;

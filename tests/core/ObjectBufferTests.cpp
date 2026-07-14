@@ -186,3 +186,21 @@ TEST_CASE("ObjectBuffer supports over-aligned objects", "[core][objectbuffer]")
     REQUIRE(buffer.Alignment() == alignof(OverAlignedObject));
     REQUIRE(address % alignof(OverAlignedObject) == 0);
 }
+
+TEST_CASE("StaticObjectBuffer stores objects in its inline storage",
+          "[core][objectbuffer]")
+{
+    forg::core::StaticObjectBuffer<sizeof(OverAlignedObject),
+                                   alignof(OverAlignedObject)>
+        buffer;
+
+    OverAlignedObject* object = buffer.Emplace<OverAlignedObject>(77);
+    const auto bufferAddress = reinterpret_cast<std::uintptr_t>(&buffer);
+    const auto objectAddress = reinterpret_cast<std::uintptr_t>(object);
+
+    REQUIRE(object->value == 77);
+    REQUIRE(objectAddress >= bufferAddress);
+    REQUIRE(objectAddress < bufferAddress + sizeof(buffer));
+    REQUIRE(objectAddress % alignof(OverAlignedObject) == 0);
+    REQUIRE(buffer.Data() == object);
+}

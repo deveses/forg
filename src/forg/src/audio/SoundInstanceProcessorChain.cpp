@@ -7,22 +7,22 @@ namespace forg::audio {
 bool SoundInstanceProcessorChain::AddProcessor(
     std::shared_ptr<SoundInstanceProcessor> processor)
 {
-    if (processor == nullptr)
+    if (processor == nullptr || m_count == m_processors.size())
         return false;
 
-    m_processors.push_back(std::move(processor));
+    m_processors[m_count++] = std::move(processor);
     return true;
 }
 
 std::size_t SoundInstanceProcessorChain::Count() const noexcept
 {
-    return m_processors.size();
+    return m_count;
 }
 
 SoundInstanceProcessor*
 SoundInstanceProcessorChain::Processor(std::size_t index) noexcept
 {
-    if (index >= m_processors.size())
+    if (index >= m_count)
         return nullptr;
 
     return m_processors[index].get();
@@ -31,7 +31,7 @@ SoundInstanceProcessorChain::Processor(std::size_t index) noexcept
 const SoundInstanceProcessor*
 SoundInstanceProcessorChain::Processor(std::size_t index) const noexcept
 {
-    if (index >= m_processors.size())
+    if (index >= m_count)
         return nullptr;
 
     return m_processors[index].get();
@@ -40,7 +40,7 @@ SoundInstanceProcessorChain::Processor(std::size_t index) const noexcept
 std::shared_ptr<SoundInstanceProcessor>
 SoundInstanceProcessorChain::ProcessorPtr(std::size_t index) const
 {
-    if (index >= m_processors.size())
+    if (index >= m_count)
         return nullptr;
 
     return m_processors[index];
