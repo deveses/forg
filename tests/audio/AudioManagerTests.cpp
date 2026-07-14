@@ -289,7 +289,7 @@ TEST_CASE("AudioManager drives its processor chain through sound instances",
     const forg::audio::SoundInstanceId id = manager.Play(tone, true);
     REQUIRE(id != forg::audio::INVALID_SOUND_INSTANCE_ID);
 
-    manager.SetGainPan(id, 0.5f, -0.25f);
+    REQUIRE(manager.SetGainPan(id, 0.5f, -0.25f));
     manager.Update();
     REQUIRE(manager.Stop(id));
     manager.Update();

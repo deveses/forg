@@ -237,6 +237,14 @@ never finishes. `AudioFile` owns decoded samples for file-backed playback.
 (8-bit data is widened to 16), and rejects anything else — there is no
 resampling.
 
+`AudioManager` delegates instance lifetime to a fixed-capacity
+`SoundInstanceManager`. Complete `ProcessedSoundInstance` objects and their
+processor contexts live in bounded inline storage, so the instance-management
+hot path does not allocate after manager initialization. `Play` and `Update`
+are owner-thread operations; `Stop`, `StopAll`, and `SetGainPan` enqueue
+bounded ID commands from other threads, while `IsPlaying` reads an atomic state
+snapshot without dereferencing a pooled instance.
+
 See [Audio Architecture](docs/audio_architecture.md) for source ownership,
 sound-instance identity, processor lifecycle behavior, mixer routing, and
 per-frame flow.

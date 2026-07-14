@@ -13,7 +13,9 @@ flowchart TD
     ENG --> AUDIO[AudioEngine]
     RENDER --> PLUGIN[Renderer Plugin]
     AUDIO --> MANAGER[AudioManager]
-    MANAGER --> INSTANCE[ProcessedSoundInstance]
+    MANAGER --> INSTANCE_MANAGER[SoundInstanceManager]
+    INSTANCE_MANAGER --> POOL[ObjectPool]
+    POOL --> INSTANCE[ProcessedSoundInstance]
     INSTANCE --> MIXER[AudioMixerProcessor / AudioMixer]
 ```
 

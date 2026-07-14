@@ -16,18 +16,17 @@ struct AudioManager::Impl
 {
     AudioMixer mixer;
     bool initialized = false;
-    std::shared_ptr<SoundInstanceProcessorChain> processorChain;
-    std::shared_ptr<AudioMixerProcessor> mixerProcessor;
-    SoundInstanceManager instanceManager{AudioMixer::MAX_STREAMS};
+    std::shared_ptr<SoundInstanceProcessorChain> processorChain =
+        std::make_shared<SoundInstanceProcessorChain>();
+    std::shared_ptr<AudioMixerProcessor> mixerProcessor =
+        std::make_shared<AudioMixerProcessor>(mixer);
+    SoundInstanceManager instanceManager{AudioMixer::MAX_STREAMS,
+                                         processorChain};
+
+    Impl() { processorChain->AddProcessor(mixerProcessor); }
 };
 
-AudioManager::AudioManager() : m_impl(std::make_unique<Impl>())
-{
-    m_impl->processorChain = std::make_shared<SoundInstanceProcessorChain>();
-    m_impl->mixerProcessor =
-        std::make_shared<AudioMixerProcessor>(m_impl->mixer);
-    m_impl->processorChain->AddProcessor(m_impl->mixerProcessor);
-}
+AudioManager::AudioManager() : m_impl(std::make_unique<Impl>()) {}
 
 AudioManager::~AudioManager() { Shutdown(); }
 
@@ -106,19 +105,7 @@ SoundInstanceId AudioManager::Play(std::shared_ptr<IAudioSource> source,
     description.parameters.volumeMultiplier = gain;
     description.parameters.pan = pan;
 
-    ProcessedSoundInstance* instance = m_impl->instanceManager.Create(
-        m_impl->processorChain, std::move(description));
-    if (instance == nullptr)
-        return INVALID_SOUND_INSTANCE_ID;
-
-    if (!instance->Play())
-    {
-        m_impl->instanceManager.Destroy(instance);
-        return INVALID_SOUND_INSTANCE_ID;
-    }
-
-    const SoundInstanceId id = instance->Id();
-    return id;
+    return m_impl->instanceManager.Play(std::move(description));
 }
 
 bool AudioManager::Stop(SoundInstanceId id)
@@ -133,25 +120,12 @@ bool AudioManager::StopAll() { return m_impl->instanceManager.StopAll(); }
 
 bool AudioManager::IsPlaying(SoundInstanceId id) const
 {
-    if (id == INVALID_SOUND_INSTANCE_ID)
-        return false;
-
-    const ProcessedSoundInstance* instance = m_impl->instanceManager.Find(id);
-    return instance != nullptr &&
-           instance->State() == SoundInstanceState::Playing;
+    return m_impl->instanceManager.IsPlaying(id);
 }
 
-void AudioManager::SetGainPan(SoundInstanceId id, float gain, float pan)
+bool AudioManager::SetGainPan(SoundInstanceId id, float gain, float pan)
 {
-    if (id == INVALID_SOUND_INSTANCE_ID)
-        return;
-
-    ProcessedSoundInstance* instance = m_impl->instanceManager.Find(id);
-    if (instance == nullptr)
-        return;
-
-    instance->Parameters().pan = pan;
-    instance->SetVolumeMultiplier(gain);
+    return m_impl->instanceManager.SetGainPan(id, gain, pan);
 }
 
 } // namespace forg::audio

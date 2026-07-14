@@ -45,14 +45,17 @@ class FORG_API AudioManager
     const AudioMixerProcessor& MixerProcessor() const noexcept;
 
     // Creates and plays a processed sound instance, returning its id or
-    // INVALID_SOUND_INSTANCE_ID on failure.
+    // INVALID_SOUND_INSTANCE_ID on failure. Call from the update/owner thread.
     SoundInstanceId Play(std::shared_ptr<IAudioSource> source,
                          bool looping = false, float gain = 1.0f,
                          float pan = 0.0f);
+    // Control requests are allocation-free and may be queued from other
+    // threads while the manager remains alive. They take effect on Update().
     bool Stop(SoundInstanceId id);
     bool StopAll();
+    // Reads an atomic state snapshot without accessing a pooled instance.
     bool IsPlaying(SoundInstanceId id) const;
-    void SetGainPan(SoundInstanceId id, float gain, float pan);
+    bool SetGainPan(SoundInstanceId id, float gain, float pan);
 };
 
 } // namespace forg::audio
