@@ -24,12 +24,19 @@ struct CounterObject
     int value;
 };
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable : 4324) // structure was padded due to alignment specifier
+#endif
 struct alignas(64) OverAlignedObject
 {
     explicit OverAlignedObject(int objectValue) : value(objectValue) {}
 
     int value;
 };
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 } // namespace
 
