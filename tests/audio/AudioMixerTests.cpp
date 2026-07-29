@@ -363,3 +363,42 @@ TEST_CASE("AudioMixer resets gain and pan when a buffer replaces a source",
     // gain/pan.
     REQUIRE(WrittenSamples(output) == std::vector<short>({1000, -1000}));
 }
+
+TEST_CASE("AudioMixer reserves and reuses voice ids", "[audio][mixer]")
+{
+    CapturingAudioOutput output;
+    forg::audio::AudioMixer mixer;
+
+    REQUIRE_FALSE(mixer.IsInitialized());
+    REQUIRE(mixer.AcquireVoice() == forg::audio::AudioMixer::INVALID_VOICE);
+    REQUIRE(mixer.InitWithOutput(&output));
+    REQUIRE(mixer.IsInitialized());
+
+    for (unsigned int i = 0; i < forg::audio::AudioMixer::MAX_STREAMS; i++)
+    {
+        const int voice = mixer.AcquireVoice();
+        REQUIRE(voice == static_cast<int>(i));
+        REQUIRE(mixer.IsVoiceAcquired(voice));
+    }
+
+    REQUIRE(mixer.AcquireVoice() == forg::audio::AudioMixer::INVALID_VOICE);
+
+    mixer.ReleaseVoice(3);
+    REQUIRE_FALSE(mixer.IsVoiceAcquired(3));
+    REQUIRE(mixer.AcquireVoice() == 3);
+}
+
+TEST_CASE("AudioMixer does not acquire a directly active stream",
+          "[audio][mixer]")
+{
+    CapturingAudioOutput output;
+    forg::audio::AudioMixer mixer;
+    REQUIRE(mixer.InitWithOutput(&output));
+
+    std::shared_ptr<StubAudioSource> source =
+        std::make_shared<StubAudioSource>();
+    source->samples = {100};
+    mixer.SetStreamSource(0, source, false);
+
+    REQUIRE(mixer.AcquireVoice() == 1);
+}

@@ -16,6 +16,7 @@ class FORG_API AudioMixer
 {
   public:
     static constexpr unsigned int MAX_STREAMS = 10;
+    static constexpr int INVALID_VOICE = -1;
 
   private:
     struct Impl;
@@ -31,6 +32,7 @@ class FORG_API AudioMixer
     // IAudioOutput::Release().
     bool InitWithOutput(IAudioOutput* output);
     void Shutdown();
+    bool IsInitialized() const noexcept;
     // Mixes all active streams (buffer- and source-driven) into 16-bit
     // stereo PCM and pushes it to the output whenever it can accept data.
     // Pushes up to one second of audio per call, so gain/pan changes can
@@ -54,6 +56,12 @@ class FORG_API AudioMixer
     // finished non-looping source counts as inactive so the slot can be
     // reused.
     bool IsStreamActive(unsigned int _stream) const;
+
+    // Reserves an inactive stream for a voice owner. Acquired voices remain
+    // reserved until ReleaseVoice(), even before a source is attached.
+    int AcquireVoice();
+    void ReleaseVoice(int voiceId);
+    bool IsVoiceAcquired(int voiceId) const noexcept;
 };
 
 } // namespace forg::audio

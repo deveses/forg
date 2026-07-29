@@ -4,14 +4,17 @@
 #pragma once
 
 #include "forg/api.h"
+#include "forg/audio/ProcessedSoundInstance.h"
 
 #include <memory>
 
 namespace forg::audio {
 
 class AudioMixer;
+class AudioMixerProcessor;
 class IAudioOutput;
 class IAudioSource;
+class SoundInstanceProcessorChain;
 
 class FORG_API AudioManager
 {
@@ -19,8 +22,6 @@ class FORG_API AudioManager
     std::unique_ptr<Impl> m_impl;
 
   public:
-    static constexpr int INVALID_VOICE = -1;
-
     AudioManager();
     ~AudioManager();
 
@@ -33,26 +34,28 @@ class FORG_API AudioManager
     // initialized and the output is not adopted.
     bool InitWithOutput(IAudioOutput* output);
     void Shutdown();
-    // Pumps the mixer and reclaims voices whose sources have finished,
-    // making their slots available to Play() again.
+    // Pumps the mixer and updates all active processed sound instances.
     void Update();
 
     bool IsInitialized() const;
     AudioMixer& Mixer();
     const AudioMixer& Mixer() const;
+    std::shared_ptr<SoundInstanceProcessorChain> ProcessorChain() const;
+    AudioMixerProcessor& MixerProcessor() noexcept;
+    const AudioMixerProcessor& MixerProcessor() const noexcept;
 
-    // Starts playing a source on a free voice and returns its handle,
-    // or INVALID_VOICE when no voice is free (at most
-    // AudioMixer::MAX_STREAMS voices play at once). The manager and mixer
-    // share ownership while the voice is attached.
-    int Play(std::shared_ptr<IAudioSource> source, bool looping = false,
-             float gain = 1.0f, float pan = 0.0f);
-    void Stop(int voice);
-    void StopAll();
-    // True while the voice is attached and its stream still produces
-    // audio; finished one-shot voices turn false after Update().
-    bool IsPlaying(int voice) const;
-    void SetGainPan(int voice, float gain, float pan);
+    // Creates and plays a processed sound instance, returning its id or
+    // INVALID_SOUND_INSTANCE_ID on failure. Call from the update/owner thread.
+    SoundInstanceId Play(std::shared_ptr<IAudioSource> source,
+                         bool looping = false, float gain = 1.0f,
+                         float pan = 0.0f);
+    // Control requests are allocation-free and may be queued from other
+    // threads while the manager remains alive. They take effect on Update().
+    bool Stop(SoundInstanceId id);
+    bool StopAll();
+    // Reads an atomic state snapshot without accessing a pooled instance.
+    bool IsPlaying(SoundInstanceId id) const;
+    bool SetGainPan(SoundInstanceId id, float gain, float pan);
 };
 
 } // namespace forg::audio

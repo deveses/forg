@@ -201,7 +201,8 @@ src/glrenderer/          OpenGL renderer plugin (CMake DLL on Windows)
 src/{cl,amp}renderer/    Unsupported legacy renderer sources
 data/                    Shared sample assets, UI YAML, textures, and fonts
 tests/                   Catch2/CTest unit tests for the forg library
-docs/nn/README.md        Notes and examples for the tiny neural-network module
+docs/ARCHITECTURE.md     Global architecture index and subsystem references
+docs/                    Subsystem architecture, configuration, and API notes
 extern/                  Vendored dependencies: cgltf (glTF 2.0 parser, wired
                          into CMake and linked into forg); OpenCL/OpenGL
                          headers
@@ -212,25 +213,14 @@ The umbrella headers are `forg/forg.h` and `forg/rendering.h`. Note that some `.
 
 ## Architecture
 
-The rendering abstraction lives in `include/forg/rendering/`. Backends implement the `IRenderDevice` family of interfaces:
+See the [global architecture guide](docs/ARCHITECTURE.md) for the system map and
+links to detailed subsystem documents. Rendering backends are isolated behind
+the `IRenderDevice` interfaces, while audio playback is coordinated through
+processed sound instances and an ordered processor chain.
 
-- **Reference software renderer** — compiled into the library itself (`include/forg/rendering/reference/`)
-- **Software renderer plugin** (`src/swrenderer/`) — wraps the reference renderer with a platform presentation layer (CoreGraphics/CALayer on macOS, GDI on Windows); loaded at runtime via `dlopen`/`LoadLibrary` from the driver named in the sample app config
-- **Metal renderer plugin** (`src/metalrenderer/`) — native Apple Metal backend hosting a `CAMetalLayer` in the sample's `NSView`; macOS only, the default `config.yml` driver
-- **OpenGL renderer plugin** (`src/glrenderer/`) — loaded at runtime on Windows via `LoadLibrary`
-- **OpenCL / C++ AMP renderers** — unsupported legacy sources, not part of the canonical CMake build
-
-Canonical renderer plugins expose a versioned descriptor. The current
-descriptor includes a display name plus a plugin-local destroy callback so hosts
-can show the active renderer and do not delete plugin-owned renderer objects
-across module or CRT boundaries. The loaders still accept version-1 descriptors
-and legacy `forgCreateRenderer`-only plugins for 1.x compatibility.
-
-Beyond rendering, the library includes math types, an audio engine (see [Audio](#audio)), XML and YAML parsers (`script`), image loading, mesh loading (DirectX `.x`, `.ply`, and glTF 2.0 `.gltf`/`.glb` static meshes via `Mesh::FromFile`), a UI layer, filesystem and OS abstractions.
-
-`Engine` owns the active camera and handles normalized input events from
-`forg/Input.h`; sample apps only translate native events before calling
-`Engine::HandleInput`.
+Beyond those runtime systems, the library includes math types, XML and YAML
+parsers, image and mesh loading, UI, filesystem and OS abstractions, control
+commands, and a small neural-network module.
 
 ## Audio
 
@@ -240,61 +230,24 @@ platform output plays the result. Everything runs at the mixer's fixed format �
 **44100 Hz, 16-bit signed PCM, stereo out** — with up to
 `AudioMixer::MAX_STREAMS` (10) simultaneous voices.
 
-```mermaid
-classDiagram
-    class IAudioSource {
-        <<interface>>
-        +Read(samples, frames) uint
-        +Channels() int
-        +IsFinished() bool
-        +Reset()
-    }
-    class AudioGenerator {
-        +SetWaveform(sine or square)
-        +SetFrequency(hz)
-        +SetAmplitude(a)
-    }
-    class AudioFile {
-        <<abstract>>
-        +Open(filename) bool*
-        +Close()
-        +FrameCount() uint
-    }
-    class AudioFileWav {
-        +Open(filename) bool
-    }
-    IAudioSource <|-- AudioGenerator : endless mono waveform
-    IAudioSource <|-- AudioFile : decoded buffer, pull mechanics
-    AudioFile <|-- AudioFileWav : PCM WAV via WaveFile parser
-```
-
 `IAudioSource` is a pull interface: the mixer asks each attached source for
 frames during `Update()`. `AudioGenerator` synthesizes sine/square waves and
-never finishes; `AudioFile` owns the decoded-sample buffer and position so a
-future codec (e.g. `AudioFileOgg`) only needs to implement `Open()`.
+never finishes. `AudioFile` owns decoded samples for file-backed playback.
 `AudioFileWav` accepts PCM WAV files at 44100 Hz, mono or stereo, 8 or 16 bits
 (8-bit data is widened to 16), and rejects anything else — there is no
 resampling.
 
-Ownership stack and platform outputs:
+`AudioManager` delegates instance lifetime to a fixed-capacity
+`SoundInstanceManager`. Complete `ProcessedSoundInstance` objects and their
+processor contexts live in bounded inline storage, so the instance-management
+hot path does not allocate after manager initialization. `Play` and `Update`
+are owner-thread operations; `Stop`, `StopAll`, and `SetGainPan` enqueue
+bounded ID commands from other threads, while `IsPlaying` reads an atomic state
+snapshot without dereferencing a pooled instance.
 
-```mermaid
-flowchart LR
-    subgraph Engine
-        AE[AudioEngine] --> AM[AudioManager] --> MX[AudioMixer]
-    end
-    MX --> OUT{{IAudioOutput}}
-    OUT --> WO[WaveOut<br/>Windows]
-    OUT --> CA[CoreAudio<br/>macOS]
-    OUT --> SDL[SDL2 queue<br/>Linux]
-```
-
-`AudioManager` allocates mixer streams as *voices*:
-`Play(source, looping, gain, pan)` returns a voice handle (`INVALID_VOICE`
-when all 10 are busy), `Stop`/`StopAll` release voices, and `Update()`
-reclaims voices whose one-shot sources have finished. Sources are passed as
-`std::shared_ptr<IAudioSource>` so the manager and mixer keep them alive while
-their voices are attached.
+See [Audio Architecture](docs/audio_architecture.md) for source ownership,
+sound-instance identity, processor lifecycle behavior, mixer routing, and
+per-frame flow.
 
 ### Scene sound nodes
 
@@ -310,27 +263,6 @@ Two scene node types (`include/forg/scene/`) drive audio from scene content:
   (`ref_distance / max(distance, ref_distance)`) and left/right panning. The
   listener is the scene's active camera. A `SoundNode` without an emitter
   ancestor plays flat (2D), so UI/music scenes need no emitter.
-
-Per-frame flow inside `Engine::Update`:
-
-```mermaid
-sequenceDiagram
-    participant E as Engine::Update
-    participant S as Scene::UpdateAudio
-    participant N as SoundNode::SyncAudio
-    participant M as AudioManager
-    participant X as AudioMixer
-
-    E->>S: for each scene
-    S->>S: listener = active camera (position, right vector)
-    S->>N: for each SoundNode
-    N->>N: find SoundEmitterNode ancestor,<br/>compute gain + pan
-    N->>M: Play / Stop / SetGainPan
-    E->>M: Update()
-    M->>X: Update()
-    X->>X: pull IAudioSource frames,<br/>apply gain/pan, mix
-    X->>X: push PCM to IAudioOutput
-```
 
 Both node types serialize with the scene. A YAML scene with a positional
 looping tone and a one-shot WAV clip:
@@ -354,10 +286,6 @@ scene:
         parent: -1           # no emitter ancestor -> plays flat
         sound: { source: file, file: "data:sounds/step.wav" }
 ```
-
-Known limitation: `AudioMixer::Update` pushes up to one second of audio per
-call, so gain/pan updates (including moving emitters) can lag by up to that
-much.
 
 ## CI
 
